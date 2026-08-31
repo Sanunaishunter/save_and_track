@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="選股七步驟追蹤工具 — 離線可用的個人選股流程紀錄">
+<title>選股七步驟追蹤</title>
+
+<!-- 加到主畫面 / PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1215">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="選股七步驟">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 儲存空間不可用時的警告橫幅 -->
+<div id="storage-banner" class="banner" hidden>
+  <strong>無法使用瀏覽器儲存空間</strong>
+  <span id="storage-banner-msg"></span>
+</div>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <h1 class="app-title">選股七步驟</h1>
+    <div class="topbar-actions">
+      <button type="button" class="btn btn-ghost" id="btn-export" title="匯出備份">匯出</button>
+      <button type="button" class="btn btn-ghost" id="btn-import" title="匯入備份">匯入</button>
+      <button type="button" class="btn btn-primary" id="btn-new">＋ 新增</button>
+    </div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
+    <button type="button" class="tab" data-tab="exited">已出場 <span class="tab-count" data-count="exited">0</span></button>
+    <button type="button" class="tab" data-tab="rejected">已放棄 <span class="tab-count" data-count="rejected">0</span></button>
+    <button type="button" class="tab" data-tab="all">全部 <span class="tab-count" data-count="all">0</span></button>
+  </nav>
+</header>
+
+<main class="list-wrap">
+  <div id="list"></div>
+  <div id="empty" class="empty" hidden>
+    <p class="empty-title">這裡還沒有股票</p>
+    <p class="empty-sub">按右上角「＋ 新增」開始走第一步。</p>
+  </div>
+</main>
+
+<!-- 個股詳情（全螢幕面板） -->
+<section id="detail" class="sheet" hidden aria-hidden="true">
+  <header class="sheet-top">
+    <button type="button" class="btn btn-ghost" id="detail-back">‹ 返回</button>
+    <div class="sheet-title">
+      <span id="detail-code" class="d-code"></span>
+      <span id="detail-name" class="d-name"></span>
+    </div>
+    <button type="button" class="btn btn-ghost" id="detail-edit">編輯</button>
+  </header>
+
+  <div class="sheet-body">
+    <div id="detail-meta" class="detail-meta"></div>
+    <div id="detail-steps" class="steps"></div>
+
+    <div class="danger-zone">
+      <button type="button" class="btn btn-block btn-outline" id="btn-exit">標記為已出場</button>
+      <button type="button" class="btn btn-block btn-outline" id="btn-reject">放棄這檔股票</button>
+      <button type="button" class="btn btn-block btn-outline" id="btn-reactivate" hidden>重新設為進行中</button>
+      <button type="button" class="btn btn-block btn-danger" id="btn-delete">刪除紀錄</button>
+    </div>
+  </div>
+</section>
+
+<!-- 新增 / 編輯 基本資料 -->
+<section id="form" class="sheet" hidden aria-hidden="true">
+  <header class="sheet-top">
+    <button type="button" class="btn btn-ghost" id="form-cancel">取消</button>
+    <div class="sheet-title"><span id="form-title">新增股票</span></div>
+    <button type="button" class="btn btn-primary" id="form-save">儲存</button>
+  </header>
+  <div class="sheet-body">
+    <label class="field">
+      <span class="field-label">股票代號</span>
+      <input type="text" id="f-stock-id" inputmode="numeric" autocomplete="off" placeholder="例如 2330">
+    </label>
+    <label class="field">
+      <span class="field-label">股票名稱</span>
+      <input type="text" id="f-stock-name" autocomplete="off" placeholder="例如 台積電">
+    </label>
+    <p class="field-hint">代號與名稱至少要填一個。存檔後就可以開始逐步填寫七個步驟。</p>
+  </div>
+</section>
+
+<input type="file" id="import-file" accept="application/json,.json" hidden>
+
+<!-- 通用對話框 -->
+<div id="modal" class="modal-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2 class="modal-title" id="modal-title"></h2>
+    <div class="modal-msg" id="modal-msg"></div>
+    <label class="field modal-input-wrap" id="modal-input-wrap" hidden>
+      <span class="field-label" id="modal-input-label"></span>
+      <textarea id="modal-input" rows="3"></textarea>
+    </label>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
