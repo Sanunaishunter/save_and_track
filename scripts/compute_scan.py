@@ -37,6 +37,13 @@ def load_day(date_str):
     return out
 
 
+def _without_timestamp(blob):
+    """比較兩次掃描結果時忽略產生時間。"""
+    out = dict(blob)
+    out.pop("generated_at", None)
+    return out
+
+
 def main():
     dates = common.history_dates()
     if not dates:
@@ -114,6 +121,13 @@ def main():
         "count": len(rows),
         "rows": rows,
     }
+
+    # 休市日重跑會算出跟上次一模一樣的結果,只有 generated_at 不同。
+    # 若實質內容沒變就不重寫,避免每天堆積無意義的 commit。
+    prev = common.read_json(common.LATEST_FILE)
+    if prev and _without_timestamp(prev) == _without_timestamp(result):
+        print("  結果與上次相同(%s),不重寫檔案" % target)
+        return 0
 
     common.write_json(common.LATEST_FILE, result)
     common.write_json(common.history_path(target).replace("history", "scans"), result)
