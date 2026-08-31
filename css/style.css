@@ -319,6 +319,25 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .field-label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom: 6px; }
 .field-hint { font-size: 12.5px; color: var(--muted); }
 
+/* 第 4、5 步的多選選項 */
+.chipgrid { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 10px; }
+.chip {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+}
+.chip.sel { border-color: var(--accent); background: rgba(232, 69, 60, 0.10); }
+.chip-label { display: block; font-size: 13.5px; font-weight: 700; }
+.chip.sel .chip-label { color: var(--accent); }
+.chip-desc { display: block; font-size: 12px; color: var(--text-dim); margin-top: 3px; line-height: 1.45; }
+
 .step-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .step-actions .spacer { flex: 1; }
 .saved-flag { font-size: 12px; color: var(--down); align-self: center; }

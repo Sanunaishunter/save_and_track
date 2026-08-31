@@ -156,14 +156,19 @@ https://sanunaishunter.github.io/save_and_track/
 [
   {
     "id": "sp_mtgsu98o_feq9vp",
-    "stock_id": "2330",
-    "stock_name": "台積電",
+    "stock_id": "6770",
+    "stock_name": "力積電",
     "status": "active",            // active | rejected | exited
-    "current_step": 3,             // 1~7
-    "notes": {                     // 第 1~5 步的文字筆記
-      "1": "CoWoS 產能吃緊,外資調升目標價後列入觀察。",
-      "2": "毛利率 53%,連四季成長。",
-      "3": "", "4": "", "5": ""
+    "current_step": 5,             // 1~7
+    "notes": {
+      "1": "爆量突破,美股費半同步走強。",        // 第 1~3 步:純文字
+      "2": "外資報告調升評等。",
+      "3": "法說會維持全年展望。",
+      "4": {                                     // 第 4~5 步:多選 + 補充說明
+        "options": ["C", "E"],
+        "note": "量能連三日站上均量。"
+      },
+      "5": { "options": ["prey_retail"], "note": "" }
     },
     "entry_reason": "突破季線帶量",        // 第 6 步
     "entry_numbers": "本益比 22 倍,部位 15%",
@@ -182,15 +187,22 @@ https://sanunaishunter.github.io/save_and_track/
 
 七個步驟:
 
-| 步驟 | 名稱 | 存到哪個欄位 |
-| --- | --- | --- |
-| 1 | 選股靈感與來源 | `notes.1` |
-| 2 | 基本面體質 | `notes.2` |
-| 3 | 產業地位與題材 | `notes.3` |
-| 4 | 籌碼與法人動向 | `notes.4` |
-| 5 | 技術面與位置 | `notes.5` |
-| 6 | 進場計畫 | `entry_reason` / `entry_numbers` / `target_price` / `invalidation_price` |
-| 7 | 持有追蹤與紀律 | `tracking[]` |
+| 步驟 | 名稱 | 型態 | 存到哪個欄位 |
+| --- | --- | --- | --- |
+| 1 | 觸發 | 文字 | `notes.1` |
+| 2 | 個股新聞 | 文字 | `notes.2` |
+| 3 | 法說／財報 | 文字 | `notes.3` |
+| 4 | K線劇本 | 多選(劇本 A~E) | `notes.4.options` / `notes.4.note` |
+| 5 | 獵人理論 | 多選(4 種力量對比) | `notes.5.options` / `notes.5.note` |
+| 6 | 進出場設定 | 欄位 | `entry_reason` / `entry_numbers` / `target_price` / `invalidation_price` |
+| 7 | 追蹤 | 列表 | `tracking[]` |
+
+第 4 步的 `options` 值是 `"A"`~`"E"`;第 5 步是 `"prey_retail"`(主力吃散戶)、
+`"prey_institution"`(散戶吃主力)、`"aligned"`(同向不對抗)、`"unclear"`(力量不明)。
+兩步都可複選,也可以什麼都不選只寫補充說明。
+
+> 舊資料相容:如果 `notes.4` / `notes.5` 是純字串(更早的版本),讀取時會自動轉成
+> `{ options: [], note: "原本的文字" }`,文字不會遺失。
 
 ---
 

@@ -9,13 +9,27 @@
   var IMPORT_BACKUP_KEY = 'stock_pipeline_v1__before_import';
 
   var STEPS = [
-    { n: 1, title: '選股靈感與來源',   hint: '這檔股票是怎麼進到名單的?新聞、選股器、朋友推薦、還是自己長期觀察?先把最原始的理由寫下來。' },
-    { n: 2, title: '基本面體質',       hint: '營收、獲利、毛利率、負債、現金流。數字撐不撐得起這個故事?' },
-    { n: 3, title: '產業地位與題材',   hint: '產業趨勢、競爭對手、護城河、催化劑。為什麼是這一家,而不是同業?' },
-    { n: 4, title: '籌碼與法人動向',   hint: '法人買賣超、大戶持股比例、融資融券、內部人異動。' },
-    { n: 5, title: '技術面與位置',     hint: '型態、均線、量能、相對位置。現在是不是合理的進場區間?' },
-    { n: 6, title: '進場計畫',         hint: '進場理由、關鍵數字、目標價、失效價。先寫清楚再進場,不是進場後才補。' },
-    { n: 7, title: '持有追蹤與紀律',   hint: '定期記錄:當初的持有理由還成立嗎?有沒有觸發失效條件?' }
+    { n: 1, title: '觸發', type: 'text',
+      hint: '爆量／無量上漲來源，美股新聞背景（大盤現況、大公司動態）' },
+    { n: 2, title: '個股新聞', type: 'text',
+      hint: '該股新聞摘要，判斷是否有直接催化劑' },
+    { n: 3, title: '法說／財報', type: 'text',
+      hint: '丟給 Claude 分析法說會與財報的摘要結論' },
+    { n: 4, title: 'K線劇本', type: 'choice', hint: '對照劇本判斷（可複選）', choices: [
+      { v: 'A', label: '劇本 A', desc: '點火後量縮價跌，主力緩慢出貨 → 不進場' },
+      { v: 'B', label: '劇本 B', desc: '點火後放量連跌，主力積極出貨 → 不進場' },
+      { v: 'C', label: '劇本 C', desc: '點火後量能持續、價格續漲，主力鎖倉 → 進場做多' },
+      { v: 'D', label: '劇本 D', desc: '放量急跌點火，恐慌性賣壓出清，主力吸籌後反彈 → 反彈進場' },
+      { v: 'E', label: '劇本 E', desc: '消息面驅動型，散戶佔比>60%，新聞+法人買入同天觸發 → 短進短出' }
+    ] },
+    { n: 5, title: '獵人理論', type: 'choice', hint: '判斷力量對比（可複選，暫定分類）', choices: [
+      { v: 'prey_retail', label: '主力吃散戶', desc: '法人默默吸籌，散戶尚未察覺' },
+      { v: 'prey_institution', label: '散戶吃主力', desc: '法人流動性賣壓，散戶承接，隔日反彈型' },
+      { v: 'aligned', label: '同向不對抗', desc: '法人與散戶方向一致，沒有明顯力量差' },
+      { v: 'unclear', label: '力量不明', desc: '指標矛盾或不足以判斷' }
+    ] },
+    { n: 6, title: '進出場設定', type: 'entry', hint: '進場理由與目標／失效價位' },
+    { n: 7, title: '追蹤', type: 'tracking', hint: '持續追蹤紀錄' }
   ];
 
   var STATUS_LABEL = { active: '進行中', exited: '已出場', rejected: '已放棄' };
@@ -171,7 +185,27 @@
 
   // ---------------------------------------------------------- 資料模型
 
-  function blankNotes() { return { 1: '', 2: '', 3: '', 4: '', 5: '' }; }
+  function blankChoice() { return { options: [], note: '' }; }
+
+  function blankNotes() {
+    return { 1: '', 2: '', 3: '', 4: blankChoice(), 5: blankChoice() };
+  }
+
+  /**
+   * 第 4、5 步是多選 + 補充說明。舊資料若把它存成純字串(或只有選項陣列),
+   * 一律轉成 {options, note} 並保留原文字,不丟資料。
+   */
+  function normalizeChoice(v) {
+    function strs(a) {
+      return Array.isArray(a) ? a.filter(function (o) { return typeof o === 'string'; }) : [];
+    }
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      return { options: strs(v.options), note: typeof v.note === 'string' ? v.note : '' };
+    }
+    if (Array.isArray(v)) return { options: strs(v), note: '' };
+    if (typeof v === 'string') return { options: [], note: v };
+    return blankChoice();
+  }
 
   function newRecord(stockId, stockName) {
     var ts = nowISO();
@@ -201,7 +235,11 @@
     if (r.notes && typeof r.notes === 'object') {
       for (var i = 1; i <= 5; i++) {
         var v = r.notes[i] != null ? r.notes[i] : r.notes[String(i)];
-        notes[i] = typeof v === 'string' ? v : (v == null ? '' : String(v));
+        if (i <= 3) {
+          notes[i] = typeof v === 'string' ? v : (v == null ? '' : String(v));
+        } else {
+          notes[i] = normalizeChoice(v);
+        }
       }
     }
     var step = parseInt(r.current_step, 10);
@@ -242,7 +280,11 @@
   function touch(rec) { rec.updated_at = nowISO(); }
 
   function stepFilled(rec, n) {
-    if (n <= 5) return !!(rec.notes[n] && rec.notes[n].trim());
+    if (n <= 3) return !!(rec.notes[n] && rec.notes[n].trim());
+    if (n === 4 || n === 5) {
+      var c = rec.notes[n] || blankChoice();
+      return (c.options && c.options.length > 0) || !!(c.note && c.note.trim());
+    }
     if (n === 6) {
       return !!((rec.entry_reason && rec.entry_reason.trim()) ||
                 (rec.entry_numbers && rec.entry_numbers.trim()) ||
@@ -380,10 +422,28 @@
   // ---------------------------------------------------------- 詳情畫面
 
   function stepBodyHtml(rec, n) {
-    if (n <= 5) {
+    if (n <= 3) {
       return '' +
         '<p class="step-hint">' + esc(STEPS[n - 1].hint) + '</p>' +
-        '<textarea data-note="' + n + '" rows="6" placeholder="寫下你的判斷與依據…">' + esc(rec.notes[n]) + '</textarea>' +
+        '<textarea data-note="' + n + '" rows="6" placeholder="' + esc(STEPS[n - 1].hint) + '">' + esc(rec.notes[n]) + '</textarea>' +
+        stepFooterHtml(rec, n);
+    }
+    if (n === 4 || n === 5) {
+      var def = STEPS[n - 1];
+      var c = rec.notes[n] || blankChoice();
+      var chips = def.choices.map(function (ch) {
+        var on = c.options.indexOf(ch.v) >= 0;
+        return '<button type="button" class="chip' + (on ? ' sel' : '') + '"' +
+                 ' data-chip="' + n + '" data-choice="' + esc(ch.v) + '"' +
+                 ' aria-pressed="' + (on ? 'true' : 'false') + '">' +
+                 '<span class="chip-label">' + esc(ch.label) + '</span>' +
+                 '<span class="chip-desc">' + esc(ch.desc) + '</span>' +
+               '</button>';
+      }).join('');
+      return '' +
+        '<p class="step-hint">' + esc(def.hint) + '</p>' +
+        '<div class="chipgrid">' + chips + '</div>' +
+        '<textarea data-choicenote="' + n + '" rows="3" placeholder="補充說明（選填）">' + esc(c.note) + '</textarea>' +
         stepFooterHtml(rec, n);
     }
     if (n === 6) {
@@ -499,6 +559,12 @@
     if (noteBox) {
       var n = parseInt(noteBox.getAttribute('data-note'), 10);
       if (rec.notes[n] !== noteBox.value) { rec.notes[n] = noteBox.value; changed = true; }
+    }
+    var choiceNote = body.querySelector('[data-choicenote]');
+    if (choiceNote) {
+      var cn = parseInt(choiceNote.getAttribute('data-choicenote'), 10);
+      if (!rec.notes[cn] || typeof rec.notes[cn] !== 'object') rec.notes[cn] = blankChoice();
+      if (rec.notes[cn].note !== choiceNote.value) { rec.notes[cn].note = choiceNote.value; changed = true; }
     }
     ['entry_reason', 'entry_numbers', 'target_price', 'invalidation_price'].forEach(function (f) {
       var node = body.querySelector('[data-f="' + f + '"]');
@@ -826,6 +892,23 @@
         return;
       }
 
+      var chipBtn = t.closest('[data-chip]');
+      if (chipBtn) {
+        var cs = parseInt(chipBtn.getAttribute('data-chip'), 10);
+        var val = chipBtn.getAttribute('data-choice');
+        collectOpenStep(rec);
+        if (!rec.notes[cs] || typeof rec.notes[cs] !== 'object') rec.notes[cs] = blankChoice();
+        var opts = rec.notes[cs].options;
+        var at = opts.indexOf(val);
+        if (at >= 0) opts.splice(at, 1); else opts.push(val);
+        // 只切換這顆按鈕的樣式,不整段重繪 — 重繪會把旁邊正在打字的補充說明換掉。
+        chipBtn.classList.toggle('sel', at < 0);
+        chipBtn.setAttribute('aria-pressed', at < 0 ? 'true' : 'false');
+        touch(rec);
+        saveAll();
+        return;
+      }
+
       if (t.id === 'track-add') {
         var date = el('track-date').value || todayStr();
         var note = el('track-note').value.trim();
@@ -858,7 +941,7 @@
 
     // 離開輸入框就自動存,手機上不會因為切走而掉資料
     el('detail-steps').addEventListener('focusout', function (e) {
-      if (e.target.matches('[data-note], [data-f]')) autoSave();
+      if (e.target.matches('[data-note], [data-f], [data-choicenote]')) autoSave();
     });
 
     // 切到背景 / 關閉分頁前,把還沒存的內容落地
