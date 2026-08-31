@@ -35,6 +35,10 @@
       <button type="button" class="btn btn-primary" id="btn-new">＋ 新增</button>
     </div>
   </div>
+  <nav class="views" id="views">
+    <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
+    <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
+  </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
     <button type="button" class="tab" data-tab="exited">已出場 <span class="tab-count" data-count="exited">0</span></button>
@@ -43,7 +47,7 @@
   </nav>
 </header>
 
-<main class="list-wrap">
+<main class="list-wrap" id="track-wrap">
   <div id="list"></div>
   <div id="empty" class="empty" hidden>
     <p class="empty-title">這裡還沒有股票</p>
@@ -52,6 +56,23 @@
 </main>
 
 <!-- 個股詳情（全螢幕面板） -->
+<main class="list-wrap" id="scan-wrap" hidden>
+  <div class="scan-meta" id="scan-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="scan-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">量比</th>
+          <th class="num">漲跌幅</th>
+        </tr>
+      </thead>
+      <tbody id="scan-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
 <section id="detail" class="sheet" hidden aria-hidden="true">
   <header class="sheet-top">
     <button type="button" class="btn btn-ghost" id="detail-back">‹ 返回</button>

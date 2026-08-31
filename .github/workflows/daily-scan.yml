@@ -1,0 +1,58 @@
+name: 每日爆量掃描
+
+on:
+  schedule:
+    # 台北 14:30 收盤後 = UTC 06:30。GitHub 排程常延遲 5~15 分鐘,屬正常。
+    - cron: '30 6 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      backfill_days:
+        description: '回補幾個交易日的基線(第一次請填 25,平常留 0)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 抓取上市全市場收盤價
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_prices.py \
+            --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
+
+      - name: 計算爆量清單
+        run: python scripts/compute_scan.py
+
+      - name: 提交結果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "沒有新資料,不產生 commit(可能是休市日)。"
+            exit 0
+          fi
+          DATE=$(python -c "import json;print(json.load(open('data/scan-latest.json'))['date'])")
+          COUNT=$(python -c "import json;print(json.load(open('data/scan-latest.json'))['count'])")
+          git commit -m "資料更新 ${DATE}:爆量 ${COUNT} 檔"
+          # 併發或手動觸發撞在一起時,rebase 後重推一次
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase origin main || true
+          done
+          exit 1

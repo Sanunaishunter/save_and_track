@@ -811,6 +811,87 @@
     });
   }
 
+  // ---------------------------------------------------------- 爆量掃描
+
+  var SCAN_URL = 'data/scan-latest.json';
+  var scanLoaded = false;
+
+  function fmtInt(n) {
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function renderScan(res) {
+    var meta = el('scan-meta');
+    var tbody = el('scan-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('scan-table').hidden = true;
+      return;
+    }
+
+    el('scan-table').hidden = false;
+    var p = res.params || {};
+    meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
+      '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
+
+    if (!res.rows || !res.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.rows.map(function (r) {
+      var chg = r.change_pct;
+      var chgCls = chg == null ? '' : (chg >= 0 ? 'up' : 'down');
+      var chgTxt = chg == null ? '—' : (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+      return '<tr>' +
+        '<td class="code mono">' + esc(r.stock_id) + '</td>' +
+        '<td>' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
+        '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadScan(force) {
+    if (scanLoaded && !force) return;
+    var meta = el('scan-meta');
+    meta.textContent = '載入中…';
+
+    // file:// 開啟時瀏覽器會擋掉本機 JSON 的讀取(CORS),這不是資料有問題。
+    if (location.protocol === 'file:') {
+      renderScan({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取掃描結果檔。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(SCAN_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        scanLoaded = true;
+        renderScan(data);
+      })
+      .catch(function (e) {
+        renderScan({ error: '讀不到掃描結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
+  function switchView(v) {
+    var isScan = v === 'scan';
+    el('scan-wrap').hidden = !isScan;
+    el('track-wrap').hidden = isScan;
+    el('tabs').hidden = isScan;
+    Array.prototype.forEach.call(el('views').children, function (b) {
+      b.classList.toggle('is-active', b.getAttribute('data-view') === v);
+    });
+    if (isScan) loadScan(false);
+  }
+
   // ---------------------------------------------------------- 事件綁定
 
   function bind() {
@@ -822,6 +903,11 @@
         t.classList.toggle('is-active', t === tab);
       });
       renderList();
+    });
+
+    el('views').addEventListener('click', function (e) {
+      var b = e.target.closest('.viewbtn');
+      if (b) switchView(b.getAttribute('data-view'));
     });
 
     el('list').addEventListener('click', function (e) {

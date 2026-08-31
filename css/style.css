@@ -113,6 +113,78 @@ body {
 }
 .tab.is-active .tab-count { color: var(--text-dim); }
 
+/* 主視圖切換:追蹤 / 爆量掃描 */
+.views {
+  display: flex;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+.viewbtn {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text-dim);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.viewbtn.is-active {
+  background: var(--panel-3);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- 爆量掃描表格 ---------- */
+
+.scan-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.scan-meta .warn { color: var(--up); }
+
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+.scan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.scan-table th,
+.scan-table td {
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.scan-table th {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--panel-2);
+  position: sticky;
+  top: 0;
+}
+.scan-table tbody tr:last-child td { border-bottom: 0; }
+.scan-table .num {
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.scan-table .code { font-weight: 700; }
+.scan-table .ratio { color: var(--up); font-weight: 700; }
+.scan-table .up { color: var(--up); }
+.scan-table .down { color: var(--down); }
+.scan-empty { padding: 40px 16px; text-align: center; color: var(--muted); font-size: 13px; }
+
 /* ---------- 按鈕 ---------- */
 
 .btn {
