@@ -221,6 +221,7 @@
       target_price: '',
       invalidation_price: '',
       tracking: [],
+      positions: [],
       rejected_step: null,
       rejected_reason: '',
       created_at: ts,
@@ -265,6 +266,7 @@
       target_price: String(r.target_price == null ? '' : r.target_price),
       invalidation_price: String(r.invalidation_price == null ? '' : r.invalidation_price),
       tracking: tracking,
+      positions: normalizePositions(r.positions),
       rejected_step: (r.rejected_step == null || r.rejected_step === '') ? null : parseInt(r.rejected_step, 10) || null,
       rejected_reason: String(r.rejected_reason || ''),
       created_at: r.created_at || nowISO(),
@@ -383,6 +385,19 @@
     return '<div class="dots">' + out + '</div>';
   }
 
+  /** 卡片上的持倉一行。沒有持倉就完全不佔位置。 */
+  function cardPosHtml(rec) {
+    var st = positionStats(rec);
+    if (!st) return '';
+    var body = fmtInt(st.shares) + ' 股 · 成本 ' + fmtMoney(st.cost);
+    if (!st.priced) {
+      return '<div class="card-pos">' + esc(body) + ' · <span class="dim">無報價</span></div>';
+    }
+    return '<div class="card-pos">' + esc(body) +
+      ' · <span class="' + plClass(st.pl) + '">' + signed(st.pl) +
+      (st.plPct == null ? '' : ' (' + fmtPct(st.plPct, 1) + ')') + '</span></div>';
+  }
+
   function cardHtml(rec) {
     var stepTitle = STEPS[rec.current_step - 1].title;
     var sub;
@@ -403,6 +418,7 @@
         '</div>' +
         dotsHtml(rec) +
         '<div class="card-step">第 ' + rec.current_step + ' 步 · ' + esc(stepTitle) + '</div>' +
+        cardPosHtml(rec) +
         '<div class="card-sub">' + esc(sub) + '</div>' +
       '</article>';
   }
@@ -508,6 +524,7 @@
                   (rec.rejected_reason ? '\n' + esc(rec.rejected_reason) : '') + '</span>';
     }
     el('detail-meta').innerHTML = metaHtml;
+    renderPositions();
 
     el('detail-steps').innerHTML = STEPS.map(function (s) {
       var isOpen = s.n === openStep;
@@ -887,12 +904,14 @@
     el('scan-wrap').hidden = v !== 'scan';
     el('fomo-wrap').hidden = v !== 'fomo';
     el('tick-wrap').hidden = v !== 'tick';
+    el('kelly-wrap').hidden = v !== 'kelly';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
     if (v === 'scan') loadScan(false);
     if (v === 'fomo') loadFomo(false);
     if (v === 'tick') loadTick(false);
+    if (v === 'kelly') loadKelly();
   }
 
   // ---------------------------------------------------------- FOMO 掃描
@@ -1368,6 +1387,650 @@
       });
   }
 
+  // ------------------------------------------------- 報價快照(持倉與相關係數共用)
+
+  var QUOTES_URL = 'data/quotes-latest.json';
+  var quotes = null;          // 原始檔
+  var quotesIdx = null;       // code -> 陣列索引
+  var quotesPending = null;   // 進行中的請求
+  var quotesErr = null;
+
+  function loadQuotes() {
+    if (quotes) return Promise.resolve(quotes);
+    if (quotesPending) return quotesPending;
+    if (location.protocol === 'file:') {
+      quotesErr = '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。';
+      return Promise.reject(new Error(quotesErr));
+    }
+    quotesPending = fetch(QUOTES_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        quotes = d;
+        quotesIdx = {};
+        for (var i = 0; i < (d.codes || []).length; i++) quotesIdx[d.codes[i]] = i;
+        quotesErr = null;
+        quotesPending = null;
+        return d;
+      })
+      .catch(function (e) {
+        quotesPending = null;          // 讓下次還能重試
+        quotesErr = e.message || String(e);
+        throw e;
+      });
+    return quotesPending;
+  }
+
+  /** {code, name, close, prev} 或 null。 */
+  function quoteOf(code) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(code || '').trim()];
+    if (i == null) return null;
+    return {
+      code: quotes.codes[i],
+      name: quotes.names[i] || '',
+      close: quotes.close[i],
+      prev: quotes.prev_close[i]
+    };
+  }
+
+  /**
+   * 兩檔的日報酬相關係數。回傳 {rho, n} 或 null(資料不足)。
+   * ret_bp 是基點整數,缺值為 null —— 兩邊都要有值那天才算。
+   */
+  function corrOf(a, b) {
+    if (!quotes || !quotesIdx) return null;
+    var ia = quotesIdx[a], ib = quotesIdx[b];
+    if (ia == null || ib == null) return null;
+    var xs = quotes.ret_bp[ia], ys = quotes.ret_bp[ib];
+    var px = [], py = [], i;
+    for (i = 0; i < Math.min(xs.length, ys.length); i++) {
+      if (xs[i] == null || ys[i] == null) continue;
+      px.push(xs[i]); py.push(ys[i]);
+    }
+    var n = px.length;
+    if (n < 5) return null;
+    var mx = 0, my = 0;
+    for (i = 0; i < n; i++) { mx += px[i]; my += py[i]; }
+    mx /= n; my /= n;
+    var sxy = 0, sxx = 0, syy = 0;
+    for (i = 0; i < n; i++) {
+      var dx = px[i] - mx, dy = py[i] - my;
+      sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+    }
+    if (sxx <= 0 || syy <= 0) return null;
+    return { rho: sxy / Math.sqrt(sxx * syy), n: n };
+  }
+
+  // ------------------------------------------------------------ Kelly 計算
+
+  /**
+   * 單筆 Kelly。
+   *
+   * 本金 C、部位佔比 x、停損幅度 s、目標獲利幅度 w:
+   *   贏 → C(1 + x·w)   輸 → C(1 - x·s)
+   * 最大化 E[log] 得 x = p/s - q/w,兩邊乘 s 就是「該拿多少比例的本金去冒險」
+   *   f_risk = x·s = p - q/R,  R = w/s(賠率)
+   * 這是課本 Kelly 的標準式,沒有自創門檻。
+   */
+  function kellySolo(p, s, w) {
+    if (!(p > 0 && p < 1) || !(s > 0) || !(w > 0)) return null;
+    var x = p / s - (1 - p) / w;
+    return {
+      x: x,                       // 部位佔本金比例(可能 > 1,代表要融資才做得到)
+      riskFrac: x * s,            // 停損時會虧掉的本金比例
+      R: w / s,                   // 賠率
+      edge: p * w - (1 - p) * s   // 每投入 1 元的期望報酬
+    };
+  }
+
+  /**
+   * n 筆同時持有時的折減係數。
+   *
+   * 這就是「拆兩筆買不同產業怎麼算」的答案:不是除以 2。
+   * 常態近似下,n 個報酬條件相同、兩兩相關係數為 ρ 的部位,
+   * 最適解是每筆 = 單筆Kelly / (1 + (n-1)ρ)。
+   *   ρ=1(完全連動,等於同一筆下兩次)→ 除以 n,才是「各半」
+   *   ρ=0(完全獨立)→ 不用折,各自下滿,因為一筆爆掉不影響另一筆
+   * 台股同產業實測約 0.5~0.75,跨產業約 0.3,防禦股對電子接近 0。
+   *
+   * 分母設下限,免得 ρ 很負時算出爆炸性的槓桿。
+   */
+  function corrHaircut(n, rho) {
+    if (n <= 1) return 1;
+    return Math.max(0.2, 1 + (n - 1) * rho);
+  }
+
+  var kMult = 0.5;
+  var kLegs = 2;
+  var kRho = 0.35;
+
+  var K_DEFAULTS = { code: '', p: '55', s: '8', w: '16' };
+
+  function kLegRowHtml(i, vals) {
+    return '' +
+      '<div class="k-leg" data-leg="' + i + '">' +
+        '<div class="k-leg-head">第 ' + (i + 1) + ' 筆</div>' +
+        '<div class="grid2">' +
+          '<label class="field"><span class="field-label">股票代號(選填)</span>' +
+            '<input type="text" data-kf="code" data-i="' + i + '" inputmode="numeric" ' +
+            'autocomplete="off" value="' + esc(vals.code) + '" placeholder="例如 2330"></label>' +
+          '<label class="field"><span class="field-label">勝率 %</span>' +
+            '<input type="text" data-kf="p" data-i="' + i + '" inputmode="decimal" ' +
+            'value="' + esc(vals.p) + '"></label>' +
+          '<label class="field"><span class="field-label">停損 %</span>' +
+            '<input type="text" data-kf="s" data-i="' + i + '" inputmode="decimal" ' +
+            'value="' + esc(vals.s) + '"></label>' +
+          '<label class="field"><span class="field-label">目標獲利 %</span>' +
+            '<input type="text" data-kf="w" data-i="' + i + '" inputmode="decimal" ' +
+            'value="' + esc(vals.w) + '"></label>' +
+        '</div>' +
+        '<div class="k-leg-info" data-leg-info="' + i + '"></div>' +
+      '</div>';
+  }
+
+  /** 只在筆數改變時重建輸入框 —— 打字途中絕不重繪,免得輸入被吃掉。 */
+  function renderKellyLegs() {
+    var old = readKellyLegs();
+    var html = '';
+    for (var i = 0; i < kLegs; i++) {
+      var prev = old[i] || old[old.length - 1] || K_DEFAULTS;
+      html += kLegRowHtml(i, {
+        code: i < old.length ? prev.code : '',    // 新增的那筆不要複製代號
+        p: prev.p, s: prev.s, w: prev.w
+      });
+    }
+    el('k-legs').innerHTML = html;
+  }
+
+  function readKellyLegs() {
+    var out = [];
+    var nodes = el('k-legs').querySelectorAll('.k-leg');
+    Array.prototype.forEach.call(nodes, function (node) {
+      function v(f) {
+        var input = node.querySelector('[data-kf="' + f + '"]');
+        return input ? input.value.trim() : '';
+      }
+      out.push({ code: v('code'), p: v('p'), s: v('s'), w: v('w') });
+    });
+    return out;
+  }
+
+  function num(v) {
+    var n = parseFloat(String(v).replace(/,/g, ''));
+    return isFinite(n) ? n : null;
+  }
+
+  function fmtMoney(n) {
+    if (n == null || !isFinite(n)) return '—';
+    return fmtInt(Math.round(n));
+  }
+
+  function fmtPct(x, digits) {
+    if (x == null || !isFinite(x)) return '—';
+    return (x * 100).toFixed(digits == null ? 1 : digits) + '%';
+  }
+
+  /** 目前這組 leg 的平均兩兩相關係數。 */
+  function kellyRho(legs) {
+    var codes = [], i, j;
+    for (i = 0; i < legs.length; i++) {
+      var c = legs[i].code;
+      if (c && quoteOf(c)) codes.push(c);
+    }
+    if (codes.length < 2) return { rho: kRho, source: 'manual', pairs: 0, minN: 0 };
+    var sum = 0, pairs = 0, minN = Infinity, missing = 0;
+    for (i = 0; i < codes.length; i++) {
+      for (j = i + 1; j < codes.length; j++) {
+        var r = corrOf(codes[i], codes[j]);
+        if (!r) { missing++; continue; }
+        sum += r.rho; pairs++;
+        if (r.n < minN) minN = r.n;
+      }
+    }
+    if (!pairs) return { rho: kRho, source: 'manual', pairs: 0, minN: 0 };
+    return {
+      rho: sum / pairs,
+      source: 'data',
+      pairs: pairs,
+      minN: minN === Infinity ? 0 : minN,
+      missing: missing,
+      codes: codes
+    };
+  }
+
+  function recalcKelly() {
+    var capital = num(el('k-capital').value);
+    var legs = readKellyLegs();
+    var out = el('k-out');
+    var corrBox = el('k-corr');
+
+    // --- 相關係數 ---
+    var rhoInfo = kellyRho(legs);
+    var rho = rhoInfo.rho;
+    var hair = corrHaircut(legs.length, rho);
+
+    if (legs.length < 2) {
+      corrBox.innerHTML = '<span class="dim">只有一筆,不需要考慮相關性。</span>';
+    } else if (rhoInfo.source === 'data') {
+      var pairTxt = rhoInfo.codes.map(function (c) {
+        var q = quoteOf(c);
+        return esc(c + (q && q.name ? ' ' + q.name : ''));
+      }).join('、');
+      corrBox.innerHTML =
+        '<div><b>實測相關係數 ρ = ' + rho.toFixed(2) + '</b>' +
+        '(' + pairTxt + ',' + rhoInfo.pairs + ' 組配對,樣本 ' + rhoInfo.minN + ' 天)</div>' +
+        '<div class="dim">每筆折減成單筆 Kelly 的 ' + Math.round(100 / hair) + '%' +
+        '(除以 1+(n-1)ρ = ' + hair.toFixed(2) + ')。' +
+        'ρ=1 才是「各半」,ρ=0 則各自下滿。</div>' +
+        (rhoInfo.minN < 30
+          ? '<div class="warn-sm">樣本只有 ' + rhoInfo.minN +
+            ' 天,相關係數的誤差約 ±' + (1 / Math.sqrt(rhoInfo.minN)).toFixed(2) +
+            ',只能當粗略參考。</div>'
+          : '');
+    } else {
+      corrBox.innerHTML = '<div class="dim">沒有填足兩個查得到的代號,改用下面手動設定的 ρ = ' +
+        rho.toFixed(2) + '(折減成 ' + Math.round(100 / hair) + '%)。</div>';
+    }
+    el('k-rho-row').hidden = (legs.length < 2) || (rhoInfo.source === 'data');
+
+    // --- 每筆 Kelly ---
+    var rows = [], i, anyNeg = false;
+    for (i = 0; i < legs.length; i++) {
+      var L = legs[i];
+      var p = num(L.p), s = num(L.s), w = num(L.w);
+      var solo = (p == null || s == null || w == null)
+        ? null : kellySolo(p / 100, s / 100, w / 100);
+      var q = L.code ? quoteOf(L.code) : null;
+      var info = el('k-legs').querySelector('[data-leg-info="' + i + '"]');
+      if (info) {
+        if (L.code && q) {
+          info.innerHTML = '<span class="dim">' + esc(q.name) + ' 現價 ' +
+            q.close + '(' + esc(quotes.date) + ')</span>';
+        } else if (L.code) {
+          info.innerHTML = '<span class="warn-sm">查不到 ' + esc(L.code) +
+            '(只收錄上市普通股)</span>';
+        } else {
+          info.innerHTML = '';
+        }
+      }
+      if (solo && solo.x <= 0) anyNeg = true;
+      rows.push({ leg: i, solo: solo, s: s, quote: q, code: L.code });
+    }
+
+    // --- 折減 + 倍數 + 本金上限 ---
+    var total = 0;
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      r.x = (r.solo && r.solo.x > 0) ? (r.solo.x / hair) * kMult : 0;
+      total += r.x;
+    }
+    var capped = total > 1;
+    var scale = capped ? 1 / total : 1;
+    for (i = 0; i < rows.length; i++) rows[i].xFinal = rows[i].x * scale;
+
+    // --- 輸出 ---
+    if (capital == null || capital <= 0) {
+      out.innerHTML = '<p class="warn">請填本金。</p>';
+      return;
+    }
+
+    var html = '<table class="k-table"><thead><tr>' +
+      '<th>筆</th><th class="num">賠率</th><th class="num">單筆Kelly</th>' +
+      '<th class="num">部位金額</th><th class="num">佔本金</th><th class="num">停損時虧</th>' +
+      '</tr></thead><tbody>';
+    var sumAmt = 0, sumRisk = 0;
+    for (i = 0; i < rows.length; i++) {
+      var R2 = rows[i];
+      var amt = R2.xFinal * capital;
+      var risk = R2.s == null ? null : amt * R2.s / 100;
+      sumAmt += amt;
+      if (risk) sumRisk += risk;
+      var label = '第 ' + (i + 1) + ' 筆' +
+        (R2.quote ? '<br><span class="dim">' + esc(R2.quote.name) + '</span>' : '');
+      if (!R2.solo) {
+        html += '<tr><td>' + label + '</td><td colspan="5" class="dim">欄位未填完</td></tr>';
+        continue;
+      }
+      if (R2.solo.x <= 0) {
+        html += '<tr><td>' + label + '</td><td class="num">' + R2.solo.R.toFixed(2) +
+          '</td><td colspan="4" class="down">沒有優勢(期望值 ' + fmtPct(R2.solo.edge, 2) +
+          '),Kelly 建議不進場</td></tr>';
+        continue;
+      }
+      var shares = (R2.quote && R2.quote.close > 0) ? Math.floor(amt / R2.quote.close) : null;
+      html += '<tr>' +
+        '<td>' + label + '</td>' +
+        '<td class="num">' + R2.solo.R.toFixed(2) + '</td>' +
+        '<td class="num">' + fmtPct(R2.solo.x, 0) + '</td>' +
+        '<td class="num">' + fmtMoney(amt) +
+          (shares != null ? '<br><span class="dim">' + fmtInt(shares) + ' 股</span>' : '') +
+        '</td>' +
+        '<td class="num">' + fmtPct(R2.xFinal, 1) + '</td>' +
+        '<td class="num down">' + (risk ? '-' + fmtMoney(risk) : '—') + '</td>' +
+      '</tr>';
+    }
+    html += '</tbody></table>';
+
+    html += '<div class="k-sum">' +
+      '<div><span>總部位</span><b>' + fmtMoney(sumAmt) + '</b>' +
+        '<span class="dim">(' + fmtPct(sumAmt / capital, 1) + ' 本金)</span></div>' +
+      '<div><span>全數停損時</span><b class="down">-' + fmtMoney(sumRisk) + '</b>' +
+        '<span class="dim">(' + fmtPct(sumRisk / capital, 1) + ' 本金)</span></div>' +
+      '<div><span>留在手上</span><b>' + fmtMoney(Math.max(0, capital - sumAmt)) + '</b></div>' +
+    '</div>';
+
+    if (capped) {
+      html += '<p class="warn-sm">Kelly 算出來的部位合計是本金的 ' +
+        fmtPct(total, 0) + ' —— 停損夠緊時 Kelly 本來就會要求融資。' +
+        '這裡不假設你有槓桿,已按比例壓到剛好用完本金。</p>';
+    }
+    html += '<p class="panel-note">Kelly 假設停損一定在你設的價位成交、勝率與賠率也估得準。' +
+      '真實市場會跳空穿過停損,勝率也多半沒有你以為的高 —— ' +
+      '這兩件事都會讓實際風險大於上表。</p>';
+    if (anyNeg) {
+      html += '<p class="warn-sm">有筆數的期望值是負的:勝率 × 目標 小於 敗率 × 停損,' +
+        '再怎麼調部位大小都是慢性虧損。</p>';
+    }
+    out.innerHTML = html;
+  }
+
+  // ------------------------------------------------------------ 零股試算
+
+  /**
+   * 預算 budget、股價 price 之下買得起幾股(含買進手續費)。
+   * fee = max(最低手續費, 成交金額 × 費率 × 折數)
+   */
+  function oddLotShares(budget, price, ratePct, discount, minFee) {
+    if (!(budget > 0) || !(price > 0)) return null;
+    var rate = (ratePct / 100) * discount;
+    function costOf(n) {
+      var v = n * price;
+      return v + Math.max(minFee, v * rate);
+    }
+    var k = Math.floor(budget / price);
+    var guard = 0;
+    while (k > 0 && costOf(k) > budget && guard++ < 100000) k--;
+    if (k <= 0) return { shares: 0, cost: 0, fee: 0, left: budget };
+    var v = k * price;
+    var fee = Math.max(minFee, v * rate);
+    return { shares: k, value: v, fee: fee, cost: v + fee, left: budget - v - fee };
+  }
+
+  function recalcOddLot() {
+    var budget = num(el('odd-budget').value);
+    var price = num(el('odd-price').value);
+    var rate = num(el('odd-rate').value);
+    var disc = num(el('odd-disc').value);
+    var minFee = num(el('odd-min').value);
+    var out = el('odd-out');
+
+    if (budget == null || price == null) {
+      out.innerHTML = '<p class="dim">填入可花金額與股價。</p>';
+      return;
+    }
+    if (rate == null || disc == null || minFee == null) {
+      out.innerHTML = '<p class="warn">手續費欄位要填數字。</p>';
+      return;
+    }
+    var r = oddLotShares(budget, price, rate, disc, minFee);
+    if (!r || r.shares <= 0) {
+      out.innerHTML = '<p class="warn">這個金額買不到 1 股(含手續費)。</p>';
+      return;
+    }
+    var lots = Math.floor(r.shares / 1000), odd = r.shares % 1000;
+    out.innerHTML = '<div class="k-sum">' +
+      '<div><span>可買</span><b>' + fmtInt(r.shares) + ' 股</b>' +
+        // 不足一張時再寫一次「N 股」只是重複,不顯示
+        (lots ? '<span class="dim">' + lots + ' 張 ' + odd + ' 股</span>' : '') + '</div>' +
+      '<div><span>股票價金</span><b>' + fmtMoney(r.value) + '</b></div>' +
+      '<div><span>手續費</span><b>' + r.fee.toFixed(2) + '</b>' +
+        (r.fee <= minFee + 1e-9 ? '<span class="dim">(最低收費)</span>' : '') + '</div>' +
+      '<div><span>實際支出</span><b>' + r.cost.toFixed(2) + '</b></div>' +
+      '<div><span>剩餘</span><b>' + r.left.toFixed(2) + '</b></div>' +
+    '</div>' +
+    '<p class="panel-note">賣出時還會有一次手續費加 0.3% 證券交易稅,這裡只算買進。</p>';
+  }
+
+  // ------------------------------------------------------------ 部位畫面
+
+  var kellyReady = false;
+
+  function loadKelly() {
+    if (kellyReady) { recalcKelly(); recalcOddLot(); return; }
+    kellyReady = true;
+    renderKellyLegs();
+    recalcOddLot();
+    el('k-rho-val').textContent = kRho.toFixed(2);
+
+    el('kelly-meta').textContent = '載入報價中…';
+    loadQuotes().then(function (d) {
+      el('kelly-meta').textContent = d.date + ' 收盤 · 收錄 ' + fmtInt(d.codes.length) +
+        ' 檔上市股票,相關係數用最近 ' + Math.max(0, d.days.length - 1) + ' 個交易日的日報酬計算';
+      recalcKelly();
+    }).catch(function () {
+      el('kelly-meta').innerHTML = '<span class="warn">讀不到報價(' + esc(quotesErr || '') +
+        ')。Kelly 還是能算,但沒有實測相關係數,請用下面的手動 ρ。</span>';
+      recalcKelly();
+    });
+  }
+
+  // ------------------------------------------------------------ 持倉(下單紀錄)
+
+  // 只是紀錄,不會真的下單。存在同一份 localStorage 的紀錄裡,
+  // 匯出備份會一併帶走。
+  function normalizePositions(v) {
+    if (!Array.isArray(v)) return [];
+    return v.filter(function (p) { return p && typeof p === 'object'; })
+      .map(function (p) {
+        return {
+          id: p.id ? String(p.id) : uid(),
+          date: String(p.date || ''),
+          shares: Number(p.shares) || 0,
+          price: Number(p.price) || 0,
+          fee: Number(p.fee) || 0,
+          note: String(p.note || '')
+        };
+      })
+      .filter(function (p) { return p.shares > 0 && p.price > 0; });
+  }
+
+  /**
+   * 一筆紀錄的持倉損益。沒有報價時 priced 為 false —— 成本仍然算得出來,
+   * 但市值與損益一律留 null,不要拿成本當市值假裝沒事。
+   */
+  function positionStats(rec) {
+    var ps = rec.positions || [];
+    if (!ps.length) return null;
+
+    var shares = 0, cost = 0, i;
+    for (i = 0; i < ps.length; i++) {
+      shares += ps[i].shares;
+      cost += ps[i].shares * ps[i].price + ps[i].fee;
+    }
+    var out = {
+      count: ps.length, shares: shares, cost: cost,
+      avg: shares > 0 ? cost / shares : null,
+      priced: false, close: null, value: null, pl: null, plPct: null, today: null
+    };
+    var q = quoteOf(rec.stock_id);
+    if (!q || !(q.close > 0)) return out;
+
+    out.priced = true;
+    out.close = q.close;
+    out.value = shares * q.close;
+    out.pl = out.value - cost;
+    out.plPct = cost > 0 ? out.pl / cost : null;
+    if (q.prev > 0) out.today = shares * (q.close - q.prev);
+    return out;
+  }
+
+  function plClass(v) {
+    if (v == null) return '';
+    if (v > 0) return 'up';
+    if (v < 0) return 'down';
+    return '';
+  }
+
+  function signed(v) {
+    if (v == null) return '—';
+    return (v > 0 ? '+' : v < 0 ? '-' : '') + fmtInt(Math.round(Math.abs(v)));
+  }
+
+  /** 追蹤畫面頂部:所有還沒出場的紀錄的持倉合計。 */
+  function renderPosSummary() {
+    var box = el('pos-summary');
+    var cost = 0, value = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].status === 'rejected') continue;
+      var st = positionStats(data[i]);
+      if (!st) continue;
+      n++;
+      cost += st.cost;
+      if (st.priced) {
+        value += st.value;
+        if (st.today != null) { today += st.today; hasToday = true; }
+      } else {
+        unpriced++;
+      }
+    }
+    if (!n) { box.hidden = true; return; }
+    box.hidden = false;
+
+    // 有報價不到的個股時,市值與損益只涵蓋得到報價的部分,要講清楚
+    var pl = unpriced ? null : value - cost;
+    box.innerHTML = '' +
+      '<div class="pos-sum-row">' +
+        '<div><span>持倉成本</span><b>' + fmtMoney(cost) + '</b></div>' +
+        '<div><span>目前市值</span><b>' + (unpriced === n ? '—' : fmtMoney(value)) + '</b></div>' +
+        '<div><span>總損益</span><b class="' + plClass(pl) + '">' +
+          (pl == null ? '—' : signed(pl)) + '</b></div>' +
+        '<div><span>今日</span><b class="' + plClass(hasToday ? today : null) + '">' +
+          (hasToday ? signed(today) : '—') + '</b></div>' +
+      '</div>' +
+      '<div class="pos-sum-note">' + n + ' 檔有持倉' +
+        (quotes ? ' · 報價 ' + esc(quotes.date) : ' · 尚未載入報價') +
+        (unpriced ? ' · ' + unpriced + ' 檔查不到報價,未計入市值' : '') +
+      '</div>';
+  }
+
+  function positionsHtml(rec) {
+    var ps = rec.positions || [];
+    var st = positionStats(rec);
+    var head = '<div class="pos-head"><span>持倉紀錄</span>' +
+      '<span class="dim">只是紀錄,不會真的下單</span></div>';
+
+    var rows = '';
+    for (var i = 0; i < ps.length; i++) {
+      var p = ps[i];
+      var c = p.shares * p.price + p.fee;
+      var v = st && st.priced ? p.shares * st.close : null;
+      var pl = v == null ? null : v - c;
+      rows += '<tr>' +
+        '<td class="mono">' + esc(p.date || '—') + '</td>' +
+        '<td class="num">' + fmtInt(p.shares) + '</td>' +
+        '<td class="num">' + p.price + '</td>' +
+        '<td class="num">' + fmtMoney(c) + '</td>' +
+        '<td class="num ' + plClass(pl) + '">' + (pl == null ? '—' : signed(pl)) + '</td>' +
+        '<td><button type="button" class="track-del" data-del-pos="' + esc(p.id) +
+          '" title="刪除這筆">×</button></td>' +
+      '</tr>';
+    }
+
+    var table = ps.length
+      ? '<table class="pos-table"><thead><tr><th>日期</th><th class="num">股數</th>' +
+        '<th class="num">成交價</th><th class="num">成本</th><th class="num">損益</th><th></th>' +
+        '</tr></thead><tbody>' + rows + '</tbody></table>'
+      : '<p class="dim">還沒有下單紀錄。</p>';
+
+    var summary = '';
+    if (st) {
+      summary = '<div class="k-sum">' +
+        '<div><span>總股數</span><b>' + fmtInt(st.shares) + '</b></div>' +
+        '<div><span>平均成本</span><b>' + (st.avg == null ? '—' : st.avg.toFixed(2)) + '</b></div>' +
+        '<div><span>現價</span><b>' + (st.priced ? st.close : '—') + '</b>' +
+          (st.priced && quotes ? '<span class="dim">' + esc(quotes.date) + '</span>' : '') + '</div>' +
+        '<div><span>市值</span><b>' + (st.priced ? fmtMoney(st.value) : '—') + '</b></div>' +
+        '<div><span>損益</span><b class="' + plClass(st.pl) + '">' + signed(st.pl) +
+          (st.plPct == null ? '' : '<span class="dim">' + fmtPct(st.plPct, 1) + '</span>') +
+          '</b></div>' +
+        '<div><span>今日</span><b class="' + plClass(st.today) + '">' + signed(st.today) + '</b></div>' +
+      '</div>';
+      if (!st.priced) {
+        summary += '<p class="warn-sm">查不到 ' + esc(rec.stock_id || '這檔') +
+          ' 的報價(只收錄上市普通股,或報價檔還沒載入),所以只顯示成本。</p>';
+      }
+    }
+
+    var form = '<div class="pos-add">' +
+      '<div class="grid2">' +
+        '<label class="field"><span class="field-label">日期</span>' +
+          '<input type="date" id="pos-date" value="' + esc(todayStr()) + '"></label>' +
+        '<label class="field"><span class="field-label">股數(1 張 = 1000 股)</span>' +
+          '<input type="text" id="pos-shares" inputmode="numeric" placeholder="例如 1000"></label>' +
+        '<label class="field"><span class="field-label">成交價</span>' +
+          '<input type="text" id="pos-price" inputmode="decimal" placeholder="例如 1200"></label>' +
+        '<label class="field"><span class="field-label">手續費(選填)</span>' +
+          '<input type="text" id="pos-fee" inputmode="decimal" placeholder="0"></label>' +
+      '</div>' +
+      '<button type="button" class="btn btn-block btn-outline" id="pos-add">記錄這筆下單</button>' +
+    '</div>';
+
+    return '<div class="pos-block">' + head + summary + table + form + '</div>';
+  }
+
+  function renderPositions() {
+    var rec = findById(currentId);
+    var box = el('detail-positions');
+    if (!rec) { box.innerHTML = ''; return; }
+    box.innerHTML = positionsHtml(rec);
+  }
+
+  function addPosition() {
+    var rec = findById(currentId);
+    if (!rec) return;
+    var shares = num(el('pos-shares').value);
+    var price = num(el('pos-price').value);
+    var fee = num(el('pos-fee').value);
+    if (!(shares > 0)) { toast('股數要大於 0', 'err'); return; }
+    if (!(price > 0)) { toast('成交價要大於 0', 'err'); return; }
+
+    rec.positions.push({
+      id: uid(),
+      date: el('pos-date').value || todayStr(),
+      shares: shares,
+      price: price,
+      fee: fee == null ? 0 : fee,
+      note: ''
+    });
+    rec.updated_at = nowISO();
+    if (!saveAll()) return;
+    toast('已記錄 ' + fmtInt(shares) + ' 股 @ ' + price);
+    renderPositions();
+    renderList();
+    renderPosSummary();
+  }
+
+  function deletePosition(pid) {
+    var rec = findById(currentId);
+    if (!rec) return;
+    dialog({
+      title: '刪除這筆下單紀錄?',
+      message: '刪掉後不影響其他紀錄,也不影響七步驟的內容。',
+      actions: [{ label: '刪除', value: 'del', cls: 'btn-danger' }]
+    }).then(function (r) {
+      if (r.action !== 'del') return;
+      rec.positions = rec.positions.filter(function (p) { return p.id !== pid; });
+      rec.updated_at = nowISO();
+      if (!saveAll()) return;
+      renderPositions();
+      renderList();
+      renderPosSummary();
+    });
+  }
+
   // ---------------------------------------------------------- 事件綁定
 
   function bind() {
@@ -1454,6 +2117,48 @@
         .catch(function (err) {
           toast('讀不到成員明細(' + (err.message || err) + ')');
         });
+    });
+
+    el('detail-positions').addEventListener('click', function (e) {
+      var del = e.target.closest('[data-del-pos]');
+      if (del) { deletePosition(del.getAttribute('data-del-pos')); return; }
+      if (e.target.closest('#pos-add')) addPosition();
+    });
+
+    el('k-capital').addEventListener('input', recalcKelly);
+    el('k-legs').addEventListener('input', recalcKelly);
+
+    el('kelly-wrap').addEventListener('click', function (e) {
+      var m = e.target.closest('[data-kmult]');
+      if (m) {
+        kMult = parseFloat(m.getAttribute('data-kmult'));
+        Array.prototype.forEach.call(
+          el('kelly-wrap').querySelectorAll('[data-kmult]'), function (b) {
+            b.classList.toggle('is-active', b === m);
+          });
+        recalcKelly();
+        return;
+      }
+      var n = e.target.closest('[data-klegs]');
+      if (n) {
+        kLegs = parseInt(n.getAttribute('data-klegs'), 10);
+        Array.prototype.forEach.call(
+          el('kelly-wrap').querySelectorAll('[data-klegs]'), function (b) {
+            b.classList.toggle('is-active', b === n);
+          });
+        renderKellyLegs();
+        recalcKelly();
+      }
+    });
+
+    el('k-rho').addEventListener('input', function (e) {
+      kRho = parseInt(e.target.value, 10) / 100;
+      el('k-rho-val').textContent = kRho.toFixed(2);
+      recalcKelly();
+    });
+
+    ['odd-budget', 'odd-price', 'odd-rate', 'odd-disc', 'odd-min'].forEach(function (id) {
+      el(id).addEventListener('input', recalcOddLot);
     });
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
@@ -1598,6 +2303,18 @@
     data = loadAll();
     bind();
     renderList();
+    renderPosSummary();
+
+    // 有持倉才去抓報價 —— 沒持倉的人不用為了首頁多下載一份 130KB
+    if (data.some(function (r) { return (r.positions || []).length; })) {
+      loadQuotes().then(function () {
+        renderList();
+        renderPosSummary();
+        if (currentId) renderPositions();
+      }).catch(function () {
+        renderPosSummary();          // 讓「尚未載入報價」的提示出現
+      });
+    }
   }
 
   if (document.readyState === 'loading') {

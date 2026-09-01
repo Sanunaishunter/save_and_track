@@ -20,6 +20,9 @@ TICK_MEMBERS_FILE = os.path.join(DATA_DIR, "tick-members-latest.json")
 # 抽樣一旦凍結就不再重算,所以這個檔案是長期狀態,不是每日產出
 TICK_SAMPLE_FILE = os.path.join(DATA_DIR, "tick-sample-members.json")
 
+# 報價快照:持倉損益要最新收盤價,Kelly 的相關係數要日報酬序列
+QUOTES_FILE = os.path.join(DATA_DIR, "quotes-latest.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]

@@ -40,6 +40,7 @@
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
+    <button type="button" class="viewbtn" data-view="kelly">部位</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -50,6 +51,7 @@
 </header>
 
 <main class="list-wrap" id="track-wrap">
+  <div class="pos-summary" id="pos-summary" hidden></div>
   <div id="list"></div>
   <div id="empty" class="empty" hidden>
     <p class="empty-title">這裡還沒有股票</p>
@@ -129,6 +131,70 @@
   <p class="tick-foot" id="tick-foot" hidden></p>
 </main>
 
+<main class="list-wrap" id="kelly-wrap" hidden>
+  <div class="scan-meta" id="kelly-meta">載入中…</div>
+
+  <section class="panel">
+    <h2 class="panel-title">Kelly 部位</h2>
+    <p class="panel-note">
+      Kelly 公式算的是「長期複利成長最快」的下注比例,不是「最不會賠」的比例。
+      全額 Kelly 的波動極大,實務上多用 1/2 或 1/4。勝率只要高估一點,
+      算出來的部位就會過大 —— 寧可保守。
+    </p>
+
+    <div class="ctrl-row">
+      <label class="field field-inline"><span class="field-label">本金</span>
+        <input type="text" id="k-capital" inputmode="decimal" value="100000"></label>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">Kelly 倍數</span>
+      <button type="button" class="tchip" data-kmult="1">全額</button>
+      <button type="button" class="tchip is-active" data-kmult="0.5">1/2</button>
+      <button type="button" class="tchip" data-kmult="0.25">1/4</button>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">拆幾筆</span>
+      <button type="button" class="tchip" data-klegs="1">1</button>
+      <button type="button" class="tchip is-active" data-klegs="2">2</button>
+      <button type="button" class="tchip" data-klegs="3">3</button>
+      <button type="button" class="tchip" data-klegs="4">4</button>
+    </div>
+
+    <div id="k-legs"></div>
+
+    <div class="k-corr" id="k-corr"></div>
+
+    <div class="ctrl-row" id="k-rho-row">
+      <span class="ctrl-label">手動相關係數 ρ</span>
+      <input type="range" id="k-rho" min="0" max="100" step="5" value="35">
+      <span class="mono" id="k-rho-val">0.35</span>
+    </div>
+
+    <div id="k-out"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">零股試算</h2>
+    <p class="panel-note">算「這筆錢在這個股價下買得起幾股」,含手續費。
+      手續費各券商不同,下面的預設值請改成你自己的。</p>
+    <div class="grid2">
+      <label class="field"><span class="field-label">可花金額</span>
+        <input type="text" id="odd-budget" inputmode="decimal" value="5000"></label>
+      <label class="field"><span class="field-label">股價</span>
+        <input type="text" id="odd-price" inputmode="decimal" placeholder="例如 1200"></label>
+      <label class="field"><span class="field-label">手續費率 %</span>
+        <input type="text" id="odd-rate" inputmode="decimal" value="0.1425"></label>
+      <label class="field"><span class="field-label">折數(1 = 無折扣)</span>
+        <input type="text" id="odd-disc" inputmode="decimal" value="1"></label>
+      <label class="field"><span class="field-label">最低手續費</span>
+        <input type="text" id="odd-min" inputmode="decimal" value="1"></label>
+    </div>
+    <div id="odd-out"></div>
+  </section>
+</main>
+
 <section id="detail" class="sheet" hidden aria-hidden="true">
   <header class="sheet-top">
     <button type="button" class="btn btn-ghost" id="detail-back">‹ 返回</button>
@@ -141,6 +207,7 @@
 
   <div class="sheet-body">
     <div id="detail-meta" class="detail-meta"></div>
+    <div id="detail-positions" class="positions"></div>
     <div id="detail-steps" class="steps"></div>
 
     <div class="danger-zone">
