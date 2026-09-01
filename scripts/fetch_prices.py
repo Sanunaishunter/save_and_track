@@ -1,92 +1,54 @@
 #!/usr/bin/env python3
 """
-抓取上市全市場每日 OHLCV,存成 data/history/YYYY-MM-DD.json(append-only)。
+抓取上市全市場每日 OHLCV,存成 data/history/YYYY-MM-DD.json。
 
 用法:
-  python scripts/fetch_prices.py                    # 抓最新交易日(每日排程用)
+  python scripts/fetch_prices.py                    # 每日增量:抓最新交易日
   python scripts/fetch_prices.py --backfill-days 25 # 回補基線(第一次用)
 
-FinMind 的 TaiwanStockPrice 不帶 data_id 時會回傳「該日全市場」,
-所以回補 25 個交易日約 25~35 次呼叫,不是逐檔 1700+ 次。
+資料來源全部是 TWSE,免 token、免額度:
+  - 增量用 OpenAPI STOCK_DAY_ALL(最新交易日)
+  - 回補用 MI_INDEX?date=(可指定過去日期)
 """
 
 import argparse
 import datetime as dt
+import os
 import sys
 import time
 
 import common
-import finmind_api
+import twse_api
 
 
 def taipei_today():
-    # runner 是 UTC,台北 = UTC+8
     return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
 
 
-def refresh_names():
-    """更新代碼→名稱對照,順便記錄市場別以便篩掉上櫃。"""
-    rows = finmind_api.stock_info()
-    names = {}
-    for r in rows:
-        sid = str(r.get("stock_id") or "")
-        if not common.is_listed_common(sid, r.get("type")):
-            continue
-        nm = (r.get("stock_name") or "").strip()
-        if nm:
-            names[sid] = nm
-    if not names:
-        raise finmind_api.FinMindError("TaiwanStockInfo 沒有回傳任何上市普通股")
-    common.write_json(common.NAMES_FILE, names)
-    print("  股票名稱對照:%d 檔上市普通股" % len(names))
-    return names
+def keep_listed(rows):
+    """只留上市普通股(四位數、開頭非 0),排除 ETF、權證、特別股。"""
+    return [r for r in rows if common.is_listed_common(r["code"], None)]
 
 
-def fetch_day(date_str, names):
-    """
-    抓單一日期。回傳 (實際日期, 筆數);當天沒有資料(休市)回傳 (None, 0)。
-    """
-    rows = finmind_api.daily_prices(date_str)
-    if not rows:
-        return None, 0
-
-    # FinMind 只會回傳該日的資料,但仍以回傳的 date 為準,不用我們請求的日期,
-    # 避免休市日拿到別天的資料卻標成今天。
-    out = []
-    actual = None
-    for r in rows:
-        sid = str(r.get("stock_id") or "")
-        if sid not in names:            # 只留上市普通股
-            continue
-        rdate = r.get("date")
-        if rdate != date_str:
-            continue
-        actual = rdate
-        try:
-            out.append([
-                sid,
-                int(r.get("Trading_Volume") or 0),
-                float(r.get("open") or 0),
-                float(r.get("max") or 0),
-                float(r.get("min") or 0),
-                float(r.get("close") or 0),
-            ])
-        except (TypeError, ValueError):
-            continue
-
-    if not out:
-        return None, 0
-
+def save_day(date_iso, rows, source):
+    out = [[r["code"], r["volume"], r["open"], r["high"], r["low"], r["close"]]
+           for r in rows]
     out.sort(key=lambda x: x[0])
-    common.write_json(common.history_path(actual), {
-        "date": actual,
-        "source": "finmind:TaiwanStockPrice",
+    common.write_json(common.history_path(date_iso), {
+        "date": date_iso,
+        "source": source,
         "market": "twse-listed-common",
         "columns": common.COLUMNS,
         "count": len(out),
         "rows": out,
     }, compact=True)
-    return actual, len(out)
+    return len(out)
+
+
+def merge_names(rows, names):
+    for r in rows:
+        if r["name"]:
+            names[r["code"]] = r["name"]
 
 
 def main():
@@ -97,54 +59,75 @@ def main():
                     help="往回掃描的日曆天上限,避免連假無限往回找")
     args = ap.parse_args()
 
-    print("== 更新股票名稱對照 ==")
-    names = refresh_names()
-
-    want = max(1, args.backfill_days)
+    names = common.read_json(common.NAMES_FILE, {}) or {}
     have = set(common.history_dates())
-    today = taipei_today()
-
-    print("== 抓取價格(目標 %d 個交易日,已有 %d 天)==" % (want, len(have)))
-    got = 0
-    calls = 1                       # 已經用掉一次 TaiwanStockInfo
     started = time.time()
+    calls = 0
+    fetched = 0
 
-    for back in range(args.max_lookback):
-        if got >= want:
-            break
-        d = today - dt.timedelta(days=back)
-        if d.weekday() >= 5:        # 週末直接跳過,省呼叫
-            continue
-        ds = d.isoformat()
-        if ds in have:
-            got += 1
-            print("  %s 已存在,跳過" % ds)
-            continue
+    # --- 最新交易日:用 OpenAPI,一次呼叫拿整個市場 ---
+    print("== 抓取最新交易日(STOCK_DAY_ALL)==")
+    calls += 1
+    date_iso, rows = twse_api.latest_all()
+    rows = keep_listed(rows)
+    merge_names(rows, names)
+    if date_iso in have:
+        print("  %s 已存在,跳過(全市場 %d 檔)" % (date_iso, len(rows)))
+    else:
+        n = save_day(date_iso, rows, "twse:STOCK_DAY_ALL")
+        have.add(date_iso)
+        fetched += 1
+        print("  %s 取得 %d 檔上市普通股" % (date_iso, n))
 
-        calls += 1
-        actual, n = fetch_day(ds, names)
-        if actual:
+    # --- 回補:用 MI_INDEX 逐日往回抓 ---
+    want = args.backfill_days
+    if want > 0:
+        print("== 回補基線(目標 %d 個交易日,已有 %d 天)==" % (want, len(have)))
+        got = len(have)
+        d = dt.date.fromisoformat(date_iso)
+        for back in range(1, args.max_lookback + 1):
+            if got >= want:
+                break
+            day = d - dt.timedelta(days=back)
+            if day.weekday() >= 5:
+                continue
+            ds = day.isoformat()
+            if ds in have:
+                print("  %s 已存在,跳過" % ds)
+                continue
+
+            calls += 1
+            actual, mrows = twse_api.by_date(day.strftime("%Y%m%d"))
+            if not actual or not mrows:
+                print("  %s 無資料(休市)" % ds)
+                time.sleep(3)
+                continue
+
+            mrows = keep_listed(mrows)
+            merge_names(mrows, names)
+            n = save_day(actual, mrows, "twse:MI_INDEX")
+            have.add(actual)
             got += 1
+            fetched += 1
             print("  %s 取得 %d 檔" % (actual, n))
-        else:
-            print("  %s 無資料(休市或尚未結算)" % ds)
-        time.sleep(0.6)             # 對 API 客氣一點
+            time.sleep(3)          # MI_INDEX 回應約 4MB,對 TWSE 客氣一點
+
+    common.write_json(common.NAMES_FILE, names)
+
+    # --- 只保留 MA20 需要的滾動視窗 ---
+    all_dates = common.history_dates()
+    for ds in all_dates[:-common.KEEP_DAYS]:
+        os.remove(common.history_path(ds))
+        print("  清掉超出視窗的 %s" % ds)
 
     elapsed = time.time() - started
-    print("== 完成:%d 個交易日、%d 次 API 呼叫、耗時 %.1f 秒 ==" % (got, calls, elapsed))
+    print("== 完成:新增 %d 天、共 %d 個交易日、%d 次 API 呼叫、耗時 %.1f 秒 =="
+          % (fetched, len(common.history_dates()), calls, elapsed))
+    print("   股票名稱對照:%d 檔" % len(names))
 
-    if got == 0:
-        print("錯誤:一天資料都沒抓到", file=sys.stderr)
+    if not common.history_dates():
+        print("錯誤:一天資料都沒有", file=sys.stderr)
         return 1
-
-    # 只保留 MA20 需要的滾動視窗,避免 repo 無限長大
-    all_dates = common.history_dates()
-    if len(all_dates) > common.KEEP_DAYS:
-        import os
-        for ds in all_dates[:-common.KEEP_DAYS]:
-            os.remove(common.history_path(ds))
-            print("  清掉超出視窗的 %s" % ds)
-
     return 0
 
 

@@ -29,8 +29,6 @@ jobs:
           python-version: '3.12'
 
       - name: 抓取上市全市場收盤價
-        env:
-          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
         run: |
           python scripts/fetch_prices.py \
             --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
