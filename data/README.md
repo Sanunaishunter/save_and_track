@@ -37,7 +37,10 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 - 法人類別以 FinMind 的 name 欄位區分,實測只有五種:Foreign_Investor、
   Investment_Trust、Foreign_Dealer_Self、Dealer_self、Dealer_Hedging。
   外資取 Foreign_Investor(不含外資自營商),與 T86 的外資定義一致
-- 金額為「淨買賣超股數 × 收盤價」的推估值,dataset 沒有金額欄位,顯示時標「約」
+- 金額為「淨買賣超股數 × 當日收盤價」的推估值,連續期間逐日累加。
+  dataset 沒有金額欄位,顯示時一律標「約」
+- 輸出檔的 `market_totals` 記錄當日全市場買超/賣超總額(股數),
+  就是各檔「佔全市場」百分比的分母,可用來事後核算
 - Token 由 GitHub Secret `FINMIND_TOKEN` 注入 runner,**不會進入任何靜態檔案**
 - 門檻常數集中在 `scripts/fomo_score.py` 的 `THRESHOLDS`
 

@@ -285,6 +285,9 @@ def main():
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "source": "finmind",
         "thresholds": fomo_score.THRESHOLDS,
+        "market_totals": (None if not market_totals else {
+            k: int(v) for k, v in market_totals.items()
+        }),
         "watchlist_count": len(watchlist),
         "scored_count": len(rows),
         "failures": failures,
