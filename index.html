@@ -38,6 +38,7 @@
   <nav class="views" id="views">
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
+    <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -69,6 +70,23 @@
         </tr>
       </thead>
       <tbody id="scan-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="list-wrap" id="fomo-wrap" hidden>
+  <div class="scan-meta" id="fomo-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="fomo-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">FOMO</th>
+          <th>判斷</th>
+        </tr>
+      </thead>
+      <tbody id="fomo-tbody"></tbody>
     </table>
   </div>
 </main>

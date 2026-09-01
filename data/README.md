@@ -8,6 +8,8 @@
 | `scans/YYYY-MM-DD.json` | 當日爆量掃描結果存查 |
 | `scan-latest.json` | 最新一次掃描結果,前端讀這支 |
 | `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應) |
+| `fomo-latest.json` | 最新一次 FOMO 掃描結果,前端讀這支 |
+| `fomo/YYYY-MM-DD.json` | 當日 FOMO 結果存底 |
 
 資料來源全部是 TWSE,免 token、免額度:
 
@@ -19,3 +21,17 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 
 計算:`vol_ratio = 當日量 / MA20`,MA20 為 shift(1) 的前 20 個交易日均量(不含當日);
 爆量條件為 `vol_ratio > 1.5` 且 `close > open`。
+
+
+---
+
+## FOMO 掃描(另一條線)
+
+與爆量掃描完全獨立,由 `.github/workflows/fomo-scan.yml` 產生:
+
+- 觀察名單在 repo 根目錄的 `watchlist.json`(手動維護,10~30 檔)
+- 資料來自 FinMind 四個 dataset:價量、融資融券、三大法人、PER/PBR
+- Token 由 GitHub Secret `FINMIND_TOKEN` 注入 runner,**不會進入任何靜態檔案**
+- 門檻常數集中在 `scripts/fomo_score.py` 的 `THRESHOLDS`
+
+⚠️ FOMO 用的是 `data/fomo/`,爆量掃描用的是 `data/history/`,兩者不共用路徑。

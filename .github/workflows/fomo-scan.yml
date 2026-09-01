@@ -1,0 +1,55 @@
+name: 每日 FOMO 掃描
+
+on:
+  schedule:
+    # 台北 13:35 = UTC 05:35。收盤後 5 分鐘,FinMind 當日資料多半還沒結算完,
+    # 這時通常會拿到前一交易日的資料 —— 依規格,沿用前一日結果即可。
+    - cron: '35 5 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '只跑前 N 檔(測試用,0 = 全部)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fomo-scan
+  cancel-in-progress: false
+
+jobs:
+  fomo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 抓取並計算 FOMO 分數
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/compute_fomo.py --limit "${{ github.event.inputs.limit || '0' }}"
+
+      - name: 提交結果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "沒有新資料,不產生 commit(可能是休市日或結果未變)。"
+            exit 0
+          fi
+          DATE=$(python -c "import json;print(json.load(open('data/fomo-latest.json'))['date'])")
+          N=$(python -c "import json;print(json.load(open('data/fomo-latest.json'))['scored_count'])")
+          git commit -m "FOMO 更新 ${DATE}:${N} 檔"
+          # 併發或手動觸發撞在一起時,rebase 後重推一次
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase origin main || true
+          done
+          exit 1

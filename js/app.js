@@ -882,14 +882,127 @@
   }
 
   function switchView(v) {
-    var isScan = v === 'scan';
-    el('scan-wrap').hidden = !isScan;
-    el('track-wrap').hidden = isScan;
-    el('tabs').hidden = isScan;
+    el('track-wrap').hidden = v !== 'track';
+    el('tabs').hidden = v !== 'track';
+    el('scan-wrap').hidden = v !== 'scan';
+    el('fomo-wrap').hidden = v !== 'fomo';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
-    if (isScan) loadScan(false);
+    if (v === 'scan') loadScan(false);
+    if (v === 'fomo') loadFomo(false);
+  }
+
+  // ---------------------------------------------------------- FOMO 掃描
+
+  var FOMO_URL = 'data/fomo-latest.json';
+  var fomoLoaded = false;
+  var fomoOpen = null;          // 目前展開理由的股票代碼
+
+  function scoreClass(n) {
+    if (n >= 60) return 'fomo-score-hi';
+    if (n >= 30) return 'fomo-score-mid';
+    return 'fomo-score-lo';
+  }
+
+  function badges(r) {
+    var out = '';
+    if (r.is_real_rally) out += '<span class="badge badge-real">真漲</span>';
+    if (r.is_fake_rally) out += '<span class="badge badge-fake">虛漲</span>';
+    if (!out) out = '<span class="badge badge-none">—</span>';
+    return out;
+  }
+
+  function reasonList(title, arr) {
+    if (!arr || !arr.length) {
+      return '<h4>' + esc(title) + '</h4><div class="none">無</div>';
+    }
+    return '<h4>' + esc(title) + '</h4><ul>' +
+      arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+  }
+
+  function fomoDetailHtml(r) {
+    var m = r.metrics || {};
+    var facts = [];
+    if (m.pbr != null) facts.push('PBR ' + m.pbr);
+    if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
+    if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
+    if (m.foreign_consecutive_buy_days != null) facts.push('外資連買 ' + m.foreign_consecutive_buy_days + ' 天');
+
+    return '<tr class="fomo-detail"><td colspan="4">' +
+      (facts.length ? '<div>' + esc(facts.join('　·　')) + '</div>' : '') +
+      reasonList('FOMO 依據(' + r.fomo_score + ' 分)', r.reasons.fomo) +
+      reasonList('真漲依據(' + r.real_rally_score + ' 分)', r.reasons.real_rally) +
+      reasonList('虛漲依據(' + r.fake_rally_score + ' 分)', r.reasons.fake_rally) +
+      (r.missing && r.missing.length
+        ? '<h4>缺少資料</h4><div class="none">' + esc(r.missing.join('、')) + '</div>'
+        : '') +
+      '</td></tr>';
+  }
+
+  function renderFomo(res) {
+    var meta = el('fomo-meta');
+    var tbody = el('fomo-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('fomo-table').hidden = true;
+      return;
+    }
+    el('fomo-table').hidden = false;
+
+    var real = 0, fake = 0;
+    res.rows.forEach(function (r) {
+      if (r.is_real_rally) real++;
+      if (r.is_fake_rally) fake++;
+    });
+    meta.textContent = res.date + ' · 觀察名單 ' + res.scored_count + ' 檔' +
+      ' · 真漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
+
+    if (!res.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="scan-empty">沒有資料</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.rows.map(function (r) {
+      var row = '<tr class="fomo-row" data-fomo="' + esc(r.stock_id) + '">' +
+        '<td class="code mono">' + esc(r.stock_id) + '</td>' +
+        '<td>' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num ' + scoreClass(r.fomo_score) + '">' + r.fomo_score + '</td>' +
+        '<td>' + badges(r) + '</td>' +
+      '</tr>';
+      if (fomoOpen === r.stock_id) row += fomoDetailHtml(r);
+      return row;
+    }).join('');
+  }
+
+  var fomoData = null;
+
+  function loadFomo(force) {
+    if (fomoLoaded && !force) return;
+    el('fomo-meta').textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderFomo({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(FOMO_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        fomoLoaded = true;
+        fomoData = data;
+        renderFomo(data);
+      })
+      .catch(function (e) {
+        renderFomo({ error: '讀不到 FOMO 結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
   }
 
   // ---------------------------------------------------------- 事件綁定
@@ -913,6 +1026,14 @@
     el('list').addEventListener('click', function (e) {
       var card = e.target.closest('.card');
       if (card) openDetail(card.getAttribute('data-id'));
+    });
+
+    el('fomo-tbody').addEventListener('click', function (e) {
+      var tr = e.target.closest('.fomo-row');
+      if (!tr || !fomoData) return;
+      var id = tr.getAttribute('data-fomo');
+      fomoOpen = (fomoOpen === id) ? null : id;
+      renderFomo(fomoData);
     });
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
