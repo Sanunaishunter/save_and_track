@@ -2,9 +2,9 @@ name: 每日 FOMO 掃描
 
 on:
   schedule:
-    # 台北 13:35 = UTC 05:35。收盤後 5 分鐘,FinMind 當日資料多半還沒結算完,
-    # 這時通常會拿到前一交易日的資料 —— 依規格,沿用前一日結果即可。
-    - cron: '35 5 * * 1-5'
+    # 台北 16:23 = UTC 08:23。與爆量掃描錯開 10 分鐘,避免兩支同時 commit
+    # 到 data/ 而撞在一起。
+    - cron: '23 8 * * 1-5'
   workflow_dispatch:
     inputs:
       limit:
