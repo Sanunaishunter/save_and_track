@@ -325,6 +325,7 @@ def score_stock(stock_id, stock_name, m):
             "trust_amount": m.get("trust_amount"),
             "trust_pct_of_volume": _round(m.get("trust_pct_of_volume")),
             "trust_pct_of_market": _round(m.get("trust_pct_of_market")),
+            "vol_ratio": m.get("vol_ratio"),
             "close": m.get("close"),
             "volume": m.get("volume"),
             "prev_volume": m.get("prev_volume"),

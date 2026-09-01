@@ -22,6 +22,7 @@ import fomo_score
 import twse_api
 
 WATCHLIST_FILE = os.path.join(common.ROOT, "watchlist.json")
+SCAN_LATEST = common.LATEST_FILE          # 爆量掃描的輸出
 FOMO_DIR = os.path.join(common.DATA_DIR, "fomo")
 FOMO_LATEST = os.path.join(common.DATA_DIR, "fomo-latest.json")
 
@@ -40,16 +41,43 @@ def taipei_today():
     return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
 
 
+def _dedup(codes):
+    out = []
+    for c in codes:
+        c = str(c).strip()
+        if c and c not in out:
+            out.append(c)
+    return out
+
+
 def load_watchlist():
     wl = common.read_json(WATCHLIST_FILE)
     if not isinstance(wl, list) or not wl:
         raise SystemExit("錯誤:找不到 watchlist.json 或格式不是非空陣列")
-    out = []
-    for s in wl:
-        s = str(s).strip()
-        if s and s not in out:
-            out.append(s)
-    return out
+    return _dedup(wl), {}, None
+
+
+def load_from_scan(top):
+    """
+    以爆量掃描的結果當觀察名單,取 vol_ratio 前 top 名。
+
+    為什麼要限制檔數:每檔要打 4 次 FinMind,未註冊上限 300 次/小時、
+    註冊會員 600 次/小時。爆量清單動輒近百檔(9/1 是 99 檔),
+    全打會超過額度,所以預設只取前 30 名(120 次)。
+    """
+    scan = common.read_json(SCAN_LATEST)
+    if not scan or not isinstance(scan.get("rows"), list) or not scan["rows"]:
+        return None, {}, None
+
+    rows = scan["rows"][:top] if top > 0 else scan["rows"]
+    codes = _dedup([r.get("stock_id") for r in rows])
+    extra = {}
+    for r in rows:
+        sid = str(r.get("stock_id") or "")
+        if sid:
+            extra[sid] = {"name": r.get("stock_name") or "",
+                          "vol_ratio": r.get("vol_ratio")}
+    return codes, extra, scan.get("date")
 
 
 def _num(v):
@@ -189,9 +217,21 @@ def main():
     ap.add_argument("--limit", type=int, default=0,
                     help="只跑前 N 檔(本機小批測試用)")
     ap.add_argument("--skip-preflight", action="store_true")
+    ap.add_argument("--source", choices=["scan", "watchlist"], default="scan",
+                    help="名單來源:scan = 爆量掃描結果(預設),watchlist = 手動名單")
+    ap.add_argument("--top", type=int, default=30,
+                    help="從爆量清單取前幾名(依 vol_ratio),0 = 全部")
     args = ap.parse_args()
 
-    watchlist = load_watchlist()
+    scan_date = None
+    if args.source == "scan":
+        watchlist, extra, scan_date = load_from_scan(args.top)
+        if not watchlist:
+            print("警告:讀不到爆量掃描結果,改用 watchlist.json")
+            watchlist, extra, scan_date = load_watchlist()
+    else:
+        watchlist, extra, scan_date = load_watchlist()
+
     if args.limit > 0:
         watchlist = watchlist[:args.limit]
 
@@ -200,7 +240,14 @@ def main():
     start_s, end_s = start.isoformat(), end.isoformat()
 
     print("== FOMO 掃描 ==")
+    print("  名單來源:%s%s" % (
+        "爆量掃描" if args.source == "scan" else "watchlist.json",
+        ("(%s,取前 %d 名)" % (scan_date, args.top)) if scan_date and args.source == "scan" else ""))
     print("  觀察名單:%d 檔" % len(watchlist))
+    est = len(watchlist) * 4 + 1
+    cap = 600 if fm.has_token() else 300
+    print("  預估 API 呼叫:%d 次(上限 %d 次/小時)%s"
+          % (est, cap, "  ⚠ 可能超過額度" if est > cap else ""))
     print("  區間:%s ~ %s" % (start_s, end_s))
     print("  FinMind token:%s" % ("已設定" if fm.has_token() else "未設定(未註冊模式)"))
 
@@ -241,7 +288,10 @@ def main():
             data_date = seen[-1]["date"]
 
         m = extract_metrics(price, margin, inst, per)
-        row = fomo_score.score_stock(sid, names.get(sid, ""), m)
+        info = extra.get(sid) or {}
+        if info.get("vol_ratio") is not None:
+            m["vol_ratio"] = info["vol_ratio"]
+        row = fomo_score.score_stock(sid, info.get("name") or names.get(sid, ""), m)
         rows.append(row)
         print("  [%d/%d] %s %-6s FOMO=%3d 真漲=%-5s 虛漲=%-5s%s"
               % (i, len(watchlist), sid, row["stock_name"], row["fomo_score"],
@@ -285,6 +335,8 @@ def main():
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "source": "finmind",
         "thresholds": fomo_score.THRESHOLDS,
+        "source_list": args.source,
+        "scan_date": scan_date,
         "market_totals": (None if not market_totals else {
             k: int(v) for k, v in market_totals.items()
         }),

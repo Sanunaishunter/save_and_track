@@ -7,8 +7,18 @@ on:
     - cron: '23 8 * * 1-5'
   workflow_dispatch:
     inputs:
+      source:
+        description: '名單來源'
+        required: false
+        default: 'scan'
+        type: choice
+        options: [scan, watchlist]
+      top:
+        description: '從爆量清單取前幾名(0 = 全部,注意額度)'
+        required: false
+        default: '30'
       limit:
-        description: '只跑前 N 檔(測試用,0 = 全部)'
+        description: '只跑前 N 檔(測試用,0 = 不限)'
         required: false
         default: '0'
 
@@ -33,7 +43,10 @@ jobs:
         env:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
         run: |
-          python scripts/compute_fomo.py --limit "${{ github.event.inputs.limit || '0' }}"
+          python scripts/compute_fomo.py \
+            --source "${{ github.event.inputs.source || 'scan' }}" \
+            --top "${{ github.event.inputs.top || '30' }}" \
+            --limit "${{ github.event.inputs.limit || '0' }}"
 
       - name: 提交結果
         run: |

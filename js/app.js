@@ -925,6 +925,7 @@
   function fomoDetailHtml(r) {
     var m = r.metrics || {};
     var facts = [];
+    if (m.vol_ratio != null) facts.push('量比 ' + m.vol_ratio);
     if (m.pbr != null) facts.push('PBR ' + m.pbr);
     if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
     if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
@@ -970,7 +971,8 @@
       if (r.is_real_rally) real++;
       if (r.is_fake_rally) fake++;
     });
-    meta.textContent = res.date + ' · 觀察名單 ' + res.scored_count + ' 檔' +
+    var src = res.source_list === 'watchlist' ? '手動名單' : '爆量前段班';
+    meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
       ' · 真漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
 
     if (!res.rows.length) {
