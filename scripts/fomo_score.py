@@ -12,7 +12,8 @@ MARGIN_CHANGE_NOTICE = 10    # 融資 5 日增幅注意
 PBR_HIGH = 2.5               # 股價淨值比偏高
 PBR_REAL_RALLY_MAX = 2.0     # 真漲可接受的 PBR 上限
 PBR_MID = 1.5                # 股價淨值比中段
-SHORT_MARGIN_BULL = 15       # 券資比(%)低於此視為籌碼偏多
+SHORT_MARGIN_BULL = 5        # 券資比(%)低於此視為籌碼偏多
+                             # 原本 15%,但實測大型股都在 1% 以下,等於恆真、沒有鑑別力
 FOREIGN_CONSECUTIVE = 3      # 外資連續買超天數門檻
 
 REAL_RALLY_PASS = 60         # 真漲成立分數
@@ -29,6 +30,7 @@ THRESHOLDS = {
     "FOREIGN_CONSECUTIVE": FOREIGN_CONSECUTIVE,
     "REAL_RALLY_PASS": REAL_RALLY_PASS,
     "FAKE_RALLY_PASS": FAKE_RALLY_PASS,
+    "REAL_RALLY_REQUIRES_FOREIGN": True,
 }
 
 
@@ -64,7 +66,7 @@ def judge_real_rally(m):
     if v is None:
         missing.append("券資比")
     elif v < SHORT_MARGIN_BULL:
-        score += 20
+        score += 10
         reasons.append("券資比 %.1f%%(<%d%%,空方壓力低)" % (v, SHORT_MARGIN_BULL))
 
     v = m.get("pbr")
@@ -74,9 +76,18 @@ def judge_real_rally(m):
         score += 20
         reasons.append("PBR %.2f(<%.1f,評價未偏高)" % (v, PBR_REAL_RALLY_MAX))
 
+    # 外資連買是「必要條件」而不只是加權:分數夠但外資沒進場,不算真漲。
+    # 否則融資、券資比、PBR 三項就能湊到 60,出現「外資在賣卻標成真漲」。
+    streak = m.get("foreign_consecutive_buy_days")
+    foreign_ok = streak is not None and streak >= FOREIGN_CONSECUTIVE
+    passed = score >= REAL_RALLY_PASS and foreign_ok
+    if score >= REAL_RALLY_PASS and not foreign_ok:
+        reasons.append("分數達標但外資未連續買超 %d 天,不列為真漲" % FOREIGN_CONSECUTIVE)
+
     return {
         "score": _clamp(score),
-        "is_real_rally": score >= REAL_RALLY_PASS,
+        "is_real_rally": passed,
+        "foreign_gate_passed": foreign_ok,
         "reasons": reasons,
         "missing": missing,
     }
@@ -160,7 +171,7 @@ def calculate_stock_fomo_score(m):
     if v is None:
         missing.append("券資比")
     elif v < SHORT_MARGIN_BULL:
-        score += 20
+        score += 10
         reasons.append("券資比 %.1f%%(<%d%%)" % (v, SHORT_MARGIN_BULL))
 
     v = m.get("foreign_net")
@@ -173,14 +184,37 @@ def calculate_stock_fomo_score(m):
     return {"score": _clamp(score), "reasons": reasons, "missing": missing}
 
 
+def judge_divergence(m):
+    """
+    背離訊號:外資賣超但投信買進。
+
+    兩者方向相反時通常是投信短打(作帳、題材追價),不宜視為長線轉強,
+    所以獨立成一個訊號,不併入真漲分數。
+    """
+    fn = m.get("foreign_net")
+    tn = m.get("trust_net")
+    if fn is None or tn is None:
+        return {"is_divergence": False, "reason": "", "missing": ["法人買賣超"]}
+
+    if fn < 0 and tn > 0:
+        return {
+            "is_divergence": True,
+            "reason": "外資賣超 %s 股、投信買進 %s 股,方向背離,可能是投信短打"
+                      % (format(int(fn), ","), format(int(tn), ",")),
+            "missing": [],
+        }
+    return {"is_divergence": False, "reason": "", "missing": []}
+
+
 def score_stock(stock_id, stock_name, m):
     """把三組判斷合成一筆輸出。"""
     real = judge_real_rally(m)
     fake = judge_fake_stock_rally(m)
     fomo = calculate_stock_fomo_score(m)
+    diverge = judge_divergence(m)
 
     missing = []
-    for part in (real, fake, fomo):
+    for part in (real, fake, fomo, diverge):
         for k in part["missing"]:
             if k not in missing:
                 missing.append(k)
@@ -193,6 +227,8 @@ def score_stock(stock_id, stock_name, m):
         "real_rally_score": real["score"],
         "is_fake_rally": fake["is_fake_rally"],
         "fake_rally_score": fake["score"],
+        "is_divergence": diverge["is_divergence"],
+        "divergence_reason": diverge["reason"],
         "metrics": {
             "pbr": m.get("pbr"),
             "margin_change_5d_pct": (None if m.get("margin_change_5d_pct") is None
@@ -201,6 +237,7 @@ def score_stock(stock_id, stock_name, m):
                                    else round(m["short_margin_ratio"], 2)),
             "foreign_net": m.get("foreign_net"),
             "foreign_consecutive_buy_days": m.get("foreign_consecutive_buy_days"),
+            "trust_net": m.get("trust_net"),
             "close": m.get("close"),
             "volume": m.get("volume"),
             "prev_volume": m.get("prev_volume"),
