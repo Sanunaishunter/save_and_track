@@ -1,6 +1,7 @@
 # data/
 
 由 GitHub Actions(`.github/workflows/daily-scan.yml`)自動產生,不要手動編輯。
+爆量與 FOMO 在同一個 workflow 的連續步驟裡跑,順序由執行序保證。
 
 | 路徑 | 內容 |
 | --- | --- |
@@ -32,10 +33,10 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 
 ## FOMO 掃描(另一條線)
 
-與爆量掃描完全獨立,由 `.github/workflows/fomo-scan.yml` 產生:
+與爆量掃描共用同一個 workflow,排在爆量之後的步驟執行:
 
-- **名單來源預設是爆量掃描的結果**(`scan-latest.json` 的前 30 名,依 vol_ratio),
-  所以 FOMO 排在爆量掃描之後跑(16:13 → 16:23)
+- **名單來源預設是爆量掃描的結果**(`scan-latest.json` 的前 30 名,依 vol_ratio)。
+  兩者在同一個 job 內依序執行,FOMO 讀到的必定是同一次剛產生的爆量清單
 - 檔數有上限是因為額度:每檔要打 4 次 FinMind,未註冊 300 次/小時、
   註冊 600 次/小時。爆量清單常近百檔(9/1 是 99 檔,全打要 397 次會爆掉)
 - `watchlist.json`(repo 根目錄)是手動備援,讀不到掃描結果時會自動改用它;

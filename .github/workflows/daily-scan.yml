@@ -1,4 +1,4 @@
-name: 每日爆量掃描
+name: 每日掃描(爆量 + FOMO)
 
 on:
   schedule:
@@ -9,7 +9,21 @@ on:
   workflow_dispatch:
     inputs:
       backfill_days:
-        description: '回補幾個交易日的基線(第一次請填 25,平常留 0)'
+        description: '爆量:回補幾個交易日的基線(第一次填 25,平常留 0)'
+        required: false
+        default: '0'
+      source:
+        description: 'FOMO:名單來源'
+        required: false
+        default: 'scan'
+        type: choice
+        options: [scan, watchlist]
+      top:
+        description: 'FOMO:從爆量清單取前幾名(0 = 全部,注意額度)'
+        required: false
+        default: '30'
+      limit:
+        description: 'FOMO:只跑前 N 檔(測試用,0 = 不限)'
         required: false
         default: '0'
 
@@ -30,6 +44,7 @@ jobs:
         with:
           python-version: '3.12'
 
+      # --- 爆量掃描 ---
       - name: 抓取上市全市場收盤價
         run: |
           python scripts/fetch_prices.py \
@@ -38,18 +53,49 @@ jobs:
       - name: 計算爆量清單
         run: python scripts/compute_scan.py
 
+      # --- FOMO(讀上一步剛產生的 scan-latest.json)---
+      # 合併成同一個 job 的用意就在這:順序由執行序保證,不再依賴兩支排程
+      # 的時間差。GitHub 排程會延遲,先前拆成兩支時,只要爆量那支慢超過
+      # 10 分鐘,FOMO 就會讀到前一天的清單。
+      - name: 計算 FOMO 分數
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/compute_fomo.py \
+            --source "${{ github.event.inputs.source || 'scan' }}" \
+            --top "${{ github.event.inputs.top || '30' }}" \
+            --limit "${{ github.event.inputs.limit || '0' }}"
+
+      # 即使前面某一步失敗,已經算出來的資料仍要保存。
+      # 步驟本身不吞錯,所以 job 該紅還是會紅。
       - name: 提交結果
+        if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/
           if git diff --cached --quiet; then
-            echo "沒有新資料,不產生 commit(可能是休市日)。"
+            echo "沒有新資料,不產生 commit(可能是休市日或結果未變)。"
             exit 0
           fi
-          DATE=$(python -c "import json;print(json.load(open('data/scan-latest.json'))['date'])")
-          COUNT=$(python -c "import json;print(json.load(open('data/scan-latest.json'))['count'])")
-          git commit -m "資料更新 ${DATE}:爆量 ${COUNT} 檔"
+          MSG=$(python - <<'PY'
+          import json
+          bits = []
+          date = None
+          for path, label in (("data/scan-latest.json", "爆量"),
+                              ("data/fomo-latest.json", "FOMO")):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      d = json.load(f)
+                  n = d.get("count", d.get("scored_count"))
+                  bits.append("%s %s 檔" % (label, n))
+                  date = d.get("date")
+              except Exception:
+                  pass
+          print("資料更新 %s:%s" % (date, "、".join(bits) or "無"))
+          PY
+          )
+          git commit -m "$MSG"
           # 併發或手動觸發撞在一起時,rebase 後重推一次
           for i in 1 2 3; do
             git push && exit 0
