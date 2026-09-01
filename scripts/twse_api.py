@@ -78,7 +78,7 @@ def _roc_to_iso(roc):
     return "%04d-%s-%s" % (int(s[:3]) + 1911, s[3:5], s[5:7])
 
 
-def _row(code, name, volume, o, h, l, c):
+def _row(code, name, volume, o, h, l, c, transaction=None):
     """統一成內部格式;缺價量的(當日無成交)回傳 None。"""
     volume = _num(volume)
     o, h, l, c = _num(o), _num(h), _num(l), _num(c)
@@ -88,8 +88,11 @@ def _row(code, name, volume, o, h, l, c):
         h = max(o, c)
     if l is None:
         l = min(o, c)
+    t = _num(transaction)
     return {"code": str(code).strip(), "name": str(name or "").strip(),
-            "volume": int(volume), "open": o, "high": h, "low": l, "close": c}
+            "volume": int(volume), "open": o, "high": h, "low": l, "close": c,
+            # 成交筆數:STOCK_DAY_ALL 的 Transaction / MI_INDEX 的「成交筆數」
+            "transaction": None if t is None else int(t)}
 
 
 def latest_all():
@@ -106,7 +109,8 @@ def latest_all():
     for r in data:
         row = _row(r.get("Code"), r.get("Name"), r.get("TradeVolume"),
                    r.get("OpeningPrice"), r.get("HighestPrice"),
-                   r.get("LowestPrice"), r.get("ClosingPrice"))
+                   r.get("LowestPrice"), r.get("ClosingPrice"),
+                   r.get("Transaction"))
         if row:
             rows.append(row)
     return date_iso, rows
@@ -144,6 +148,7 @@ def by_date(ymd):
 
         idx = {name: i for i, name in enumerate(fields)}
         need = ["證券代號", "證券名稱", "成交股數", "開盤價", "最高價", "最低價", "收盤價"]
+        has_tx = "成交筆數" in idx
         if any(k not in idx for k in need):
             last_err = TWSEError("MI_INDEX 欄位與預期不符:%s" % fields)
             continue
@@ -153,7 +158,8 @@ def by_date(ymd):
             try:
                 row = _row(d[idx["證券代號"]], d[idx["證券名稱"]], d[idx["成交股數"]],
                            d[idx["開盤價"]], d[idx["最高價"]],
-                           d[idx["最低價"]], d[idx["收盤價"]])
+                           d[idx["最低價"]], d[idx["收盤價"]],
+                           d[idx["成交筆數"]] if has_tx else None)
             except (IndexError, TypeError):
                 continue
             if row:

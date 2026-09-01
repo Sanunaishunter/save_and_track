@@ -26,6 +26,12 @@ on:
         description: 'FOMO:只跑前 N 檔(測試用,0 = 不限)'
         required: false
         default: '0'
+      probe_8012:
+        description: '8012:順便探測產業別與市值資料源(一次性)'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
 
 permissions:
   contents: write
@@ -68,6 +74,12 @@ jobs:
 
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。
+      - name: 探測 8012 資料源(一次性,手動勾選才跑)
+        if: ${{ github.event.inputs.probe_8012 == 'true' }}
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/probe_8012.py
+
       - name: 提交結果
         if: always()
         run: |

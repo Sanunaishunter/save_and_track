@@ -31,7 +31,8 @@ def keep_listed(rows):
 
 
 def save_day(date_iso, rows, source):
-    out = [[r["code"], r["volume"], r["open"], r["high"], r["low"], r["close"]]
+    out = [[r["code"], r["volume"], r["open"], r["high"], r["low"], r["close"],
+            r.get("transaction")]
            for r in rows]
     out.sort(key=lambda x: x[0])
     common.write_json(common.history_path(date_iso), {
@@ -65,7 +66,14 @@ def main():
     # 已確認休市的日期,不必每天重問。判定條件很嚴格:必須已經抓到「更晚」
     # 的交易日,才能證明那天真的是休市,而不是當天資料還沒公布。
     no_trade = set(common.read_json(common.NO_TRADE_FILE, []) or [])
-    have = set(common.history_dates())
+
+    # 欄位過時的檔案不算「已有」,會被重新抓取(新增欄位後自動修復)
+    all_dates = common.history_dates()
+    have = set(d for d in all_dates if common.history_is_current(d))
+    stale = [d for d in all_dates if d not in have]
+    if stale:
+        print("== 有 %d 天的欄位過時,將重新抓取 ==" % len(stale))
+        print("   %s%s" % ("、".join(stale[:5]), " …" if len(stale) > 5 else ""))
     started = time.time()
     calls = 0
     fetched = 0

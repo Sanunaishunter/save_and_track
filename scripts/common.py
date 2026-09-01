@@ -13,7 +13,8 @@ NO_TRADE_FILE = os.path.join(DATA_DIR, "no_trade_dates.json")
 LATEST_FILE = os.path.join(DATA_DIR, "scan-latest.json")
 
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
-COLUMNS = ["id", "volume", "open", "high", "low", "close"]
+# transaction = 成交筆數,8012 的 tick 活躍度代理指標
+COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]
 
 # MA20 需要「不含當日的前 20 個交易日」,25 天是緩衝
 MA_WINDOW = 20
@@ -52,6 +53,20 @@ def write_json(path, obj, compact=False):
 
 def history_path(date_str):
     return os.path.join(HISTORY_DIR, date_str + ".json")
+
+
+def history_is_current(date_str):
+    """
+    檔案的欄位是否已包含目前需要的全部欄位。
+
+    新增欄位(例如 8012 需要的成交筆數)後,舊檔案會缺欄位。與其手動清掉重抓,
+    不如讓抓取流程把「欄位過時」視同「缺漏」,自動重新取得。
+    """
+    blob = read_json(history_path(date_str))
+    if not blob:
+        return False
+    cols = blob.get("columns") or []
+    return all(c in cols for c in COLUMNS)
 
 
 def history_dates():
