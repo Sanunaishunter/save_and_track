@@ -9,6 +9,7 @@ DATA_DIR = os.path.join(ROOT, "data")
 HISTORY_DIR = os.path.join(DATA_DIR, "history")
 SCANS_DIR = os.path.join(DATA_DIR, "scans")
 NAMES_FILE = os.path.join(DATA_DIR, "stock_names.json")
+NO_TRADE_FILE = os.path.join(DATA_DIR, "no_trade_dates.json")
 LATEST_FILE = os.path.join(DATA_DIR, "scan-latest.json")
 
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)

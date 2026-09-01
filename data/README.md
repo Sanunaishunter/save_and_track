@@ -8,12 +8,17 @@
 | `scans/YYYY-MM-DD.json` | 當日爆量掃描結果存查 |
 | `scan-latest.json` | 最新一次掃描結果,前端讀這支 |
 | `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應) |
+| `no_trade_dates.json` | 已確認休市的日期,避免每天重複查詢 |
 | `fomo-latest.json` | 最新一次 FOMO 掃描結果,前端讀這支 |
 | `fomo/YYYY-MM-DD.json` | 當日 FOMO 結果存底 |
 
 資料來源全部是 TWSE,免 token、免額度:
 
 - 每日增量:OpenAPI `STOCK_DAY_ALL`(最新交易日全市場,一次呼叫)
+- 補缺口:`STOCK_DAY_ALL` 是開放資料快取,收盤後不一定馬上更新
+  (實測台北 19:53 時仍回傳前一交易日)。因此每天另外用按日期定址的
+  `MI_INDEX` 檢查最近 5 個交易日有無缺漏,不受快取延遲影響,
+  也能自動修復排程失敗漏掉的日子
 - 歷史回補:`MI_INDEX?date=YYYYMMDD&type=ALL`(可指定過去日期)
 
 資料範圍:**上市普通股**。篩選規則是代碼為四位數字且開頭非 0,因此排除

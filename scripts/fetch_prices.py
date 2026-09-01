@@ -57,15 +57,22 @@ def main():
                     help="往回補幾個交易日(0 = 只抓最新交易日)")
     ap.add_argument("--max-lookback", type=int, default=60,
                     help="往回掃描的日曆天上限,避免連假無限往回找")
+    ap.add_argument("--fill-gap-days", type=int, default=5,
+                    help="每天順便補最近幾個交易日的缺口(0 = 不補)")
     args = ap.parse_args()
 
     names = common.read_json(common.NAMES_FILE, {}) or {}
+    # 已確認休市的日期,不必每天重問。判定條件很嚴格:必須已經抓到「更晚」
+    # 的交易日,才能證明那天真的是休市,而不是當天資料還沒公布。
+    no_trade = set(common.read_json(common.NO_TRADE_FILE, []) or [])
     have = set(common.history_dates())
     started = time.time()
     calls = 0
     fetched = 0
 
     # --- 最新交易日:用 OpenAPI,一次呼叫拿整個市場 ---
+    today = taipei_today()
+
     print("== 抓取最新交易日(STOCK_DAY_ALL)==")
     calls += 1
     date_iso, rows = twse_api.latest_all()
@@ -78,6 +85,50 @@ def main():
         have.add(date_iso)
         fetched += 1
         print("  %s 取得 %d 檔上市普通股" % (date_iso, n))
+
+    # --- 補近期缺口 ---
+    # STOCK_DAY_ALL 是開放資料快取,收盤後不一定馬上更新(實測台北 19:53 時
+    # 仍回傳前一交易日)。只靠它會整天抓不到資料,而且漏掉的那天再也補不回來,
+    # MA20 的視窗就會有洞。所以每天用按日期定址的 MI_INDEX 補最近幾個交易日,
+    # 不受快取延遲影響,也能自動修復排程失敗漏掉的日子。
+    if args.fill_gap_days > 0:
+        print("== 檢查最近 %d 個交易日有無缺口 ==" % args.fill_gap_days)
+        checked = 0
+        empty_days = []
+        for back in range(args.max_lookback):
+            if checked >= args.fill_gap_days:
+                break
+            day = today - dt.timedelta(days=back)
+            if day.weekday() >= 5:
+                continue
+            checked += 1
+            ds = day.isoformat()
+            if ds in have or ds in no_trade:
+                continue
+
+            calls += 1
+            actual, mrows = twse_api.by_date(day.strftime("%Y%m%d"))
+            if not actual or not mrows:
+                empty_days.append(ds)
+                print("  %s 無資料(休市或尚未公布)" % ds)
+                time.sleep(3)
+                continue
+            mrows = keep_listed(mrows)
+            merge_names(mrows, names)
+            n = save_day(actual, mrows, "twse:MI_INDEX")
+            have.add(actual)
+            fetched += 1
+            print("  %s 補上 %d 檔" % (actual, n))
+            time.sleep(3)
+
+        # 只有在已經取得更晚的交易日時,才能斷定該日是休市。
+        # 否則可能只是當天資料尚未公布,記下來會導致永遠不再抓。
+        newest = max(common.history_dates() or [""])
+        confirmed = [d for d in empty_days if newest > d]
+        if confirmed:
+            no_trade.update(confirmed)
+            print("  確認休市(不再重複查詢):%s" % "、".join(sorted(confirmed)))
+            common.write_json(common.NO_TRADE_FILE, sorted(no_trade))
 
     # --- 回補:用 MI_INDEX 逐日往回抓 ---
     want = args.backfill_days
