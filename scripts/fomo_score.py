@@ -34,6 +34,10 @@ THRESHOLDS = {
 }
 
 
+def _round(v, n=2):
+    return None if v is None else round(v, n)
+
+
 def _clamp(v, lo=0, hi=100):
     return max(lo, min(hi, v))
 
@@ -112,7 +116,7 @@ def judge_fake_stock_rally(m):
         missing.append("外資買賣超")
     elif v <= 0:
         score += 20
-        reasons.append("外資賣超或中性(%s 股)" % format(int(v), ","))
+        reasons.append("外資賣超或中性(%s 股)" % format(abs(int(v)), ","))
 
     v = m.get("pbr")
     if v is None:
@@ -179,7 +183,7 @@ def calculate_stock_fomo_score(m):
         missing.append("外資買賣超")
     elif v < 0:
         score += 10
-        reasons.append("外資賣超(%s 股)" % format(int(v), ","))
+        reasons.append("外資賣超(%s 股)" % format(abs(int(v)), ","))
 
     return {"score": _clamp(score), "reasons": reasons, "missing": missing}
 
@@ -200,10 +204,82 @@ def judge_divergence(m):
         return {
             "is_divergence": True,
             "reason": "外資賣超 %s 股、投信買進 %s 股,方向背離,可能是投信短打"
-                      % (format(int(fn), ","), format(int(tn), ",")),
+                      % (format(abs(int(fn)), ","), format(int(tn), ",")),
             "missing": [],
         }
     return {"is_divergence": False, "reason": "", "missing": []}
+
+
+# ---------------------------------------------------------------- 標記文字
+
+def _lots(shares):
+    """股數轉張數(1 張 = 1000 股)。"""
+    return abs(shares) / 1000.0
+
+
+def _money(amount):
+    """金額轉易讀字串。這是用收盤價推估的,呼叫端會標「約」。"""
+    a = abs(amount)
+    if a >= 1e8:
+        return "%.1f 億" % (a / 1e8)
+    if a >= 1e4:
+        return "%.0f 萬" % (a / 1e4)
+    return "%.0f 元" % a
+
+
+def _pct_clause(of_volume, of_market, market_label):
+    parts = []
+    if of_volume is not None:
+        parts.append("佔該股成交量 %.1f%%" % of_volume)
+    if of_market is not None:
+        parts.append("佔全市場%s %.1f%%" % (market_label, of_market))
+    return "、".join(parts)
+
+
+def foreign_annotation(m):
+    """
+    外資連買/連賣的標記。資料不足時回傳 None,不硬湊。
+    """
+    days = m.get("foreign_streak_days")
+    direction = m.get("foreign_streak_direction")
+    if not days or direction not in ("buy", "sell"):
+        return None
+
+    verb = "連買" if direction == "buy" else "連賣"
+    label = "外資買超" if direction == "buy" else "外資賣超"
+    bits = ["外資%s %d 天" % (verb, days)]
+
+    shares = m.get("foreign_streak_shares")
+    if shares is not None:
+        bits.append("總共 %s 張" % format(round(_lots(shares)), ","))
+    amount = m.get("foreign_streak_amount")
+    if amount is not None:
+        bits.append("約 $%s" % _money(amount))
+
+    pct = _pct_clause(m.get("foreign_pct_of_volume"),
+                      m.get("foreign_pct_of_market"), label)
+    if pct:
+        bits.append(pct)
+    bits.append("注意長線變化")
+    return ",".join(bits)
+
+
+def trust_annotation(m):
+    """投信買進時的標記(賣超不標,依規格只在買進時提示)。"""
+    net = m.get("trust_net")
+    if net is None or net <= 0:
+        return None
+
+    bits = ["此股投信買進 %s 張" % format(round(_lots(net)), ",")]
+    amount = m.get("trust_amount")
+    if amount is not None:
+        bits.append("約 $%s" % _money(amount))
+    pct = _pct_clause(m.get("trust_pct_of_volume"),
+                      m.get("trust_pct_of_market"), "投信買超")
+    if pct:
+        bits.append(pct)
+    bits.append("注意可能是短打")
+    return ",".join(bits)
 
 
 def score_stock(stock_id, stock_name, m):
@@ -229,6 +305,8 @@ def score_stock(stock_id, stock_name, m):
         "fake_rally_score": fake["score"],
         "is_divergence": diverge["is_divergence"],
         "divergence_reason": diverge["reason"],
+        "foreign_note": foreign_annotation(m),
+        "trust_note": trust_annotation(m),
         "metrics": {
             "pbr": m.get("pbr"),
             "margin_change_5d_pct": (None if m.get("margin_change_5d_pct") is None
@@ -238,6 +316,15 @@ def score_stock(stock_id, stock_name, m):
             "foreign_net": m.get("foreign_net"),
             "foreign_consecutive_buy_days": m.get("foreign_consecutive_buy_days"),
             "trust_net": m.get("trust_net"),
+            "foreign_streak_days": m.get("foreign_streak_days"),
+            "foreign_streak_direction": m.get("foreign_streak_direction"),
+            "foreign_streak_shares": m.get("foreign_streak_shares"),
+            "foreign_streak_amount": m.get("foreign_streak_amount"),
+            "foreign_pct_of_volume": _round(m.get("foreign_pct_of_volume")),
+            "foreign_pct_of_market": _round(m.get("foreign_pct_of_market")),
+            "trust_amount": m.get("trust_amount"),
+            "trust_pct_of_volume": _round(m.get("trust_pct_of_volume")),
+            "trust_pct_of_market": _round(m.get("trust_pct_of_market")),
             "close": m.get("close"),
             "volume": m.get("volume"),
             "prev_volume": m.get("prev_volume"),

@@ -19,6 +19,7 @@ import time
 import common
 import finmind_api as fm
 import fomo_score
+import twse_api
 
 WATCHLIST_FILE = os.path.join(common.ROOT, "watchlist.json")
 FOMO_DIR = os.path.join(common.DATA_DIR, "fomo")
@@ -71,6 +72,11 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
         "close": None, "volume": None, "prev_volume": None,
         "margin_change_5d_pct": None, "short_margin_ratio": None,
         "foreign_net": None, "foreign_consecutive_buy_days": None, "pbr": None,
+        "trust_net": None, "trust_amount": None,
+        "foreign_streak_days": None, "foreign_streak_direction": None,
+        "foreign_streak_shares": None, "foreign_streak_amount": None,
+        "foreign_pct_of_volume": None, "foreign_pct_of_market": None,
+        "trust_pct_of_volume": None, "trust_pct_of_market": None,
     }
 
     # --- 價量 ---
@@ -96,27 +102,64 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
                 if prev is not None and prev > 0:
                     m["margin_change_5d_pct"] = (mb - prev) / prev * 100.0
 
-    # --- 外資買賣超 ---
-    foreign = {}
-    for r in inst_rows:
-        name = str(r.get("name") or "")
-        # FinMind 的外資是 Foreign_Investor;Foreign_Dealer_Self 是外資自營,不計入
-        if name != "Foreign_Investor":
-            continue
-        d = r.get("date")
-        buy, sell = _num(r.get("buy")), _num(r.get("sell"))
-        if d and buy is not None and sell is not None:
-            foreign[d] = buy - sell
+    # --- 法人買賣超 ---
+    # 探測確認 FinMind 的 name 只有這五種:Foreign_Investor、Investment_Trust、
+    # Foreign_Dealer_Self、Dealer_self、Dealer_Hedging。
+    # 外資取 Foreign_Investor(不含外資自營商),與 TWSE T86 的定義一致。
+    close_by_date = {r["date"]: _num(r.get("close")) for r in prices if r.get("date")}
+
+    def net_by_date(target_name):
+        out = {}
+        for r in inst_rows:
+            if str(r.get("name") or "") != target_name:
+                continue
+            d = r.get("date")
+            buy, sell = _num(r.get("buy")), _num(r.get("sell"))
+            if d and buy is not None and sell is not None:
+                out[d] = buy - sell
+        return out
+
+    foreign = net_by_date("Foreign_Investor")
+    trust = net_by_date("Investment_Trust")
+
     if foreign:
         days = sorted(foreign.keys())
-        m["foreign_net"] = foreign[days[-1]]
-        streak = 0
+        latest = foreign[days[-1]]
+        m["foreign_net"] = latest
+
+        # 真漲門檻只看「連續買超」天數
+        buy_streak = 0
         for d in reversed(days):
             if foreign[d] > 0:
-                streak += 1
+                buy_streak += 1
             else:
                 break
-        m["foreign_consecutive_buy_days"] = streak
+        m["foreign_consecutive_buy_days"] = buy_streak
+
+        # 標記文字要連買也要連賣,所以另外算帶方向的連續天數
+        if latest != 0:
+            want_positive = latest > 0
+            streak_days, streak_shares, streak_amount = 0, 0.0, 0.0
+            for d in reversed(days):
+                v = foreign[d]
+                if v == 0 or (v > 0) != want_positive:
+                    break
+                streak_days += 1
+                streak_shares += v
+                c = close_by_date.get(d)
+                if c:
+                    streak_amount += v * c
+            m["foreign_streak_days"] = streak_days
+            m["foreign_streak_direction"] = "buy" if want_positive else "sell"
+            m["foreign_streak_shares"] = streak_shares
+            m["foreign_streak_amount"] = streak_amount if streak_amount else None
+
+    if trust:
+        tdays = sorted(trust.keys())
+        m["trust_net"] = trust[tdays[-1]]
+        c = close_by_date.get(tdays[-1])
+        if c:
+            m["trust_amount"] = trust[tdays[-1]] * c
 
     # --- PBR ---
     pers = _by_date(per_rows)
@@ -215,6 +258,28 @@ def main():
         print("錯誤:抓不到任何交易日資料", file=sys.stderr)
         return 1
 
+    # 全市場法人買賣超,用來算「佔全市場外資/投信買超 P%」的分母。
+    # 分母用「買超個股加總」而非市場買賣差額 —— 差額可能是負數
+    # (實測 2026-08-31 外資淨賣超 143 億),當分母算出的百分比沒有意義。
+    market_totals = None
+    try:
+        ymd = data_date.replace("-", "")
+        t86_date, _per_stock, market_totals = twse_api.institutional_by_date(
+            ymd, keep=lambda c: common.is_listed_common(c, None))
+        if market_totals:
+            print("\n== 全市場法人買超總額(%s,上市普通股)==" % t86_date)
+            print("   外資買超 %s 股 / 賣超 %s 股"
+                  % (format(int(market_totals["foreign_buy"]), ","),
+                     format(int(market_totals["foreign_sell"]), ",")))
+            print("   投信買超 %s 股 / 賣超 %s 股"
+                  % (format(int(market_totals["trust_buy"]), ","),
+                     format(int(market_totals["trust_sell"]), ",")))
+    except twse_api.TWSEError as e:
+        print("\n警告:取不到全市場法人資料(%s),佔全市場的百分比將略過" % e)
+        market_totals = None
+
+    _add_percentages(rows, market_totals)
+
     result = {
         "date": data_date,
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -243,6 +308,43 @@ def main():
     for r in rows[:5]:
         print("   %s %s FOMO=%d" % (r["stock_id"], r["stock_name"], r["fomo_score"]))
     return 0
+
+
+def _pct(part, whole):
+    if part is None or not whole:
+        return None
+    return abs(part) / float(whole) * 100.0
+
+
+def _add_percentages(rows, totals):
+    """補上兩種佔比,並用完整資訊重新產生標記文字。"""
+    for r in rows:
+        m = dict(r["metrics"])
+        vol = m.get("volume")
+        fn, tn = m.get("foreign_net"), m.get("trust_net")
+
+        m["foreign_pct_of_volume"] = _pct(fn, vol)
+        m["trust_pct_of_volume"] = _pct(tn, vol)
+
+        if totals:
+            if fn is not None:
+                key = "foreign_buy" if fn > 0 else "foreign_sell"
+                m["foreign_pct_of_market"] = _pct(fn, totals.get(key))
+            if tn is not None:
+                key = "trust_buy" if tn > 0 else "trust_sell"
+                m["trust_pct_of_market"] = _pct(tn, totals.get(key))
+
+        r["metrics"]["foreign_pct_of_volume"] = _round(m["foreign_pct_of_volume"])
+        r["metrics"]["trust_pct_of_volume"] = _round(m["trust_pct_of_volume"])
+        r["metrics"]["foreign_pct_of_market"] = _round(m.get("foreign_pct_of_market"))
+        r["metrics"]["trust_pct_of_market"] = _round(m.get("trust_pct_of_market"))
+
+        r["foreign_note"] = fomo_score.foreign_annotation(m)
+        r["trust_note"] = fomo_score.trust_annotation(m)
+
+
+def _round(v, n=2):
+    return None if v is None else round(v, n)
 
 
 def _strip_ts(blob):

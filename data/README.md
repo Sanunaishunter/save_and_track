@@ -31,6 +31,13 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 
 - 觀察名單在 repo 根目錄的 `watchlist.json`(手動維護,10~30 檔)
 - 資料來自 FinMind 四個 dataset:價量、融資融券、三大法人、PER/PBR
+- 另外打一次 TWSE T86(全市場個股法人買賣超)算「佔全市場買超」的分母。
+  分母用「買超個股加總」而非市場買賣差額 —— 差額可能是負數
+  (實測 2026-08-31 外資淨賣超 143 億),當分母算出的百分比沒有意義
+- 法人類別以 FinMind 的 name 欄位區分,實測只有五種:Foreign_Investor、
+  Investment_Trust、Foreign_Dealer_Self、Dealer_self、Dealer_Hedging。
+  外資取 Foreign_Investor(不含外資自營商),與 T86 的外資定義一致
+- 金額為「淨買賣超股數 × 收盤價」的推估值,dataset 沒有金額欄位,顯示時標「約」
 - Token 由 GitHub Secret `FINMIND_TOKEN` 注入 runner,**不會進入任何靜態檔案**
 - 門檻常數集中在 `scripts/fomo_score.py` 的 `THRESHOLDS`
 

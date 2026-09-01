@@ -448,6 +448,21 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .badge-real { color: var(--down); }
 .badge-fake { color: var(--up); }
 .badge-none { color: var(--muted); }
+.badge-diverge { color: #d4a24c; }
+
+/* 法人標記 */
+.fomo-detail .note {
+  border-left: 3px solid currentColor;
+  padding: 7px 10px;
+  margin: 0 0 8px;
+  border-radius: 0 6px 6px 0;
+  background: var(--panel-3);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+.fomo-detail .note-foreign { color: var(--text); border-left-color: var(--up); }
+.fomo-detail .note-trust { color: var(--text); border-left-color: var(--down); }
+.fomo-detail .note-diverge { color: var(--text); border-left-color: #d4a24c; }
 
 .scan-table tr.fomo-row { cursor: pointer; }
 .scan-table tr.fomo-row:active td { background: var(--panel-2); }

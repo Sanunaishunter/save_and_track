@@ -13,6 +13,11 @@ import urllib.error
 import urllib.request
 
 OPENAPI_ALL = "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL"
+T86_URLS = [
+    "https://www.twse.com.tw/rwd/zh/fund/T86?date=%s&selectType=ALL&response=json",
+    "https://www.twse.com.tw/fund/T86?response=json&date=%s&selectType=ALL",
+]
+
 MI_INDEX_URLS = [
     "https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=%s&type=ALL&response=json",
     "https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date=%s&type=ALL",
@@ -159,3 +164,74 @@ def by_date(ymd):
         return date_iso, rows
 
     raise TWSEError("MI_INDEX 兩條路徑都失敗:%s" % last_err)
+
+
+# ---------------------------------------------------------------- 法人買賣超
+
+# T86 的外資欄位是「不含外資自營商」,與 FinMind 的 Foreign_Investor 定義一致。
+T86_CODE = "證券代號"
+T86_FOREIGN = "外陸資買賣超股數(不含外資自營商)"
+T86_TRUST = "投信買賣超股數"
+
+
+def institutional_by_date(ymd, keep=None):
+    """
+    指定日期的全市場個股法人買賣超(T86)。
+
+    回傳 (日期, {code: {foreign, trust}}, totals);休市日回傳 (None, {}, {})。
+    totals 是「買超個股加總」與「賣超個股加總」,用來當佔比的分母 ——
+    不能用市場買賣差額,因為那可能是負數(實測 8/31 外資淨賣超 143 億),
+    當分母算出來的百分比沒有意義。
+
+    keep(code) 可指定只納入哪些股票,讓分母與掃描範圍一致。
+    """
+    last_err = None
+    for tpl in T86_URLS:
+        try:
+            payload = _get_json(tpl % ymd)
+        except TWSEError as e:
+            last_err = e
+            continue
+
+        if payload.get("stat") != "OK":
+            return None, {}, {}
+
+        fields = payload.get("fields") or []
+        data = payload.get("data") or []
+        if not data:
+            return None, {}, {}
+
+        idx = {name: i for i, name in enumerate(fields)}
+        for need in (T86_CODE, T86_FOREIGN, T86_TRUST):
+            if need not in idx:
+                last_err = TWSEError("T86 欄位與預期不符:%s" % fields)
+                break
+        else:
+            per_stock = {}
+            totals = {"foreign_buy": 0, "foreign_sell": 0,
+                      "trust_buy": 0, "trust_sell": 0}
+            for row in data:
+                try:
+                    code = str(row[idx[T86_CODE]]).strip()
+                    foreign = _num(row[idx[T86_FOREIGN]])
+                    trust = _num(row[idx[T86_TRUST]])
+                except (IndexError, TypeError):
+                    continue
+                if foreign is None and trust is None:
+                    continue
+                if keep and not keep(code):
+                    continue
+                per_stock[code] = {"foreign": foreign or 0.0, "trust": trust or 0.0}
+                if foreign:
+                    key = "foreign_buy" if foreign > 0 else "foreign_sell"
+                    totals[key] += abs(foreign)
+                if trust:
+                    key = "trust_buy" if trust > 0 else "trust_sell"
+                    totals[key] += abs(trust)
+
+            date_iso = str(payload.get("date") or ymd)
+            date_iso = "%s-%s-%s" % (date_iso[:4], date_iso[4:6], date_iso[6:8])
+            return date_iso, per_stock, totals
+        continue
+
+    raise TWSEError("T86 兩條路徑都失敗:%s" % last_err)

@@ -909,6 +909,7 @@
     var out = '';
     if (r.is_real_rally) out += '<span class="badge badge-real">真漲</span>';
     if (r.is_fake_rally) out += '<span class="badge badge-fake">虛漲</span>';
+    if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
     if (!out) out = '<span class="badge badge-none">—</span>';
     return out;
   }
@@ -929,7 +930,19 @@
     if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
     if (m.foreign_consecutive_buy_days != null) facts.push('外資連買 ' + m.foreign_consecutive_buy_days + ' 天');
 
+    var notes = '';
+    if (r.foreign_note) {
+      notes += '<div class="note note-foreign">' + esc(r.foreign_note) + '</div>';
+    }
+    if (r.trust_note) {
+      notes += '<div class="note note-trust">' + esc(r.trust_note) + '</div>';
+    }
+    if (r.is_divergence && r.divergence_reason) {
+      notes += '<div class="note note-diverge">' + esc(r.divergence_reason) + '</div>';
+    }
+
     return '<tr class="fomo-detail"><td colspan="4">' +
+      notes +
       (facts.length ? '<div>' + esc(facts.join('　·　')) + '</div>' : '') +
       reasonList('FOMO 依據(' + r.fomo_score + ' 分)', r.reasons.fomo) +
       reasonList('真漲依據(' + r.real_rally_score + ' 分)', r.reasons.real_rally) +
