@@ -108,7 +108,7 @@ def main():
 
     result = {
         "date": target,
-        "generated_at": dt.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "market": "twse-listed-common",
         "params": {
             "ma_window": common.MA_WINDOW,

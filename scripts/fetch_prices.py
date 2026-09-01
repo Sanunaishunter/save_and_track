@@ -21,7 +21,7 @@ import finmind_api
 
 def taipei_today():
     # runner 是 UTC,台北 = UTC+8
-    return (dt.datetime.utcnow() + dt.timedelta(hours=8)).date()
+    return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
 
 
 def refresh_names():
