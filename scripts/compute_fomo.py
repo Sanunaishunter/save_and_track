@@ -63,7 +63,11 @@ def load_from_scan(top):
 
     為什麼要限制檔數:每檔要打 4 次 FinMind,未註冊上限 300 次/小時、
     註冊會員 600 次/小時。爆量清單動輒近百檔(9/1 是 99 檔),
-    全打會超過額度,所以預設只取前 30 名(120 次)。
+    全打(約 400 次)會超過額度。
+
+    預設取前 60 名 = 60×4 + 4 次 preflight = 244 次,未註冊模式下還在
+    300 的額度內,但只剩 56 次餘裕 —— 同一小時內重跑第二次就會撞牆。
+    設了 FINMIND_TOKEN(額度 600)才有空間再往上加。
     """
     scan = common.read_json(SCAN_LATEST)
     if not scan or not isinstance(scan.get("rows"), list) or not scan["rows"]:
@@ -219,7 +223,7 @@ def main():
     ap.add_argument("--skip-preflight", action="store_true")
     ap.add_argument("--source", choices=["scan", "watchlist"], default="scan",
                     help="名單來源:scan = 爆量掃描結果(預設),watchlist = 手動名單")
-    ap.add_argument("--top", type=int, default=30,
+    ap.add_argument("--top", type=int, default=60,
                     help="從爆量清單取前幾名(依 vol_ratio),0 = 全部")
     args = ap.parse_args()
 
@@ -244,10 +248,19 @@ def main():
         "爆量掃描" if args.source == "scan" else "watchlist.json",
         ("(%s,取前 %d 名)" % (scan_date, args.top)) if scan_date and args.source == "scan" else ""))
     print("  觀察名單:%d 檔" % len(watchlist))
-    est = len(watchlist) * 4 + 1
+    per_stock = len(DATASETS)
+    est = len(watchlist) * per_stock
+    if not args.skip_preflight:
+        est += len(DATASETS)          # preflight 每個 dataset 各打一次
     cap = 600 if fm.has_token() else 300
-    print("  預估 API 呼叫:%d 次(上限 %d 次/小時)%s"
-          % (est, cap, "  ⚠ 可能超過額度" if est > cap else ""))
+    note = ""
+    if est > cap:
+        note = "  ⚠ 會超過額度,後面的股票會抓不到"
+    elif est > cap * 0.8:
+        note = "  ⚠ 已用掉 %d%% 額度,同一小時內別重跑" % round(100.0 * est / cap)
+    print("  預估 API 呼叫:%d 次(上限 %d 次/小時)%s" % (est, cap, note))
+    if est > cap * 0.8 and not fm.has_token():
+        print("     設定 GitHub Secret FINMIND_TOKEN 可把額度提高到 600 次/小時")
     print("  區間:%s ~ %s" % (start_s, end_s))
     print("  FinMind token:%s" % ("已設定" if fm.has_token() else "未設定(未註冊模式)"))
 
