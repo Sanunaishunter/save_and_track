@@ -241,3 +241,41 @@ def institutional_by_date(ymd, keep=None):
         continue
 
     raise TWSEError("T86 兩條路徑都失敗:%s" % last_err)
+
+
+# ---------------------------------------------------------------- 公司基本資料
+
+COMPANY_INFO_URL = "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
+
+CI_CODE = "公司代號"
+CI_NAME = "公司簡稱"
+CI_SHARES = "已發行普通股數或TDR原股發行股數"
+
+
+def company_info():
+    """
+    上市公司基本資料(t187ap03_L),實測 1,095 筆。
+
+    這裡只取發行股數 —— 市值 = 發行股數 × 收盤價,也就是 SH2 在沒有付費
+    market_value 欄位時用的免費 fallback。
+
+    這支表也有「產業別」,但值是數字代碼("01"),與 SH2 用的中文分類
+    (FinMind industry_category)對不起來,所以產業別另外從 FinMind 取。
+
+    回傳 {code: {"name": 簡稱, "shares": 股數}}。
+    """
+    data = _get_json(COMPANY_INFO_URL)
+    if not isinstance(data, list) or not data:
+        raise TWSEError("t187ap03_L 回傳空資料")
+
+    out = {}
+    for r in data:
+        code = str(r.get(CI_CODE) or "").strip()
+        if not code:
+            continue
+        shares = _num(r.get(CI_SHARES))
+        out[code] = {
+            "name": str(r.get(CI_NAME) or "").strip(),
+            "shares": None if shares is None else int(shares),
+        }
+    return out

@@ -39,6 +39,7 @@
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
+    <button type="button" class="viewbtn" data-view="tick">產業流向</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -89,6 +90,43 @@
       <tbody id="fomo-tbody"></tbody>
     </table>
   </div>
+</main>
+
+<main class="list-wrap" id="tick-wrap" hidden>
+  <div class="scan-meta" id="tick-meta">載入中…</div>
+
+  <div class="tick-controls" id="tick-controls" hidden>
+    <div class="ctrl-row" id="tick-metrics">
+      <button type="button" class="tchip is-active" data-metric="d0_d1">D0-D1</button>
+      <button type="button" class="tchip" data-metric="ma21">MA21</button>
+      <button type="button" class="tchip" data-metric="fixed">固定基底</button>
+      <button type="button" class="tchip" data-metric="rolling">滾動基底</button>
+    </div>
+    <div class="ctrl-row" id="tick-windows" hidden>
+      <span class="ctrl-label">窗口</span>
+      <button type="button" class="tchip is-active" data-window="20">20</button>
+      <button type="button" class="tchip" data-window="10">10</button>
+      <button type="button" class="tchip" data-window="5">5</button>
+    </div>
+    <div class="ctrl-row">
+      <label class="ctrl-check"><input type="checkbox" id="tick-raw"> 同時顯示原始筆數</label>
+    </div>
+  </div>
+
+  <div class="table-scroll">
+    <table class="scan-table tick-table" id="tick-table" hidden>
+      <thead>
+        <tr>
+          <th>產業</th>
+          <th class="num">大</th>
+          <th class="num">中</th>
+          <th class="num">小</th>
+        </tr>
+      </thead>
+      <tbody id="tick-tbody"></tbody>
+    </table>
+  </div>
+  <p class="tick-foot" id="tick-foot" hidden></p>
 </main>
 
 <section id="detail" class="sheet" hidden aria-hidden="true">

@@ -12,13 +12,22 @@ NAMES_FILE = os.path.join(DATA_DIR, "stock_names.json")
 NO_TRADE_FILE = os.path.join(DATA_DIR, "no_trade_dates.json")
 LATEST_FILE = os.path.join(DATA_DIR, "scan-latest.json")
 
+# 8012 產業/市值 Tick 聚合
+META_FILE = os.path.join(DATA_DIR, "stock_meta.json")
+TICK_DIR = os.path.join(DATA_DIR, "tick")
+TICK_LATEST_FILE = os.path.join(DATA_DIR, "tick-latest.json")
+TICK_MEMBERS_FILE = os.path.join(DATA_DIR, "tick-members-latest.json")
+# 抽樣一旦凍結就不再重算,所以這個檔案是長期狀態,不是每日產出
+TICK_SAMPLE_FILE = os.path.join(DATA_DIR, "tick-sample-members.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]
 
-# MA20 需要「不含當日的前 20 個交易日」,25 天是緩衝
+# MA20 需要「不含當日的前 20 個交易日」,原本留 25 天當緩衝。
+# 8012 的 rebase 圖要顯示 30 天(DISPLAY_DAYS),所以保留天數跟著拉到 30。
 MA_WINDOW = 20
-KEEP_DAYS = 25
+KEEP_DAYS = 30
 
 # 爆量門檻(沿用 SH2 project102)
 VOL_RATIO_THRESHOLD = 1.5

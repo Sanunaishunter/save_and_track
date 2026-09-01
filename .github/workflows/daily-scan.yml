@@ -1,4 +1,4 @@
-name: 每日掃描(爆量 + FOMO)
+name: 每日掃描(爆量 + 產業流向 + FOMO)
 
 on:
   schedule:
@@ -26,8 +26,8 @@ on:
         description: 'FOMO:只跑前 N 檔(測試用,0 = 不限)'
         required: false
         default: '0'
-      probe_8012:
-        description: '8012:順便探測產業別與市值資料源(一次性)'
+      refreeze_tick:
+        description: '產業流向:重抽凍結樣本(會讓序列不可比,平常別動)'
         required: false
         default: 'false'
         type: choice
@@ -59,7 +59,20 @@ jobs:
       - name: 計算爆量清單
         run: python scripts/compute_scan.py
 
-      # --- FOMO(讀上一步剛產生的 scan-latest.json)---
+      # --- 產業/市值 Tick 聚合 ---
+      # 產業別要打 FinMind(只有一次呼叫),排在 FOMO 前面,
+      # 免得 FOMO 把額度用完之後這裡抓不到。
+      - name: 更新產業別與發行股數
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/fetch_stock_meta.py
+
+      - name: 計算產業流向
+        run: |
+          python scripts/compute_tick_flow.py \
+            ${{ github.event.inputs.refreeze_tick == 'true' && '--refreeze' || '' }}
+
+      # --- FOMO(讀前面剛產生的 scan-latest.json)---
       # 合併成同一個 job 的用意就在這:順序由執行序保證,不再依賴兩支排程
       # 的時間差。GitHub 排程會延遲,先前拆成兩支時,只要爆量那支慢超過
       # 10 分鐘,FOMO 就會讀到前一天的清單。
@@ -74,12 +87,6 @@ jobs:
 
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。
-      - name: 探測 8012 資料源(一次性,手動勾選才跑)
-        if: ${{ github.event.inputs.probe_8012 == 'true' }}
-        env:
-          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
-        run: python scripts/probe_8012.py
-
       - name: 提交結果
         if: always()
         run: |
@@ -94,13 +101,14 @@ jobs:
           import json
           bits = []
           date = None
-          for path, label in (("data/scan-latest.json", "爆量"),
-                              ("data/fomo-latest.json", "FOMO")):
+          for path, label, unit in (("data/scan-latest.json", "爆量", "檔"),
+                                    ("data/tick-latest.json", "產業流向", "組"),
+                                    ("data/fomo-latest.json", "FOMO", "檔")):
               try:
                   with open(path, encoding="utf-8") as f:
                       d = json.load(f)
-                  n = d.get("count", d.get("scored_count"))
-                  bits.append("%s %s 檔" % (label, n))
+                  n = d.get("count", d.get("group_count", d.get("scored_count")))
+                  bits.append("%s %s %s" % (label, n, unit))
                   date = d.get("date")
               except Exception:
                   pass

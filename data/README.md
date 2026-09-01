@@ -1,17 +1,22 @@
 # data/
 
 由 GitHub Actions(`.github/workflows/daily-scan.yml`)自動產生,不要手動編輯。
-爆量與 FOMO 在同一個 workflow 的連續步驟裡跑,順序由執行序保證。
+爆量、產業流向、FOMO 在同一個 workflow 的連續步驟裡跑,順序由執行序保證。
 
 | 路徑 | 內容 |
 | --- | --- |
-| `history/YYYY-MM-DD.json` | 當日上市全市場 OHLCV。`columns` 定義欄位順序,`rows` 是精簡陣列。只保留最近 25 個交易日(MA20 需要 20 天 + 緩衝) |
+| `history/YYYY-MM-DD.json` | 當日上市全市場 OHLCV。`columns` 定義欄位順序,`rows` 是精簡陣列。只保留最近 30 個交易日(MA20 需要 20 天;產業流向的 rebase 圖要顯示 30 天) |
 | `scans/YYYY-MM-DD.json` | 當日爆量掃描結果存查 |
 | `scan-latest.json` | 最新一次掃描結果,前端讀這支 |
 | `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應) |
 | `no_trade_dates.json` | 已確認休市的日期,避免每天重複查詢 |
 | `fomo-latest.json` | 最新一次 FOMO 掃描結果,前端讀這支 |
 | `fomo/YYYY-MM-DD.json` | 當日 FOMO 結果存底 |
+| `stock_meta.json` | 代碼 → 產業別 + 已發行普通股數(產業流向分組用) |
+| `tick-latest.json` | 最新一次產業流向交叉表,前端讀這支 |
+| `tick/YYYY-MM-DD.json` | 當日產業流向結果存查 |
+| `tick-members-latest.json` | 各組凍結成員的逐日成交筆數(前端展開時才載入) |
+| `tick-sample-members.json` | 凍結的抽樣名單。**長期狀態,不是每日產出** |
 
 資料來源全部是 TWSE,免 token、免額度:
 
@@ -56,3 +61,77 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 - 門檻常數集中在 `scripts/fomo_score.py` 的 `THRESHOLDS`
 
 ⚠️ FOMO 用的是 `data/fomo/`,爆量掃描用的是 `data/history/`,兩者不共用路徑。
+
+
+---
+
+## 產業/市值 Tick 聚合(產業流向)
+
+移植自 SH2 的 8012。純觀察型:看哪個「產業 × 市值級距」今天的成交活躍度
+暴增或暴減,**不產生任何進出場訊號**,也不跟爆量/FOMO 的邏輯耦合。
+
+### 活躍度指標
+
+SH2 用的是 Shioaji 的逐筆 tick 數。這邊沒有 tick 資料源,改用 TWSE 每日
+行情的**成交筆數**(`STOCK_DAY_ALL` 的 `Transaction` /`MI_INDEX` 的
+「成交筆數」)—— 同樣是「今天成交了幾次」,不是股數也不是金額,
+語意上是最接近的免費替代。實測 9/1 全市場 4,234,997 筆、1,081 檔都有值。
+
+### 分組
+
+- **產業別**:FinMind `TaiwanStockInfo.industry_category` 原樣落地,
+  **不做任何分類合併**(SH2 那邊也沒合併)。實測回傳 57 種,SH2 記錄的
+  44 種全都出現;多出來的多半是上櫃 ETF/ETN/受益證券等,四位數非 0 開頭
+  的代碼篩選本來就會排掉。少數是分類本身的分歧(觀光事業 vs 觀光餐旅、
+  農業科技 vs 農業科技業…),照 SH2 的做法不動它
+- **市值**:`已發行普通股數 × 當日收盤價 / 1e8`(億元)。股數取自 TWSE
+  OpenAPI `t187ap03_L`(上市公司基本資料),就是 SH2 沒有付費
+  `market_value` 欄位時的免費 fallback
+- **級距**:`assign_relative_tiers` —— **組內相對排名**,不是絕對門檻。
+  單一產業內依市值由大到小排,`ceil(n/3)` / `ceil(2n/3)` 兩刀切成大/中/小。
+  常數 `CAP_TIER_LARGE_MIN=1000` / `CAP_TIER_MID_MIN=100` 是 SH2 v1
+  deprecated 的絕對門檻,留在程式裡對照,v2 不用
+
+### 抽樣凍結
+
+每組依**股票代號**排序取前 `SAMPLE_TARGET_PER_GROUP=10` 檔,不足額全取,
+第一次算出來就寫進 `tick-sample-members.json` **永久凍結**。之後即使市值
+變動、分層結果會不同,成員也不跟著跳 —— 序列要能前後比較就得如此。
+
+要重抽:`python scripts/compute_tick_flow.py --refreeze`,或在 workflow
+手動觸發時把 `refreeze_tick` 設成 true。**重抽會讓歷史序列不可比**。
+
+### 聚合
+
+- 組內每日值 = **算術平均**(不是加總、不是中位數)
+- 缺值成員**排除出當日分母,不計 0**;整組當天無人有資料 → `null`
+- `sample_count`(凍結組樣本數,固定)與 `reporting_count`(當天實際
+  貢獻分母的成員數)分開記,避免「n=10 但只有 3 支回報」被誤讀
+- `low_n_flag`:`sample_count < 10` 時為 1,前端整列變灰並標「樣本數低」
+
+### 四種比法
+
+公式在 `scripts/tick_indicators.py`,是 SH2 `sh2_autorollout/indicators.py`
+的原樣移植(`vals` 新到舊、`vals[0]` 是今天;分母 None 或 0 整條 None;
+分子分母任一 None 該格留 None、不當 0):
+
+| 指標 | 定義 | 需要天數 |
+| --- | --- | --- |
+| D0-D1 | `vals[0] - vals[1]` | 2 |
+| MA21 | 21 日均,窗口內缺任一天 → `null`(all-or-nothing) | 21 |
+| 固定基底 w | `vals[0] / vals[w-1]`,w ∈ 20/10/5 | w |
+| 滾動基底 w | `vals[0] / vals[w]`,w ∈ 20/10/5 | w+1 |
+
+SH2 的 `WINDOWS` 已經拿掉 30(Shioaji tick 只留 28 天湊不齊),這邊沿用
+20/10/5。`fixed_30`/`rolling_30` 不產生。
+
+### 前端
+
+`tick-latest.json` 只存**當天那一格**的各項指標值,外加每組 30 天的原始
+序列(`series_raw`)。個股逐日明細是前端用同一組公式現算的 —— 為了不讓
+兩份公式默默走鐘,每次載入都會把前端算出來的當日值跟後端的逐格比對,
+對不上就在表格下方標紅字說明。
+
+染色:D0-D1 以 0 為基準、rebase 以 1 為基準,高於基準紅、低於基準綠
+(沿用本站「紅漲綠跌」的慣例;SH2 8012 原本是綠正紅負)。MA21 與原始
+筆數是水準值恆為正,不染色。**沒有絕對值分級門檻**,純看方向。

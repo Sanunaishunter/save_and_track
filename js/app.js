@@ -886,11 +886,13 @@
     el('tabs').hidden = v !== 'track';
     el('scan-wrap').hidden = v !== 'scan';
     el('fomo-wrap').hidden = v !== 'fomo';
+    el('tick-wrap').hidden = v !== 'tick';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
     if (v === 'scan') loadScan(false);
     if (v === 'fomo') loadFomo(false);
+    if (v === 'tick') loadTick(false);
   }
 
   // ---------------------------------------------------------- FOMO 掃描
@@ -1020,6 +1022,352 @@
       });
   }
 
+  // ------------------------------------------- 產業/市值 Tick 聚合(8012)
+
+  // 這四支跟 scripts/tick_indicators.py 是同一組公式的 JS 版。
+  // 後端只把「當天那一格」算好寫進 JSON,個股逐日明細要在前端現算,
+  // 所以這裡必須有一份 —— 兩邊會不會走鐘,由 tickSelfCheck() 每次載入時比對。
+  var TICK_DISPLAY_DAYS = 30;
+
+  function tiFixed(vals, w) {
+    var out = [], i;
+    for (i = 0; i < TICK_DISPLAY_DAYS; i++) out.push(null);
+    if (w - 1 >= vals.length) return out;
+    var base = vals[w - 1];
+    if (base === null || base === undefined || base === 0) return out;
+    for (i = 0; i < Math.min(w, TICK_DISPLAY_DAYS); i++) {
+      var v = i < vals.length ? vals[i] : null;
+      out[i] = (v === null || v === undefined) ? null : v / base;
+    }
+    return out;
+  }
+
+  function tiRolling(vals, w) {
+    var out = [], i;
+    for (i = 0; i < TICK_DISPLAY_DAYS; i++) out.push(null);
+    for (i = 0; i < Math.min(w, TICK_DISPLAY_DAYS); i++) {
+      if (i >= vals.length || i + w >= vals.length) continue;
+      var v = vals[i], base = vals[i + w];
+      if (v !== null && v !== undefined &&
+          base !== null && base !== undefined && base !== 0) {
+        out[i] = v / base;
+      }
+    }
+    return out;
+  }
+
+  function tiD0D1(vals) {
+    var out = [], i;
+    for (i = 0; i < TICK_DISPLAY_DAYS; i++) out.push(null);
+    for (i = 0; i < Math.min(vals.length, TICK_DISPLAY_DAYS); i++) {
+      if (i + 1 >= vals.length) continue;
+      var v = vals[i], prev = vals[i + 1];
+      if (v !== null && v !== undefined && prev !== null && prev !== undefined) {
+        out[i] = v - prev;
+      }
+    }
+    return out;
+  }
+
+  function tiMa(vals, w) {
+    var out = [], i, j;
+    for (i = 0; i < TICK_DISPLAY_DAYS; i++) out.push(null);
+    for (i = 0; i < TICK_DISPLAY_DAYS; i++) {
+      if (i + w > vals.length) continue;
+      var sum = 0, ok = true;
+      for (j = i; j < i + w; j++) {
+        if (vals[j] === null || vals[j] === undefined) { ok = false; break; }
+        sum += vals[j];
+      }
+      if (ok) out[i] = sum / w;
+    }
+    return out;
+  }
+
+  // 依目前選的指標,把一條「新到舊」的原始序列換算成該指標的逐日序列
+  function tickSeries(vals) {
+    if (tickMetric === 'd0_d1') return tiD0D1(vals);
+    if (tickMetric === 'ma21') return tiMa(vals, 21);
+    if (tickMetric === 'fixed') return tiFixed(vals, tickWindow);
+    return tiRolling(vals, tickWindow);
+  }
+
+  var TICK_URL = 'data/tick-latest.json';
+  var TICK_MEMBERS_URL = 'data/tick-members-latest.json';
+
+  var tickData = null;
+  var tickMembers = null;
+  var tickLoaded = false;
+  var tickMetric = 'd0_d1';
+  var tickWindow = 20;
+  var tickShowRaw = false;
+  var tickOpenGroup = null;      // '產業|層'
+  var tickOpenStock = null;      // 展開中的個股代碼
+
+  var TICK_TIERS = ['大', '中', '小'];
+
+  function tickMetricKey() {
+    if (tickMetric === 'd0_d1' || tickMetric === 'ma21') return tickMetric;
+    return tickMetric + '_' + tickWindow;
+  }
+
+  // 染色基準:D0-D1 比 0(今天比昨天),rebase 比 1(等於基期)。
+  // MA21 與原始筆數是「水準值」不是「變化量」,恆為正,染色沒有意義 → 不染。
+  function tickBaseline() {
+    if (tickMetric === 'd0_d1') return 0;
+    if (tickMetric === 'ma21') return null;
+    return 1;
+  }
+
+  function tickFmt(v) {
+    if (v === null || v === undefined) return '無資料';
+    if (tickMetric === 'd0_d1') return (v > 0 ? '+' : '') + fmtInt(Math.round(v));
+    if (tickMetric === 'ma21') return fmtInt(Math.round(v));
+    return v.toFixed(3);
+  }
+
+  function tickCls(v) {
+    var base = tickBaseline();
+    if (v === null || v === undefined || base === null) return '';
+    if (v > base) return 'up';
+    if (v < base) return 'down';
+    return '';
+  }
+
+  function tickGroupMap() {
+    var map = {};
+    var rows = (tickData && tickData.rows) || [];
+    for (var i = 0; i < rows.length; i++) {
+      map[rows[i].industry + '|' + rows[i].cap_tier] = rows[i];
+    }
+    return map;
+  }
+
+  // 產業列順序沿用後端排好的順序(三層 sample_count 加總,多的在前)
+  function tickIndustries() {
+    var seen = {}, out = [];
+    var rows = (tickData && tickData.rows) || [];
+    for (var i = 0; i < rows.length; i++) {
+      if (!seen[rows[i].industry]) { seen[rows[i].industry] = 1; out.push(rows[i].industry); }
+    }
+    return out;
+  }
+
+  // 後端算好的當日值 vs 前端用同一組公式現算的值,對不上就講出來,
+  // 不要讓兩份公式默默走鐘。
+  function tickSelfCheck() {
+    var rows = (tickData && tickData.rows) || [];
+    var checked = 0, bad = [];
+    var combos = [['d0_d1', 0], ['ma21', 0], ['fixed', 20], ['fixed', 10], ['fixed', 5],
+                  ['rolling', 20], ['rolling', 10], ['rolling', 5]];
+    var savedM = tickMetric, savedW = tickWindow;
+    for (var i = 0; i < rows.length; i++) {
+      var vals = rows[i].series_raw || [];
+      for (var c = 0; c < combos.length; c++) {
+        tickMetric = combos[c][0];
+        tickWindow = combos[c][1] || 20;
+        var mine = tickSeries(vals)[0];
+        var theirs = rows[i][tickMetricKey()];
+        checked++;
+        var same = (mine === null || mine === undefined)
+          ? (theirs === null || theirs === undefined)
+          : (theirs !== null && theirs !== undefined &&
+             Math.abs(mine - theirs) <= Math.max(1e-9, Math.abs(theirs) * 1e-9));
+        if (!same) bad.push(rows[i].industry + '|' + rows[i].cap_tier + ' ' + tickMetricKey());
+      }
+    }
+    tickMetric = savedM; tickWindow = savedW;
+    return { checked: checked, bad: bad };
+  }
+
+  function tickCellHtml(row, key) {
+    if (!row) return '<td class="num tick-cell tick-none">—</td>';
+    var v = row[tickMetricKey()];
+    var cls = tickCls(v);
+    var under = row.reporting_count < row.sample_count;
+    var html = '<td class="num tick-cell' + (row.low_n_flag ? ' low-n' : '') +
+      '" data-group="' + esc(key) + '">' +
+      '<span class="tick-val ' + cls + '">' + esc(tickFmt(v)) + '</span>' +
+      '<span class="tick-n' + (under ? ' n-under' : '') + '">n=' + row.sample_count +
+      (under ? '(實報' + row.reporting_count + ')' : '') + '</span>';
+    if (tickShowRaw) {
+      html += '<span class="tick-raw">' +
+        (row.avg_tick_count_raw === null || row.avg_tick_count_raw === undefined
+          ? '—' : fmtInt(Math.round(row.avg_tick_count_raw))) + ' 筆</span>';
+    }
+    return html + '</td>';
+  }
+
+  function tickBarsHtml(series, days) {
+    var base = tickBaseline();
+    var i, max = 0;
+    for (i = 0; i < days.length; i++) {
+      var v = series[i];
+      if (v === null || v === undefined) continue;
+      var d = base === null ? v : v - base;
+      if (Math.abs(d) > max) max = Math.abs(d);
+    }
+    var out = '<div class="bars">';
+    for (i = 0; i < days.length; i++) {
+      var val = series[i];
+      var txt = tickFmt(val);
+      var w = 0, sign = 'pos';
+      if (val !== null && val !== undefined && max > 0) {
+        var diff = base === null ? val : val - base;
+        w = Math.abs(diff) / max * 50;
+        sign = diff < 0 ? 'neg' : 'pos';
+      }
+      out += '<div class="bar-row">' +
+        '<span class="bar-date">' + esc(days[i].slice(5)) + '</span>' +
+        '<span class="bar-track">' +
+          '<i class="bar-fill ' + sign + '" style="width:' + w.toFixed(1) + '%"></i>' +
+        '</span>' +
+        '<span class="bar-val ' + tickCls(val) + '">' + esc(txt) + '</span>' +
+      '</div>';
+    }
+    return out + '</div>';
+  }
+
+  function tickMembersHtml(key) {
+    if (!tickMembers) return '<div class="tick-detail">成員明細載入中…</div>';
+    var list = (tickMembers.groups || {})[key];
+    if (!list || !list.length) return '<div class="tick-detail">這組沒有凍結成員。</div>';
+    var days = tickMembers.days || [];
+    var html = '<div class="tick-detail">' +
+      '<div class="tick-detail-head">' + esc(key.replace('|', ' · ')) +
+      ' 凍結成員 ' + list.length + ' 檔(最新 ' + esc(tickMembers.date || '') + ')</div>' +
+      '<table class="member-table"><thead><tr>' +
+      '<th>代碼</th><th>名稱</th><th class="num">市值(億)</th>' +
+      '<th class="num">當日筆數</th><th class="num">' + esc(tickMetricLabel()) + '</th>' +
+      '</tr></thead><tbody>';
+    for (var i = 0; i < list.length; i++) {
+      var m = list[i];
+      var ticks = m.ticks || [];
+      var mv = tickSeries(ticks)[0];
+      var latest = ticks.length ? ticks[0] : null;
+      var open = tickOpenStock === m.code;
+      html += '<tr class="member-row' + (open ? ' is-open' : '') +
+        '" data-stock="' + esc(m.code) + '">' +
+        '<td class="code mono">' + esc(m.code) + '</td>' +
+        '<td>' + esc(m.name || '') + '</td>' +
+        '<td class="num">' + (m.frozen_cap_yi === null || m.frozen_cap_yi === undefined
+            ? '—' : fmtInt(Math.round(m.frozen_cap_yi))) + '</td>' +
+        '<td class="num">' + (latest === null || latest === undefined
+            ? '—' : fmtInt(latest)) + '</td>' +
+        '<td class="num ' + tickCls(mv) + '">' + esc(tickFmt(mv)) + '</td>' +
+      '</tr>';
+      if (open) {
+        html += '<tr class="member-detail-row"><td colspan="5">' +
+          tickBarsHtml(tickSeries(ticks), days) + '</td></tr>';
+      }
+    }
+    return html + '</tbody></table></div>';
+  }
+
+  function tickMetricLabel() {
+    if (tickMetric === 'd0_d1') return 'D0-D1';
+    if (tickMetric === 'ma21') return 'MA21';
+    return (tickMetric === 'fixed' ? '固定基底' : '滾動基底') + tickWindow;
+  }
+
+  function renderTick(res) {
+    var meta = el('tick-meta');
+    var tbody = el('tick-tbody');
+
+    if (res && res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('tick-table').hidden = true;
+      el('tick-controls').hidden = true;
+      el('tick-foot').hidden = true;
+      return;
+    }
+
+    el('tick-table').hidden = false;
+    el('tick-controls').hidden = false;
+    el('tick-windows').hidden = (tickMetric === 'd0_d1' || tickMetric === 'ma21');
+
+    var p = tickData.params || {};
+    meta.textContent = tickData.date + ' 收盤 · ' + tickData.group_count +
+      ' 組(產業 × 市值級距),每組最多 ' + (p.sample_target_per_group || '?') +
+      ' 檔凍結樣本,序列 ' + ((tickData.days || []).length) + ' 個交易日';
+
+    var map = tickGroupMap();
+    var inds = tickIndustries();
+    var html = '';
+    for (var i = 0; i < inds.length; i++) {
+      var ind = inds[i];
+      var lowAll = true;
+      for (var t = 0; t < TICK_TIERS.length; t++) {
+        var r0 = map[ind + '|' + TICK_TIERS[t]];
+        if (r0 && !r0.low_n_flag) lowAll = false;
+      }
+      html += '<tr class="tick-row' + (lowAll ? ' low-n-row' : '') + '">' +
+        '<td class="tick-ind">' + esc(ind) +
+        (lowAll ? '<span class="low-note">樣本數低,僅供參考</span>' : '') + '</td>';
+      for (t = 0; t < TICK_TIERS.length; t++) {
+        var key = ind + '|' + TICK_TIERS[t];
+        html += tickCellHtml(map[key], key);
+      }
+      html += '</tr>';
+      if (tickOpenGroup && tickOpenGroup.indexOf(ind + '|') === 0) {
+        html += '<tr class="tick-detail-row"><td colspan="4">' +
+          tickMembersHtml(tickOpenGroup) + '</td></tr>';
+      }
+    }
+    tbody.innerHTML = html;
+
+    var chk = tickSelfCheck();
+    var foot = el('tick-foot');
+    foot.hidden = false;
+    if (chk.bad.length) {
+      foot.className = 'tick-foot warn';
+      foot.textContent = '注意:前端公式與後端算出來的當日值有 ' + chk.bad.length +
+        ' 格對不上(共比對 ' + chk.checked + ' 格),例如 ' + chk.bad.slice(0, 3).join('、') +
+        '。表格內的個股明細是前端現算的,請以後端 JSON 為準。';
+    } else {
+      foot.className = 'tick-foot';
+      foot.textContent = '純觀察用,不是進出場訊號。前端公式已與後端當日值逐格比對一致(' +
+        chk.checked + ' 格)。點格子展開凍結成員,再點個股看逐日明細。';
+    }
+  }
+
+  function loadTickMembers() {
+    if (tickMembers) return Promise.resolve(tickMembers);
+    return fetch(TICK_MEMBERS_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (d) { tickMembers = d; return d; });
+  }
+
+  function loadTick(force) {
+    if (tickLoaded && !force) return;
+    el('tick-meta').textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderTick({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(TICK_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        tickLoaded = true;
+        tickData = data;
+        renderTick();
+      })
+      .catch(function (e) {
+        renderTick({ error: '讀不到產業流向結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
   // ---------------------------------------------------------- 事件綁定
 
   function bind() {
@@ -1049,6 +1397,63 @@
       var id = tr.getAttribute('data-fomo');
       fomoOpen = (fomoOpen === id) ? null : id;
       renderFomo(fomoData);
+    });
+
+    el('tick-metrics').addEventListener('click', function (e) {
+      var b = e.target.closest('.tchip');
+      if (!b || !tickData) return;
+      tickMetric = b.getAttribute('data-metric');
+      Array.prototype.forEach.call(el('tick-metrics').children, function (c) {
+        c.classList.toggle('is-active', c === b);
+      });
+      renderTick();
+    });
+
+    el('tick-windows').addEventListener('click', function (e) {
+      var b = e.target.closest('.tchip');
+      if (!b || !tickData) return;
+      tickWindow = parseInt(b.getAttribute('data-window'), 10);
+      Array.prototype.forEach.call(el('tick-windows').querySelectorAll('.tchip'), function (c) {
+        c.classList.toggle('is-active', c === b);
+      });
+      renderTick();
+    });
+
+    el('tick-raw').addEventListener('change', function (e) {
+      tickShowRaw = !!e.target.checked;
+      if (tickData) renderTick();
+    });
+
+    el('tick-tbody').addEventListener('click', function (e) {
+      if (!tickData) return;
+
+      // 個股逐日明細(在展開的成員表裡)
+      var mrow = e.target.closest('.member-row');
+      if (mrow) {
+        var code = mrow.getAttribute('data-stock');
+        tickOpenStock = (tickOpenStock === code) ? null : code;
+        renderTick();
+        return;
+      }
+
+      var cell = e.target.closest('.tick-cell');
+      if (!cell) return;
+      var key = cell.getAttribute('data-group');
+      if (!key) return;
+      if (tickOpenGroup === key) {
+        tickOpenGroup = null;
+        tickOpenStock = null;
+        renderTick();
+        return;
+      }
+      tickOpenGroup = key;
+      tickOpenStock = null;
+      renderTick();                       // 先展開,成員明細到了再補上
+      loadTickMembers()
+        .then(function () { if (tickOpenGroup === key) renderTick(); })
+        .catch(function (err) {
+          toast('讀不到成員明細(' + (err.message || err) + ')');
+        });
     });
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
