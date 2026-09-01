@@ -250,6 +250,7 @@ COMPANY_INFO_URL = "https://openapi.twse.com.tw/v1/opendata/t187ap03_L"
 CI_CODE = "公司代號"
 CI_NAME = "公司簡稱"
 CI_SHARES = "已發行普通股數或TDR原股發行股數"
+CI_INDUSTRY = "產業別"
 
 
 def company_info():
@@ -259,10 +260,14 @@ def company_info():
     這裡只取發行股數 —— 市值 = 發行股數 × 收盤價,也就是 SH2 在沒有付費
     market_value 欄位時用的免費 fallback。
 
-    這支表也有「產業別」,但值是數字代碼("01"),與 SH2 用的中文分類
-    (FinMind industry_category)對不起來,所以產業別另外從 FinMind 取。
+    這支表的「產業別」是數字代碼("01"),與 SH2 用的中文分類
+    (FinMind industry_category)對不起來,所以分組用的產業別仍從 FinMind 取;
+    這裡把代碼一併帶出來存查 —— FinMind 對上市電子股幾乎只給「電子工業」
+    這個大類,將來若要換成 TWSE 的官方細分類,需要的原料就在這欄。
 
-    回傳 {code: {"name": 簡稱, "shares": 股數}}。
+    這份清單同時是「哪些代碼是上市公司」的權威來源。
+
+    回傳 {code: {"name": 簡稱, "shares": 股數, "twse_industry_code": 代碼}}。
     """
     data = _get_json(COMPANY_INFO_URL)
     if not isinstance(data, list) or not data:
@@ -277,5 +282,6 @@ def company_info():
         out[code] = {
             "name": str(r.get(CI_NAME) or "").strip(),
             "shares": None if shares is None else int(shares),
+            "twse_industry_code": str(r.get(CI_INDUSTRY) or "").strip() or None,
         }
     return out

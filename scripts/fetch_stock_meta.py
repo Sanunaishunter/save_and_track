@@ -9,6 +9,10 @@
   - 發行股數:TWSE OpenAPI t187ap03_L「已發行普通股數或TDR原股發行股數」
     市值 = 發行股數 × 收盤價,即 SH2 沒有付費 market_value 時的免費 fallback
 
+TaiwanStockInfo 是全市場的(上市 + 上櫃 + 興櫃),代碼規則分不出來,
+所以用 t187ap03_L 的公司清單當「哪些是上市」的權威來源,只留上市的。
+上櫃在這個專案是明確排除的,留著只會讓檔案變大又容易誤讀。
+
 這份資料變動很慢(產業別幾乎不動、股數只在增減資時變),抓失敗時
 沿用既有檔案,不清空 —— 分層一旦凍結也不會因此漂移。
 """
@@ -32,7 +36,7 @@ SH2_INDUSTRIES = set("""ETF 光電業 其他 其他電子業 其他電子類 創
 
 
 def fetch_industries():
-    """{code: industry}。只留上市普通股。"""
+    """{code: industry}。代碼規則先濾一次(四位數、開頭非 0),上市與否稍後再濾。"""
     rows = finmind_api.request("TaiwanStockInfo")
     out = {}
     for r in rows:
@@ -56,23 +60,30 @@ def main():
 
     errors = []
 
+    # --- 上市公司清單 + 發行股數(同時是「哪些代碼是上市」的權威來源)---
+    company = {}
+    try:
+        company = twse_api.company_info()
+        print("TWSE t187ap03_L:%d 筆上市公司基本資料" % len(company))
+    except Exception as e:                    # noqa: BLE001 - 抓不到就沿用舊檔
+        errors.append("發行股數:%r" % (e,))
+        print("!! 上市公司清單抓取失敗,沿用既有資料:%r" % (e,), file=sys.stderr)
+
     # --- 產業別 ---
     industries = {}
     try:
         industries = fetch_industries()
-        print("FinMind TaiwanStockInfo:上市普通股 %d 檔" % len(industries))
-    except Exception as e:                    # noqa: BLE001 - 抓不到就沿用舊檔
+        raw_n = len(industries)
+        if company:
+            industries = {c: v for c, v in industries.items() if c in company}
+            print("FinMind TaiwanStockInfo:代碼規則符合 %d 檔,其中上市 %d 檔"
+                  % (raw_n, len(industries)))
+        else:
+            print("FinMind TaiwanStockInfo:代碼規則符合 %d 檔"
+                  "(沒有上市清單可比對,這次不濾)" % raw_n)
+    except Exception as e:                    # noqa: BLE001
         errors.append("產業別:%r" % (e,))
         print("!! 產業別抓取失敗,沿用既有資料:%r" % (e,), file=sys.stderr)
-
-    # --- 發行股數 ---
-    company = {}
-    try:
-        company = twse_api.company_info()
-        print("TWSE t187ap03_L:%d 筆公司基本資料" % len(company))
-    except Exception as e:                    # noqa: BLE001
-        errors.append("發行股數:%r" % (e,))
-        print("!! 發行股數抓取失敗,沿用既有資料:%r" % (e,), file=sys.stderr)
 
     for code, ind in industries.items():
         stocks.setdefault(code, {})["industry"] = ind
@@ -84,18 +95,42 @@ def main():
             rec["shares"] = info["shares"]
         if info.get("name") and not rec.get("name"):
             rec["name"] = info["name"]
+        if info.get("twse_industry_code"):
+            rec["twse_industry_code"] = info["twse_industry_code"]
+
+    # 拿得到上市清單時才清掉非上市的殘留;拿不到就原樣留著,不亂刪
+    if company:
+        dropped = [c for c in stocks if c not in company]
+        for c in dropped:
+            del stocks[c]
+        if dropped:
+            print("清掉非上市殘留 %d 檔" % len(dropped))
 
     if industries:
         seen = set(industries.values())
         extra = sorted(seen - SH2_INDUSTRIES)
         missing = sorted(SH2_INDUSTRIES - seen)
-        print("產業別 %d 種;SH2 那 44 種沒有的 %d 種:%s"
+        print("上市產業別 %d 種;SH2 那 44 種沒有的 %d 種:%s"
               % (len(seen), len(extra), "、".join(extra) or "無"))
         print("SH2 有但這次沒出現的:%s" % ("、".join(missing) or "無"))
 
     with_ind = sum(1 for v in stocks.values() if v.get("industry"))
     with_sh = sum(1 for v in stocks.values() if v.get("shares"))
     print("合計 %d 檔:有產業別 %d、有股數 %d" % (len(stocks), with_ind, with_sh))
+
+    # FinMind 對上市電子股幾乎只給「電子工業」這個大類(實測 247 檔),
+    # 細分類多半只用在上櫃/新上市 —— 分組會因此失去鑑別力,印出來提醒。
+    counts = {}
+    for v in stocks.values():
+        ind = v.get("industry")
+        if ind:
+            counts[ind] = counts.get(ind, 0) + 1
+    if counts:
+        top = sorted(counts.items(), key=lambda x: -x[1])[:3]
+        biggest, n = top[0]
+        print("最大的產業:%s(%d 檔,佔 %.0f%%);前三大 = %s"
+              % (biggest, n, 100.0 * n / max(1, with_ind),
+                 "、".join("%s %d" % t for t in top)))
 
     if args.dry_run:
         return 1 if errors else 0
@@ -105,6 +140,8 @@ def main():
         "sources": {
             "industry": "FinMind TaiwanStockInfo.industry_category",
             "shares": "TWSE OpenAPI t187ap03_L 已發行普通股數或TDR原股發行股數",
+            "twse_industry_code": "TWSE OpenAPI t187ap03_L 產業別(數字代碼,存查用,目前不參與分組)",
+            "scope": "只含上市:以 t187ap03_L 的公司清單為準",
         },
         "count": len(stocks),
         "stocks": stocks,
