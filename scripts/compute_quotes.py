@@ -22,7 +22,7 @@ DAYS = tick_indicators.DISPLAY_DAYS
 
 
 def load_day(date_str):
-    """{stock_id: close}。只留上市普通股。"""
+    """{stock_id: {"close":.., "high":.., "low":..}}。只留上市普通股。"""
     blob = common.read_json(common.history_path(date_str))
     if not blob:
         return {}
@@ -33,11 +33,13 @@ def load_day(date_str):
         try:
             sid = row[idx["id"]]
             close = row[idx["close"]]
+            high = row[idx["high"]]
+            low = row[idx["low"]]
         except (IndexError, KeyError, TypeError):
             continue
         if close is None or not common.is_listed_common(sid, None):
             continue
-        out[sid] = close
+        out[sid] = {"close": close, "high": high, "low": low}
     return out
 
 
@@ -59,20 +61,28 @@ def main():
 
     codes = sorted(by_day[0])
     out_names, close, prev_close, ret_bp = [], [], [], []
+    daily_high, daily_low, daily_close = [], [], []
     for code in codes:
         out_names.append(names.get(code) or "")
-        close.append(by_day[0][code])
-        prev_close.append(by_day[1].get(code) if len(by_day) > 1 else None)
+        close.append(by_day[0][code]["close"])
+        prev_rec = by_day[1].get(code) if len(by_day) > 1 else None
+        prev_close.append(prev_rec["close"] if prev_rec else None)
 
         series = []
         for i in range(len(dates) - 1):
             cur = by_day[i].get(code)
             prev = by_day[i + 1].get(code)
-            if cur is None or prev is None or prev == 0:
+            if cur is None or prev is None or prev["close"] == 0:
                 series.append(None)
             else:
-                series.append(int(round((cur / prev - 1.0) * 10000)))
+                series.append(int(round((cur["close"] / prev["close"] - 1.0) * 10000)))
         ret_bp.append(series)
+
+        # 持倉「假設在某天高/低點出場」要用到的逐日 OHLC,跟 ret_bp 同一個
+        # 日期範圍(新到舊),缺值(停牌/新股上市前)留 None。
+        daily_high.append([(by_day[i].get(code) or {}).get("high") for i in range(len(dates))])
+        daily_low.append([(by_day[i].get(code) or {}).get("low") for i in range(len(dates))])
+        daily_close.append([(by_day[i].get(code) or {}).get("close") for i in range(len(dates))])
 
     full = sum(1 for s in ret_bp if all(v is not None for v in s))
     print("== 報價快照 %s ==" % target)
@@ -84,12 +94,16 @@ def main():
         "date": target,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "days": dates,
-        "note": "ret_bp 是日報酬的基點整數(100 = +1.00%),新到舊,長度 = days-1",
+        "note": "ret_bp 是日報酬的基點整數(100 = +1.00%),新到舊,長度 = days-1。"
+                "daily_high/daily_low/daily_close 新到舊,長度 = days,缺值(停牌/新股上市前)為 null",
         "codes": codes,
         "names": out_names,
         "close": close,
         "prev_close": prev_close,
         "ret_bp": ret_bp,
+        "daily_high": daily_high,
+        "daily_low": daily_low,
+        "daily_close": daily_close,
     }, compact=True)
     print("已寫入 %s" % common.QUOTES_FILE)
     return 0
