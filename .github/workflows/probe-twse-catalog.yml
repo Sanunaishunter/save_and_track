@@ -1,0 +1,15 @@
+name: 探測 TWSE OpenAPI 端點目錄(一次性)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 探測
+        run: python scripts/probe_twse_catalog.py
