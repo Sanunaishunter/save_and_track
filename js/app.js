@@ -1907,7 +1907,7 @@
         '<div><span>目前市值</span><b>' + (unpriced === n ? '—' : fmtMoney(value)) + '</b></div>' +
         '<div><span>總損益</span><b class="' + plClass(pl) + '">' +
           (pl == null ? '—' : signed(pl)) + '</b></div>' +
-        '<div><span>今日</span><b class="' + plClass(hasToday ? today : null) + '">' +
+        '<div><span>今日(非當下損益)</span><b class="' + plClass(hasToday ? today : null) + '">' +
           (hasToday ? signed(today) : '—') + '</b></div>' +
       '</div>' +
       '<div class="pos-sum-note">' + n + ' 檔有持倉' +
@@ -1956,7 +1956,7 @@
         '<div><span>損益</span><b class="' + plClass(st.pl) + '">' + signed(st.pl) +
           (st.plPct == null ? '' : '<span class="dim">' + fmtPct(st.plPct, 1) + '</span>') +
           '</b></div>' +
-        '<div><span>今日</span><b class="' + plClass(st.today) + '">' + signed(st.today) + '</b></div>' +
+        '<div><span>今日(非當下損益)</span><b class="' + plClass(st.today) + '">' + signed(st.today) + '</b></div>' +
       '</div>';
       if (!st.priced) {
         summary += '<p class="warn-sm">查不到 ' + esc(rec.stock_id || '這檔') +
