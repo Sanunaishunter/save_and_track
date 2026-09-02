@@ -1838,6 +1838,43 @@
   }
 
   /**
+   * 整個持有期間(從最早一筆下單日到報價日)逐日高/低的極值,以及「當時
+   * 出場」的假設損益。用來回答「爆量隔天最高點沒賣到,到底少賺多少」——
+   * 只看得到高/低,不代表當時真的來得及賣在那個價位。
+   * 回傳 {high:{date,price,pl}, low:{date,price,pl}} 或 null(缺報價序列)。
+   */
+  function positionRangeStats(rec, shares, cost) {
+    if (!quotes || !quotesIdx || !shares) return null;
+    var i = quotesIdx[String(rec.stock_id || '').trim()];
+    if (i == null) return null;
+    var highs = quotes.daily_high && quotes.daily_high[i];
+    var lows = quotes.daily_low && quotes.daily_low[i];
+    var days = quotes.days;
+    if (!highs || !lows || !days) return null;
+
+    var earliest = null, k;
+    for (k = 0; k < (rec.positions || []).length; k++) {
+      var d = rec.positions[k].date;
+      if (d && (earliest == null || d < earliest)) earliest = d;
+    }
+    if (!earliest) return null;
+
+    var bestDate = null, bestPrice = null, worstDate = null, worstPrice = null;
+    for (k = 0; k < days.length; k++) {
+      if (days[k] < earliest) continue;
+      var h = highs[k], l = lows[k];
+      if (h != null && (bestPrice == null || h > bestPrice)) { bestPrice = h; bestDate = days[k]; }
+      if (l != null && (worstPrice == null || l < worstPrice)) { worstPrice = l; worstDate = days[k]; }
+    }
+    if (bestPrice == null || worstPrice == null) return null;
+
+    return {
+      high: { date: bestDate, price: bestPrice, pl: shares * bestPrice - cost },
+      low: { date: worstDate, price: worstPrice, pl: shares * worstPrice - cost }
+    };
+  }
+
+  /**
    * 一筆紀錄的持倉損益。沒有報價時 priced 為 false —— 成本仍然算得出來,
    * 但市值與損益一律留 null,不要拿成本當市值假裝沒事。
    */
@@ -1853,7 +1890,8 @@
     var out = {
       count: ps.length, shares: shares, cost: cost,
       avg: shares > 0 ? cost / shares : null,
-      priced: false, close: null, value: null, pl: null, plPct: null, today: null
+      priced: false, close: null, value: null, pl: null, plPct: null, today: null,
+      range: positionRangeStats(rec, shares, cost)
     };
     var q = quoteOf(rec.stock_id);
     if (!q || !(q.close > 0)) return out;
@@ -1883,6 +1921,7 @@
   function renderPosSummary() {
     var box = el('pos-summary');
     var cost = 0, value = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
+    var bestSum = 0, worstSum = 0, hasRange = false, noRange = 0;
     for (var i = 0; i < data.length; i++) {
       if (data[i].status === 'rejected') continue;
       var st = positionStats(data[i]);
@@ -1894,6 +1933,11 @@
         if (st.today != null) { today += st.today; hasToday = true; }
       } else {
         unpriced++;
+      }
+      if (st.range) {
+        bestSum += st.range.high.pl; worstSum += st.range.low.pl; hasRange = true;
+      } else {
+        noRange++;
       }
     }
     if (!n) { box.hidden = true; return; }
@@ -1909,11 +1953,18 @@
           (pl == null ? '—' : signed(pl)) + '</b></div>' +
         '<div><span>今日(非當下損益)</span><b class="' + plClass(hasToday ? today : null) + '">' +
           (hasToday ? signed(today) : '—') + '</b></div>' +
+        '<div><span>持有期間各自最佳出場</span><b class="' + plClass(hasRange ? bestSum : null) + '">' +
+          (hasRange ? signed(bestSum) : '—') + '</b></div>' +
+        '<div><span>持有期間各自最差出場</span><b class="' + plClass(hasRange ? worstSum : null) + '">' +
+          (hasRange ? signed(worstSum) : '—') + '</b></div>' +
       '</div>' +
       '<div class="pos-sum-note">' + n + ' 檔有持倉' +
         (quotes ? ' · 報價 ' + esc(quotes.date) : ' · 尚未載入報價') +
         (unpriced ? ' · ' + unpriced + ' 檔查不到報價,未計入市值' : '') +
-      '</div>';
+        (noRange ? ' · ' + noRange + ' 檔缺逐日高低,未計入最佳/最差出場' : '') +
+      '</div>' +
+      '<div class="pos-sum-note">最佳/最差出場是「每檔各自在持有期間內的最高/最低點出場」加總,' +
+        '不是同一天;只代表當時的高低價曾經出現,不代表真的來得及成交。</div>';
   }
 
   function positionsHtml(rec) {
@@ -1957,7 +2008,19 @@
           (st.plPct == null ? '' : '<span class="dim">' + fmtPct(st.plPct, 1) + '</span>') +
           '</b></div>' +
         '<div><span>今日(非當下損益)</span><b class="' + plClass(st.today) + '">' + signed(st.today) + '</b></div>' +
+        '<div><span>期間最高</span><b>' + (st.range ? st.range.high.price : '—') + '</b>' +
+          (st.range ? '<span class="dim">' + esc(st.range.high.date) + '</span>' : '') + '</div>' +
+        '<div><span>若在最高點出場</span><b class="' + plClass(st.range && st.range.high.pl) + '">' +
+          (st.range ? signed(st.range.high.pl) : '—') + '</b></div>' +
+        '<div><span>期間最低</span><b>' + (st.range ? st.range.low.price : '—') + '</b>' +
+          (st.range ? '<span class="dim">' + esc(st.range.low.date) + '</span>' : '') + '</div>' +
+        '<div><span>若在最低點出場</span><b class="' + plClass(st.range && st.range.low.pl) + '">' +
+          (st.range ? signed(st.range.low.pl) : '—') + '</b></div>' +
       '</div>';
+      if (st.range) {
+        summary += '<p class="dim">「期間」指從最早一筆下單日到報價日;高低點只代表當天曾經出現過那個價,' +
+          '不代表真的來得及在那個價位成交。</p>';
+      }
       if (!st.priced) {
         summary += '<p class="warn-sm">查不到 ' + esc(rec.stock_id || '這檔') +
           ' 的報價(只收錄上市普通股,或報價檔還沒載入),所以只顯示成本。</p>';
