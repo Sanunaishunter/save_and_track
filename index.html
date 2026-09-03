@@ -43,6 +43,7 @@
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
     <button type="button" class="viewbtn" data-view="broker">券商</button>
     <button type="button" class="viewbtn" data-view="dca">定期定額</button>
+    <button type="button" class="viewbtn" data-view="risk">籌碼</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -231,6 +232,115 @@
       <tbody id="dca-tbody"></tbody>
     </table>
   </div>
+</main>
+
+<main class="list-wrap" id="risk-wrap" hidden>
+  <div class="scan-meta" id="risk-meta">載入中…</div>
+
+  <section class="panel" id="risk-market-panel" hidden>
+    <h2 class="panel-title">大盤</h2>
+    <div class="k-sum" id="risk-market"></div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">今日漲跌停</h2>
+    <p class="panel-note">
+      用今日收盤價對照昨收算出的漲跌幅度 ±10% 檔位價,不是官方旗標
+      (探測過 TWSE 的 TWT84U,但欄位的跨日對應關係無法完全驗證,改用
+      現有資料自己算,已用真實案例核對過)。只看得到「收在漲跌停」,
+      盤中曾經觸及但收盤打開的不算。
+    </p>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-limit-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th class="num">收盤</th>
+            <th class="num">漲跌幅</th>
+            <th>狀態</th>
+          </tr>
+        </thead>
+        <tbody id="risk-limit-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">注意股</h2>
+    <p class="panel-note" id="risk-attention-note"></p>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-attention-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th class="num">收盤</th>
+            <th class="num">本益比</th>
+            <th>公布次數</th>
+            <th>注意原因</th>
+          </tr>
+        </thead>
+        <tbody id="risk-attention-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">融資融券</h2>
+    <p class="panel-note">依融資今日餘額由高到低排序。</p>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-margin-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th class="num">融資餘額</th>
+            <th class="num">融資增減</th>
+            <th class="num">融券餘額</th>
+            <th class="num">融券增減</th>
+          </tr>
+        </thead>
+        <tbody id="risk-margin-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">停資停券預告</h2>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-suspension-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th>起</th>
+            <th>迄</th>
+            <th>原因</th>
+          </tr>
+        </thead>
+        <tbody id="risk-suspension-tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2 class="panel-title">除權除息預告</h2>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-exdiv-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
+            <th>日期</th>
+            <th>權/息</th>
+            <th class="num">現金股利</th>
+          </tr>
+        </thead>
+        <tbody id="risk-exdiv-tbody"></tbody>
+      </table>
+    </div>
+  </section>
 </main>
 
 <section id="detail" class="sheet" hidden aria-hidden="true">

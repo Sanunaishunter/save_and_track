@@ -1023,6 +1023,226 @@
       });
   }
 
+  // ---------------------------------------------------------- 籌碼/風險
+
+  var RISK_URL = 'data/risk-latest.json';
+  var riskLoaded = false;
+
+  function tickSize(price) {
+    if (price < 10) return 0.01;
+    if (price < 50) return 0.05;
+    if (price < 100) return 0.1;
+    if (price < 500) return 0.5;
+    if (price < 1000) return 1;
+    return 5;
+  }
+
+  /**
+   * 台股漲跌停價:昨收 ±10%,依「結果價位所在級距」的檔位捨入
+   * (漲停無條件捨去、跌停無條件進位)。探測過 TWSE 官方的 TWT84U
+   * 想直接拿旗標,但 Today/PreviousDay 兩組欄位跨日的對應關係沒辦法
+   * 從單次探測完全驗證,改成自己算 —— 用 3518 的真實案例核對過:
+   * 8/31 收盤 28.55 算出的漲停價 31.40,跟 9/1 實際收盤一致;9/2 收盤
+   * 31.90 算出的漲停/跌停價 35.05 / 28.75,跟 TWT84U 官方數字也一致。
+   */
+  function limitUpPrice(prevClose) {
+    var raw = prevClose * 1.1;
+    var t = tickSize(raw);
+    return Math.round(Math.floor(raw / t + 1e-9) * t * 100) / 100;
+  }
+  function limitDownPrice(prevClose) {
+    var raw = prevClose * 0.9;
+    var t = tickSize(raw);
+    return Math.round(Math.ceil(raw / t - 1e-9) * t * 100) / 100;
+  }
+
+  /** 今日鎖漲跌停清單,純前端算,只需要 quotes-latest.json,不用額外資料檔。*/
+  function renderRiskLimitTable() {
+    var tbody = el('risk-limit-tbody');
+    var table = el('risk-limit-table');
+    if (!quotes || !quotes.codes) { table.hidden = true; return; }
+
+    var rows = [];
+    for (var i = 0; i < quotes.codes.length; i++) {
+      var close = quotes.close[i], prev = quotes.prev_close[i];
+      if (!(close > 0) || !(prev > 0)) continue;
+      var chg = (close - prev) / prev;
+      if (close >= limitUpPrice(prev) - 0.001) {
+        rows.push({ code: quotes.codes[i], name: quotes.names[i] || '', close: close, chg: chg, hit: 'up' });
+      } else if (close <= limitDownPrice(prev) + 0.001) {
+        rows.push({ code: quotes.codes[i], name: quotes.names[i] || '', close: close, chg: chg, hit: 'down' });
+      }
+    }
+    rows.sort(function (a, b) { return b.chg - a.chg; });
+
+    table.hidden = false;
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">今日沒有鎖漲跌停的股票</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(function (r) {
+      var cls = r.hit === 'up' ? 'up' : 'down';
+      return '<tr>' +
+        '<td class="code mono">' + esc(r.code) + '</td>' +
+        '<td>' + esc(r.name) + '</td>' +
+        '<td class="num mono">' + r.close + '</td>' +
+        '<td class="num ' + cls + '">' + (r.chg >= 0 ? '+' : '') + (r.chg * 100).toFixed(2) + '%</td>' +
+        '<td class="' + cls + '">' + (r.hit === 'up' ? '鎖漲停' : '鎖跌停') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function renderRisk(res) {
+    var meta = el('risk-meta');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      el('risk-market-panel').hidden = true;
+      el('risk-attention-table').hidden = true;
+      el('risk-margin-table').hidden = true;
+      el('risk-suspension-table').hidden = true;
+      el('risk-exdiv-table').hidden = true;
+      el('risk-attention-note').textContent = '';
+      return;
+    }
+
+    meta.textContent = '資料日期 ' + (res.date || '—');
+
+    var market = res.market || [];
+    if (market.length) {
+      el('risk-market-panel').hidden = false;
+      var m0 = market[0], m1 = market[1];
+      el('risk-market').innerHTML =
+        '<div><span>日期</span><b>' + esc(m0.date) + '</b></div>' +
+        '<div><span>加權指數</span><b>' + (m0.taiex == null ? '—' : m0.taiex.toFixed(2)) + '</b></div>' +
+        '<div><span>漲跌</span><b class="' + plClass(m0.change) + '">' + signed(m0.change) + '</b></div>' +
+        '<div><span>成交金額(億)</span><b>' +
+          (m0.trade_value == null ? '—' : fmtInt(Math.round(m0.trade_value / 1e8))) + '</b></div>' +
+        '<div><span>成交筆數</span><b>' + (m0.transaction == null ? '—' : fmtInt(m0.transaction)) + '</b></div>' +
+        (m1 ? '<div><span>前一日指數</span><b>' + (m1.taiex == null ? '—' : m1.taiex.toFixed(2)) + '</b></div>' : '');
+    } else {
+      el('risk-market-panel').hidden = true;
+    }
+
+    var attention = res.attention || [];
+    var attTable = el('risk-attention-table');
+    if (attention.length) {
+      attTable.hidden = false;
+      el('risk-attention-note').textContent = '共 ' + attention.length + ' 檔';
+      el('risk-attention-tbody').innerHTML = attention.map(function (a) {
+        return '<tr>' +
+          '<td class="code mono">' + esc(a.code) + '</td>' +
+          '<td>' + esc(a.name || '') + '</td>' +
+          '<td class="num mono">' + (a.closing_price == null ? '—' : a.closing_price) + '</td>' +
+          '<td class="num mono">' + (a.pe == null ? '—' : a.pe) + '</td>' +
+          '<td class="num mono">' + (a.notice_count == null ? '—' : fmtInt(a.notice_count)) + '</td>' +
+          '<td>' + esc(a.reason || '') + '</td>' +
+        '</tr>';
+      }).join('');
+    } else {
+      attTable.hidden = true;
+      el('risk-attention-note').textContent =
+        '今日沒有公布注意股票,或 TWSE 還沒公布 —— 這個端點沒辦法分辨這兩種情況。';
+    }
+
+    var margin = res.margin || {};
+    var marginRows = [];
+    Object.keys(margin).forEach(function (code) {
+      var v = margin[code];
+      marginRows.push({
+        code: code,
+        name: v.name,
+        margin_today: v.margin_today,
+        margin_delta: (v.margin_today == null || v.margin_prev == null) ? null : v.margin_today - v.margin_prev,
+        short_today: v.short_today,
+        short_delta: (v.short_today == null || v.short_prev == null) ? null : v.short_today - v.short_prev
+      });
+    });
+    marginRows.sort(function (a, b) { return (b.margin_today || 0) - (a.margin_today || 0); });
+    var marginTable = el('risk-margin-table');
+    if (marginRows.length) {
+      marginTable.hidden = false;
+      el('risk-margin-tbody').innerHTML = marginRows.map(function (r) {
+        return '<tr>' +
+          '<td class="code mono">' + esc(r.code) + '</td>' +
+          '<td>' + esc(r.name || '') + '</td>' +
+          '<td class="num mono">' + (r.margin_today == null ? '—' : fmtInt(r.margin_today)) + '</td>' +
+          '<td class="num mono ' + plClass(r.margin_delta) + '">' +
+            (r.margin_delta == null ? '—' : signed(r.margin_delta)) + '</td>' +
+          '<td class="num mono">' + (r.short_today == null ? '—' : fmtInt(r.short_today)) + '</td>' +
+          '<td class="num mono ' + plClass(r.short_delta) + '">' +
+            (r.short_delta == null ? '—' : signed(r.short_delta)) + '</td>' +
+        '</tr>';
+      }).join('');
+    } else {
+      marginTable.hidden = true;
+    }
+
+    var susTable = el('risk-suspension-table');
+    var suspension = res.suspension || [];
+    if (suspension.length) {
+      susTable.hidden = false;
+      el('risk-suspension-tbody').innerHTML = suspension.map(function (s) {
+        return '<tr>' +
+          '<td class="code mono">' + esc(s.code) + '</td>' +
+          '<td>' + esc(s.name || '') + '</td>' +
+          '<td class="mono">' + esc(s.start || '—') + '</td>' +
+          '<td class="mono">' + esc(s.end || '—') + '</td>' +
+          '<td>' + esc(s.reason || '') + '</td>' +
+        '</tr>';
+      }).join('');
+    } else {
+      susTable.hidden = true;
+    }
+
+    var exdivTable = el('risk-exdiv-table');
+    var exdiv = res.exdividend || [];
+    if (exdiv.length) {
+      exdivTable.hidden = false;
+      el('risk-exdiv-tbody').innerHTML = exdiv.map(function (x) {
+        return '<tr>' +
+          '<td class="code mono">' + esc(x.code) + '</td>' +
+          '<td>' + esc(x.name || '') + '</td>' +
+          '<td class="mono">' + esc(x.date || '—') + '</td>' +
+          '<td>' + esc(x.kind || '') + '</td>' +
+          '<td class="num mono">' + (x.cash_dividend == null ? '—' : x.cash_dividend) + '</td>' +
+        '</tr>';
+      }).join('');
+    } else {
+      exdivTable.hidden = true;
+    }
+  }
+
+  function loadRisk(force) {
+    loadQuotes().then(renderRiskLimitTable).catch(function () {
+      el('risk-limit-table').hidden = true;
+    });
+
+    if (riskLoaded && !force) return;
+    var meta = el('risk-meta');
+    meta.textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderRisk({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                         '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(RISK_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        riskLoaded = true;
+        renderRisk(data);
+      })
+      .catch(function (e) {
+        renderRisk({ error: '讀不到籌碼/風險資料(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
@@ -1032,6 +1252,7 @@
     el('kelly-wrap').hidden = v !== 'kelly';
     el('broker-wrap').hidden = v !== 'broker';
     el('dca-wrap').hidden = v !== 'dca';
+    el('risk-wrap').hidden = v !== 'risk';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -1041,11 +1262,12 @@
     if (v === 'kelly') loadKelly();
     if (v === 'broker') loadBroker(false);
     if (v === 'dca') loadDca(false);
+    if (v === 'risk') loadRisk(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca'];
+  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca', 'risk'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');

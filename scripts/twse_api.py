@@ -355,3 +355,175 @@ def dca_rank():
             "etf_accounts": None if etf_acc is None else int(etf_acc),
         })
     return out
+
+
+# ---------------------------------------------------------------- 大盤成交資訊
+
+MARKET_SUMMARY_URL = "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK"
+
+
+def market_summary():
+    """
+    集中市場每日市場成交資訊,實測回應只含最近兩個交易日。
+
+    回傳 [{date(西元 ISO), taiex, change, trade_value, trade_volume,
+           transaction}, ...],新到舊。
+    """
+    data = _get_json(MARKET_SUMMARY_URL)
+    if not isinstance(data, list) or not data:
+        raise TWSEError("FMTQIK 回傳空資料")
+
+    out = []
+    for r in data:
+        date_iso = _roc_to_iso(r.get("Date"))
+        if not date_iso:
+            continue
+        out.append({
+            "date": date_iso,
+            "taiex": _num(r.get("TAIEX")),
+            "change": _num(r.get("Change")),
+            "trade_value": _num(r.get("TradeValue")),
+            "trade_volume": _num(r.get("TradeVolume")),
+            "transaction": _num(r.get("Transaction")),
+        })
+    out.sort(key=lambda x: x["date"], reverse=True)
+    return out
+
+
+# ---------------------------------------------------------------- 注意股
+
+ATTENTION_URL = "https://openapi.twse.com.tw/v1/announcement/notice"
+
+
+def attention_stocks():
+    """
+    集中市場當日公布注意股票。
+
+    實測沒有資料時回傳一筆全空欄位的 placeholder(Code 是空字串),
+    不是 HTTP 錯誤也不是空陣列 —— 濾掉這種列,但沒辦法區分「今天真的
+    沒有注意股」跟「還沒公布」,兩種情況回應長得一模一樣,呼叫端要自己
+    決定怎麼講給使用者聽。
+
+    回傳 [{code, name, closing_price, pe, notice_count, reason}, ...]。
+    """
+    data = _get_json(ATTENTION_URL)
+    if not isinstance(data, list):
+        raise TWSEError("announcement/notice 回傳格式不是陣列")
+
+    out = []
+    for r in data:
+        code = str(r.get("Code") or "").strip()
+        if not code:
+            continue
+        out.append({
+            "code": code,
+            "name": str(r.get("Name") or "").strip(),
+            "closing_price": _num(r.get("ClosingPrice")),
+            "pe": _num(r.get("PE")),
+            "notice_count": _num(r.get("NumberOfAnnouncement")),
+            "reason": str(r.get("TradingInfoForAttention") or "").strip(),
+        })
+    return out
+
+
+# ---------------------------------------------------------------- 融資融券餘額
+
+MARGIN_URL = "https://openapi.twse.com.tw/v1/exchangeReport/MI_MARGN"
+
+
+def margin_balance():
+    """
+    集中市場融資融券餘額,全市場一次拿到(含非普通股,呼叫端自行篩選)。
+
+    回傳 {code: {name, margin_today, margin_prev, margin_buy, margin_sell,
+                 margin_cash_repay, margin_limit, short_today, short_prev,
+                 short_buy, short_sell, short_stock_repay, short_limit,
+                 offset}}。
+    """
+    data = _get_json(MARGIN_URL)
+    if not isinstance(data, list) or not data:
+        raise TWSEError("MI_MARGN 回傳空資料")
+
+    out = {}
+    for r in data:
+        code = str(r.get("股票代號") or "").strip()
+        if not code:
+            continue
+        out[code] = {
+            "name": str(r.get("股票名稱") or "").strip(),
+            "margin_today": _num(r.get("融資今日餘額")),
+            "margin_prev": _num(r.get("融資前日餘額")),
+            "margin_buy": _num(r.get("融資買進")),
+            "margin_sell": _num(r.get("融資賣出")),
+            "margin_cash_repay": _num(r.get("融資現金償還")),
+            "margin_limit": _num(r.get("融資限額")),
+            "short_today": _num(r.get("融券今日餘額")),
+            "short_prev": _num(r.get("融券前日餘額")),
+            "short_buy": _num(r.get("融券買進")),
+            "short_sell": _num(r.get("融券賣出")),
+            "short_stock_repay": _num(r.get("融券現券償還")),
+            "short_limit": _num(r.get("融券限額")),
+            "offset": _num(r.get("資券互抵")),
+        }
+    return out
+
+
+# ---------------------------------------------------------------- 停資停券預告
+
+SUSPENSION_URL = "https://openapi.twse.com.tw/v1/exchangeReport/BFI84U"
+
+
+def margin_suspension():
+    """
+    集中市場停資停券預告表。
+
+    回傳 [{code, name, start(西元 ISO), end(西元 ISO), reason}, ...]。
+    """
+    data = _get_json(SUSPENSION_URL)
+    if not isinstance(data, list):
+        raise TWSEError("BFI84U 回傳格式不是陣列")
+
+    out = []
+    for r in data:
+        code = str(r.get("Code") or "").strip()
+        if not code:
+            continue
+        out.append({
+            "code": code,
+            "name": str(r.get("Name") or "").strip(),
+            "start": _roc_to_iso(r.get("StartDate")),
+            "end": _roc_to_iso(r.get("EndDate")),
+            "reason": str(r.get("Reason") or "").strip(),
+        })
+    return out
+
+
+# ---------------------------------------------------------------- 除權除息預告
+
+EXDIV_URL = "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+
+
+def exdividend_calendar():
+    """
+    上市股票除權除息預告表。
+
+    回傳 [{code, name, date(西元 ISO), kind, cash_dividend}, ...]。
+    kind 是 Exdividend 原文("息"/"權"/"權息"),照原樣存查,不轉譯。
+    """
+    data = _get_json(EXDIV_URL)
+    if not isinstance(data, list):
+        raise TWSEError("TWT48U_ALL 回傳格式不是陣列")
+
+    out = []
+    for r in data:
+        code = str(r.get("Code") or "").strip()
+        if not code:
+            continue
+        out.append({
+            "code": code,
+            "name": str(r.get("Name") or "").strip(),
+            "date": _roc_to_iso(r.get("Date")),
+            "kind": str(r.get("Exdividend") or "").strip(),
+            "cash_dividend": _num(r.get("CashDividend")),
+        })
+    return out

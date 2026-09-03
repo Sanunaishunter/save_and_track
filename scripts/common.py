@@ -28,6 +28,10 @@ QUOTES_FILE = os.path.join(DATA_DIR, "quotes-latest.json")
 BROKER_FILE = os.path.join(DATA_DIR, "broker-latest.json")
 DCA_FILE = os.path.join(DATA_DIR, "dca-latest.json")
 
+# 籌碼/風險:大盤成交資訊 + 注意股 + 融資融券 + 停資停券預告 + 除權息預告,
+# 獨立分頁,跟七步驟/爆量/FOMO/產業流向/部位無關
+RISK_FILE = os.path.join(DATA_DIR, "risk-latest.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]
