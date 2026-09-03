@@ -914,6 +914,69 @@
     if (v === 'kelly') loadKelly();
   }
 
+  // ---------------------------------------------------------- 左右滑動切換分頁
+
+  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly'];
+
+  function currentViewName() {
+    var active = el('views').querySelector('.viewbtn.is-active');
+    return active ? active.getAttribute('data-view') : VIEWS_ORDER[0];
+  }
+
+  /**
+   * 手指起點沿著祖先往上找,只要有任何一層「往滑動方向還能捲」的水平捲軸
+   * (產業流向的交叉表、持倉紀錄表格…),就讓瀏覽器自己處理,不搶手勢。
+   * dx > 0 是手指往右移(內容要往回捲),dx < 0 是手指往左移(內容要往前捲)。
+   */
+  function ancestorCanScrollX(node, dx) {
+    while (node && node !== document.body) {
+      if (node.scrollWidth > node.clientWidth + 1) {
+        var atLeft = node.scrollLeft <= 0;
+        var atRight = node.scrollLeft + node.clientWidth >= node.scrollWidth - 1;
+        if ((dx > 0 && !atLeft) || (dx < 0 && !atRight)) return true;
+      }
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function bindSwipe() {
+    var startX = null, startY = null, target = null, tracking = false, blocked = false;
+    var THRESHOLD = 60;         // 至少要滑這麼多 px 才算數,單純點擊不誤觸
+    var DIR_RATIO = 1.5;        // 水平位移要明顯大於垂直位移,才不會跟捲動打架
+
+    document.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1 || !el('modal').hidden) { tracking = false; return; }
+      var tag = e.target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') { tracking = false; return; }
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      target = e.target;
+      tracking = true;
+      blocked = false;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', function (e) {
+      if (!tracking || blocked) return;
+      var dx = e.touches[0].clientX - startX;
+      var dy = e.touches[0].clientY - startY;
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      if (Math.abs(dy) > Math.abs(dx) || ancestorCanScrollX(target, dx)) blocked = true;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function (e) {
+      if (!tracking || blocked) { tracking = false; return; }
+      tracking = false;
+      var dx = e.changedTouches[0].clientX - startX;
+      var dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) < THRESHOLD || Math.abs(dx) < Math.abs(dy) * DIR_RATIO) return;
+      var idx = VIEWS_ORDER.indexOf(currentViewName());
+      if (idx < 0) return;
+      if (dx < 0 && idx < VIEWS_ORDER.length - 1) switchView(VIEWS_ORDER[idx + 1]);
+      else if (dx > 0 && idx > 0) switchView(VIEWS_ORDER[idx - 1]);
+    }, { passive: true });
+  }
+
   // ---------------------------------------------------------- FOMO 掃描
 
   var FOMO_URL = 'data/fomo-latest.json';
@@ -2111,6 +2174,8 @@
       var b = e.target.closest('.viewbtn');
       if (b) switchView(b.getAttribute('data-view'));
     });
+
+    bindSwipe();
 
     el('list').addEventListener('click', function (e) {
       var card = e.target.closest('.card');
