@@ -114,23 +114,25 @@ body {
 }
 .tab.is-active .tab-count { color: var(--text-dim); }
 
-/* 主視圖切換:追蹤 / 爆量掃描 */
+/* 主視圖切換:追蹤 / 爆量掃描 / ...
+   分頁數會愈加愈多,不再擠在一排等寬按鈕裡,改成跟 .tabs 一樣橫向捲動。 */
 .views {
   display: flex;
   gap: 4px;
   padding: 0 12px 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-/* 五顆按鈕平分寬度,窄螢幕上「爆量掃描」四個字會頂不下而折行,
-   所以字級跟著螢幕寬度縮,並且一律不換行。 */
+.views::-webkit-scrollbar { display: none; }
+
 .viewbtn {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 0 0 auto;
   border: 1px solid var(--line);
   background: transparent;
   color: var(--text-dim);
   border-radius: 8px;
-  padding: 7px 4px;
-  font-size: clamp(11px, 3.2vw, 13px);
+  padding: 7px 12px;
+  font-size: 13px;
   letter-spacing: -0.02em;
   white-space: nowrap;
   font-family: inherit;
