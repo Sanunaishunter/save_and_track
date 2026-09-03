@@ -2332,10 +2332,49 @@
   }
 
   /** 追蹤畫面頂部:所有還沒出場的紀錄的持倉合計。 */
+  var posSummaryExpanded = false;
+
+  /**
+   * 每檔分別的明細表。加總數字會把「哪一檔在拉高/拉低」跟「最佳/最差
+   * 出場是哪一天」都抹掉,尤其最佳/最差出場本來就是不同檔各自的日期
+   * 加總、不是同一天發生的 —— 展開明細才看得回這些細節。
+   */
+  function renderPosBreakdown(rows) {
+    var trs = rows.map(function (r) {
+      var rec = r.rec, st = r.st;
+      return '<tr>' +
+        '<td class="code mono">' + esc(rec.stock_id) + '</td>' +
+        '<td>' + esc(rec.stock_name || '') + '</td>' +
+        '<td class="num mono">' + fmtMoney(st.cost) + '</td>' +
+        '<td class="num mono">' + (st.priced ? fmtMoney(st.value) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(st.priced ? st.pl : null) + '">' +
+          (st.priced ? signed(st.pl) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(st.today) + '">' +
+          (st.today != null ? signed(st.today) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(st.range && st.range.high.pl) + '">' +
+          (st.range ? signed(st.range.high.pl) + ' (' + esc(st.range.high.date) + ')' : '—') + '</td>' +
+        '<td class="num mono ' + plClass(st.range && st.range.low.pl) + '">' +
+          (st.range ? signed(st.range.low.pl) + ' (' + esc(st.range.low.date) + ')' : '—') + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="table-scroll">' +
+      '<table class="scan-table" id="pos-breakdown-table">' +
+        '<thead><tr>' +
+          '<th>代碼</th><th>名稱</th><th class="num">成本</th><th class="num">市值</th>' +
+          '<th class="num">損益</th><th class="num">今日</th>' +
+          '<th class="num">最佳出場</th><th class="num">最差出場</th>' +
+        '</tr></thead>' +
+        '<tbody>' + trs + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
   function renderPosSummary() {
     var box = el('pos-summary');
     var cost = 0, value = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
     var bestSum = 0, worstSum = 0, hasRange = false, noRange = 0;
+    var rows = [];
     for (var i = 0; i < data.length; i++) {
       if (data[i].status === 'rejected') continue;
       var st = positionStats(data[i]);
@@ -2353,6 +2392,7 @@
       } else {
         noRange++;
       }
+      rows.push({ rec: data[i], st: st });
     }
     if (!n) { box.hidden = true; return; }
     box.hidden = false;
@@ -2376,9 +2416,12 @@
         (quotes ? ' · 報價 ' + esc(quotes.date) : ' · 尚未載入報價') +
         (unpriced ? ' · ' + unpriced + ' 檔查不到報價,未計入市值' : '') +
         (noRange ? ' · ' + noRange + ' 檔缺逐日高低,未計入最佳/最差出場' : '') +
+        (n > 1 ? ' · <button type="button" class="link-btn" id="pos-sum-toggle">' +
+          (posSummaryExpanded ? '收合每檔明細 ▲' : '看每檔明細 ▼') + '</button>' : '') +
       '</div>' +
       '<div class="pos-sum-note">最佳/最差出場是「每檔各自在持有期間內的最高/最低點出場」加總,' +
-        '不是同一天;只代表當時的高低價曾經出現,不代表真的來得及成交。</div>';
+        '不是同一天;只代表當時的高低價曾經出現,不代表真的來得及成交。</div>' +
+      (posSummaryExpanded && n > 1 ? renderPosBreakdown(rows) : '');
   }
 
   function positionsHtml(rec) {
@@ -2531,6 +2574,12 @@
     el('list').addEventListener('click', function (e) {
       var card = e.target.closest('.card');
       if (card) openDetail(card.getAttribute('data-id'));
+    });
+
+    el('pos-summary').addEventListener('click', function (e) {
+      if (!e.target.closest('#pos-sum-toggle')) return;
+      posSummaryExpanded = !posSummaryExpanded;
+      renderPosSummary();
     });
 
     el('fomo-tbody').addEventListener('click', function (e) {
