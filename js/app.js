@@ -898,6 +898,131 @@
       });
   }
 
+  // ---------------------------------------------------------- 券商基本資料
+
+  var BROKER_URL = 'data/broker-latest.json';
+  var brokerLoaded = false;
+
+  function renderBroker(res) {
+    var meta = el('broker-meta');
+    var tbody = el('broker-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('broker-table').hidden = true;
+      return;
+    }
+
+    el('broker-table').hidden = false;
+    meta.textContent = res.date + ' · 共 ' + fmtInt(res.count || 0) + ' 家證券商';
+
+    var rows = res.brokers || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function (b) {
+      return '<tr>' +
+        '<td class="code mono">' + esc(b.code) + '</td>' +
+        '<td>' + esc(b.name || '') + '</td>' +
+        '<td class="mono">' + esc(b.established || '—') + '</td>' +
+        '<td class="mono">' + esc(b.phone || '—') + '</td>' +
+        '<td>' + esc(b.address || '—') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadBroker(force) {
+    if (brokerLoaded && !force) return;
+    var meta = el('broker-meta');
+    meta.textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderBroker({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                            '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(BROKER_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        brokerLoaded = true;
+        renderBroker(data);
+      })
+      .catch(function (e) {
+        renderBroker({ error: '讀不到券商資料(' + (e.message || e) + ')。' +
+                              '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
+  // ---------------------------------------------------------- 定期定額統計
+
+  var DCA_URL = 'data/dca-latest.json';
+  var dcaLoaded = false;
+
+  function renderDca(res) {
+    var meta = el('dca-meta');
+    var tbody = el('dca-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('dca-table').hidden = true;
+      return;
+    }
+
+    el('dca-table').hidden = false;
+    meta.textContent = 'TWSE 定期定額交易戶數統計排行月報表 · 抓取於 ' + esc(res.fetched_date) +
+      '(來源沒有月份欄位,不代表資料所屬月份) · 前 ' + fmtInt(res.count || 0) + ' 名';
+
+    var rows = res.rows || [];
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td class="num mono">' + fmtInt(r.rank || 0) + '</td>' +
+        '<td>' + esc(r.stock_code) + ' ' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num mono">' + fmtInt(r.stock_accounts || 0) + '</td>' +
+        '<td>' + esc(r.etf_code) + ' ' + esc(r.etf_name || '') + '</td>' +
+        '<td class="num mono">' + fmtInt(r.etf_accounts || 0) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadDca(force) {
+    if (dcaLoaded && !force) return;
+    var meta = el('dca-meta');
+    meta.textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderDca({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                         '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(DCA_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        dcaLoaded = true;
+        renderDca(data);
+      })
+      .catch(function (e) {
+        renderDca({ error: '讀不到定期定額統計(' + (e.message || e) + ')。' +
+                           '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
@@ -905,6 +1030,8 @@
     el('fomo-wrap').hidden = v !== 'fomo';
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
+    el('broker-wrap').hidden = v !== 'broker';
+    el('dca-wrap').hidden = v !== 'dca';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -912,11 +1039,13 @@
     if (v === 'fomo') loadFomo(false);
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
+    if (v === 'broker') loadBroker(false);
+    if (v === 'dca') loadDca(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly'];
+  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');

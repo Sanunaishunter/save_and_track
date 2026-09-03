@@ -23,6 +23,11 @@ TICK_SAMPLE_FILE = os.path.join(DATA_DIR, "tick-sample-members.json")
 # 報價快照:持倉損益要最新收盤價,Kelly 的相關係數要日報酬序列
 QUOTES_FILE = os.path.join(DATA_DIR, "quotes-latest.json")
 
+# 券商基本資料 + 定期定額統計:兩份都幾乎不變(券商數量、月報表),
+# 但抓取成本是免費的兩次呼叫,跟著每日 workflow 一起更新就好
+BROKER_FILE = os.path.join(DATA_DIR, "broker-latest.json")
+DCA_FILE = os.path.join(DATA_DIR, "dca-latest.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]

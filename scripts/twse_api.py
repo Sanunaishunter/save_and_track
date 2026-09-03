@@ -285,3 +285,73 @@ def company_info():
             "twse_industry_code": str(r.get(CI_INDUSTRY) or "").strip() or None,
         }
     return out
+
+
+# ---------------------------------------------------------------- 券商基本資料
+
+BROKER_LIST_URL = "https://openapi.twse.com.tw/v1/brokerService/brokerList"
+
+
+def broker_list():
+    """
+    證券商總公司基本資料,實測 64 筆、5 個欄位(代號/簡稱/設立日期/地址/電話)。
+
+    另有 opendata/t187ap18 同樣叫「證券商基本資料」,但 68 個欄位裡多數是
+    交割專戶、錯帳專戶、權證履約專戶之類的行政/法遵資訊,對這個工具沒意義,
+    所以選這支乾淨版本。
+
+    回傳 [{code, name, established(西元 ISO), address, phone}, ...]。
+    """
+    data = _get_json(BROKER_LIST_URL)
+    if not isinstance(data, list) or not data:
+        raise TWSEError("brokerList 回傳空資料")
+
+    out = []
+    for r in data:
+        code = str(r.get("Code") or "").strip()
+        if not code:
+            continue
+        out.append({
+            "code": code,
+            "name": str(r.get("Name") or "").strip(),
+            "established": _roc_to_iso(r.get("EstablishmentDate")),
+            "address": str(r.get("Address") or "").strip(),
+            "phone": str(r.get("Telephone") or "").strip(),
+        })
+    return out
+
+
+# ---------------------------------------------------------------- 定期定額統計
+
+DCA_RANK_URL = "https://openapi.twse.com.tw/v1/ETFReport/ETFRank"
+
+
+def dca_rank():
+    """
+    定期定額交易戶數統計排行月報表,實測 20 筆,個股/ETF 排行並列。
+
+    ⚠️ 回應本身沒有月份欄位,只知道是 TWSE 網站當下公布的最新一期 ——
+    呼叫端要自己記錄抓取日期,不能當成「這個月的數字」。
+
+    回傳 [{rank, stock_code, stock_name, stock_accounts,
+           etf_code, etf_name, etf_accounts}, ...]。
+    """
+    data = _get_json(DCA_RANK_URL)
+    if not isinstance(data, list) or not data:
+        raise TWSEError("ETFRank 回傳空資料")
+
+    out = []
+    for r in data:
+        rank = _num(r.get("No"))
+        stock_acc = _num(r.get("STOCKsNumberofTradingAccounts"))
+        etf_acc = _num(r.get("ETFsNumberofTradingAccounts"))
+        out.append({
+            "rank": None if rank is None else int(rank),
+            "stock_code": str(r.get("STOCKsSecurityCode") or "").strip(),
+            "stock_name": str(r.get("STOCKsName") or "").strip(),
+            "stock_accounts": None if stock_acc is None else int(stock_acc),
+            "etf_code": str(r.get("ETFsSecurityCode") or "").strip(),
+            "etf_name": str(r.get("ETFsName") or "").strip(),
+            "etf_accounts": None if etf_acc is None else int(etf_acc),
+        })
+    return out

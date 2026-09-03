@@ -76,6 +76,10 @@ jobs:
       - name: 產生報價快照
         run: python scripts/compute_quotes.py
 
+      # --- 券商基本資料 + 定期定額統計(獨立分頁,跟其他步驟無關)---
+      - name: 更新券商基本資料與定期定額統計
+        run: python scripts/fetch_broker_dca.py
+
       # --- FOMO(讀前面剛產生的 scan-latest.json)---
       # 合併成同一個 job 的用意就在這:順序由執行序保證,不再依賴兩支排程
       # 的時間差。GitHub 排程會延遲,先前拆成兩支時,只要爆量那支慢超過

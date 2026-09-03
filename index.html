@@ -41,6 +41,8 @@
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
+    <button type="button" class="viewbtn" data-view="broker">券商</button>
+    <button type="button" class="viewbtn" data-view="dca">定期定額</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -193,6 +195,42 @@
     </div>
     <div id="odd-out"></div>
   </section>
+</main>
+
+<main class="list-wrap" id="broker-wrap" hidden>
+  <div class="scan-meta" id="broker-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="broker-table">
+      <thead>
+        <tr>
+          <th>代號</th>
+          <th>簡稱</th>
+          <th>設立日期</th>
+          <th>電話</th>
+          <th>地址</th>
+        </tr>
+      </thead>
+      <tbody id="broker-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="list-wrap" id="dca-wrap" hidden>
+  <div class="scan-meta" id="dca-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="dca-table">
+      <thead>
+        <tr>
+          <th class="num">名次</th>
+          <th>個股</th>
+          <th class="num">個股戶數</th>
+          <th>ETF</th>
+          <th class="num">ETF 戶數</th>
+        </tr>
+      </thead>
+      <tbody id="dca-tbody"></tbody>
+    </table>
+  </div>
 </main>
 
 <section id="detail" class="sheet" hidden aria-hidden="true">
