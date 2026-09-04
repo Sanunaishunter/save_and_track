@@ -525,6 +525,7 @@
     }
     el('detail-meta').innerHTML = metaHtml;
     renderPositions();
+    renderMarginDetail();
 
     el('detail-steps').innerHTML = STEPS.map(function (s) {
       var isOpen = s.n === openStep;
@@ -832,6 +833,7 @@
 
   var SCAN_URL = 'data/scan-latest.json';
   var scanLoaded = false;
+  var scanData = null;
 
   function fmtInt(n) {
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -854,7 +856,7 @@
       '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
 
     if (!res.rows || !res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="scan-empty">當日沒有符合條件的股票</td></tr>';
       return;
     }
 
@@ -862,16 +864,28 @@
       var chg = r.change_pct;
       var chgCls = chg == null ? '' : (chg >= 0 ? 'up' : 'down');
       var chgTxt = chg == null ? '—' : (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+      var mg = marginOf(r.stock_id);
+      var marginDelta = (mg && mg.margin_today != null && mg.margin_prev != null)
+        ? mg.margin_today - mg.margin_prev : null;
       return '<tr>' +
         '<td class="code mono">' + esc(r.stock_id) + '</td>' +
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(marginDelta) + '">' +
+          (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
+        '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
       '</tr>';
     }).join('');
   }
 
   function loadScan(force) {
+    // 融資融券欄位跟掃描結果各自獨立抓取,晚到就補一次重繪,不擋主表先顯示
+    loadRiskData().then(function () {
+      if (scanData) renderScan(scanData);
+    }).catch(function () { /* 表格已經有 — 佔位,不強求 */ });
+
     if (scanLoaded && !force) return;
     var meta = el('scan-meta');
     meta.textContent = '載入中…';
@@ -890,6 +904,7 @@
       })
       .then(function (data) {
         scanLoaded = true;
+        scanData = data;
         renderScan(data);
       })
       .catch(function (e) {
@@ -1026,7 +1041,42 @@
   // ---------------------------------------------------------- 籌碼/風險
 
   var RISK_URL = 'data/risk-latest.json';
-  var riskLoaded = false;
+  var riskData = null;
+  var riskDataPending = null;
+
+  /**
+   * 抓 data/risk-latest.json 並快取,跟 loadQuotes() 同一個模式。
+   * 爆量掃描的融資融券欄位、追蹤詳情頁的融資融券區塊都吃這份快取,
+   * 不用各自重抓一次。
+   */
+  function loadRiskData() {
+    if (riskData) return Promise.resolve(riskData);
+    if (riskDataPending) return riskDataPending;
+    if (location.protocol === 'file:') {
+      return Promise.reject(new Error('用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。'));
+    }
+    riskDataPending = fetch(RISK_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        riskData = data;
+        riskDataPending = null;
+        return data;
+      })
+      .catch(function (e) {
+        riskDataPending = null;
+        throw e;
+      });
+    return riskDataPending;
+  }
+
+  /** 個股融資融券(TWSE MI_MARGN,只留上市普通股)。查不到回傳 null。*/
+  function marginOf(code) {
+    if (!riskData || !riskData.margin) return null;
+    return riskData.margin[String(code || '').trim()] || null;
+  }
 
   function tickSize(price) {
     if (price < 10) return 0.01;
@@ -1218,25 +1268,13 @@
       el('risk-limit-table').hidden = true;
     });
 
-    if (riskLoaded && !force) return;
+    if (force) riskData = null;
+    if (riskData) { renderRisk(riskData); return; }
     var meta = el('risk-meta');
     meta.textContent = '載入中…';
 
-    if (location.protocol === 'file:') {
-      renderRisk({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
-                         '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
-      return;
-    }
-
-    fetch(RISK_URL, { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        riskLoaded = true;
-        renderRisk(data);
-      })
+    loadRiskData()
+      .then(function (data) { renderRisk(data); })
       .catch(function (e) {
         renderRisk({ error: '讀不到籌碼/風險資料(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
@@ -2506,6 +2544,63 @@
     var box = el('detail-positions');
     if (!rec) { box.innerHTML = ''; return; }
     box.innerHTML = positionsHtml(rec);
+  }
+
+  /** 融資融券獨立區塊,跟持倉紀錄無關,查不到就照實講,不留白也不裝懂。*/
+  function marginDetailHtml(rec, errMsg) {
+    var head = '<div class="pos-head"><span>融資融券</span>' +
+      '<span class="dim">資料來源 TWSE,只收錄上市普通股</span></div>';
+
+    if (errMsg) {
+      return '<section class="panel">' + head + '<p class="warn-sm">' + esc(errMsg) + '</p></section>';
+    }
+    if (!riskData) {
+      return '<section class="panel">' + head + '<p class="dim">載入中…</p></section>';
+    }
+    var mg = marginOf(rec.stock_id);
+    if (!mg) {
+      return '<section class="panel">' + head +
+        '<p class="dim">查不到 ' + esc(rec.stock_id || '這檔') +
+        ' 的融資融券資料(可能不是上市普通股,或資料當天還沒更新)。</p></section>';
+    }
+
+    var marginDelta = (mg.margin_today != null && mg.margin_prev != null)
+      ? mg.margin_today - mg.margin_prev : null;
+    var shortDelta = (mg.short_today != null && mg.short_prev != null)
+      ? mg.short_today - mg.short_prev : null;
+
+    return '<section class="panel">' + head +
+      '<div class="k-sum">' +
+        '<div><span>融資餘額</span><b>' +
+          (mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</b></div>' +
+        '<div><span>融資增減</span><b class="' + plClass(marginDelta) + '">' +
+          (marginDelta == null ? '—' : signed(marginDelta)) + '</b></div>' +
+        '<div><span>融券餘額</span><b>' +
+          (mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</b></div>' +
+        '<div><span>融券增減</span><b class="' + plClass(shortDelta) + '">' +
+          (shortDelta == null ? '—' : signed(shortDelta)) + '</b></div>' +
+        '<div><span>資券互抵</span><b>' + (mg.offset != null ? fmtInt(mg.offset) : '—') + '</b></div>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function renderMarginDetail() {
+    var rec = findById(currentId);
+    var box = el('detail-margin');
+    if (!rec || !rec.stock_id) { box.innerHTML = ''; return; }
+    box.innerHTML = marginDetailHtml(rec);
+    if (riskData) return;
+
+    loadRiskData()
+      .then(function () {
+        if (findById(currentId) === rec) box.innerHTML = marginDetailHtml(rec);
+      })
+      .catch(function (e) {
+        if (findById(currentId) === rec) {
+          box.innerHTML = marginDetailHtml(rec, '讀不到融資融券資料(' + (e.message || e) + ')。' +
+            '每日排程尚未跑過,或檔案還沒產生。');
+        }
+      });
   }
 
   function addPosition() {
