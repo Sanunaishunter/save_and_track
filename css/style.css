@@ -856,6 +856,42 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .k-sum b.down { color: var(--down); }
 .k-sum b .dim { margin-left: 4px; font-weight: 400; }
 
+/* ---------------------------------------------- 獵人九宮格 + 爆量六訊號 */
+
+.hunter-grid-3x3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  margin: 10px 0;
+}
+.hunter-cell {
+  padding: 12px 4px;
+  border-radius: 8px;
+  background: var(--panel-2);
+  border: 1px solid transparent;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.hunter-cell.is-current {
+  border-color: var(--accent);
+  background: var(--panel-3);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.hunter-signal-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.hunter-signal-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+.hunter-signal-item .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
 /* ---------------------------------------------- 持倉 */
 
 .pos-summary {

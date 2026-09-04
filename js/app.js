@@ -525,6 +525,7 @@
     }
     el('detail-meta').innerHTML = metaHtml;
     renderPositions();
+    renderGridDetail();
     renderMarginDetail();
 
     el('detail-steps').innerHTML = STEPS.map(function (s) {
@@ -856,7 +857,7 @@
       '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
 
     if (!res.rows || !res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="scan-empty">當日沒有符合條件的股票</td></tr>';
       return;
     }
 
@@ -867,11 +868,14 @@
       var mg = marginOf(r.stock_id);
       var marginDelta = (mg && mg.margin_today != null && mg.margin_prev != null)
         ? mg.margin_today - mg.margin_prev : null;
+      var hu = hunterOf(r.stock_id);
+      var sig = hu && hu.signal;
       return '<tr>' +
         '<td class="code mono">' + esc(r.stock_id) + '</td>' +
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        '<td' + (sig ? ' title="' + esc(HUNTER_SIGNAL_LABELS[sig]) + '"' : '') + '>' + (sig || '—') + '</td>' +
         '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
@@ -881,10 +885,13 @@
   }
 
   function loadScan(force) {
-    // 融資融券欄位跟掃描結果各自獨立抓取,晚到就補一次重繪,不擋主表先顯示
+    // 融資融券、獵人訊號欄位跟掃描結果各自獨立抓取,晚到就補一次重繪,不擋主表先顯示
     loadRiskData().then(function () {
       if (scanData) renderScan(scanData);
     }).catch(function () { /* 表格已經有 — 佔位,不強求 */ });
+    loadQuotes().then(function () {
+      if (scanData) renderScan(scanData);
+    }).catch(function () { /* 同上 */ });
 
     if (scanLoaded && !force) return;
     var meta = el('scan-meta');
@@ -1106,6 +1113,113 @@
     return Math.round(Math.ceil(raw / t - 1e-9) * t * 100) / 100;
   }
 
+  // ---------------------------------------------------------- 獵人九宮格 + 爆量六訊號
+  //
+  // 兩層系統共用 quotes-latest.json 的 daily_close/daily_volume,純前端算,
+  // 不落地成資料檔(跟上面漲跌停的做法一致)。
+  //   ρ = MA5V/MA20V,兩者都含當日 —— 慢變量,九宮格用,描述中期量能趨勢
+  //   S = 當日量/MA20V(不含當日)—— 快變量,六訊號用,跟爆量掃描的
+  //       vol_ratio 是同一個公式,可以互相對照
+  // day 是 quotes.days 的索引,0 = 最新一天,數字愈大愈舊。
+
+  var HUNTER_DELTA = 0.01;    // δ,價的門檻(九宮格、六訊號共用)
+  var HUNTER_EPS = 0.12;      // ε,九宮格量的門檻(spec 給 10~15%,先取中間,之後要調就改這裡)
+  var HUNTER_DELTA2 = 0.05;   // δ',六訊號的暴漲/暴跌門檻
+  var HUNTER_K = 1.5;         // k,六訊號的爆量門檻,跟爆量掃描的 vol_ratio 門檻同一個數字
+
+  /** [start, start+count) 這段的平均,任何一格是 null 或超出範圍就回傳 null。*/
+  function avgSlice(arr, start, count) {
+    if (!arr || start < 0 || start + count > arr.length) return null;
+    var sum = 0;
+    for (var i = start; i < start + count; i++) {
+      if (arr[i] == null) return null;
+      sum += arr[i];
+    }
+    return sum / count;
+  }
+
+  /** ΔP:day 對 day+1 的單日報酬率。*/
+  function hunterDeltaP(closeArr, day) {
+    if (!closeArr || day + 1 >= closeArr.length) return null;
+    var c = closeArr[day], p = closeArr[day + 1];
+    if (c == null || !p) return null;
+    return (c - p) / p;
+  }
+
+  /** ρ = MA5V/MA20V,兩者都含當日。*/
+  function hunterRho(volArr, day) {
+    var ma5 = avgSlice(volArr, day, 5);
+    var ma20 = avgSlice(volArr, day, 20);
+    if (ma5 == null || !ma20) return null;
+    return ma5 / ma20;
+  }
+
+  /** S = 當日量 / MA20V(不含當日,day+1 ~ day+20)。*/
+  function hunterS(volArr, day) {
+    if (!volArr || day >= volArr.length || volArr[day] == null) return null;
+    var ma20 = avgSlice(volArr, day + 1, 20);
+    if (!ma20) return null;
+    return volArr[day] / ma20;
+  }
+
+  var HUNTER_GRID_LABELS = {
+    '漲增': '價量齊揚', '漲平': '價漲量平', '漲縮': '價漲量縮',
+    '平增': '價平量增', '平平': '價平量平', '平縮': '價平量縮',
+    '跌增': '價跌量增', '跌平': '價跌量平', '跌縮': '價跌量縮'
+  };
+
+  function hunterPriceState(dp) {
+    if (dp > HUNTER_DELTA) return '漲';
+    if (dp < -HUNTER_DELTA) return '跌';
+    return '平';
+  }
+  function hunterVolState(rho) {
+    if (rho > 1 + HUNTER_EPS) return '增';
+    if (rho < 1 - HUNTER_EPS) return '縮';
+    return '平';
+  }
+
+  /** 獵人九宮格分類,dp/rho 任一 null 就回傳 null。*/
+  function hunterGrid(dp, rho) {
+    if (dp == null || rho == null) return null;
+    var p = hunterPriceState(dp), v = hunterVolState(rho);
+    return { price: p, vol: v, label: HUNTER_GRID_LABELS[p + v] };
+  }
+
+  var HUNTER_SIGNAL_LABELS = {
+    '①': '量價同步爆量(暴漲)', '②': '量增價不太動', '③': '量增暴跌',
+    '④': '無量暴跌', '⑤': '量增溫和上漲', '⑥': '量增溫和下跌'
+  };
+
+  /**
+   * 爆量六訊號分類。①②③⑤⑥ 在 S>HUNTER_K 母體內無縫覆蓋整個 ΔP 範圍,
+   * ④ 來自 S<=HUNTER_K 母體,是唯一的無量情境;其餘無量情境回傳 null,
+   * 留在九宮格框架裡處理(spec 明確講的已知未涵蓋範圍,不是漏寫)。
+   */
+  function hunterSignal(dp, s) {
+    if (dp == null || s == null) return null;
+    if (s > HUNTER_K) {
+      if (dp > HUNTER_DELTA2) return '①';
+      if (dp < -HUNTER_DELTA2) return '③';
+      if (dp > HUNTER_DELTA) return '⑤';
+      if (dp < -HUNTER_DELTA) return '⑥';
+      return '②';
+    }
+    if (dp < -HUNTER_DELTA2) return '④';
+    return null;
+  }
+
+  /** 給定代號的今日(day=0)獵人九宮格 + 六訊號。查不到回傳 null。*/
+  function hunterOf(code) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(code || '').trim()];
+    if (i == null) return null;
+    var dp = hunterDeltaP(quotes.daily_close[i], 0);
+    var rho = hunterRho(quotes.daily_volume[i], 0);
+    var s = hunterS(quotes.daily_volume[i], 0);
+    return { dp: dp, rho: rho, s: s, grid: hunterGrid(dp, rho), signal: hunterSignal(dp, s) };
+  }
+
   /** 今日鎖漲跌停清單,純前端算,只需要 quotes-latest.json,不用額外資料檔。*/
   function renderRiskLimitTable() {
     var tbody = el('risk-limit-tbody');
@@ -1281,6 +1395,79 @@
       });
   }
 
+  // ---------------------------------------------------------- 量價訊號(六訊號全市場篩選)
+
+  // 由多頭到空頭排,方便從上面往下看
+  var HUNTER_SIGNAL_ORDER = ['①', '⑤', '②', '⑥', '③', '④'];
+
+  function renderSignals(errMsg) {
+    var meta = el('signals-meta');
+    var table = el('signals-table');
+    var tbody = el('signals-tbody');
+
+    if (errMsg) {
+      meta.innerHTML = '<span class="warn">' + esc(errMsg) + '</span>';
+      table.hidden = true;
+      return;
+    }
+    if (!quotes || !quotes.codes) {
+      meta.textContent = '載入中…';
+      table.hidden = true;
+      return;
+    }
+
+    var rows = [];
+    for (var i = 0; i < quotes.codes.length; i++) {
+      var dp = hunterDeltaP(quotes.daily_close[i], 0);
+      var s = hunterS(quotes.daily_volume[i], 0);
+      var sig = hunterSignal(dp, s);
+      if (!sig) continue;
+      rows.push({
+        code: quotes.codes[i], name: quotes.names[i] || '',
+        close: quotes.close[i], dp: dp, s: s, sig: sig
+      });
+    }
+
+    table.hidden = false;
+    meta.textContent = quotes.date + ' 收盤 · 掃描 ' + fmtInt(quotes.codes.length) +
+      ' 檔上市股票,觸發 ' + fmtInt(rows.length) + ' 檔';
+
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="scan-empty">今天沒有股票觸發任何訊號</td></tr>';
+      return;
+    }
+
+    rows.sort(function (a, b) {
+      var ia = HUNTER_SIGNAL_ORDER.indexOf(a.sig), ib = HUNTER_SIGNAL_ORDER.indexOf(b.sig);
+      if (ia !== ib) return ia - ib;
+      return b.dp - a.dp;
+    });
+
+    tbody.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td class="code mono">' + esc(r.code) + '</td>' +
+        '<td>' + esc(r.name) + '</td>' +
+        '<td class="num mono">' + r.close + '</td>' +
+        '<td class="num ' + plClass(r.dp) + '">' +
+          (r.dp >= 0 ? '+' : '') + (r.dp * 100).toFixed(2) + '%</td>' +
+        '<td class="num mono">' + r.s.toFixed(2) + '</td>' +
+        '<td title="' + esc(HUNTER_SIGNAL_LABELS[r.sig]) + '">' + r.sig + ' ' +
+          esc(HUNTER_SIGNAL_LABELS[r.sig]) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadSignals(force) {
+    if (force) quotes = null;
+    if (quotes) { renderSignals(); return; }
+    renderSignals();   // 顯示「載入中…」
+    loadQuotes()
+      .then(function () { renderSignals(); })
+      .catch(function (e) {
+        renderSignals('讀不到報價資料(' + (e.message || e) + ')。每日排程尚未跑過,或檔案還沒產生。');
+      });
+  }
+
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
@@ -1291,6 +1478,7 @@
     el('broker-wrap').hidden = v !== 'broker';
     el('dca-wrap').hidden = v !== 'dca';
     el('risk-wrap').hidden = v !== 'risk';
+    el('signals-wrap').hidden = v !== 'signals';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -1301,11 +1489,12 @@
     if (v === 'broker') loadBroker(false);
     if (v === 'dca') loadDca(false);
     if (v === 'risk') loadRisk(false);
+    if (v === 'signals') loadSignals(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca', 'risk'];
+  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca', 'risk', 'signals'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -2544,6 +2733,129 @@
     var box = el('detail-positions');
     if (!rec) { box.innerHTML = ''; return; }
     box.innerHTML = positionsHtml(rec);
+  }
+
+  var HUNTER_PRICE_ROWS = ['漲', '平', '跌'];
+  var HUNTER_VOL_COLS = ['增', '平', '縮'];
+
+  /** 獵人九宮格卡片:3x3 格子 + 目前位置 + ΔP/ρ 數值。*/
+  function hunterGridDetailHtml(rec, errMsg) {
+    var head = '<h2 class="panel-title">獵人九宮格</h2>' +
+      '<p class="panel-note">ρ(MA5V/MA20V)是中期量能趨勢,慢變量;' +
+      '中間那排(價平)是過渡態,雜訊高,不單獨當進出場依據。</p>';
+
+    if (errMsg) {
+      return '<section class="panel">' + head + '<p class="warn-sm">' + esc(errMsg) + '</p></section>';
+    }
+    if (!quotes) {
+      return '<section class="panel">' + head + '<p class="dim">載入中…</p></section>';
+    }
+
+    var hu = hunterOf(rec.stock_id);
+    if (!hu) {
+      return '<section class="panel">' + head +
+        '<p class="dim">查不到 ' + esc(rec.stock_id || '這檔') + ' 的報價資料。</p></section>';
+    }
+    if (!hu.grid) {
+      return '<section class="panel">' + head +
+        '<p class="dim">資料天數不足(ρ 需要 20 個交易日的成交量),算不出來。</p></section>';
+    }
+
+    var cells = '';
+    HUNTER_PRICE_ROWS.forEach(function (p) {
+      HUNTER_VOL_COLS.forEach(function (v) {
+        var isCur = (p === hu.grid.price && v === hu.grid.vol);
+        cells += '<div class="hunter-cell' + (isCur ? ' is-current' : '') + '">' +
+          esc(HUNTER_GRID_LABELS[p + v]) + '</div>';
+      });
+    });
+
+    return '<section class="panel">' + head +
+      '<div class="hunter-grid-3x3">' + cells + '</div>' +
+      '<div class="k-sum">' +
+        '<div><span>目前位置</span><b>' + esc(hu.grid.label) + '</b></div>' +
+        '<div><span>ΔP</span><b class="' + plClass(hu.dp) + '">' +
+          (hu.dp >= 0 ? '+' : '') + (hu.dp * 100).toFixed(2) + '%</b></div>' +
+        '<div><span>ρ</span><b>' + hu.rho.toFixed(2) + '</b></div>' +
+        (hu.signal ? '<div><span>今日觸發訊號</span><b>' + hu.signal + ' ' +
+          esc(HUNTER_SIGNAL_LABELS[hu.signal]) + '</b></div>' : '') +
+      '</div>' +
+    '</section>';
+  }
+
+  /** 近期六訊號時間軸,受 history 保留天數限制,能回溯幾天就顯示幾天。*/
+  function hunterTimelineHtml(rec, errMsg) {
+    var head = '<h2 class="panel-title">近期訊號時間軸</h2>';
+
+    if (errMsg) {
+      return '<section class="panel">' + head + '<p class="warn-sm">' + esc(errMsg) + '</p></section>';
+    }
+    if (!quotes) {
+      return '<section class="panel">' + head + '<p class="dim">載入中…</p></section>';
+    }
+    var i = quotesIdx[String(rec.stock_id || '').trim()];
+    if (i == null) {
+      return '<section class="panel">' + head +
+        '<p class="dim">查不到 ' + esc(rec.stock_id || '這檔') + ' 的報價資料。</p></section>';
+    }
+
+    var closeArr = quotes.daily_close[i], volArr = quotes.daily_volume[i];
+    var maxDay = Math.min(closeArr.length, volArr.length) - 21;   // 六訊號的 S 每天都要 20 天基準
+    if (maxDay < 0) {
+      return '<section class="panel">' + head +
+        '<p class="dim">資料天數不足,目前只有 ' + quotes.days.length +
+        ' 天,六訊號至少要 21 天才能算出第一天。</p></section>';
+    }
+
+    var items = [];
+    for (var d = 0; d <= maxDay; d++) {
+      var dp = hunterDeltaP(closeArr, d);
+      var s = hunterS(volArr, d);
+      var sig = hunterSignal(dp, s);
+      if (sig) items.push({ date: quotes.days[d], sig: sig, dp: dp });
+    }
+
+    var note = '<p class="panel-note">目前資料只能回溯 ' + (maxDay + 1) +
+      ' 個交易日(六訊號每天都要 20 天的成交量基準,受 history 保留天數限制)。</p>';
+
+    if (!items.length) {
+      return '<section class="panel">' + head + note +
+        '<p class="dim">這段期間沒有觸發任何訊號。</p></section>';
+    }
+
+    var rows = items.map(function (it) {
+      return '<div class="hunter-signal-item">' +
+        '<span class="mono">' + esc(it.date) + '</span>' +
+        '<span>' + it.sig + ' ' + esc(HUNTER_SIGNAL_LABELS[it.sig]) + '</span>' +
+        '<span class="mono ' + plClass(it.dp) + '">' +
+          (it.dp >= 0 ? '+' : '') + (it.dp * 100).toFixed(2) + '%</span>' +
+      '</div>';
+    }).join('');
+
+    return '<section class="panel">' + head + note +
+      '<div class="hunter-signal-list">' + rows + '</div>' +
+    '</section>';
+  }
+
+  function renderGridDetail() {
+    var rec = findById(currentId);
+    var box = el('detail-grid');
+    if (!rec || !rec.stock_id) { box.innerHTML = ''; return; }
+    box.innerHTML = hunterGridDetailHtml(rec) + hunterTimelineHtml(rec);
+    if (quotes) return;
+
+    loadQuotes()
+      .then(function () {
+        if (findById(currentId) === rec) {
+          box.innerHTML = hunterGridDetailHtml(rec) + hunterTimelineHtml(rec);
+        }
+      })
+      .catch(function (e) {
+        if (findById(currentId) === rec) {
+          var msg = '讀不到報價資料(' + (e.message || e) + ')。每日排程尚未跑過,或檔案還沒產生。';
+          box.innerHTML = hunterGridDetailHtml(rec, msg) + hunterTimelineHtml(rec, msg);
+        }
+      });
   }
 
   /** 融資融券獨立區塊,跟持倉紀錄無關,查不到就照實講,不留白也不裝懂。*/

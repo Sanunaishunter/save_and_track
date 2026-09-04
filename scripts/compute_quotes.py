@@ -22,7 +22,7 @@ DAYS = tick_indicators.DISPLAY_DAYS
 
 
 def load_day(date_str):
-    """{stock_id: {"close":.., "high":.., "low":..}}。只留上市普通股。"""
+    """{stock_id: {"close":.., "high":.., "low":.., "volume":..}}。只留上市普通股。"""
     blob = common.read_json(common.history_path(date_str))
     if not blob:
         return {}
@@ -35,11 +35,12 @@ def load_day(date_str):
             close = row[idx["close"]]
             high = row[idx["high"]]
             low = row[idx["low"]]
+            volume = row[idx["volume"]]
         except (IndexError, KeyError, TypeError):
             continue
         if close is None or not common.is_listed_common(sid, None):
             continue
-        out[sid] = {"close": close, "high": high, "low": low}
+        out[sid] = {"close": close, "high": high, "low": low, "volume": volume}
     return out
 
 
@@ -61,7 +62,7 @@ def main():
 
     codes = sorted(by_day[0])
     out_names, close, prev_close, ret_bp = [], [], [], []
-    daily_high, daily_low, daily_close = [], [], []
+    daily_high, daily_low, daily_close, daily_volume = [], [], [], []
     for code in codes:
         out_names.append(names.get(code) or "")
         close.append(by_day[0][code]["close"])
@@ -83,6 +84,8 @@ def main():
         daily_high.append([(by_day[i].get(code) or {}).get("high") for i in range(len(dates))])
         daily_low.append([(by_day[i].get(code) or {}).get("low") for i in range(len(dates))])
         daily_close.append([(by_day[i].get(code) or {}).get("close") for i in range(len(dates))])
+        # 獵人九宮格 + 爆量六訊號用:ρ = MA5V/MA20V(含當日)、S = 當日量/MA20V(不含當日)
+        daily_volume.append([(by_day[i].get(code) or {}).get("volume") for i in range(len(dates))])
 
     full = sum(1 for s in ret_bp if all(v is not None for v in s))
     print("== 報價快照 %s ==" % target)
@@ -95,7 +98,8 @@ def main():
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "days": dates,
         "note": "ret_bp 是日報酬的基點整數(100 = +1.00%),新到舊,長度 = days-1。"
-                "daily_high/daily_low/daily_close 新到舊,長度 = days,缺值(停牌/新股上市前)為 null",
+                "daily_high/daily_low/daily_close/daily_volume 新到舊,長度 = days,"
+                "缺值(停牌/新股上市前)為 null",
         "codes": codes,
         "names": out_names,
         "close": close,
@@ -104,6 +108,7 @@ def main():
         "daily_high": daily_high,
         "daily_low": daily_low,
         "daily_close": daily_close,
+        "daily_volume": daily_volume,
     }, compact=True)
     print("已寫入 %s" % common.QUOTES_FILE)
     return 0

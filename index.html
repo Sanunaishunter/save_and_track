@@ -44,6 +44,7 @@
     <button type="button" class="viewbtn" data-view="broker">券商</button>
     <button type="button" class="viewbtn" data-view="dca">定期定額</button>
     <button type="button" class="viewbtn" data-view="risk">籌碼</button>
+    <button type="button" class="viewbtn" data-view="signals">量價訊號</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -73,6 +74,7 @@
           <th>名稱</th>
           <th class="num">量比</th>
           <th class="num">漲跌幅</th>
+          <th>訊號</th>
           <th class="num">融資餘額</th>
           <th class="num">融資增減</th>
           <th class="num">融券餘額</th>
@@ -346,6 +348,30 @@
   </section>
 </main>
 
+<main class="list-wrap" id="signals-wrap" hidden>
+  <div class="scan-meta" id="signals-meta">載入中…</div>
+  <p class="panel-note">
+    獵人九宮格 + 爆量六訊號:S = 當日量/MA20V(不含當日),跟爆量掃描的量比是
+    同一個公式;這裡掃全市場,不像爆量掃描要求 close &gt; open,所以看得到
+    出貨/趕底(③⑥)。ΔP 是對昨收的單日報酬率。
+  </p>
+  <div class="table-scroll">
+    <table class="scan-table" id="signals-table" hidden>
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">收盤</th>
+          <th class="num">漲跌幅</th>
+          <th class="num">S</th>
+          <th>訊號</th>
+        </tr>
+      </thead>
+      <tbody id="signals-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
 <section id="detail" class="sheet" hidden aria-hidden="true">
   <header class="sheet-top">
     <button type="button" class="btn btn-ghost" id="detail-back">‹ 返回</button>
@@ -359,6 +385,7 @@
   <div class="sheet-body">
     <div id="detail-meta" class="detail-meta"></div>
     <div id="detail-positions" class="positions"></div>
+    <div id="detail-grid"></div>
     <div id="detail-margin"></div>
     <div id="detail-steps" class="steps"></div>
 
