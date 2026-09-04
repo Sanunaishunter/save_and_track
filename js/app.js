@@ -960,7 +960,12 @@
       if (!groups[c]) { groups[c] = []; order.push(c); }
       groups[c].push(r);
     });
-    order.sort();
+    // 純字串排序會把 "10." 排在 "2." 前面,題材編號要照數字大小排
+    order.sort(function (a, b) {
+      var na = parseInt(a, 10), nb = parseInt(b, 10);
+      if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+      return a < b ? -1 : (a > b ? 1 : 0);
+    });
     order.forEach(function (c) {
       groups[c].sort(function (a, b) {
         if (!!a._sig !== !!b._sig) return a._sig ? -1 : 1;
