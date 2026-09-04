@@ -920,74 +920,77 @@
       });
   }
 
-  // ---------------------------------------------------------- 券商基本資料
+  // ---------------------------------------------------------- 題材分類
+  //
+  // 手動維護的靜態清單(data/themes.json),不是掃描/計分結果,沒有每日排程,
+  // Hugo 自己判斷資料再請 Claude Code 加進檔案。純顯示,依題材分組。
 
-  var BROKER_URL = 'data/broker-latest.json';
-  var brokerLoaded = false;
+  var THEMES_URL = 'data/themes.json';
+  var themesLoaded = false;
 
-  function renderBroker(res) {
-    var meta = el('broker-meta');
-    var tbody = el('broker-tbody');
+  function renderThemes(res) {
+    var meta = el('themes-meta');
+    var tbody = el('themes-tbody');
 
     if (res.error) {
       meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
       tbody.innerHTML = '';
-      el('broker-table').hidden = true;
+      el('themes-table').hidden = true;
       return;
     }
 
-    el('broker-table').hidden = false;
-    meta.textContent = res.date + ' · 共 ' + fmtInt(res.count || 0) + ' 家證券商';
+    var rows = (res.rows || res || []).slice();
+    el('themes-table').hidden = false;
+    meta.textContent = '共 ' + fmtInt(rows.length) + ' 檔';
 
-    var rows = (res.brokers || []).slice();
     if (!rows.length) {
       tbody.innerHTML = '<tr><td colspan="6" class="scan-empty">沒有資料</td></tr>';
       return;
     }
 
-    // 依實收資本額由大到小,查不到資本額的排最後
+    // 依題材分組,同題材內依純度由高到低
     rows.sort(function (a, b) {
-      if (a.capital == null && b.capital == null) return 0;
-      if (a.capital == null) return 1;
-      if (b.capital == null) return -1;
-      return b.capital - a.capital;
+      var ca = a.category || '', cb = b.category || '';
+      if (ca !== cb) return ca < cb ? -1 : 1;
+      return (Number(b.purity_rating) || 0) - (Number(a.purity_rating) || 0);
     });
 
-    tbody.innerHTML = rows.map(function (b) {
+    tbody.innerHTML = rows.map(function (r) {
+      var rating = Number(r.purity_rating);
+      var stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating)) : '—';
       return '<tr>' +
-        '<td class="code mono">' + esc(b.code) + '</td>' +
-        '<td>' + esc(b.name || '') + '</td>' +
-        '<td class="num mono">' + (b.capital != null ? fmtInt(b.capital) : '—') + '</td>' +
-        '<td class="mono">' + esc(b.established || '—') + '</td>' +
-        '<td class="mono">' + esc(b.phone || '—') + '</td>' +
-        '<td>' + esc(b.address || '—') + '</td>' +
+        '<td>' + esc(r.category || '') + '</td>' +
+        '<td class="code mono">' + esc(r.stock_code || '') + '</td>' +
+        '<td>' + esc(r.company_name || '') + '</td>' +
+        '<td>' + esc(r.market_type || '') + '</td>' +
+        '<td>' + esc(r.benefit_reason || '') + '</td>' +
+        '<td class="num mono">' + stars + '</td>' +
       '</tr>';
     }).join('');
   }
 
-  function loadBroker(force) {
-    if (brokerLoaded && !force) return;
-    var meta = el('broker-meta');
+  function loadThemes(force) {
+    if (themesLoaded && !force) return;
+    var meta = el('themes-meta');
     meta.textContent = '載入中…';
 
     if (location.protocol === 'file:') {
-      renderBroker({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+      renderThemes({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
                             '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
       return;
     }
 
-    fetch(BROKER_URL, { cache: 'no-store' })
+    fetch(THEMES_URL, { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .then(function (data) {
-        brokerLoaded = true;
-        renderBroker(data);
+        themesLoaded = true;
+        renderThemes(data);
       })
       .catch(function (e) {
-        renderBroker({ error: '讀不到券商資料(' + (e.message || e) + ')。' +
-                              '每日排程尚未跑過,或檔案還沒產生。' });
+        renderThemes({ error: '讀不到題材分類資料(' + (e.message || e) + ')。' });
       });
   }
 
@@ -1610,7 +1613,7 @@
     el('fomo-wrap').hidden = v !== 'fomo';
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
-    el('broker-wrap').hidden = v !== 'broker';
+    el('themes-wrap').hidden = v !== 'themes';
     el('dca-wrap').hidden = v !== 'dca';
     el('risk-wrap').hidden = v !== 'risk';
     el('signals-wrap').hidden = v !== 'signals';
@@ -1621,7 +1624,7 @@
     if (v === 'fomo') loadFomo(false);
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
-    if (v === 'broker') loadBroker(false);
+    if (v === 'themes') loadThemes(false);
     if (v === 'dca') loadDca(false);
     if (v === 'risk') loadRisk(false);
     if (v === 'signals') loadSignals(false);
@@ -1629,7 +1632,7 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'broker', 'dca', 'risk', 'signals'];
+  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');

@@ -23,10 +23,12 @@ TICK_SAMPLE_FILE = os.path.join(DATA_DIR, "tick-sample-members.json")
 # 報價快照:持倉損益要最新收盤價,Kelly 的相關係數要日報酬序列
 QUOTES_FILE = os.path.join(DATA_DIR, "quotes-latest.json")
 
-# 券商基本資料 + 定期定額統計:兩份都幾乎不變(券商數量、月報表),
-# 但抓取成本是免費的兩次呼叫,跟著每日 workflow 一起更新就好
-BROKER_FILE = os.path.join(DATA_DIR, "broker-latest.json")
+# 定期定額統計:幾乎不變(月報表才更新一次),但抓取成本是免費的一次呼叫,
+# 跟著每日 workflow 一起更新就好
 DCA_FILE = os.path.join(DATA_DIR, "dca-latest.json")
+
+# 題材分類(data/themes.json)是手動維護的靜態清單,不是排程產出,沒有對應的
+# fetch 腳本,不需要常數 —— Hugo 判斷資料後直接請 Claude Code 編輯那份檔案
 
 # 籌碼/風險:大盤成交資訊 + 注意股 + 融資融券 + 停資停券預告 + 除權息預告,
 # 獨立分頁,跟七步驟/爆量/FOMO/產業流向/部位無關

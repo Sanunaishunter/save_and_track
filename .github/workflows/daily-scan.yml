@@ -76,9 +76,9 @@ jobs:
       - name: 產生報價快照
         run: python scripts/compute_quotes.py
 
-      # --- 券商基本資料 + 定期定額統計(獨立分頁,跟其他步驟無關)---
-      - name: 更新券商基本資料與定期定額統計
-        run: python scripts/fetch_broker_dca.py
+      # --- 定期定額統計(獨立分頁,跟其他步驟無關)---
+      - name: 更新定期定額統計
+        run: python scripts/fetch_dca.py
 
       # --- 籌碼/風險(獨立分頁,跟其他步驟無關)---
       - name: 更新籌碼/風險資料
