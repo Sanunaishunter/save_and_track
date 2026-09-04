@@ -923,12 +923,43 @@
   // ---------------------------------------------------------- 題材分類
   //
   // 手動維護的靜態清單(data/themes.json),不是掃描/計分結果,沒有每日排程,
-  // Hugo 自己判斷資料再請 Claude Code 加進檔案。純顯示,依題材分組。
+  // Hugo 自己判斷資料再請 Claude Code 加進檔案。跟爆量掃描(data/scan-latest.json)
+  // 交叉比對:題材成員今天有沒有被掃到爆量,藉此看出「哪個題材可以關注」。
 
   var THEMES_URL = 'data/themes.json';
   var themesLoaded = false;
 
-  function renderThemes(res) {
+  /** 代碼 -> 爆量掃描那一列,查不到回傳 null。獨立抓取,不影響爆量掃描分頁本身。*/
+  var themeScanIndex = null;
+  var themeScanIndexPending = null;
+  function loadThemeScanIndex() {
+    if (themeScanIndex) return Promise.resolve(themeScanIndex);
+    if (themeScanIndexPending) return themeScanIndexPending;
+    if (location.protocol === 'file:') {
+      return Promise.reject(new Error('file:// 不能讀本機 JSON'));
+    }
+    themeScanIndexPending = fetch(SCAN_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var idx = {};
+        (data.rows || []).forEach(function (r) {
+          idx[String(r.stock_id)] = r;
+        });
+        themeScanIndex = idx;
+        themeScanIndexPending = null;
+        return idx;
+      })
+      .catch(function (e) {
+        themeScanIndexPending = null;
+        throw e;
+      });
+    return themeScanIndexPending;
+  }
+
+  function renderThemes(res, scanIdx) {
     var meta = el('themes-meta');
     var tbody = el('themes-tbody');
 
@@ -941,30 +972,59 @@
 
     var rows = (res.rows || res || []).slice();
     el('themes-table').hidden = false;
-    meta.textContent = '共 ' + fmtInt(rows.length) + ' 檔';
 
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="scan-empty">沒有資料</td></tr>';
+      meta.textContent = '共 0 檔';
+      tbody.innerHTML = '<tr><td colspan="7" class="scan-empty">沒有資料</td></tr>';
       return;
     }
 
-    // 依題材分組,同題材內依純度由高到低
+    scanIdx = scanIdx || {};
+    rows.forEach(function (r) {
+      r._hit = scanIdx[String(r.stock_code)] || null;
+    });
+
+    // 依題材分組,同題材內爆量的排前面,再依純度由高到低
     rows.sort(function (a, b) {
       var ca = a.category || '', cb = b.category || '';
       if (ca !== cb) return ca < cb ? -1 : 1;
+      if (!!a._hit !== !!b._hit) return a._hit ? -1 : 1;
       return (Number(b.purity_rating) || 0) - (Number(a.purity_rating) || 0);
     });
+
+    // 有幾個題材今天有成員被掃到爆量,一眼看出哪個題材可以關注
+    var hitCategories = [];
+    var seen = {};
+    rows.forEach(function (r) {
+      if (r._hit && !seen[r.category]) {
+        seen[r.category] = true;
+        hitCategories.push(r.category);
+      }
+    });
+    meta.innerHTML = '共 ' + fmtInt(rows.length) + ' 檔' +
+      (hitCategories.length
+        ? ' · <span class="up">今日爆量題材:' + hitCategories.map(esc).join('、') + '</span>'
+        : ' · 今日沒有題材成員出現在爆量掃描');
 
     tbody.innerHTML = rows.map(function (r) {
       var rating = Number(r.purity_rating);
       var stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating)) : '—';
-      return '<tr>' +
+      var hit = r._hit;
+      var hitTxt = '—';
+      if (hit) {
+        var chg = hit.change_pct;
+        hitTxt = Number(hit.vol_ratio).toFixed(2) + 'x' +
+          (chg == null ? '' : ' <span class="' + plClass(chg) + '">' +
+            (chg > 0 ? '+' : '') + chg.toFixed(2) + '%</span>');
+      }
+      return '<tr class="' + (hit ? 'is-hit' : '') + '">' +
         '<td>' + esc(r.category || '') + '</td>' +
         '<td class="code mono">' + esc(r.stock_code || '') + '</td>' +
         '<td>' + esc(r.company_name || '') + '</td>' +
         '<td>' + esc(r.market_type || '') + '</td>' +
         '<td>' + esc(r.benefit_reason || '') + '</td>' +
         '<td class="num mono">' + stars + '</td>' +
+        '<td class="num mono">' + hitTxt + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -980,14 +1040,16 @@
       return;
     }
 
-    fetch(THEMES_URL, { cache: 'no-store' })
-      .then(function (r) {
+    Promise.all([
+      fetch(THEMES_URL, { cache: 'no-store' }).then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
-      })
-      .then(function (data) {
+      }),
+      loadThemeScanIndex().catch(function () { return {}; })   // 爆量資料晚到就先顯示,不擋主表
+    ])
+      .then(function (results) {
         themesLoaded = true;
-        renderThemes(data);
+        renderThemes(results[0], results[1]);
       })
       .catch(function (e) {
         renderThemes({ error: '讀不到題材分類資料(' + (e.message || e) + ')。' });
