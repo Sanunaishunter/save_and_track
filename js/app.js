@@ -923,109 +923,95 @@
   // ---------------------------------------------------------- 題材分類
   //
   // 手動維護的靜態清單(data/themes.json),不是掃描/計分結果,沒有每日排程,
-  // Hugo 自己判斷資料再請 Claude Code 加進檔案。跟爆量掃描(data/scan-latest.json)
-  // 交叉比對:題材成員今天有沒有被掃到爆量,藉此看出「哪個題材可以關注」。
+  // Hugo 自己判斷資料再請 Claude Code 加進檔案。每個題材是一組(<details>
+  // 收合),組頭顯示今天觸發幾檔訊號,點開才看到全部成員 —— 訊號用的是
+  // hunterOf()/爆量六訊號(跟「量價訊號」分頁同一套算法,涵蓋爆量、暴跌等
+  // 六種情境,不是只有爆量掃描那種單一方向的條件)。
 
   var THEMES_URL = 'data/themes.json';
   var themesLoaded = false;
 
-  /** 代碼 -> 爆量掃描那一列,查不到回傳 null。獨立抓取,不影響爆量掃描分頁本身。*/
-  var themeScanIndex = null;
-  var themeScanIndexPending = null;
-  function loadThemeScanIndex() {
-    if (themeScanIndex) return Promise.resolve(themeScanIndex);
-    if (themeScanIndexPending) return themeScanIndexPending;
-    if (location.protocol === 'file:') {
-      return Promise.reject(new Error('file:// 不能讀本機 JSON'));
-    }
-    themeScanIndexPending = fetch(SCAN_URL, { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        var idx = {};
-        (data.rows || []).forEach(function (r) {
-          idx[String(r.stock_id)] = r;
-        });
-        themeScanIndex = idx;
-        themeScanIndexPending = null;
-        return idx;
-      })
-      .catch(function (e) {
-        themeScanIndexPending = null;
-        throw e;
-      });
-    return themeScanIndexPending;
-  }
-
-  function renderThemes(res, scanIdx) {
+  function renderThemes(res, quotesOk) {
     var meta = el('themes-meta');
-    var tbody = el('themes-tbody');
+    var list = el('themes-list');
 
     if (res.error) {
       meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
-      tbody.innerHTML = '';
-      el('themes-table').hidden = true;
+      list.innerHTML = '';
       return;
     }
 
     var rows = (res.rows || res || []).slice();
-    el('themes-table').hidden = false;
-
     if (!rows.length) {
       meta.textContent = '共 0 檔';
-      tbody.innerHTML = '<tr><td colspan="7" class="scan-empty">沒有資料</td></tr>';
+      list.innerHTML = '<p class="dim">沒有資料</p>';
       return;
     }
 
-    scanIdx = scanIdx || {};
     rows.forEach(function (r) {
-      r._hit = scanIdx[String(r.stock_code)] || null;
+      var hu = hunterOf(r.stock_code);
+      r._sig = hu && hu.signal;
     });
 
-    // 依題材分組,同題材內爆量的排前面,再依純度由高到低
-    rows.sort(function (a, b) {
-      var ca = a.category || '', cb = b.category || '';
-      if (ca !== cb) return ca < cb ? -1 : 1;
-      if (!!a._hit !== !!b._hit) return a._hit ? -1 : 1;
-      return (Number(b.purity_rating) || 0) - (Number(a.purity_rating) || 0);
+    // 依題材分組(依 category 字串排序),組內觸發訊號的排前面,再依純度高到低
+    var groups = {}, order = [];
+    rows.forEach(function (r) {
+      var c = r.category || '(未分類)';
+      if (!groups[c]) { groups[c] = []; order.push(c); }
+      groups[c].push(r);
+    });
+    order.sort();
+    order.forEach(function (c) {
+      groups[c].sort(function (a, b) {
+        if (!!a._sig !== !!b._sig) return a._sig ? -1 : 1;
+        return (Number(b.purity_rating) || 0) - (Number(a.purity_rating) || 0);
+      });
     });
 
-    // 有幾個題材今天有成員被掃到爆量,一眼看出哪個題材可以關注
     var hitCategories = [];
-    var seen = {};
-    rows.forEach(function (r) {
-      if (r._hit && !seen[r.category]) {
-        seen[r.category] = true;
-        hitCategories.push(r.category);
-      }
+    order.forEach(function (c) {
+      var n = groups[c].filter(function (r) { return r._sig; }).length;
+      if (n) hitCategories.push(c + '(' + n + ')');
     });
-    meta.innerHTML = '共 ' + fmtInt(rows.length) + ' 檔' +
-      (hitCategories.length
-        ? ' · <span class="up">今日爆量題材:' + hitCategories.map(esc).join('、') + '</span>'
-        : ' · 今日沒有題材成員出現在爆量掃描');
 
-    tbody.innerHTML = rows.map(function (r) {
-      var rating = Number(r.purity_rating);
-      var stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating)) : '—';
-      var hit = r._hit;
-      var hitTxt = '—';
-      if (hit) {
-        var chg = hit.change_pct;
-        hitTxt = Number(hit.vol_ratio).toFixed(2) + 'x' +
-          (chg == null ? '' : ' <span class="' + plClass(chg) + '">' +
-            (chg > 0 ? '+' : '') + chg.toFixed(2) + '%</span>');
-      }
-      return '<tr class="' + (hit ? 'is-hit' : '') + '">' +
-        '<td>' + esc(r.category || '') + '</td>' +
-        '<td class="code mono">' + esc(r.stock_code || '') + '</td>' +
-        '<td>' + esc(r.company_name || '') + '</td>' +
-        '<td>' + esc(r.market_type || '') + '</td>' +
-        '<td>' + esc(r.benefit_reason || '') + '</td>' +
-        '<td class="num mono">' + stars + '</td>' +
-        '<td class="num mono">' + hitTxt + '</td>' +
-      '</tr>';
+    meta.innerHTML = '共 ' + fmtInt(rows.length) + ' 檔、' + order.length + ' 個題材' +
+      (quotesOk === false ? ' · <span class="warn">訊號資料讀不到,以下先看題材清單本身</span>'
+        : hitCategories.length
+          ? ' · <span class="up">今日觸發訊號:' + hitCategories.map(esc).join('、') + '</span>'
+          : ' · 今天沒有題材成員觸發訊號');
+
+    list.innerHTML = order.map(function (c) {
+      var members = groups[c];
+      var hitCount = members.filter(function (r) { return r._sig; }).length;
+
+      var body = '<table class="scan-table"><thead><tr>' +
+        '<th>代碼</th><th>名稱</th><th>市場別</th><th>受惠原因</th>' +
+        '<th class="num">純度</th><th>今日訊號</th>' +
+        '</tr></thead><tbody>' +
+        members.map(function (r) {
+          var rating = Number(r.purity_rating);
+          var stars = rating > 0 ? '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating)) : '—';
+          var sigTxt = r._sig ? (r._sig + ' ' + esc(HUNTER_SIGNAL_LABELS[r._sig])) : '—';
+          return '<tr class="' + (r._sig ? 'is-hit' : '') + '">' +
+            '<td class="code mono">' + esc(r.stock_code || '') + '</td>' +
+            '<td>' + esc(r.company_name || '') + '</td>' +
+            '<td>' + esc(r.market_type || '') + '</td>' +
+            '<td>' + esc(r.benefit_reason || '') + '</td>' +
+            '<td class="num mono">' + stars + '</td>' +
+            '<td>' + sigTxt + '</td>' +
+          '</tr>';
+        }).join('') +
+        '</tbody></table>';
+
+      return '<details class="theme-set">' +
+        '<summary class="theme-set-head">' +
+          '<span class="theme-set-title">' + esc(c) + '</span>' +
+          '<span class="theme-set-badge' + (hitCount ? ' has-hit' : '') + '">' +
+            (hitCount ? hitCount + ' 檔觸發訊號' : '無訊號') +
+          '</span>' +
+        '</summary>' +
+        '<div class="theme-set-body table-scroll">' + body + '</div>' +
+      '</details>';
     }).join('');
   }
 
@@ -1045,7 +1031,7 @@
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       }),
-      loadThemeScanIndex().catch(function () { return {}; })   // 爆量資料晚到就先顯示,不擋主表
+      loadQuotes().then(function () { return true; }).catch(function () { return false; })
     ])
       .then(function (results) {
         themesLoaded = true;

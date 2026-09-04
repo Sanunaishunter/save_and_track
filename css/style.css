@@ -944,9 +944,46 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
   font-size: 10.5px;
 }
 
-/* ---------------------------------------------- 題材分類:今日爆量交叉比對 */
+/* ---------------------------------------------- 題材分類:收合式分組 + 訊號交叉比對 */
 
 .scan-table tr.is-hit { background: rgba(232, 69, 60, 0.08); }
+
+.theme-set {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.theme-set-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  cursor: pointer;
+  background: var(--panel-2);
+  list-style: none;
+}
+.theme-set-head::-webkit-details-marker { display: none; }
+.theme-set-head::marker { content: ''; }
+.theme-set-title { font-weight: 600; font-size: 13.5px; }
+.theme-set-badge {
+  flex: none;
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--panel-3);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.theme-set-badge.has-hit {
+  background: rgba(232, 69, 60, 0.16);
+  color: var(--up);
+  font-weight: 600;
+}
+.theme-set-body { padding: 10px 0 4px; }
+.theme-set-body .scan-table { margin: 0; }
 
 .lajiban-banner {
   margin-top: 10px;

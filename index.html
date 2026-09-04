@@ -207,26 +207,11 @@
   <div class="scan-meta" id="themes-meta">載入中…</div>
   <p class="panel-note">
     手動維護的題材分類清單 —— 資料由 Hugo 自己判斷、自己輸入,純資訊整理,
-    不代表買賣建議。純度是主觀評分(1~5,5 最純)。「今日爆量」對照的是
-    爆量掃描分頁的結果:題材成員今天有沒有被掃到爆量,藉此看出哪個題材
-    可以關注,有爆量的成員會排在同題材最前面並用底色標示。
+    不代表買賣建議。純度是主觀評分(1~5,5 最純)。每個題材是一組(set),
+    收合時只看得到「今天觸發幾檔訊號」,點開才看到全部成員;訊號是
+    量價訊號分頁的六訊號(爆量、暴跌…等),同一檔算法完全一致。
   </p>
-  <div class="table-scroll">
-    <table class="scan-table" id="themes-table">
-      <thead>
-        <tr>
-          <th>題材</th>
-          <th>代碼</th>
-          <th>名稱</th>
-          <th>市場別</th>
-          <th>受惠原因</th>
-          <th class="num">純度</th>
-          <th class="num">今日爆量</th>
-        </tr>
-      </thead>
-      <tbody id="themes-tbody"></tbody>
-    </table>
-  </div>
+  <div id="themes-list"></div>
 </main>
 
 <main class="list-wrap" id="dca-wrap" hidden>
