@@ -68,9 +68,15 @@ body {
 
 .app-title {
   margin: 0;
-  font-size: 17px;
+  min-width: 0;
+  /* 名字比原本的中文標題長很多,窄螢幕上跟著縮字級,一律不換行;
+     縮到底還是放不下就省略號收尾,不擠壓右邊的按鈕 */
+  font-size: clamp(12px, 4.2vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-actions { display: flex; gap: 6px; }
