@@ -939,16 +939,25 @@
     el('broker-table').hidden = false;
     meta.textContent = res.date + ' · 共 ' + fmtInt(res.count || 0) + ' 家證券商';
 
-    var rows = res.brokers || [];
+    var rows = (res.brokers || []).slice();
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="scan-empty">沒有資料</td></tr>';
       return;
     }
+
+    // 依實收資本額由大到小,查不到資本額的排最後
+    rows.sort(function (a, b) {
+      if (a.capital == null && b.capital == null) return 0;
+      if (a.capital == null) return 1;
+      if (b.capital == null) return -1;
+      return b.capital - a.capital;
+    });
 
     tbody.innerHTML = rows.map(function (b) {
       return '<tr>' +
         '<td class="code mono">' + esc(b.code) + '</td>' +
         '<td>' + esc(b.name || '') + '</td>' +
+        '<td class="num mono">' + (b.capital != null ? fmtInt(b.capital) : '—') + '</td>' +
         '<td class="mono">' + esc(b.established || '—') + '</td>' +
         '<td class="mono">' + esc(b.phone || '—') + '</td>' +
         '<td>' + esc(b.address || '—') + '</td>' +
@@ -1343,7 +1352,10 @@
     }
 
     var susTable = el('risk-suspension-table');
-    var suspension = res.suspension || [];
+    // 依起始日期從近到遠(ISO 字串本身就是可比較的字典序)
+    var suspension = (res.suspension || []).slice().sort(function (a, b) {
+      return (a.start || '').localeCompare(b.start || '');
+    });
     if (suspension.length) {
       susTable.hidden = false;
       el('risk-suspension-tbody').innerHTML = suspension.map(function (s) {
@@ -1360,7 +1372,13 @@
     }
 
     var exdivTable = el('risk-exdiv-table');
-    var exdiv = res.exdividend || [];
+    // 依現金股利由大到小,查不到股利的排最後
+    var exdiv = (res.exdividend || []).slice().sort(function (a, b) {
+      if (a.cash_dividend == null && b.cash_dividend == null) return 0;
+      if (a.cash_dividend == null) return 1;
+      if (b.cash_dividend == null) return -1;
+      return b.cash_dividend - a.cash_dividend;
+    });
     if (exdiv.length) {
       exdivTable.hidden = false;
       el('risk-exdiv-tbody').innerHTML = exdiv.map(function (x) {
