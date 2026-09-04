@@ -892,6 +892,70 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 }
 .hunter-signal-item .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
+/* ---------------------------------------------- 大盤九宮格 + 法人融資交叉 + 情緒 + 拉積盤 */
+
+.cross-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  border: 1px solid transparent;
+}
+.cross-box .cross-title { font-size: 11px; color: var(--muted); margin-bottom: 2px; }
+.cross-box.level-healthy { background: rgba(60, 160, 90, 0.14); border-color: rgba(60, 160, 90, 0.4); }
+.cross-box.level-caution { background: rgba(216, 160, 42, 0.14); border-color: rgba(216, 160, 42, 0.4); }
+.cross-box.level-alert   { background: rgba(232, 69, 60, 0.14); border-color: rgba(232, 69, 60, 0.4); }
+.cross-box.level-watch   { background: rgba(216, 160, 42, 0.14); border-color: rgba(216, 160, 42, 0.4); }
+
+.sentiment-box {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--panel-2);
+  font-size: 12.5px;
+}
+.sentiment-box .sentiment-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.sentiment-gauge {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, var(--down), var(--panel-3) 35%, var(--panel-3) 65%, var(--up));
+}
+.sentiment-marker {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 16px;
+  background: var(--text);
+  transform: translateX(-1px);
+}
+.sentiment-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.lajiban-banner {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(232, 69, 60, 0.14);
+  border: 1px solid rgba(232, 69, 60, 0.45);
+  color: var(--up);
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
 /* ---------------------------------------------- 持倉 */
 
 .pos-summary {

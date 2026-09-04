@@ -84,6 +84,10 @@ jobs:
       - name: 更新籌碼/風險資料
         run: python scripts/fetch_risk_flags.py
 
+      # 大盤九宮格排在籌碼/風險之後,重用同一份 risk-latest.json 的融資融券快照
+      - name: 計算大盤九宮格
+        run: python scripts/compute_market_grid.py
+
       # --- FOMO(讀前面剛產生的 scan-latest.json)---
       # 合併成同一個 job 的用意就在這:順序由執行序保證,不再依賴兩支排程
       # 的時間差。GitHub 排程會延遲,先前拆成兩支時,只要爆量那支慢超過

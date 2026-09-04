@@ -243,6 +243,21 @@
 <main class="list-wrap" id="risk-wrap" hidden>
   <div class="scan-meta" id="risk-meta">載入中…</div>
 
+  <section class="panel" id="market-grid-panel" hidden>
+    <h2 class="panel-title">大盤九宮格</h2>
+    <p class="panel-note">
+      Y 軸 ΔP_idx(加權指數單日報酬率)× X 軸 ρ_idx(大盤成交值 5日均/20日均比,
+      成交值用 Σ收盤價×成交量 自算)。跟個股獵人九宮格同構但參數不同 ——
+      指數波動天生被市值加權壓縮,門檻比個股窄。純觀察型,不是進出場訊號,
+      所有判讀都還沒經過勝率驗證。
+    </p>
+    <div class="hunter-grid-3x3" id="market-grid-cells"></div>
+    <div class="k-sum" id="market-grid-sum"></div>
+    <div class="cross-box" id="market-cross-signal" hidden></div>
+    <div class="sentiment-box" id="market-sentiment" hidden></div>
+    <div class="lajiban-banner" id="market-lajiban" hidden></div>
+  </section>
+
   <section class="panel" id="risk-market-panel" hidden>
     <h2 class="panel-title">大盤</h2>
     <div class="k-sum" id="risk-market"></div>

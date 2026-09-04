@@ -32,6 +32,10 @@ DCA_FILE = os.path.join(DATA_DIR, "dca-latest.json")
 # 獨立分頁,跟七步驟/爆量/FOMO/產業流向/部位無關
 RISK_FILE = os.path.join(DATA_DIR, "risk-latest.json")
 
+# 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測,放在「籌碼/風險」分頁裡,
+# 跟個股獵人九宮格是平行但獨立的功能(參數不共用)
+MARKET_GRID_FILE = os.path.join(DATA_DIR, "market-grid-latest.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]

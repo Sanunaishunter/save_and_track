@@ -875,7 +875,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
-        '<td' + (sig ? ' title="' + esc(HUNTER_SIGNAL_LABELS[sig]) + '"' : '') + '>' + (sig || '—') + '</td>' +
+        '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +
         '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
@@ -1395,10 +1395,127 @@
     }
   }
 
+  // ---------------------------------------------------------- 大盤九宮格(籌碼/風險分頁)
+  //
+  // 跟個股獵人九宮格平行但獨立:ΔP_idx/ρ_idx 門檻、法人融資交叉、情緒溫度計、
+  // 拉積盤 breadth_ratio 全部由後端 compute_market_grid.py 算好,前端只負責顯示,
+  // 不像獵人九宮格需要前端現算(這裡沒有逐檔明細鑽取的需求,不用複算)。
+
+  var MARKET_GRID_URL = 'data/market-grid-latest.json';
+  var marketGridData = null;
+  var marketGridPending = null;
+
+  function loadMarketGrid() {
+    if (marketGridData) return Promise.resolve(marketGridData);
+    if (marketGridPending) return marketGridPending;
+    if (location.protocol === 'file:') {
+      return Promise.reject(new Error('用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。'));
+    }
+    marketGridPending = fetch(MARKET_GRID_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        marketGridData = data;
+        marketGridPending = null;
+        return data;
+      })
+      .catch(function (e) {
+        marketGridPending = null;
+        throw e;
+      });
+    return marketGridPending;
+  }
+
+  var MARKET_PRICE_ROWS = ['漲', '平', '跌'];
+  var MARKET_VOL_COLS = ['增', '平', '縮'];
+  var MARKET_GRID_SHORT_LABELS = {
+    '漲增': '資金行情啟動', '漲平': '指數漲量平', '漲縮': '指數漲量縮',
+    '平增': '指數平量增', '平平': '指數平量平', '平縮': '指數平量縮',
+    '跌增': '系統性賣壓', '跌平': '指數跌量平', '跌縮': '指數跌量縮'
+  };
+
+  function renderMarketGrid(res) {
+    var panel = el('market-grid-panel');
+    if (!res || res.error) { panel.hidden = true; return; }
+    panel.hidden = false;
+
+    var cells = '';
+    MARKET_PRICE_ROWS.forEach(function (p) {
+      MARKET_VOL_COLS.forEach(function (v) {
+        var isCur = (p === res.price_state && v === res.volume_state);
+        cells += '<div class="hunter-cell' + (isCur ? ' is-current' : '') + '">' +
+          esc(MARKET_GRID_SHORT_LABELS[p + v]) + '</div>';
+      });
+    });
+    el('market-grid-cells').innerHTML = cells;
+
+    var sumHtml = '<div><span>今日位置</span><b>' + esc(res.grid_label || '資料不足') + '</b></div>';
+    if (res.delta_p_idx != null) {
+      sumHtml += '<div><span>ΔP_idx</span><b class="' + plClass(res.delta_p_idx) + '">' +
+        (res.delta_p_idx >= 0 ? '+' : '') + (res.delta_p_idx * 100).toFixed(2) + '%</b></div>';
+    }
+    sumHtml += res.rho_idx != null
+      ? '<div><span>ρ_idx</span><b>' + res.rho_idx.toFixed(2) + '</b></div>'
+      : '<div><span>ρ_idx</span><b class="dim">資料不足(' + (res.turnover_days || 0) + '/20 天)</b></div>';
+    if (res.idx_close != null) {
+      sumHtml += '<div><span>加權指數</span><b>' + res.idx_close.toFixed(2) + '</b></div>';
+    }
+    el('market-grid-sum').innerHTML = sumHtml;
+
+    var crossBox = el('market-cross-signal');
+    if (res.cross_signal) {
+      crossBox.hidden = false;
+      crossBox.className = 'cross-box level-' + (res.cross_signal_level || 'watch');
+      crossBox.innerHTML = '<div class="cross-title">法人 + 融資交叉分析(僅「量價齊揚」格顯示)</div>' +
+        esc(res.cross_signal) +
+        '<div class="dim" style="margin-top:4px;">法人買賣超(約)' +
+          signed(Math.round((res.institutional_net || 0) / 1e4)) + ' 萬元 · 融資增減 ' +
+          (res.margin_delta == null ? '—' : signed(res.margin_delta)) + '</div>';
+    } else {
+      crossBox.hidden = true;
+    }
+
+    var sentBox = el('market-sentiment');
+    if (res.sentiment_ma5 != null && res.params) {
+      sentBox.hidden = false;
+      var lo = res.params.sentiment_low, hi = res.params.sentiment_high;
+      var scaleMax = 1000;
+      var pct = Math.max(0, Math.min(100, (res.sentiment_ma5 / scaleMax) * 100));
+      var mood = res.sentiment_ma5 < lo ? '偏悲觀' : (res.sentiment_ma5 > hi ? '偏樂觀' : '中性');
+      sentBox.innerHTML =
+        '<div class="sentiment-head"><span>市場情緒溫度計 —— 上漲家數 5日均</span><span>' +
+          Math.round(res.sentiment_ma5) + ' 家 · ' + mood + '</span></div>' +
+        '<div class="sentiment-gauge"><div class="sentiment-marker" style="left:' + pct + '%"></div></div>' +
+        '<div class="sentiment-ticks"><span>0</span><span>' + lo + '</span><span>' + hi + '</span><span>' + scaleMax + '</span></div>' +
+        '<p class="dim" style="margin-top:6px;">跌破 ' + lo + ' 家偏悲觀、突破 ' + hi + ' 家偏樂觀,' +
+          '門檻是舊經驗值,隨掛牌家數增加可能已不準,僅供參考。</p>';
+    } else {
+      sentBox.hidden = true;
+    }
+
+    var lajibanBox = el('market-lajiban');
+    if (res.is_lajiban) {
+      lajibanBox.hidden = false;
+      var chg = res.delta_p_idx != null ? ((res.delta_p_idx >= 0 ? '+' : '') + (res.delta_p_idx * 100).toFixed(2) + '%') : '—';
+      lajibanBox.innerHTML = '⚠ 拉積盤警訊:指數漲 ' + chg + ',但下跌家數 ' +
+        fmtInt(res.declining_count) + ' 家 > 上漲家數 ' + fmtInt(res.advancing_count) +
+        ' 家 —— 可能是少數權值股獨撐指數,並非全面性上漲。';
+    } else {
+      lajibanBox.hidden = true;
+    }
+  }
+
   function loadRisk(force) {
     loadQuotes().then(renderRiskLimitTable).catch(function () {
       el('risk-limit-table').hidden = true;
     });
+
+    if (force) marketGridData = null;
+    loadMarketGrid()
+      .then(function (data) { renderMarketGrid(data); })
+      .catch(function () { el('market-grid-panel').hidden = true; });
 
     if (force) riskData = null;
     if (riskData) { renderRisk(riskData); return; }
