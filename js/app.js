@@ -209,7 +209,7 @@
     markSplashSeen();
     s.hidden = false;
     s.addEventListener('click', hideSplash);
-    setTimeout(hideSplash, 9500);
+    setTimeout(hideSplash, 11800);
   }
 
   function showStorageBanner(msg) {

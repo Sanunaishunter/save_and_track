@@ -1202,6 +1202,14 @@ input[type="date"] {
 .splash-quote:nth-of-type(2) { animation-delay: 2.3s; }
 .splash-quote:nth-of-type(3) { animation-delay: 4.4s; }
 .splash-quote:nth-of-type(4) { animation-delay: 6.5s; }
+.splash-quote:nth-of-type(5) { animation-delay: 8.6s; }
+
+.splash-quote.is-attrib b {
+  font-size: clamp(18px, 5vw, 26px);
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+.splash-quote.is-attrib small { letter-spacing: 0.15em; }
 
 @keyframes splash-line {
   0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
