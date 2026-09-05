@@ -1389,6 +1389,7 @@
       el('risk-market-panel').hidden = true;
       el('risk-attention-table').hidden = true;
       el('risk-margin-table').hidden = true;
+      el('risk-short-table').hidden = true;
       el('risk-suspension-table').hidden = true;
       el('risk-exdiv-table').hidden = true;
       el('risk-attention-note').textContent = '';
@@ -1447,24 +1448,42 @@
         short_delta: (v.short_today == null || v.short_prev == null) ? null : v.short_today - v.short_prev
       });
     });
-    marginRows.sort(function (a, b) { return (b.margin_today || 0) - (a.margin_today || 0); });
+    var marginTop10 = marginRows.slice().sort(function (a, b) {
+      return (b.margin_today || 0) - (a.margin_today || 0);
+    }).slice(0, 10);
     var marginTable = el('risk-margin-table');
-    if (marginRows.length) {
+    if (marginTop10.length) {
       marginTable.hidden = false;
-      el('risk-margin-tbody').innerHTML = marginRows.map(function (r) {
+      el('risk-margin-tbody').innerHTML = marginTop10.map(function (r) {
         return '<tr>' +
           '<td class="code mono">' + esc(r.code) + '</td>' +
           '<td>' + esc(r.name || '') + '</td>' +
           '<td class="num mono">' + (r.margin_today == null ? '—' : fmtInt(r.margin_today)) + '</td>' +
           '<td class="num mono ' + plClass(r.margin_delta) + '">' +
             (r.margin_delta == null ? '—' : signed(r.margin_delta)) + '</td>' +
+        '</tr>';
+      }).join('');
+    } else {
+      marginTable.hidden = true;
+    }
+
+    var shortTop10 = marginRows.slice().sort(function (a, b) {
+      return (b.short_today || 0) - (a.short_today || 0);
+    }).slice(0, 10);
+    var shortTable = el('risk-short-table');
+    if (shortTop10.length) {
+      shortTable.hidden = false;
+      el('risk-short-tbody').innerHTML = shortTop10.map(function (r) {
+        return '<tr>' +
+          '<td class="code mono">' + esc(r.code) + '</td>' +
+          '<td>' + esc(r.name || '') + '</td>' +
           '<td class="num mono">' + (r.short_today == null ? '—' : fmtInt(r.short_today)) + '</td>' +
           '<td class="num mono ' + plClass(r.short_delta) + '">' +
             (r.short_delta == null ? '—' : signed(r.short_delta)) + '</td>' +
         '</tr>';
       }).join('');
     } else {
-      marginTable.hidden = true;
+      shortTable.hidden = true;
     }
 
     var susTable = el('risk-suspension-table');

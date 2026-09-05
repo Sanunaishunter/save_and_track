@@ -314,7 +314,8 @@
 
   <section class="panel">
     <h2 class="panel-title">融資融券</h2>
-    <p class="panel-note">依融資今日餘額由高到低排序。</p>
+    <p class="panel-note">融資、融券各自取餘額前 10 名,不是同一批股票 —— 原始資料仍是全市場,畫面只顯示前段班。</p>
+    <p class="dim" style="margin:10px 0 4px;">融資餘額前 10 名</p>
     <div class="table-scroll">
       <table class="scan-table" id="risk-margin-table" hidden>
         <thead>
@@ -323,11 +324,23 @@
             <th>名稱</th>
             <th class="num">融資餘額</th>
             <th class="num">融資增減</th>
+          </tr>
+        </thead>
+        <tbody id="risk-margin-tbody"></tbody>
+      </table>
+    </div>
+    <p class="dim" style="margin:14px 0 4px;">融券餘額前 10 名</p>
+    <div class="table-scroll">
+      <table class="scan-table" id="risk-short-table" hidden>
+        <thead>
+          <tr>
+            <th>代碼</th>
+            <th>名稱</th>
             <th class="num">融券餘額</th>
             <th class="num">融券增減</th>
           </tr>
         </thead>
-        <tbody id="risk-margin-tbody"></tbody>
+        <tbody id="risk-short-tbody"></tbody>
       </table>
     </div>
   </section>
