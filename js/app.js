@@ -179,6 +179,7 @@
   // ---------------------------------------------------------- 開場動畫
 
   var SPLASH_SEEN_KEY = 'stock_pipeline_splash_seen';
+  var SPLASH_EVERY_LAUNCH = true; // 目前先每次啟動都跑,之後要改回一天一次把這個切回 false
 
   function splashSeenToday() {
     try {
@@ -204,11 +205,11 @@
   function initSplash() {
     var s = el('splash');
     if (!s) return;
-    if (splashSeenToday()) { s.hidden = true; return; }
+    if (!SPLASH_EVERY_LAUNCH && splashSeenToday()) { s.hidden = true; return; }
     markSplashSeen();
     s.hidden = false;
     s.addEventListener('click', hideSplash);
-    setTimeout(hideSplash, 4900);
+    setTimeout(hideSplash, 9500);
   }
 
   function showStorageBanner(msg) {

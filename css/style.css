@@ -1185,7 +1185,7 @@ input[type="date"] {
   justify-content: center;
   gap: 8px;
   opacity: 0;
-  animation: splash-line 2.1s ease forwards;
+  animation: splash-line 2.6s ease forwards;
 }
 .splash-quote b {
   font-family: Georgia, "Noto Serif TC", serif;
@@ -1198,10 +1198,10 @@ input[type="date"] {
   letter-spacing: 0.3em;
   color: var(--text-dim);
 }
-.splash-quote:nth-of-type(1) { animation-delay: 0.1s; }
-.splash-quote:nth-of-type(2) { animation-delay: 1.3s; }
-.splash-quote:nth-of-type(3) { animation-delay: 2.5s; }
-.splash-quote:nth-of-type(4) { animation-delay: 3.7s; }
+.splash-quote:nth-of-type(1) { animation-delay: 0.2s; }
+.splash-quote:nth-of-type(2) { animation-delay: 2.3s; }
+.splash-quote:nth-of-type(3) { animation-delay: 4.4s; }
+.splash-quote:nth-of-type(4) { animation-delay: 6.5s; }
 
 @keyframes splash-line {
   0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
@@ -1220,6 +1220,6 @@ input[type="date"] {
   color: var(--muted);
   opacity: 0;
   animation: splash-hint 0.6s ease forwards;
-  animation-delay: 1.8s;
+  animation-delay: 2.2s;
 }
 @keyframes splash-hint { to { opacity: 1; } }
