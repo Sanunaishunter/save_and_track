@@ -176,6 +176,41 @@
     return true;
   }
 
+  // ---------------------------------------------------------- 開場動畫
+
+  var SPLASH_SEEN_KEY = 'stock_pipeline_splash_seen';
+
+  function splashSeenToday() {
+    try {
+      return window.localStorage.getItem(SPLASH_SEEN_KEY) === todayStr();
+    } catch (e) {
+      return true; // 存不到就別每次都擋著使用者
+    }
+  }
+
+  function markSplashSeen() {
+    try { window.localStorage.setItem(SPLASH_SEEN_KEY, todayStr()); }
+    catch (e) { /* 存不到頂多下次還會再跳一次,不影響功能 */ }
+  }
+
+  function hideSplash() {
+    var s = el('splash');
+    if (!s || s.hidden) return;
+    s.removeEventListener('click', hideSplash);
+    s.classList.add('is-hiding');
+    setTimeout(function () { s.hidden = true; }, 400);
+  }
+
+  function initSplash() {
+    var s = el('splash');
+    if (!s) return;
+    if (splashSeenToday()) { s.hidden = true; return; }
+    markSplashSeen();
+    s.hidden = false;
+    s.addEventListener('click', hideSplash);
+    setTimeout(hideSplash, 4900);
+  }
+
   function showStorageBanner(msg) {
     var b = el('storage-banner');
     el('storage-banner-msg').textContent = msg;
@@ -3851,6 +3886,7 @@
   // ---------------------------------------------------------- 啟動
 
   function init() {
+    initSplash();
     var probe = storageProbe();
     if (!probe.ok) {
       storageOk = false;

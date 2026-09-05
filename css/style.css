@@ -1162,3 +1162,64 @@ input[type="date"] {
   font-family: inherit;
   font-size: 15px;
 }
+
+/* ---------------------------------------------- 開場動畫 */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--bg);
+  cursor: pointer;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+.splash.is-hiding { opacity: 0; }
+
+.splash-quote {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  animation: splash-line 2.1s ease forwards;
+}
+.splash-quote b {
+  font-family: Georgia, "Noto Serif TC", serif;
+  font-size: clamp(28px, 9vw, 52px);
+  letter-spacing: 0.12em;
+  color: #d4a24c;
+}
+.splash-quote small {
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+}
+.splash-quote:nth-of-type(1) { animation-delay: 0.1s; }
+.splash-quote:nth-of-type(2) { animation-delay: 1.3s; }
+.splash-quote:nth-of-type(3) { animation-delay: 2.5s; }
+.splash-quote:nth-of-type(4) { animation-delay: 3.7s; }
+
+@keyframes splash-line {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
+  18%  { opacity: 1; transform: translateY(0) scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.splash-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(28px + var(--safe-bottom));
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0;
+  animation: splash-hint 0.6s ease forwards;
+  animation-delay: 1.8s;
+}
+@keyframes splash-hint { to { opacity: 1; } }
