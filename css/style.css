@@ -59,18 +59,22 @@ body {
 }
 
 .topbar-row {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 8px;
   padding: 10px 12px 8px;
 }
 
 .app-title {
+  position: absolute;
+  left: 12px;
+  right: 12px;
   margin: 0;
-  min-width: 0;
-  /* 名字比原本的中文標題長很多,窄螢幕上跟著縮字級,一律不換行;
-     縮到底還是放不下就省略號收尾,不擠壓右邊的按鈕 */
+  text-align: center;
+  pointer-events: none;
+  /* 置中,跟右邊的按鈕各自獨立;字放不下就省略號收尾,不擠壓右邊的按鈕 */
   font-size: clamp(12px, 4.2vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
