@@ -15,3 +15,8 @@ jobs:
 
       - name: 探測央行匯率 + 期交所 OpenAPI
         run: python scripts/probe_fx_taifex.py
+
+      - name: 探測 FinMind 期貨三大法人資料集
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/probe_finmind_futures.py
