@@ -221,6 +221,26 @@ body {
 .btn-sm { font-size: 13px; padding: 6px 10px; }
 .btn[disabled] { opacity: 0.45; cursor: default; }
 
+.btn-quickadd {
+  font-family: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.btn-quickadd:active { transform: translateY(1px); }
+.btn-quickadd.is-added,
+.btn-quickadd[disabled] {
+  border-color: var(--line);
+  color: var(--muted);
+  cursor: default;
+  transform: none;
+}
+
 /* ---------- 清單 ---------- */
 
 .list-wrap {

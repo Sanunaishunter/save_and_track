@@ -301,6 +301,52 @@
     return rec.stock_id || rec.stock_name || '(未命名)';
   }
 
+  // ------------------------------------------- 一鍵加入追蹤(爆量掃描/FOMO/量價訊號/題材分類共用)
+  //
+  // 不改七步驟的欄位定義,只是把「+新增」表單原本要手動輸入代號/名稱的動作
+  // 自動化:直接呼叫既有的 newRecord(),新紀錄從第 1 步開始,跟手動新增
+  // 完全一樣。不自動跳轉到追蹤詳情頁,因為使用者是從別的分頁點的,跳頁
+  // 會打斷正在看的掃描清單。
+
+  /** 代號是否已經有一筆「追蹤中」的紀錄,用來決定按鈕要不要顯示成已加入。*/
+  function isTracked(stockId) {
+    stockId = String(stockId || '').trim();
+    if (!stockId) return false;
+    return data.some(function (r) { return r.stock_id === stockId && r.status === 'active'; });
+  }
+
+  /** 產生一顆「+ 追蹤」按鈕,已經在追蹤中就顯示成灰色不可點。*/
+  function quickAddBtnHtml(code, name) {
+    code = String(code || '').trim();
+    if (!code) return '';
+    if (isTracked(code)) return '<button type="button" class="btn-quickadd is-added" disabled>已追蹤</button>';
+    return '<button type="button" class="btn-quickadd" data-qa-code="' + esc(code) +
+      '" data-qa-name="' + esc(name || '') + '">+ 追蹤</button>';
+  }
+
+  function quickAddTracking(stockId, stockName) {
+    stockId = String(stockId || '').trim();
+    stockName = String(stockName || '').trim();
+    if (!stockId && !stockName) return;
+    var fresh = newRecord(stockId, stockName);
+    data.push(fresh);
+    if (saveAll()) toast('已加入追蹤:' + displayTitle(fresh), 'ok');
+    renderList();
+  }
+
+  /** 掛在任何一個容器上,委派處理裡面所有「+ 追蹤」按鈕的點擊。*/
+  function bindQuickAdd(container) {
+    container.addEventListener('click', function (e) {
+      var btn = e.target.closest('.btn-quickadd');
+      if (!btn || btn.disabled) return;
+      e.stopPropagation();
+      quickAddTracking(btn.getAttribute('data-qa-code'), btn.getAttribute('data-qa-name'));
+      btn.textContent = '已追蹤';
+      btn.disabled = true;
+      btn.classList.add('is-added');
+    });
+  }
+
   // ---------------------------------------------------------- 對話框
 
   /**
@@ -857,7 +903,7 @@
       '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
 
     if (!res.rows || !res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="8" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="scan-empty">當日沒有符合條件的股票</td></tr>';
       return;
     }
 
@@ -880,6 +926,7 @@
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
         '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -991,7 +1038,7 @@
 
       var body = '<table class="scan-table"><thead><tr>' +
         '<th>代碼</th><th>名稱</th><th>市場別</th><th>受惠原因</th>' +
-        '<th class="num">純度</th><th>今日訊號</th>' +
+        '<th class="num">純度</th><th>今日訊號</th><th>追蹤</th>' +
         '</tr></thead><tbody>' +
         members.map(function (r) {
           var rating = Number(r.purity_rating);
@@ -1004,6 +1051,7 @@
             '<td>' + esc(r.benefit_reason || '') + '</td>' +
             '<td class="num mono">' + stars + '</td>' +
             '<td>' + sigTxt + '</td>' +
+            '<td>' + quickAddBtnHtml(r.stock_code, r.company_name) + '</td>' +
           '</tr>';
         }).join('') +
         '</tbody></table>';
@@ -1624,7 +1672,7 @@
       ' 檔上市股票,觸發 ' + fmtInt(rows.length) + ' 檔';
 
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="scan-empty">今天沒有股票觸發任何訊號</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="scan-empty">今天沒有股票觸發任何訊號</td></tr>';
       return;
     }
 
@@ -1644,6 +1692,7 @@
         '<td class="num mono">' + r.s.toFixed(2) + '</td>' +
         '<td title="' + esc(HUNTER_SIGNAL_LABELS[r.sig]) + '">' + r.sig + ' ' +
           esc(HUNTER_SIGNAL_LABELS[r.sig]) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.code, r.name) + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -1795,7 +1844,7 @@
       notes += '<div class="note note-diverge">' + esc(r.divergence_reason) + '</div>';
     }
 
-    return '<tr class="fomo-detail"><td colspan="4">' +
+    return '<tr class="fomo-detail"><td colspan="5">' +
       notes +
       (facts.length ? '<div>' + esc(facts.join('　·　')) + '</div>' : '') +
       reasonList('FOMO 依據(' + r.fomo_score + ' 分)', r.reasons.fomo) +
@@ -1829,7 +1878,7 @@
       ' · 真漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
 
     if (!res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="4" class="scan-empty">沒有資料</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
       return;
     }
 
@@ -1839,6 +1888,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ' + scoreClass(r.fomo_score) + '">' + r.fomo_score + '</td>' +
         '<td>' + badges(r) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
       '</tr>';
       if (fomoOpen === r.stock_id) row += fomoDetailHtml(r);
       return row;
@@ -3180,7 +3230,20 @@
       renderPosSummary();
     });
 
+    bindQuickAdd(el('scan-tbody'));
+    bindQuickAdd(el('signals-tbody'));
+    bindQuickAdd(el('themes-list'));
+
     el('fomo-tbody').addEventListener('click', function (e) {
+      var qa = e.target.closest('.btn-quickadd');
+      if (qa) {
+        if (qa.disabled) return;
+        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'));
+        qa.textContent = '已追蹤';
+        qa.disabled = true;
+        qa.classList.add('is-added');
+        return;
+      }
       var tr = e.target.closest('.fomo-row');
       if (!tr || !fomoData) return;
       var id = tr.getAttribute('data-fomo');
