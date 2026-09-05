@@ -227,6 +227,7 @@
       tracking: [],
       positions: [],
       exit_plan: blankExitPlan(),
+      exit_result: null,
       rejected_step: null,
       rejected_reason: '',
       created_at: ts,
@@ -273,6 +274,7 @@
       tracking: tracking,
       positions: normalizePositions(r.positions),
       exit_plan: normalizeExitPlan(r.exit_plan),
+      exit_result: normalizeExitResult(r.exit_result),
       rejected_step: (r.rejected_step == null || r.rejected_step === '') ? null : parseInt(r.rejected_step, 10) || null,
       rejected_reason: String(r.rejected_reason || ''),
       created_at: r.created_at || nowISO(),
@@ -731,6 +733,7 @@
       if (saveAll()) toast('已放棄', 'ok');
       renderDetail();
       renderList();
+      renderPosSummary();
     });
   }
 
@@ -753,6 +756,7 @@
       if (saveAll()) toast('已標記為出場', 'ok');
       renderDetail();
       renderList();
+      renderPosSummary();
     });
   }
 
@@ -768,10 +772,12 @@
       rec.status = 'active';
       rec.rejected_step = null;
       rec.rejected_reason = '';
+      rec.exit_result = null;
       touch(rec);
       if (saveAll()) toast('已改回進行中', 'ok');
       renderDetail();
       renderList();
+      renderPosSummary();
     });
   }
 
@@ -2722,6 +2728,21 @@
     };
   }
 
+  /** 自動出場當下的快照(觸發規則/假設成交價/當時損益),事後算勝率要用這份,不能用「現在」的報價回推。*/
+  function normalizeExitResult(v) {
+    if (!v || typeof v !== 'object') return null;
+    var rule = ['target', 'days', 'drawdown'].indexOf(v.rule) >= 0 ? v.rule : null;
+    if (!rule) return null;
+    return {
+      date: String(v.date || ''),
+      price: Number(v.price) || 0,
+      reason: String(v.reason || ''),
+      rule: rule,
+      pl: Number(v.pl) || 0,
+      pl_pct: (v.pl_pct == null || v.pl_pct === '') ? null : Number(v.pl_pct)
+    };
+  }
+
   function normalizePositions(v) {
     if (!Array.isArray(v)) return [];
     return v.filter(function (p) { return p && typeof p === 'object'; })
@@ -2813,6 +2834,7 @@
         alerts.push({
           key: 'target',
           hit: st.close >= target,
+          price: target,
           label: (plan.mode === 'daytrade' ? '當沖出場' : '獲利出場') + ' +' + pct + '%',
           detail: '目標價 ' + target.toFixed(2) + '(現價 ' + st.close + ')'
         });
@@ -2826,6 +2848,7 @@
         alerts.push({
           key: 'days',
           hit: held >= maxDays,
+          price: st.close,
           label: '持倉上限 ' + maxDays + ' 個交易日',
           detail: '已持有 ' + held + ' 個交易日'
         });
@@ -2837,9 +2860,11 @@
       var peak = st.range.high.price;
       if (ddPct > 0 && peak > 0) {
         var dd = (st.close - peak) / peak;
+        var stopPrice = peak * (1 - ddPct / 100);
         alerts.push({
           key: 'drawdown',
           hit: dd <= -ddPct / 100,
+          price: stopPrice,
           label: '最大回撤 -' + ddPct + '%(獨立生效,不受模式影響)',
           detail: '目前回撤 ' + (dd * 100).toFixed(1) + '%(期間高點 ' + peak + ')'
         });
@@ -2847,6 +2872,86 @@
     }
 
     return alerts.length ? alerts : null;
+  }
+
+  /**
+   * 出場設定一旦觸發,直接把紀錄轉成「已出場」,不用等使用者手動點。
+   * 只在 loadQuotes() 剛載入之後跑一次(quotes 一天只更新一次,不會反覆觸發)。
+   *
+   * 用觸發當下的目標價/停損價當「假設成交價」記錄下來(見 evalExitPlan 的
+   * alert.price),不是用「之後某次打開網頁時」的現價回推 —— 不然勝率統計會
+   * 隨著使用者多久沒開網頁而亂跳。多個規則同時觸發時,取第一個命中的。
+   *
+   * 這不是真的下單,這個 app 沒有接券商 API —— 只是把 app 自己的狀態欄位
+   * 改成「已出場」,跟使用者手動點「標記出場」是同一個 rec.status 欄位,
+   * 差別只在這裡是自動觸發、且會多存一份 exit_result 快照給勝率統計用。
+   */
+  function checkAutoExits() {
+    var changed = false;
+    data.forEach(function (rec) {
+      if (rec.status !== 'active') return;
+      var st = positionStats(rec);
+      if (!st || !st.priced || !st.shares) return;
+      var alerts = evalExitPlan(rec, st);
+      if (!alerts) return;
+      var hit = alerts.filter(function (a) { return a.hit; })[0];
+      if (!hit) return;
+
+      var pl = st.shares * hit.price - st.cost;
+      rec.exit_result = {
+        date: quotes.date, price: hit.price, reason: hit.label,
+        rule: hit.key, pl: pl, pl_pct: st.cost > 0 ? pl / st.cost : null
+      };
+      rec.status = 'exited';
+      rec.current_step = 7;
+      rec.tracking.unshift({
+        date: quotes.date,
+        note: '【自動出場】' + hit.label + '(' + hit.detail + '),假設成交價 ' + hit.price.toFixed(2)
+      });
+      touch(rec);
+      changed = true;
+      toast('已自動標記出場:' + displayTitle(rec) + '(' + hit.label + ')', 'ok', 5000);
+    });
+    if (changed) saveAll();
+    return changed;
+  }
+
+  /**
+   * 自動出場紀錄的勝率統計,依觸發規則分組。用 exit_result 這份「觸發當下」
+   * 的快照算,不會因為之後報價變動而跑掉。
+   */
+  function exitStatsHtml() {
+    var exited = data.filter(function (r) { return r.exit_result; });
+    if (!exited.length) return '';
+
+    var groups = {};
+    exited.forEach(function (r) {
+      var k = r.exit_result.rule;
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(r);
+    });
+
+    var ruleLabels = { target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損' };
+    var rows = Object.keys(groups).map(function (k) {
+      var recs = groups[k];
+      var wins = recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
+      var avgPct = recs.reduce(function (s, r) { return s + (r.exit_result.pl_pct || 0); }, 0) / recs.length;
+      return '<div class="exit-stat-row">' +
+        '<span>' + esc(ruleLabels[k] || k) + '</span>' +
+        '<span class="mono">N=' + recs.length + '</span>' +
+        '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
+        '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+      '</div>';
+    }).join('');
+
+    var totalWins = exited.filter(function (r) { return r.exit_result.pl > 0; }).length;
+    return '<div class="pos-block">' +
+      '<div class="pos-head"><span>自動出場統計</span>' +
+        '<span class="dim">N=' + exited.length + '、整體勝率 ' +
+          Math.round(totalWins / exited.length * 100) + '%</span></div>' +
+      '<p class="dim">樣本數還很少(見 CLAUDE.md 已知限制),當參考,不是驗證過的勝率。</p>' +
+      '<div class="exit-stats">' + rows + '</div>' +
+    '</div>';
   }
 
   /**
@@ -2983,6 +3088,9 @@
       '<div class="pos-sum-note">最佳/最差出場是「每檔各自在持有期間內的最高/最低點出場」加總,' +
         '不是同一天;只代表當時的高低價曾經出現,不代表真的來得及成交。</div>' +
       (posSummaryExpanded && n > 1 ? renderPosBreakdown(rows) : '');
+
+    var exitBox = el('exit-stats');
+    if (exitBox) exitBox.innerHTML = exitStatsHtml();
   }
 
   var EXIT_MODE_LABELS = {
@@ -3673,6 +3781,7 @@
     // 有持倉才去抓報價 —— 沒持倉的人不用為了首頁多下載一份 130KB
     if (data.some(function (r) { return (r.positions || []).length; })) {
       loadQuotes().then(function () {
+        checkAutoExits();             // 出場設定觸發就自動轉已出場,一天跑一次
         renderList();
         renderPosSummary();
         if (currentId) renderPositions();

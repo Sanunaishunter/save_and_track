@@ -1112,6 +1112,18 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
   border-top: 1px dashed var(--line);
 }
 
+.exit-stats { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.exit-stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+.exit-stat-row .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
 .exit-alerts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
 .exit-alert {
   display: flex;
