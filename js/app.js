@@ -1623,6 +1623,66 @@
     }
   }
 
+  // ---------------------------------------------------------- 匯率 / 期貨三大法人
+  //
+  // 央行匯率 + 台指期貨(TX)三大法人未平倉,獨立區塊,放在籌碼/風險分頁。
+  // 一天更新一次,不是即時報價。
+
+  var FX_FUTURES_URL = 'data/fx-futures-latest.json';
+  var fxFuturesData = null;
+  var fxFuturesPending = null;
+
+  function loadFxFutures() {
+    if (fxFuturesData) return Promise.resolve(fxFuturesData);
+    if (fxFuturesPending) return fxFuturesPending;
+    if (location.protocol === 'file:') {
+      return Promise.reject(new Error('file:// 不能讀本機 JSON'));
+    }
+    fxFuturesPending = fetch(FX_FUTURES_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        fxFuturesData = data;
+        fxFuturesPending = null;
+        return data;
+      })
+      .catch(function (e) {
+        fxFuturesPending = null;
+        throw e;
+      });
+    return fxFuturesPending;
+  }
+
+  function renderFxFutures(res) {
+    var panel = el('fx-futures-panel');
+    var fx = res && res.fx;
+    var fut = res && res.futures;
+    if (!res || (!fx && !fut)) { panel.hidden = true; return; }
+    panel.hidden = false;
+
+    var html = '';
+    if (fx && fx.rate != null) {
+      var chg = (fx.prev_rate != null) ? fx.rate - fx.prev_rate : null;
+      html += '<div><span>USD/TWD</span><b>' + fx.rate.toFixed(3) + '</b></div>' +
+        '<div><span>較前一筆</span><b class="' + plClass(chg) + '">' +
+          (chg == null ? '—' : (chg > 0 ? '+' : '') + chg.toFixed(3)) + '</b>' +
+          '<span class="dim">' + esc(fx.date || '') + '</span></div>';
+    }
+    if (fut && fut.foreign_long_oi != null && fut.foreign_short_oi != null) {
+      var net = fut.foreign_long_oi - fut.foreign_short_oi;
+      html += '<div><span>外資多單未平倉(' + esc(fut.futures_id || '') + ')</span><b class="mono">' +
+          fmtInt(fut.foreign_long_oi) + '</b></div>' +
+        '<div><span>外資空單未平倉</span><b class="mono">' + fmtInt(fut.foreign_short_oi) + '</b></div>' +
+        '<div><span>外資淨部位</span><b class="' + plClass(net) + '">' +
+          (net > 0 ? '+' : '') + fmtInt(net) + '</b>' +
+          '<span class="dim">' + (net < 0 ? '淨空單' : (net > 0 ? '淨多單' : '')) +
+          ' · ' + esc(fut.date || '') + '</span></div>';
+    }
+    el('fx-futures-sum').innerHTML = html;
+  }
+
   function loadRisk(force) {
     loadQuotes().then(renderRiskLimitTable).catch(function () {
       el('risk-limit-table').hidden = true;
@@ -1632,6 +1692,11 @@
     loadMarketGrid()
       .then(function (data) { renderMarketGrid(data); })
       .catch(function () { el('market-grid-panel').hidden = true; });
+
+    if (force) fxFuturesData = null;
+    loadFxFutures()
+      .then(function (data) { renderFxFutures(data); })
+      .catch(function () { el('fx-futures-panel').hidden = true; });
 
     if (force) riskData = null;
     if (riskData) { renderRisk(riskData); return; }

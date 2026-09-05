@@ -38,6 +38,10 @@ RISK_FILE = os.path.join(DATA_DIR, "risk-latest.json")
 # 跟個股獵人九宮格是平行但獨立的功能(參數不共用)
 MARKET_GRID_FILE = os.path.join(DATA_DIR, "market-grid-latest.json")
 
+# 匯率(央行開放資料)+ 台指期貨三大法人未平倉(FinMind),放在「籌碼/風險」分頁裡,
+# 跟這個分頁其他區塊無關
+FX_FUTURES_FILE = os.path.join(DATA_DIR, "fx-futures-latest.json")
+
 # 每日價格檔的欄位順序(用陣列存,1700 檔一天約 100KB)
 # transaction = 成交筆數,8012 的 tick 活躍度代理指標
 COLUMNS = ["id", "volume", "open", "high", "low", "close", "transaction"]

@@ -88,6 +88,12 @@ jobs:
       - name: 計算大盤九宮格
         run: python scripts/compute_market_grid.py
 
+      # 匯率(央行)+ 台指期貨三大法人未平倉(FinMind)—— 獨立區塊,跟其他步驟無關
+      - name: 更新匯率與期貨三大法人
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/fetch_fx_futures.py
+
       # --- FOMO(讀前面剛產生的 scan-latest.json)---
       # 合併成同一個 job 的用意就在這:順序由執行序保證,不再依賴兩支排程
       # 的時間差。GitHub 排程會延遲,先前拆成兩支時,只要爆量那支慢超過

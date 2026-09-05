@@ -21,6 +21,7 @@
 | `dca-latest.json` | 定期定額交易戶數統計排行(個股/ETF 前 20 名並列),獨立分頁 |
 | `risk-latest.json` | 大盤成交資訊 + 注意股 + 融資融券 + 停資停券預告 + 除權息預告,獨立分頁。今日漲跌停是前端自算,不在這份檔案裡 |
 | `market-grid-latest.json` | 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測,放在籌碼/風險分頁 |
+| `fx-futures-latest.json` | 匯率(央行)+ 台指期貨三大法人未平倉(FinMind),放在籌碼/風險分頁 |
 | `themes.json` | 題材分類清單,**手動維護,不是排程產出**,由 Hugo 判斷資料後請 Claude Code 直接編輯這份檔案 |
 
 資料來源全部是 TWSE,免 token、免額度:
@@ -427,3 +428,44 @@ FinMind,更不需要碰 SH2**(這點直接回答了規格第 8 節「上漲/下�
   明講之後要讓使用者用歷史資料回測校準,不是最終定案的數字
 - 這幾個 flag 都還沒經過 Gate 1 驗證(N≥60 pre-registered predictions),
   純資訊展示,不是進出場依據
+
+
+---
+
+## 匯率 / 期貨三大法人(「籌碼/風險」分頁)
+
+使用者要求「查查能不能把匯率跟期貨空單加進來」,`scripts/fetch_fx_futures.py`
+產生 `data/fx-futures-latest.json`,跟籌碼/風險其他區塊、大盤九宮格、題材
+分類都無關,獨立一塊。第一次碰央行、期交所、FinMind 的期貨資料集,都先
+寫 probe(`probe_fx_taifex.py`、`probe_finmind_futures.py`,已刪除)在
+Actions 上跑過,不是照文件猜的。
+
+**匯率**:央行 `cpx.cbc.gov.tw/api/OpenData/FTDOpenData_Day`,免 token。
+實測**一次回應就是全部歷史**(2026-09-05 探測到 4642 筆,回溯到 2008
+年),欄位是 `{"日期":"20080102","NTD_USD":"32.443"}`(日期西元 YYYYMMDD
+字串,不是民國)。跟 TWSE 大多數「只給最新一兩天」的端點不同,不用自己
+每天存歷史 —— `cbc_api.usd_twd_history()` 每次重新抓、切最近 30 天即可。
+
+**期貨三大法人未平倉,兩個資料源探測結果**:
+
+- **TAIFEX OpenAPI**(`openapi.taifex.com.tw/v1/...`,期交所自己的
+  OpenAPI,跟 TWSE 那支不同網域):端點名稱
+  `MarketDataOfMajorInstitutionalTradersDetailsOfFuturesContractsBytheDate`
+  (三大法人-區分各期貨契約-依日期)探測正確,欄位也拿到了,但**只回最新
+  一個交易日,沒有歷史查詢**——沿用跟 FMTQIK 一樣的限制。
+- **FinMind `TaiwanFuturesInstitutionalInvestors`**:改用這支,**免費額度
+  就能查、而且有歷史區間**(實測 `data_id="TX"` 查一個月拿到 25 個交易日,
+  2026-08-03~09-04)。跟 `fetch_stock_meta.py`/`compute_fomo.py` 一樣的坑:
+  **一定要帶 `data_id`**,不帶會回 400「Your level is free」。欄位:
+  `date, futures_id, institutional_investors(自營商/投信/外資),
+  long_open_interest_balance_volume(多單未平倉口數),
+  short_open_interest_balance_volume(空單未平倉口數)` + 對應金額欄位。
+
+**決定改用 FinMind、放棄 TAIFEX OpenAPI**——後者「只有最新一天」代表要另開
+`data/futures/YYYY-MM-DD.json` 逐日存底才能看趨勢,FinMind 一次查詢就有
+歷史,實作簡單很多,且免費額度就夠用,不用等 `FINMIND_TOKEN` 設定。
+
+**外資淨部位** = `foreign_long_oi - foreign_short_oi`,負值是淨空單(散戶
+最常看的期貨籌碼指標)。自營商/投信的原始未平倉口數也一併存進
+`data/fx-futures-latest.json` 的 `futures.history`,只是前端目前只顯示
+外資這條。
