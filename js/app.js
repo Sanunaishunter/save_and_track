@@ -207,6 +207,10 @@
     return blankChoice();
   }
 
+  function blankExitPlan() {
+    return { mode: 'hold', target_pct: '', max_days: '', max_drawdown_pct: '' };
+  }
+
   function newRecord(stockId, stockName) {
     var ts = nowISO();
     return {
@@ -222,6 +226,7 @@
       invalidation_price: '',
       tracking: [],
       positions: [],
+      exit_plan: blankExitPlan(),
       rejected_step: null,
       rejected_reason: '',
       created_at: ts,
@@ -267,6 +272,7 @@
       invalidation_price: String(r.invalidation_price == null ? '' : r.invalidation_price),
       tracking: tracking,
       positions: normalizePositions(r.positions),
+      exit_plan: normalizeExitPlan(r.exit_plan),
       rejected_step: (r.rejected_step == null || r.rejected_step === '') ? null : parseInt(r.rejected_step, 10) || null,
       rejected_reason: String(r.rejected_reason || ''),
       created_at: r.created_at || nowISO(),
@@ -2703,6 +2709,19 @@
 
   // 只是紀錄,不會真的下單。存在同一份 localStorage 的紀錄裡,
   // 匯出備份會一併帶走。
+  var EXIT_MODES = ['hold', 'daytrade', 'profit', 'days'];
+
+  function normalizeExitPlan(v) {
+    v = (v && typeof v === 'object') ? v : {};
+    var mode = EXIT_MODES.indexOf(v.mode) >= 0 ? v.mode : 'hold';
+    return {
+      mode: mode,
+      target_pct: String(v.target_pct == null ? '' : v.target_pct),
+      max_days: String(v.max_days == null ? '' : v.max_days),
+      max_drawdown_pct: String(v.max_drawdown_pct == null ? '' : v.max_drawdown_pct)
+    };
+  }
+
   function normalizePositions(v) {
     if (!Array.isArray(v)) return [];
     return v.filter(function (p) { return p && typeof p === 'object'; })
@@ -2754,6 +2773,80 @@
       high: { date: bestDate, price: bestPrice, pl: shares * bestPrice - cost },
       low: { date: worstDate, price: worstPrice, pl: shares * worstPrice - cost }
     };
+  }
+
+  /**
+   * 從最早一筆下單日到報價日,實際交易日數(用 quotes.days 數,不是日曆天)。
+   * quotes.days 只保留 KEEP_DAYS(30)天,持倉超過這個天數的舊倉位會被低估,
+   * 這是既有 30 天視窗的限制,不是這裡另外造成的。查不到就回傳 null。
+   */
+  function heldTradingDays(rec) {
+    if (!quotes || !quotes.days) return null;
+    var earliest = null, i;
+    for (i = 0; i < (rec.positions || []).length; i++) {
+      var d = rec.positions[i].date;
+      if (d && (earliest == null || d < earliest)) earliest = d;
+    }
+    if (!earliest) return null;
+    var n = 0;
+    for (i = 0; i < quotes.days.length; i++) {
+      if (quotes.days[i] >= earliest) n++;
+    }
+    return n;
+  }
+
+  /**
+   * 出場設定達成狀況。純提醒,不會自動下單 —— 這個 app 沒有接券商 API,
+   * 沒辦法真的送出委託。而且資料一天只在排程跑完後更新一次,不是即時
+   * 報價,「當沖」模式的目標價判斷用的也是當日收盤/現價快照,不是盤中
+   * 逐筆。回傳 alert 陣列(每個 alert 有 hit 是否已觸發)或 null。
+   */
+  function evalExitPlan(rec, st) {
+    var plan = rec.exit_plan;
+    if (!plan || !st || !st.priced) return null;
+    var alerts = [];
+
+    if ((plan.mode === 'daytrade' || plan.mode === 'profit') && plan.target_pct) {
+      var pct = Number(plan.target_pct);
+      if (pct > 0 && st.avg > 0) {
+        var target = st.avg * (1 + pct / 100);
+        alerts.push({
+          key: 'target',
+          hit: st.close >= target,
+          label: (plan.mode === 'daytrade' ? '當沖出場' : '獲利出場') + ' +' + pct + '%',
+          detail: '目標價 ' + target.toFixed(2) + '(現價 ' + st.close + ')'
+        });
+      }
+    }
+
+    if (plan.mode === 'days' && plan.max_days) {
+      var maxDays = Number(plan.max_days);
+      var held = heldTradingDays(rec);
+      if (maxDays > 0 && held != null) {
+        alerts.push({
+          key: 'days',
+          hit: held >= maxDays,
+          label: '持倉上限 ' + maxDays + ' 個交易日',
+          detail: '已持有 ' + held + ' 個交易日'
+        });
+      }
+    }
+
+    if (plan.max_drawdown_pct && st.range) {
+      var ddPct = Number(plan.max_drawdown_pct);
+      var peak = st.range.high.price;
+      if (ddPct > 0 && peak > 0) {
+        var dd = (st.close - peak) / peak;
+        alerts.push({
+          key: 'drawdown',
+          hit: dd <= -ddPct / 100,
+          label: '最大回撤 -' + ddPct + '%(獨立生效,不受模式影響)',
+          detail: '目前回撤 ' + (dd * 100).toFixed(1) + '%(期間高點 ' + peak + ')'
+        });
+      }
+    }
+
+    return alerts.length ? alerts : null;
   }
 
   /**
@@ -2892,6 +2985,58 @@
       (posSummaryExpanded && n > 1 ? renderPosBreakdown(rows) : '');
   }
 
+  var EXIT_MODE_LABELS = {
+    hold: '留倉不賣', daytrade: '當沖出場', profit: '獲利出場', days: '持倉天數到期'
+  };
+
+  /** 出場設定目前的達成狀況,觸發的用紅色標出來。純提醒,不會自動下單。*/
+  function positionAlertsHtml(rec, st, plan) {
+    if (plan.mode === 'hold' && !plan.max_drawdown_pct) return '';
+    var alerts = evalExitPlan(rec, st);
+    if (!alerts) {
+      return '<p class="dim">出場設定:' + esc(EXIT_MODE_LABELS[plan.mode]) +
+        (plan.max_drawdown_pct ? ' + 最大回撤 -' + esc(plan.max_drawdown_pct) + '%' : '') +
+        '(還沒填完數字,或還沒有報價可以判斷)</p>';
+    }
+    return '<div class="exit-alerts">' + alerts.map(function (a) {
+      return '<div class="exit-alert' + (a.hit ? ' is-hit' : '') + '">' +
+        '<span>' + (a.hit ? '⚠ ' : '') + esc(a.label) + '</span>' +
+        '<span class="dim">' + esc(a.detail) + '</span>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
+  /** 出場設定表單,值從 rec.exit_plan 帶入。*/
+  function exitPlanFormHtml(plan) {
+    var showTarget = plan.mode === 'daytrade' || plan.mode === 'profit';
+    var showDays = plan.mode === 'days';
+    return '<div class="pos-exit">' +
+      '<div class="pos-head"><span>出場設定</span>' +
+        '<span class="dim">只是提醒,不會自動下單;資料一天更新一次,不是即時報價</span></div>' +
+      '<div class="grid2">' +
+        '<label class="field"><span class="field-label">模式</span>' +
+          '<select id="exit-mode">' +
+            EXIT_MODES.map(function (m) {
+              return '<option value="' + m + '"' + (plan.mode === m ? ' selected' : '') + '>' +
+                esc(EXIT_MODE_LABELS[m]) + '</option>';
+            }).join('') +
+          '</select></label>' +
+        '<label class="field" id="exit-target-field"' + (showTarget ? '' : ' hidden') + '>' +
+          '<span class="field-label">目標漲幅 %(對均價)</span>' +
+          '<input type="text" id="exit-target-pct" inputmode="decimal" placeholder="例如 5" value="' +
+            esc(plan.target_pct) + '"></label>' +
+        '<label class="field" id="exit-days-field"' + (showDays ? '' : ' hidden') + '>' +
+          '<span class="field-label">持倉上限(交易日)</span>' +
+          '<input type="text" id="exit-max-days" inputmode="numeric" placeholder="例如 10" value="' +
+            esc(plan.max_days) + '"></label>' +
+        '<label class="field"><span class="field-label">最大回撤 %(選填,獨立生效)</span>' +
+          '<input type="text" id="exit-max-drawdown" inputmode="decimal" placeholder="例如 8" value="' +
+            esc(plan.max_drawdown_pct) + '"></label>' +
+      '</div>' +
+      '<button type="button" class="btn btn-block btn-outline" id="exit-save">儲存出場設定</button>' +
+    '</div>';
+  }
+
   function positionsHtml(rec) {
     var ps = rec.positions || [];
     var st = positionStats(rec);
@@ -2952,6 +3097,10 @@
       }
     }
 
+    var plan = rec.exit_plan || blankExitPlan();
+    var alerts = positionAlertsHtml(rec, st, plan);
+    var exitForm = exitPlanFormHtml(plan);
+
     var form = '<div class="pos-add">' +
       '<div class="grid2">' +
         '<label class="field"><span class="field-label">日期</span>' +
@@ -2966,7 +3115,7 @@
       '<button type="button" class="btn btn-block btn-outline" id="pos-add">記錄這筆下單</button>' +
     '</div>';
 
-    return '<div class="pos-block">' + head + summary + table + form + '</div>';
+    return '<div class="pos-block">' + head + summary + alerts + table + form + exitForm + '</div>';
   }
 
   function renderPositions() {
@@ -3199,6 +3348,23 @@
     });
   }
 
+  function saveExitPlan() {
+    var rec = findById(currentId);
+    if (!rec) return;
+    var mode = el('exit-mode').value;
+    if (EXIT_MODES.indexOf(mode) < 0) mode = 'hold';
+    rec.exit_plan = {
+      mode: mode,
+      target_pct: el('exit-target-pct').value.trim(),
+      max_days: el('exit-max-days').value.trim(),
+      max_drawdown_pct: el('exit-max-drawdown').value.trim()
+    };
+    touch(rec);
+    if (!saveAll()) return;
+    toast('已儲存出場設定', 'ok');
+    renderPositions();
+  }
+
   // ---------------------------------------------------------- 事件綁定
 
   function bind() {
@@ -3312,6 +3478,16 @@
       var del = e.target.closest('[data-del-pos]');
       if (del) { deletePosition(del.getAttribute('data-del-pos')); return; }
       if (e.target.closest('#pos-add')) addPosition();
+      if (e.target.closest('#exit-save')) saveExitPlan();
+    });
+
+    el('detail-positions').addEventListener('change', function (e) {
+      if (!e.target.closest('#exit-mode')) return;
+      var mode = e.target.value;
+      var targetField = el('exit-target-field');
+      var daysField = el('exit-days-field');
+      if (targetField) targetField.hidden = !(mode === 'daytrade' || mode === 'profit');
+      if (daysField) daysField.hidden = (mode !== 'days');
     });
 
     el('k-capital').addEventListener('input', recalcKelly);

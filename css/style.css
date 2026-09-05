@@ -1106,6 +1106,40 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 
 .pos-add { margin-top: 10px; }
 
+.pos-exit {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.exit-alerts { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.exit-alert {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+.exit-alert.is-hit {
+  background: rgba(232, 69, 60, 0.14);
+  border: 1px solid rgba(232, 69, 60, 0.4);
+  color: var(--up);
+  font-weight: 600;
+}
+
+select {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
 input[type="date"] {
   width: 100%;
   background: var(--panel-2);
