@@ -746,7 +746,36 @@
       closeForm();
       renderList();
       openDetail(fresh.id);
+      promptQuickAddPosition(fresh);
     }
+  }
+
+  /** 新增紀錄後順手問一句要不要直接入倉,省得每次都要點進第 6 步慢慢設。 */
+  function promptQuickAddPosition(rec) {
+    dialog({
+      title: '順便幫 ' + displayTitle(rec) + ' 入倉?',
+      message: '用預設 1000 股、抓目前收盤價下單,出場設定直接套用「獲利出場 4.5%」。' +
+        '之後隨時可以在第 6 步改股數、價位或出場條件。',
+      actions: [{ label: '順便入倉', value: 'yes', cls: 'btn-primary' }],
+      cancelLabel: '先不要'
+    }).then(function (res) {
+      if (res.action !== 'yes') return;
+      loadQuotes().catch(function () { return null; }).then(function () {
+        var q = quoteOf(rec.stock_id);
+        if (!q || !(q.close > 0)) {
+          toast('查不到 ' + (rec.stock_id || '這檔') + ' 的收盤價,請到第 6 步手動輸入成交價', 'err');
+          return;
+        }
+        rec.positions.push({ id: uid(), date: todayStr(), shares: 1000, price: q.close, fee: 0, note: '' });
+        rec.exit_plan = { mode: 'profit', target_pct: '4.5', max_days: '', max_drawdown_pct: '' };
+        touch(rec);
+        if (!saveAll()) return;
+        toast('已入倉 1000 股 @ ' + q.close + ',出場設定:獲利 4.5%', 'ok');
+        if (currentId === rec.id) renderPositions();
+        renderList();
+        renderPosSummary();
+      });
+    });
   }
 
   // ---------------------------------------------------------- 狀態變更
