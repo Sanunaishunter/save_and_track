@@ -3329,17 +3329,20 @@
     var alerts = positionAlertsHtml(rec, st, plan);
     var exitForm = exitPlanFormHtml(plan);
 
+    var todayQuote = quoteOf(rec.stock_id);
+    var defaultPrice = (todayQuote && todayQuote.close > 0) ? String(todayQuote.close) : '';
     var form = '<div class="pos-add">' +
       '<div class="grid2">' +
         '<label class="field"><span class="field-label">日期</span>' +
           '<input type="date" id="pos-date" value="' + esc(todayStr()) + '"></label>' +
         '<label class="field"><span class="field-label">股數(1 張 = 1000 股)</span>' +
-          '<input type="text" id="pos-shares" inputmode="numeric" placeholder="例如 1000"></label>' +
+          '<input type="text" id="pos-shares" inputmode="numeric" placeholder="例如 1000" value="1000"></label>' +
         '<label class="field"><span class="field-label">成交價</span>' +
-          '<input type="text" id="pos-price" inputmode="decimal" placeholder="例如 1200"></label>' +
+          '<input type="text" id="pos-price" inputmode="decimal" placeholder="例如 1200" value="' + esc(defaultPrice) + '"></label>' +
         '<label class="field"><span class="field-label">手續費(選填)</span>' +
           '<input type="text" id="pos-fee" inputmode="decimal" placeholder="0"></label>' +
       '</div>' +
+      '<p class="dim">股數預設 1000、成交價預設今日收盤價,兩個都可以直接改。</p>' +
       '<button type="button" class="btn btn-block btn-outline" id="pos-add">記錄這筆下單</button>' +
     '</div>';
 
