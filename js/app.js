@@ -359,20 +359,26 @@
     return data.some(function (r) { return r.stock_id === stockId && r.status === 'active'; });
   }
 
-  /** 產生一顆「+ 追蹤」按鈕,已經在追蹤中就顯示成灰色不可點。*/
-  function quickAddBtnHtml(code, name) {
+  /**
+   * 產生一顆「+ 追蹤」按鈕,已經在追蹤中就顯示成灰色不可點。
+   * note 選填:加入追蹤時要預先帶進第 1 步「觸發」的預設內容(例如 FOMO 的真漲/虛漲判定)。
+   */
+  function quickAddBtnHtml(code, name, note) {
     code = String(code || '').trim();
     if (!code) return '';
     if (isTracked(code)) return '<button type="button" class="btn-quickadd is-added" disabled>已追蹤</button>';
     return '<button type="button" class="btn-quickadd" data-qa-code="' + esc(code) +
-      '" data-qa-name="' + esc(name || '') + '">+ 追蹤</button>';
+      '" data-qa-name="' + esc(name || '') + '"' +
+      (note ? ' data-qa-note="' + esc(note) + '"' : '') +
+      '>+ 追蹤</button>';
   }
 
-  function quickAddTracking(stockId, stockName) {
+  function quickAddTracking(stockId, stockName, triggerNote) {
     stockId = String(stockId || '').trim();
     stockName = String(stockName || '').trim();
     if (!stockId && !stockName) return;
     var fresh = newRecord(stockId, stockName);
+    if (triggerNote) fresh.notes[1] = triggerNote;
     data.push(fresh);
     if (saveAll()) toast('已加入追蹤:' + displayTitle(fresh), 'ok');
     renderList();
@@ -384,7 +390,8 @@
       var btn = e.target.closest('.btn-quickadd');
       if (!btn || btn.disabled) return;
       e.stopPropagation();
-      quickAddTracking(btn.getAttribute('data-qa-code'), btn.getAttribute('data-qa-name'));
+      quickAddTracking(btn.getAttribute('data-qa-code'), btn.getAttribute('data-qa-name'),
+        btn.getAttribute('data-qa-note'));
       btn.textContent = '已追蹤';
       btn.disabled = true;
       btn.classList.add('is-added');
@@ -2001,6 +2008,15 @@
     return out;
   }
 
+  /** 加入追蹤時,第 1 步「觸發」預設帶入 FOMO 的判定結果,不用再手動打一次。*/
+  function fomoTriggerNote(r) {
+    var tags = [];
+    if (r.is_real_rally) tags.push('真漲');
+    if (r.is_fake_rally) tags.push('虛漲');
+    if (r.is_divergence) tags.push('背離');
+    return 'FOMO(' + r.fomo_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯真漲/虛漲訊號');
+  }
+
   function reasonList(title, arr) {
     if (!arr || !arr.length) {
       return '<h4>' + esc(title) + '</h4><div class="none">無</div>';
@@ -2073,7 +2089,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ' + scoreClass(r.fomo_score) + '">' + r.fomo_score + '</td>' +
         '<td>' + badges(r) + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, fomoTriggerNote(r)) + '</td>' +
       '</tr>';
       if (fomoOpen === r.stock_id) row += fomoDetailHtml(r);
       return row;
@@ -3688,7 +3704,8 @@
       var qa = e.target.closest('.btn-quickadd');
       if (qa) {
         if (qa.disabled) return;
-        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'));
+        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'),
+          qa.getAttribute('data-qa-note'));
         qa.textContent = '已追蹤';
         qa.disabled = true;
         qa.classList.add('is-added');
