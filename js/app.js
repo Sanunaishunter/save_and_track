@@ -832,6 +832,30 @@
     });
   }
 
+  var DELETE_ALL_PHRASE = '刪除全部';
+
+  function doDeleteAll() {
+    if (!data.length) { toast('目前沒有任何追蹤紀錄', 'err'); return; }
+    dialog({
+      title: '刪除全部追蹤紀錄?',
+      message: '目前共有 ' + data.length + ' 筆紀錄(進行中/已出場/已放棄都算),' +
+        '包含七個步驟內容、追蹤備註與持倉紀錄會一次永久消失,無法復原。強烈建議先「匯出」備份。\n\n' +
+        '請在下方輸入「' + DELETE_ALL_PHRASE + '」以確認。',
+      input: { label: '輸入「' + DELETE_ALL_PHRASE + '」確認', placeholder: DELETE_ALL_PHRASE },
+      actions: [{ label: '確定刪除全部', value: 'delAll', cls: 'btn-danger' }]
+    }).then(function (res) {
+      if (res.action !== 'delAll') return;
+      if ((res.input || '').trim() !== DELETE_ALL_PHRASE) {
+        toast('輸入的文字不符,取消刪除', 'err');
+        return;
+      }
+      data = [];
+      if (saveAll()) toast('已刪除全部追蹤紀錄', 'ok');
+      closeDetail();
+      renderPosSummary();
+    });
+  }
+
   // ---------------------------------------------------------- 匯出 / 匯入
 
   function exportBackup() {
@@ -3758,6 +3782,7 @@
     });
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
+    el('btn-delete-all').addEventListener('click', doDeleteAll);
     el('btn-export').addEventListener('click', exportBackup);
     el('btn-import').addEventListener('click', function () { el('import-file').click(); });
     el('import-file').addEventListener('change', function (e) {
