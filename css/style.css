@@ -59,22 +59,17 @@ body {
 }
 
 .topbar-row {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 8px;
   padding: 10px 12px 8px;
 }
 
 .app-title {
-  position: absolute;
-  left: 12px;
-  right: 12px;
   margin: 0;
-  text-align: center;
-  pointer-events: none;
-  /* 置中,跟右邊的按鈕各自獨立;字放不下就省略號收尾,不擠壓右邊的按鈕 */
+  min-width: 0;
+  /* 靠左;字放不下就省略號收尾,不擠壓右邊的按鈕 */
   font-size: clamp(12px, 4.2vw, 17px);
   font-weight: 700;
   letter-spacing: 0.02em;
