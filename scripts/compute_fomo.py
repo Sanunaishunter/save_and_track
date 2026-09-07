@@ -103,7 +103,8 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
     m = {
         "close": None, "volume": None, "prev_volume": None,
         "margin_change_5d_pct": None, "short_margin_ratio": None,
-        "foreign_net": None, "foreign_consecutive_buy_days": None, "pbr": None,
+        "foreign_net": None, "foreign_consecutive_buy_days": None,
+        "foreign_consecutive_sell_days": None, "pbr": None,
         "trust_net": None, "trust_amount": None,
         "foreign_streak_days": None, "foreign_streak_direction": None,
         "foreign_streak_shares": None, "foreign_streak_amount": None,
@@ -159,7 +160,7 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
         latest = foreign[days[-1]]
         m["foreign_net"] = latest
 
-        # 真漲門檻只看「連續買超」天數
+        # 真漲門檻只看「連續買超」天數,真跌(暴跌 FOMO)只看「連續賣超」天數
         buy_streak = 0
         for d in reversed(days):
             if foreign[d] > 0:
@@ -167,6 +168,14 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
             else:
                 break
         m["foreign_consecutive_buy_days"] = buy_streak
+
+        sell_streak = 0
+        for d in reversed(days):
+            if foreign[d] < 0:
+                sell_streak += 1
+            else:
+                break
+        m["foreign_consecutive_sell_days"] = sell_streak
 
         # 標記文字要連買也要連賣,所以另外算帶方向的連續天數
         if latest != 0:

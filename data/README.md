@@ -8,10 +8,14 @@
 | `history/YYYY-MM-DD.json` | 當日上市全市場 OHLCV。`columns` 定義欄位順序,`rows` 是精簡陣列。只保留最近 30 個交易日(MA20 需要 20 天;產業流向的 rebase 圖要顯示 30 天) |
 | `scans/YYYY-MM-DD.json` | 當日爆量掃描結果存查 |
 | `scan-latest.json` | 最新一次掃描結果,前端讀這支 |
+| `crashes/YYYY-MM-DD.json` | 當日暴跌掃描結果存查(跟爆量掃描對稱,`close < open`) |
+| `crash-latest.json` | 最新一次暴跌掃描結果,前端讀這支 |
 | `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應) |
 | `no_trade_dates.json` | 已確認休市的日期,避免每天重複查詢 |
 | `fomo-latest.json` | 最新一次 FOMO 掃描結果,前端讀這支 |
 | `fomo/YYYY-MM-DD.json` | 當日 FOMO 結果存底 |
+| `crash-fomo-latest.json` | 最新一次暴跌 FOMO 掃描結果,前端讀這支 |
+| `crash-fomo/YYYY-MM-DD.json` | 當日暴跌 FOMO 結果存底 |
 | `stock_meta.json` | 代碼 → 產業別 + 已發行普通股數(產業流向分組用) |
 | `tick-latest.json` | 最新一次產業流向交叉表,前端讀這支 |
 | `tick/YYYY-MM-DD.json` | 當日產業流向結果存查 |
@@ -71,6 +75,58 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 - 門檻常數集中在 `scripts/fomo_score.py` 的 `THRESHOLDS`
 
 ⚠️ FOMO 用的是 `data/fomo/`,爆量掃描用的是 `data/history/`,兩者不共用路徑。
+
+
+---
+
+## 暴跌掃描 + 暴跌 FOMO(爆量/FOMO 的鏡射,2026-09-07 加入)
+
+跟爆量掃描、FOMO 完全平行,同一個 workflow 裡緊接在各自後面跑
+(`compute_crash.py` 接在 `compute_scan.py` 後面,`compute_crash_fomo.py`
+接在 `compute_fomo.py` 後面)。
+
+**暴跌掃描**(`compute_crash.py`):跟爆量掃描共用同一個 `vol_ratio` 門檻與
+`data/history`,唯一差別是價格條件相反 —— `vol_ratio > 1.5` 且 `close < open`。
+邏輯完全對稱,`load_day()` 直接 import 自 `compute_scan.py`,不重複實作。
+
+**暴跌 FOMO**(`compute_crash_fomo.py`):判斷一檔股票的下跌是「真跌」(法人
+出貨主導,大機率續跌)還是「虛跌」(融資斷頭式恐慌錯殺,法人趁機承接,
+可能是抄底機會)。抓資料、算指標的底層邏輯(FinMind 四組資料、全市場法人
+買賣超、百分比計算)直接呼叫 `compute_fomo.py` 裡的函式,不重複實作,只有
+名單來源(讀 `crash-latest.json` 而不是 `scan-latest.json`)與計分函式
+(`fomo_score.score_stock_crash()`)不一樣。
+
+真跌/虛跌的判斷是真漲/虛漲的**鏡射,但不是單純把號誌反過來**——這是
+Hugo 跟 Claude Code 討論後定案的邏輯,寫在 `fomo_score.py` 的
+`judge_real_crash()` / `judge_fake_crash()`:
+
+| | 真漲(既有) | 真跌(鏡射) |
+| --- | --- | --- |
+| 必要條件 | 外資連續買超 ≥3 天 | 外資連續賣超 ≥3 天 |
+| 融資 | 5 日增幅 <10%(散戶未追價) | 5 日增幅 >-10%(散戶還沒認賠減倉) |
+| 券資比 | <5%(空方壓力低) | <5%(空方還沒大量進場對敲) |
+| PBR | <2.0(評價未偏高) | >1.5(還沒跌到便宜) |
+
+| | 虛漲(既有) | 虛跌(鏡射) |
+| --- | --- | --- |
+| 融資 | 5 日增幅 >15%(散戶追價明顯) | 5 日增幅 <-15%(疑似斷頭/恐慌認賠) |
+| 外資 | 賣超或中性 | 買超或中性(趁機承接) |
+| PBR | >2.5(評價偏高) | <1.2(評價已明顯偏低) |
+| 成交量 | 今日量縮 | 今日量縮(賣壓漸緩) |
+
+沒有另外發明一套「暴跌綜合分數」——虛跌分數本身就是「這波下跌像不像
+散戶恐慌錯殺」的強度,直接拿來當 `crash_score`(主要排序/顯示用),
+跟原本 FOMO 分數的角色一樣但沒有獨立的計分函式,因為概念上高度重疊。
+
+「背離」(法人買賣方向分歧)沿用同一份 `judge_divergence()`,方向無關,
+不用另外寫。
+
+前端顏色刻意跟 FOMO 相反:真跌(會續跌)用危險色(紅色 `--up`),虛跌
+(可能是機會)用安全色(綠色 `--down`),對應 CSS 的 `badge-crash-real` /
+`badge-crash-fake`。
+
+⚠️ 這套真跌/虛跌邏輯是這次新設計的,不是移植自 SH2 或任何驗證過的
+外部公式,樣本也還沒累積,拿來當參考就好,不是驗證過的訊號。
 
 
 ---

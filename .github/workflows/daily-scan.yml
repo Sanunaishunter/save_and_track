@@ -1,4 +1,4 @@
-name: 每日掃描(爆量 + 產業流向 + FOMO)
+name: 每日掃描(爆量 + 暴跌 + 產業流向 + FOMO + 暴跌FOMO)
 
 on:
   schedule:
@@ -24,6 +24,20 @@ on:
         default: '60'
       limit:
         description: 'FOMO:只跑前 N 檔(測試用,0 = 不限)'
+        required: false
+        default: '0'
+      crash_source:
+        description: '暴跌FOMO:名單來源'
+        required: false
+        default: 'crash'
+        type: choice
+        options: [crash, watchlist]
+      crash_top:
+        description: '暴跌FOMO:從暴跌清單取前幾名(0 = 全部,注意額度)'
+        required: false
+        default: '60'
+      crash_limit:
+        description: '暴跌FOMO:只跑前 N 檔(測試用,0 = 不限)'
         required: false
         default: '0'
       refreeze_tick:
@@ -58,6 +72,10 @@ jobs:
 
       - name: 計算爆量清單
         run: python scripts/compute_scan.py
+
+      # 暴跌掃描:跟爆量掃描完全對稱,讀同一份 data/history,不用額外抓資料
+      - name: 計算暴跌清單
+        run: python scripts/compute_crash.py
 
       # --- 產業/市值 Tick 聚合 ---
       # 產業別要打 FinMind(只有一次呼叫),排在 FOMO 前面,
@@ -107,6 +125,17 @@ jobs:
             --top "${{ github.event.inputs.top || '60' }}" \
             --limit "${{ github.event.inputs.limit || '0' }}"
 
+      # 暴跌 FOMO(讀前面剛產生的 crash-latest.json),邏輯跟上面 FOMO 那步一樣,
+      # 只是讀暴跌清單、判真跌/虛跌不是真漲/虛漲
+      - name: 計算暴跌 FOMO 分數
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/compute_crash_fomo.py \
+            --source "${{ github.event.inputs.crash_source || 'crash' }}" \
+            --top "${{ github.event.inputs.crash_top || '60' }}" \
+            --limit "${{ github.event.inputs.crash_limit || '0' }}"
+
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。
       - name: 提交結果
@@ -124,8 +153,10 @@ jobs:
           bits = []
           date = None
           for path, label, unit in (("data/scan-latest.json", "爆量", "檔"),
+                                    ("data/crash-latest.json", "暴跌", "檔"),
                                     ("data/tick-latest.json", "產業流向", "組"),
-                                    ("data/fomo-latest.json", "FOMO", "檔")):
+                                    ("data/fomo-latest.json", "FOMO", "檔"),
+                                    ("data/crash-fomo-latest.json", "暴跌FOMO", "檔")):
               try:
                   with open(path, encoding="utf-8") as f:
                       d = json.load(f)

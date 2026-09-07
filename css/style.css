@@ -482,6 +482,9 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .badge-fake { color: var(--up); }
 .badge-none { color: var(--muted); }
 .badge-diverge { color: #d4a24c; }
+/* 暴跌 FOMO 顏色跟真漲/虛漲相反:真跌=危險(up 紅)、虛跌=可能是機會(down 綠) */
+.badge-crash-real { color: var(--up); }
+.badge-crash-fake { color: var(--down); }
 
 /* 法人標記 */
 .fomo-detail .note {

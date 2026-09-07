@@ -12,6 +12,10 @@ NAMES_FILE = os.path.join(DATA_DIR, "stock_names.json")
 NO_TRADE_FILE = os.path.join(DATA_DIR, "no_trade_dates.json")
 LATEST_FILE = os.path.join(DATA_DIR, "scan-latest.json")
 
+# 暴跌掃描:跟爆量掃描完全對稱(同一個 vol_ratio 門檻),只是 close < open
+CRASHES_DIR = os.path.join(DATA_DIR, "crashes")
+CRASH_LATEST_FILE = os.path.join(DATA_DIR, "crash-latest.json")
+
 # 8012 產業/市值 Tick 聚合
 META_FILE = os.path.join(DATA_DIR, "stock_meta.json")
 TICK_DIR = os.path.join(DATA_DIR, "tick")

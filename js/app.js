@@ -1076,6 +1076,92 @@
       });
   }
 
+  // ---------------------------------------------------------- 暴跌掃描
+  // 跟爆量掃描完全對稱(同一個 vol_ratio 門檻),差別只在 close < open。
+
+  var CRASH_URL = 'data/crash-latest.json';
+  var crashLoaded = false;
+  var crashData = null;
+
+  function renderCrash(res) {
+    var meta = el('crash-meta');
+    var tbody = el('crash-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('crash-table').hidden = true;
+      return;
+    }
+
+    el('crash-table').hidden = false;
+    var p = res.params || {};
+    meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
+      '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
+
+    if (!res.rows || !res.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.rows.map(function (r) {
+      var chg = r.change_pct;
+      var chgCls = chg == null ? '' : (chg >= 0 ? 'up' : 'down');
+      var chgTxt = chg == null ? '—' : (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+      var mg = marginOf(r.stock_id);
+      var marginDelta = (mg && mg.margin_today != null && mg.margin_prev != null)
+        ? mg.margin_today - mg.margin_prev : null;
+      var hu = hunterOf(r.stock_id);
+      var sig = hu && hu.signal;
+      return '<tr>' +
+        '<td class="code mono">' + esc(r.stock_id) + '</td>' +
+        '<td>' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
+        '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +
+        '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(marginDelta) + '">' +
+          (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
+        '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadCrash(force) {
+    loadRiskData().then(function () {
+      if (crashData) renderCrash(crashData);
+    }).catch(function () { /* 表格已經有 — 佔位,不強求 */ });
+    loadQuotes().then(function () {
+      if (crashData) renderCrash(crashData);
+    }).catch(function () { /* 同上 */ });
+
+    if (crashLoaded && !force) return;
+    var meta = el('crash-meta');
+    meta.textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderCrash({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取掃描結果檔。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(CRASH_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        crashLoaded = true;
+        crashData = data;
+        renderCrash(data);
+      })
+      .catch(function (e) {
+        renderCrash({ error: '讀不到掃描結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
   // ---------------------------------------------------------- 題材分類
   //
   // 手動維護的靜態清單(data/themes.json),不是掃描/計分結果,沒有每日排程,
@@ -1905,7 +1991,9 @@
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
     el('scan-wrap').hidden = v !== 'scan';
+    el('crash-wrap').hidden = v !== 'crash';
     el('fomo-wrap').hidden = v !== 'fomo';
+    el('crashfomo-wrap').hidden = v !== 'crashfomo';
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
     el('themes-wrap').hidden = v !== 'themes';
@@ -1916,7 +2004,9 @@
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
     if (v === 'scan') loadScan(false);
+    if (v === 'crash') loadCrash(false);
     if (v === 'fomo') loadFomo(false);
+    if (v === 'crashfomo') loadCrashFomo(false);
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
     if (v === 'themes') loadThemes(false);
@@ -1927,7 +2017,7 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'fomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals'];
+  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -2121,6 +2211,129 @@
       })
       .catch(function (e) {
         renderFomo({ error: '讀不到 FOMO 結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
+  // ---------------------------------------------------------- 暴跌 FOMO
+  // FOMO 掃描的鏡射:真跌/虛跌取代真漲/虛漲。顏色跟 FOMO 相反 ——
+  // 真跌(會續跌)用危險色(badge-crash-real),虛跌(可能是抄底機會)用安全色。
+
+  var CRASH_FOMO_URL = 'data/crash-fomo-latest.json';
+  var crashFomoLoaded = false;
+  var crashFomoOpen = null;
+  var crashFomoData = null;
+
+  function crashBadges(r) {
+    var out = '';
+    if (r.is_real_crash) out += '<span class="badge badge-crash-real">真跌</span>';
+    if (r.is_fake_crash) out += '<span class="badge badge-crash-fake">虛跌</span>';
+    if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
+    if (!out) out = '<span class="badge badge-none">—</span>';
+    return out;
+  }
+
+  /** 加入追蹤時,第 1 步「觸發」預設帶入暴跌 FOMO 的判定結果。*/
+  function crashFomoTriggerNote(r) {
+    var tags = [];
+    if (r.is_real_crash) tags.push('真跌');
+    if (r.is_fake_crash) tags.push('虛跌');
+    if (r.is_divergence) tags.push('背離');
+    return '暴跌FOMO(' + r.crash_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯真跌/虛跌訊號');
+  }
+
+  function crashFomoDetailHtml(r) {
+    var m = r.metrics || {};
+    var facts = [];
+    if (m.vol_ratio != null) facts.push('量比 ' + m.vol_ratio);
+    if (m.pbr != null) facts.push('PBR ' + m.pbr);
+    if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
+    if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
+    if (m.foreign_consecutive_sell_days != null) facts.push('外資連賣 ' + m.foreign_consecutive_sell_days + ' 天');
+
+    var notes = '';
+    if (r.foreign_note) {
+      notes += '<div class="note note-foreign">' + esc(r.foreign_note) + '</div>';
+    }
+    if (r.trust_note) {
+      notes += '<div class="note note-trust">' + esc(r.trust_note) + '</div>';
+    }
+    if (r.is_divergence && r.divergence_reason) {
+      notes += '<div class="note note-diverge">' + esc(r.divergence_reason) + '</div>';
+    }
+
+    return '<tr class="fomo-detail"><td colspan="5">' +
+      notes +
+      (facts.length ? '<div>' + esc(facts.join('　·　')) + '</div>' : '') +
+      reasonList('真跌依據(' + r.real_crash_score + ' 分)', r.reasons.real_crash) +
+      reasonList('虛跌依據(' + r.fake_crash_score + ' 分)', r.reasons.fake_crash) +
+      (r.missing && r.missing.length
+        ? '<h4>缺少資料</h4><div class="none">' + esc(r.missing.join('、')) + '</div>'
+        : '') +
+      '</td></tr>';
+  }
+
+  function renderCrashFomo(res) {
+    var meta = el('crashfomo-meta');
+    var tbody = el('crashfomo-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('crashfomo-table').hidden = true;
+      return;
+    }
+    el('crashfomo-table').hidden = false;
+
+    var real = 0, fake = 0;
+    res.rows.forEach(function (r) {
+      if (r.is_real_crash) real++;
+      if (r.is_fake_crash) fake++;
+    });
+    var src = res.source_list === 'watchlist' ? '手動名單' : '暴跌前段班';
+    meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
+      ' · 真跌 ' + real + ' 檔 · 虛跌 ' + fake + ' 檔(點列可看理由)';
+
+    if (!res.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.rows.map(function (r) {
+      var row = '<tr class="fomo-row" data-fomo="' + esc(r.stock_id) + '">' +
+        '<td class="code mono">' + esc(r.stock_id) + '</td>' +
+        '<td>' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num ' + scoreClass(r.crash_score) + '">' + r.crash_score + '</td>' +
+        '<td>' + crashBadges(r) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashFomoTriggerNote(r)) + '</td>' +
+      '</tr>';
+      if (crashFomoOpen === r.stock_id) row += crashFomoDetailHtml(r);
+      return row;
+    }).join('');
+  }
+
+  function loadCrashFomo(force) {
+    if (crashFomoLoaded && !force) return;
+    el('crashfomo-meta').textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderCrashFomo({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(CRASH_FOMO_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        crashFomoLoaded = true;
+        crashFomoData = data;
+        renderCrashFomo(data);
+      })
+      .catch(function (e) {
+        renderCrashFomo({ error: '讀不到暴跌 FOMO 結果(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
       });
   }
@@ -3706,6 +3919,7 @@
     });
 
     bindQuickAdd(el('scan-tbody'));
+    bindQuickAdd(el('crash-tbody'));
     bindQuickAdd(el('signals-tbody'));
     bindQuickAdd(el('themes-list'));
 
@@ -3725,6 +3939,24 @@
       var id = tr.getAttribute('data-fomo');
       fomoOpen = (fomoOpen === id) ? null : id;
       renderFomo(fomoData);
+    });
+
+    el('crashfomo-tbody').addEventListener('click', function (e) {
+      var qa = e.target.closest('.btn-quickadd');
+      if (qa) {
+        if (qa.disabled) return;
+        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'),
+          qa.getAttribute('data-qa-note'));
+        qa.textContent = '已追蹤';
+        qa.disabled = true;
+        qa.classList.add('is-added');
+        return;
+      }
+      var tr = e.target.closest('.fomo-row');
+      if (!tr || !crashFomoData) return;
+      var id = tr.getAttribute('data-fomo');
+      crashFomoOpen = (crashFomoOpen === id) ? null : id;
+      renderCrashFomo(crashFomoData);
     });
 
     el('tick-metrics').addEventListener('click', function (e) {

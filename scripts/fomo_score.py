@@ -19,6 +19,14 @@ FOREIGN_CONSECUTIVE = 3      # 外資連續買超天數門檻
 REAL_RALLY_PASS = 60         # 真漲成立分數
 FAKE_RALLY_PASS = 60         # 虛漲成立分數
 
+# --- 暴跌 FOMO(真跌/虛跌)專用門檻 ---
+# 概念上是真漲/虛漲的鏡射,但方向不是單純把號誌反過來就好,見 compute_crash_fomo.py
+# 開頭的說明。PBR_CRASH_CHEAP、MARGIN_DROP_PANIC 是這裡新增、原本 FOMO 沒有的門檻。
+PBR_CRASH_CHEAP = 1.2        # 虛跌:PBR 已經跌到明顯便宜
+MARGIN_DROP_PANIC = -15      # 虛跌:融資 5 日大減(斷頭/認賠殺出的門檻,注意是負值)
+REAL_CRASH_PASS = 60         # 真跌成立分數
+FAKE_CRASH_PASS = 60         # 虛跌成立分數
+
 THRESHOLDS = {
     "MARGIN_CHANGE_HIGH": MARGIN_CHANGE_HIGH,
     "MARGIN_CHANGE_WARN": MARGIN_CHANGE_WARN,
@@ -31,6 +39,11 @@ THRESHOLDS = {
     "REAL_RALLY_PASS": REAL_RALLY_PASS,
     "FAKE_RALLY_PASS": FAKE_RALLY_PASS,
     "REAL_RALLY_REQUIRES_FOREIGN": True,
+    "PBR_CRASH_CHEAP": PBR_CRASH_CHEAP,
+    "MARGIN_DROP_PANIC": MARGIN_DROP_PANIC,
+    "REAL_CRASH_PASS": REAL_CRASH_PASS,
+    "FAKE_CRASH_PASS": FAKE_CRASH_PASS,
+    "REAL_CRASH_REQUIRES_FOREIGN": True,
 }
 
 
@@ -135,6 +148,108 @@ def judge_fake_stock_rally(m):
     return {
         "score": _clamp(score),
         "is_fake_rally": score >= FAKE_RALLY_PASS,
+        "reasons": reasons,
+        "missing": missing,
+    }
+
+
+def judge_real_crash(m):
+    """
+    真跌判斷:這波下跌是法人主導的出貨,不是散戶恐慌錯殺,大機率續跌。
+    是 judge_real_rally() 的鏡射,但方向不是單純把號誌反過來 —— 見
+    compute_crash_fomo.py 開頭的說明。回傳形狀跟 judge_real_rally() 一致。
+    """
+    score = 0
+    reasons = []
+    missing = []
+
+    v = m.get("foreign_consecutive_sell_days")
+    if v is None:
+        missing.append("外資連續賣超天數")
+    elif v >= FOREIGN_CONSECUTIVE:
+        score += 40
+        reasons.append("外資連續賣超 %d 天(≥%d)" % (v, FOREIGN_CONSECUTIVE))
+
+    v = m.get("margin_change_5d_pct")
+    if v is None:
+        missing.append("融資5日增幅")
+    elif v > -MARGIN_CHANGE_NOTICE:
+        score += 20
+        reasons.append("融資5日增幅 %.1f%%(>-%d%%,散戶還沒認賠減倉)"
+                       % (v, MARGIN_CHANGE_NOTICE))
+
+    v = m.get("short_margin_ratio")
+    if v is None:
+        missing.append("券資比")
+    elif v < SHORT_MARGIN_BULL:
+        score += 10
+        reasons.append("券資比 %.1f%%(<%d%%,空方還沒大量進場對敲)" % (v, SHORT_MARGIN_BULL))
+
+    v = m.get("pbr")
+    if v is None:
+        missing.append("PBR")
+    elif v > PBR_MID:
+        score += 20
+        reasons.append("PBR %.2f(>%.1f,還沒跌到便宜)" % (v, PBR_MID))
+
+    # 外資連賣是「必要條件」而不只是加權,理由跟真漲的外資連買閘門對稱:
+    # 分數夠但外資沒賣,不該標成真跌(可能只是融資戶自己在減碼)。
+    streak = m.get("foreign_consecutive_sell_days")
+    foreign_ok = streak is not None and streak >= FOREIGN_CONSECUTIVE
+    passed = score >= REAL_CRASH_PASS and foreign_ok
+    if score >= REAL_CRASH_PASS and not foreign_ok:
+        reasons.append("分數達標但外資未連續賣超 %d 天,不列為真跌" % FOREIGN_CONSECUTIVE)
+
+    return {
+        "score": _clamp(score),
+        "is_real_crash": passed,
+        "foreign_gate_passed": foreign_ok,
+        "reasons": reasons,
+        "missing": missing,
+    }
+
+
+def judge_fake_crash(m):
+    """
+    虛跌判斷:融資斷頭式減倉造成的恐慌性錯殺,法人反而趁機承接,
+    是 judge_fake_stock_rally() 的鏡射。回傳形狀跟它一致。
+    """
+    score = 0
+    reasons = []
+    missing = []
+
+    v = m.get("margin_change_5d_pct")
+    if v is None:
+        missing.append("融資5日增幅")
+    elif v < MARGIN_DROP_PANIC:
+        score += 30
+        reasons.append("融資5日增幅 %.1f%%(<%d%%,疑似斷頭/恐慌認賠殺出)"
+                       % (v, MARGIN_DROP_PANIC))
+
+    v = m.get("foreign_net")
+    if v is None:
+        missing.append("外資買賣超")
+    elif v >= 0:
+        score += 20
+        reasons.append("外資買超或中性(%s 股),趁機承接" % format(int(v), ","))
+
+    v = m.get("pbr")
+    if v is None:
+        missing.append("PBR")
+    elif v < PBR_CRASH_CHEAP:
+        score += 20
+        reasons.append("PBR %.2f(<%.1f,評價已明顯偏低)" % (v, PBR_CRASH_CHEAP))
+
+    vol, prev = m.get("volume"), m.get("prev_volume")
+    if vol is None or prev is None:
+        missing.append("成交量")
+    elif vol < prev:
+        score += 10
+        reasons.append("今日量縮(%s → %s,賣壓漸緩)" % (format(int(prev), ","), format(int(vol), ",")))
+
+    return {
+        "score": _clamp(score),
+        "is_fake_crash": score >= FAKE_CRASH_PASS,
         "reasons": reasons,
         "missing": missing,
     }
@@ -334,6 +449,68 @@ def score_stock(stock_id, stock_name, m):
             "fomo": fomo["reasons"],
             "real_rally": real["reasons"],
             "fake_rally": fake["reasons"],
+        },
+        "missing": missing,
+    }
+
+
+def score_stock_crash(stock_id, stock_name, m):
+    """
+    暴跌 FOMO 版本的 score_stock():用真跌/虛跌取代真漲/虛漲。
+    背離(judge_divergence)是法人分歧訊號,方向無關,直接沿用同一份判斷。
+
+    沒有另外做一個「暴跌綜合分數」——虛跌分數本身就是「這波下跌像不像
+    散戶恐慌錯殺」的強度,拿來當主要排序/顯示分數(crash_score)就夠了,
+    不重複發明一套跟虛跌高度重疊的指標。
+    """
+    real = judge_real_crash(m)
+    fake = judge_fake_crash(m)
+    diverge = judge_divergence(m)
+
+    missing = []
+    for part in (real, fake, diverge):
+        for k in part["missing"]:
+            if k not in missing:
+                missing.append(k)
+
+    return {
+        "stock_id": stock_id,
+        "stock_name": stock_name,
+        "crash_score": fake["score"],
+        "is_real_crash": real["is_real_crash"],
+        "real_crash_score": real["score"],
+        "is_fake_crash": fake["is_fake_crash"],
+        "fake_crash_score": fake["score"],
+        "is_divergence": diverge["is_divergence"],
+        "divergence_reason": diverge["reason"],
+        "foreign_note": foreign_annotation(m),
+        "trust_note": trust_annotation(m),
+        "metrics": {
+            "pbr": m.get("pbr"),
+            "margin_change_5d_pct": (None if m.get("margin_change_5d_pct") is None
+                                     else round(m["margin_change_5d_pct"], 2)),
+            "short_margin_ratio": (None if m.get("short_margin_ratio") is None
+                                   else round(m["short_margin_ratio"], 2)),
+            "foreign_net": m.get("foreign_net"),
+            "foreign_consecutive_sell_days": m.get("foreign_consecutive_sell_days"),
+            "trust_net": m.get("trust_net"),
+            "foreign_streak_days": m.get("foreign_streak_days"),
+            "foreign_streak_direction": m.get("foreign_streak_direction"),
+            "foreign_streak_shares": m.get("foreign_streak_shares"),
+            "foreign_streak_amount": m.get("foreign_streak_amount"),
+            "foreign_pct_of_volume": _round(m.get("foreign_pct_of_volume")),
+            "foreign_pct_of_market": _round(m.get("foreign_pct_of_market")),
+            "trust_amount": m.get("trust_amount"),
+            "trust_pct_of_volume": _round(m.get("trust_pct_of_volume")),
+            "trust_pct_of_market": _round(m.get("trust_pct_of_market")),
+            "vol_ratio": m.get("vol_ratio"),
+            "close": m.get("close"),
+            "volume": m.get("volume"),
+            "prev_volume": m.get("prev_volume"),
+        },
+        "reasons": {
+            "real_crash": real["reasons"],
+            "fake_crash": fake["reasons"],
         },
         "missing": missing,
     }

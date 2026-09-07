@@ -38,7 +38,9 @@
 | --- | --- | --- |
 | 追蹤 | localStorage | 七步驟紀錄 + 持倉損益 |
 | 爆量掃描 | `data/scan-latest.json` | `vol_ratio = 量 / MA20(shift 1) > 1.5` 且 `close > open` |
+| 暴跌掃描 | `data/crash-latest.json` | 跟爆量掃描對稱,`vol_ratio > 1.5` 且 `close < open` |
 | FOMO | `data/fomo-latest.json` | 對爆量前 60 名判斷真漲/虛漲 |
+| 暴跌FOMO | `data/crash-fomo-latest.json` | 對暴跌前 60 名判斷真跌/虛跌,是真漲/虛漲的鏡射(不是單純反號誌,見 `data/README.md`) |
 | 產業流向 | `data/tick-latest.json` | 移植自 SH2 8012:產業 × 市值級距的成交筆數聚合 |
 | 部位 | `data/quotes-latest.json` | Kelly 部位 + 零股試算 |
 
@@ -48,16 +50,19 @@
 GitHub 排程會延遲(實測延遲過 5 小時 23 分),拆成兩支時 FOMO 會讀到前一天的爆量清單。
 
 ```
-fetch_prices.py       TWSE 全市場收盤(含成交筆數)→ data/history/YYYY-MM-DD.json
-compute_scan.py       爆量清單
-fetch_stock_meta.py   產業別(FinMind)+ 發行股數(TWSE)→ data/stock_meta.json
-compute_tick_flow.py  產業流向聚合
-compute_quotes.py     報價快照(收盤價 + 日報酬)
-compute_fomo.py       FOMO 計分(吃上一步的 scan-latest.json)
-git commit + push     if: always(),某步失敗也保存已算出的資料
+fetch_prices.py        TWSE 全市場收盤(含成交筆數)→ data/history/YYYY-MM-DD.json
+compute_scan.py        爆量清單
+compute_crash.py       暴跌清單(跟爆量對稱,共用 data/history)
+fetch_stock_meta.py    產業別(FinMind)+ 發行股數(TWSE)→ data/stock_meta.json
+compute_tick_flow.py   產業流向聚合
+compute_quotes.py      報價快照(收盤價 + 日報酬)
+compute_fomo.py        FOMO 計分(吃上一步的 scan-latest.json)
+compute_crash_fomo.py  暴跌FOMO 計分(吃上一步的 crash-latest.json)
+git commit + push      if: always(),某步失敗也保存已算出的資料
 ```
 
-手動觸發參數:`backfill_days` / `source` / `top`(預設 60)/ `limit` / `refreeze_tick`。
+手動觸發參數:`backfill_days` / `source` / `top`(預設 60)/ `limit` / `refreeze_tick` /
+`crash_source` / `crash_top`(預設 60)/ `crash_limit`。
 
 ---
 

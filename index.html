@@ -49,7 +49,9 @@
   <nav class="views" id="views">
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
+    <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
+    <button type="button" class="viewbtn" data-view="crashfomo">暴跌FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
     <button type="button" class="viewbtn" data-view="themes">題材分類</button>
@@ -98,6 +100,28 @@
   </div>
 </main>
 
+<main class="list-wrap" id="crash-wrap" hidden>
+  <div class="scan-meta" id="crash-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="crash-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">量比</th>
+          <th class="num">漲跌幅</th>
+          <th>訊號</th>
+          <th class="num">融資餘額</th>
+          <th class="num">融資增減</th>
+          <th class="num">融券餘額</th>
+          <th>追蹤</th>
+        </tr>
+      </thead>
+      <tbody id="crash-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
 <main class="list-wrap" id="fomo-wrap" hidden>
   <div class="scan-meta" id="fomo-meta">載入中…</div>
   <div class="table-scroll">
@@ -112,6 +136,24 @@
         </tr>
       </thead>
       <tbody id="fomo-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="list-wrap" id="crashfomo-wrap" hidden>
+  <div class="scan-meta" id="crashfomo-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="crashfomo-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">恐慌分數</th>
+          <th>判斷</th>
+          <th>追蹤</th>
+        </tr>
+      </thead>
+      <tbody id="crashfomo-tbody"></tbody>
     </table>
   </div>
 </main>
