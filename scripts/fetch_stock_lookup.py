@@ -170,8 +170,17 @@ def main():
             print("  ✓ %-45s %d 筆  欄位=%s" % (ds, r["rows"], r["fields"]))
         else:
             print("  ✗ %-45s %s" % (ds, r["error"]))
-            blocked.append(ds)
+            blocked.append(r["error"])
     if blocked:
+        # FOMO/暴跌FOMO 排在這步前面,同一小時內把免費額度用光是正常會發生的事
+        # (三支合計常態性超過 300 次/小時的上限),不是這支腳本本身壞了。
+        # 額度用完就靜靜跳過、保留上一份資料,不要讓這種每天都可能發生的情況
+        # 把整個 daily-scan job 標成失敗;其他原因(真的欄位跑掉之類)才視為
+        # 需要人工處理的錯誤。
+        if all("402" in b for b in blocked):
+            print("\n額度用完(HTTP 402),今天先跳過個股查詢,保留上一份資料。"
+                  "考慮設定 FINMIND_TOKEN 把額度從 300 次/小時提高到 600 次。")
+            return 0
         print("\n錯誤:以下 dataset 取不到:\n  %s" % "\n  ".join(blocked), file=sys.stderr)
         return 1
 

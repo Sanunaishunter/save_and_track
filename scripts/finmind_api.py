@@ -54,7 +54,10 @@ def request(dataset, data_id=None, start_date=None, end_date=None):
             except Exception:
                 pass
             last = "HTTP %s %s" % (e.code, body)
-            if e.code in (402, 429, 500, 502, 503, 504):
+            # 402(額度超過)是小時額度用完,不是暫時性錯誤——同一小時內重試
+            # 幾次都不會恢復,只會白白燒 CI 時間(實測 28 檔 402 重試燒了 44
+            # 分鐘)。429/5xx 才是真的可能等一下就好,才值得退避重試。
+            if e.code in (429, 500, 502, 503, 504):
                 time.sleep(min(60, 5 * (2 ** attempt)))
                 continue
             raise FinMindError("%s:%s" % (dataset, last))
@@ -66,7 +69,7 @@ def request(dataset, data_id=None, start_date=None, end_date=None):
         status = payload.get("status")
         if status != 200:
             last = "status=%s msg=%s" % (status, payload.get("msg"))
-            if status in (402, 429):
+            if status == 429:
                 time.sleep(min(60, 5 * (2 ** attempt)))
                 continue
             raise FinMindError("%s:%s" % (dataset, last))
