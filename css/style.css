@@ -1233,3 +1233,71 @@ input[type="date"] {
   animation-delay: 2.2s;
 }
 @keyframes splash-hint { to { opacity: 1; } }
+
+/* ---------------------------------------------- 版本資訊(開場動畫後面) */
+
+.version-page {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  padding-top: calc(20px + var(--safe-top));
+  padding-bottom: calc(20px + var(--safe-bottom));
+}
+
+.version-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.version-title {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.version-note {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.version-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 14px;
+  min-height: 80px;
+}
+
+.version-item {
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.version-item:first-child { border-top: none; }
+
+.version-item-date {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-bottom: 2px;
+}
+
+.version-item-msg {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

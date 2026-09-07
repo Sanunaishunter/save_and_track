@@ -30,6 +30,16 @@
   <div class="splash-hint">點一下略過</div>
 </div>
 
+<!-- 版本資訊,接在開場動畫後面。內容直接抓 GitHub commit 紀錄,不用手動維護。 -->
+<div class="version-page" id="version-page" hidden>
+  <div class="version-card">
+    <h2 class="version-title">最近更新了什麼</h2>
+    <p class="version-note" id="version-note">載入中…</p>
+    <div class="version-list" id="version-list"></div>
+    <button type="button" class="btn btn-primary btn-block" id="version-continue">進入 App</button>
+  </div>
+</div>
+
 <!-- 儲存空間不可用時的警告橫幅 -->
 <div id="storage-banner" class="banner" hidden>
   <strong>無法使用瀏覽器儲存空間</strong>

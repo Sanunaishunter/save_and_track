@@ -199,17 +199,117 @@
     if (!s || s.hidden) return;
     s.removeEventListener('click', hideSplash);
     s.classList.add('is-hiding');
-    setTimeout(function () { s.hidden = true; }, 400);
+    setTimeout(function () {
+      s.hidden = true;
+      showVersionPage();
+    }, 400);
   }
 
   function initSplash() {
     var s = el('splash');
     if (!s) return;
+    // 版本頁接在 hideSplash() 裡面,今天已經看過、直接跳過動畫的這條路徑
+    // 不會經過 hideSplash(),版本頁也就不會跳出來 —— 之後把
+    // SPLASH_EVERY_LAUNCH 改回 false 時要一併想一下版本頁要不要獨立判斷。
     if (!SPLASH_EVERY_LAUNCH && splashSeenToday()) { s.hidden = true; return; }
     markSplashSeen();
     s.hidden = false;
     s.addEventListener('click', hideSplash);
     setTimeout(hideSplash, 11800);
+  }
+
+  // ---------------------------------------------------------- 版本資訊
+  // 接在開場動畫後面。內容直接抓 GitHub commit 紀錄(public repo,不用 token,
+  // 瀏覽器可以直接 fetch),不用另外手動維護一份說明,永遠是最新的。
+  // 用 localStorage 快取 1 小時,避免短時間內重整好幾次撞到匿名額度(60 次/小時)。
+
+  var VERSION_API_URL =
+    'https://api.github.com/repos/Sanunaishunter/save_and_track/commits?per_page=20';
+  var VERSION_CACHE_KEY = 'stock_pipeline_version_cache_v1';
+  var VERSION_CACHE_TTL_MS = 60 * 60 * 1000;
+
+  function readVersionCache() {
+    try {
+      var raw = window.localStorage.getItem(VERSION_CACHE_KEY);
+      if (!raw) return null;
+      var obj = JSON.parse(raw);
+      if (!obj || !obj.at || !obj.items) return null;
+      if (Date.now() - obj.at > VERSION_CACHE_TTL_MS) return null;
+      return obj.items;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeVersionCache(items) {
+    try {
+      window.localStorage.setItem(VERSION_CACHE_KEY, JSON.stringify({ at: Date.now(), items: items }));
+    } catch (e) { /* 存不到就算了,下次重新抓一次 */ }
+  }
+
+  function fmtVersionDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '/' + pad(d.getMonth() + 1) + '/' + pad(d.getDate());
+  }
+
+  function renderVersionList(items) {
+    var list = el('version-list');
+    var note = el('version-note');
+    if (!items || !items.length) {
+      note.textContent = '讀不到更新紀錄,不影響使用,直接進 App 就好。';
+      list.innerHTML = '';
+      return;
+    }
+    note.textContent = '最近 ' + items.length + ' 筆,直接讀 GitHub commit 紀錄。';
+    list.innerHTML = items.map(function (it) {
+      return '<div class="version-item">' +
+        '<span class="version-item-date">' + esc(fmtVersionDate(it.date)) +
+          (it.sha ? ' · ' + esc(it.sha) : '') + '</span>' +
+        '<span class="version-item-msg">' + esc(it.summary) + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function loadVersionInfo() {
+    var cached = readVersionCache();
+    if (cached) { renderVersionList(cached); return; }
+
+    el('version-note').textContent = '載入中…';
+    el('version-list').innerHTML = '';
+
+    fetch(VERSION_API_URL, { headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        var items = (data || []).map(function (c) {
+          var msg = (c.commit && c.commit.message) || '';
+          var date = c.commit && c.commit.author && c.commit.author.date;
+          return { sha: (c.sha || '').slice(0, 7), date: date, summary: msg.split('\n')[0] };
+        });
+        writeVersionCache(items);
+        renderVersionList(items);
+      })
+      .catch(function (e) {
+        el('version-note').textContent =
+          '讀不到更新紀錄(' + (e.message || String(e)) + ')。不影響使用,直接進 App 就好。';
+        el('version-list').innerHTML = '';
+      });
+  }
+
+  function showVersionPage() {
+    var v = el('version-page');
+    if (!v) return;
+    v.hidden = false;
+    loadVersionInfo();
+  }
+
+  function hideVersionPage() {
+    var v = el('version-page');
+    if (v) v.hidden = true;
   }
 
   function showStorageBanner(msg) {
@@ -4192,6 +4292,7 @@
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
     el('btn-delete-all').addEventListener('click', doDeleteAll);
+    el('version-continue').addEventListener('click', hideVersionPage);
     el('btn-export').addEventListener('click', exportBackup);
     el('btn-import').addEventListener('click', function () { el('import-file').click(); });
     el('import-file').addEventListener('change', function (e) {
