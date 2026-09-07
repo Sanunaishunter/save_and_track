@@ -1165,6 +1165,63 @@ input[type="date"] {
   font-size: 15px;
 }
 
+/* ---------------------------------------------- 個股查詢:螢光筆標色 + 筆記 */
+
+.lookup-row { cursor: pointer; }
+.lookup-row.hl-yellow { background: rgba(255, 235, 59, 0.16); }
+.lookup-row.hl-red    { background: rgba(244, 67, 54, 0.18); }
+.lookup-row.hl-green  { background: rgba(76, 175, 80, 0.18); }
+.lookup-row.hl-purple { background: rgba(171, 71, 188, 0.20); }
+
+.lookup-note-cell {
+  max-width: 10em;
+  white-space: normal;
+  font-size: 12px;
+  color: var(--text-dim);
+  word-break: break-word;
+}
+.lookup-note-cell .dim { color: var(--muted); }
+
+.lookup-editor-row td {
+  padding: 0 !important;
+  background: var(--panel-2);
+}
+.lookup-editor {
+  padding: 12px 14px 14px;
+}
+.lookup-editor-head {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.lookup-swatches {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.lookup-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.lookup-swatch.is-active { border-color: var(--text); }
+.lookup-swatch.swatch-yellow { background: #fdd835; }
+.lookup-swatch.swatch-red    { background: #e53935; }
+.lookup-swatch.swatch-green  { background: #43a047; }
+.lookup-swatch.swatch-purple { background: #ab47bc; }
+.lookup-swatch.swatch-clear {
+  background: var(--panel-3);
+  border-color: var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ---------------------------------------------- 開場動畫 */
 
 .splash {

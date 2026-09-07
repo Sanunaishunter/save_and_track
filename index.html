@@ -481,7 +481,8 @@
     只列得出「個股查詢清單」(<code>stock_lookup.json</code>)裡已經加過的代號 ——
     這個 App 沒有後端,沒辦法即時查任意一檔。想看新的代號,直接跟 Nomad 說一聲,
     加進清單、下次排程跑完就有資料。開高低收量沿用爆量/暴跌掃描的 30 天基準線,
-    融資融券與外資投信來自 FinMind。
+    融資融券與外資投信來自 FinMind。點一列可以標色、寫筆記,存在瀏覽器裡,
+    「匯出」備份會一起帶走。
   </p>
   <div class="table-scroll">
     <table class="scan-table" id="lookup-table" hidden>
@@ -499,6 +500,7 @@
           <th class="num">融券增減</th>
           <th class="num">外資買賣超</th>
           <th class="num">投信買賣超</th>
+          <th>備註</th>
         </tr>
       </thead>
       <tbody id="lookup-tbody"></tbody>

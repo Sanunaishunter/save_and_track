@@ -1003,7 +1003,7 @@
     var filename = 'stock-pipeline-backup-' + stampStr() + '.json';
     var text;
     try {
-      text = JSON.stringify(data, null, 2);
+      text = JSON.stringify({ data: data, lookup_notes: loadLookupNotesMap() }, null, 2);
     } catch (e) {
       toast('匯出失敗:' + (e.message || e), 'err');
       return;
@@ -1037,24 +1037,31 @@
         toast('這個檔案不是有效的 JSON:' + (e.message || e), 'err');
         return;
       }
-      // 容許直接的陣列,或 { data: [...] } 這種包一層的格式。
-      if (!Array.isArray(incoming) && incoming && Array.isArray(incoming.data)) incoming = incoming.data;
+      // 容許直接的陣列,或 { data: [...], lookup_notes: {...} } 這種包一層的格式。
+      // lookup_notes 是個股查詢的螢光筆標色/筆記,舊版備份檔沒有這個欄位,
+      // importedNotes 保持 null 代表「這份檔案沒提到」,匯入時不去動現有筆記。
+      var importedNotes = null;
+      if (!Array.isArray(incoming) && incoming && Array.isArray(incoming.data)) {
+        importedNotes = incoming.lookup_notes || null;
+        incoming = incoming.data;
+      }
       if (!Array.isArray(incoming)) {
         toast('備份檔格式不正確:最外層必須是陣列', 'err');
         return;
       }
       var records = incoming.map(normalize);
-      confirmImport(records, file.name);
+      confirmImport(records, file.name, importedNotes);
     };
     reader.readAsText(file);
   }
 
-  function confirmImport(records, filename) {
+  function confirmImport(records, filename, importedNotes) {
     dialog({
       title: '匯入備份',
       message: '檔案:' + filename + '\n' +
                '備份檔內有 ' + records.length + ' 筆,目前畫面上有 ' + data.length + ' 筆。\n\n' +
                '「覆蓋全部」會刪掉現有資料;「合併」會用相同 id 的備份內容取代現有的,其餘保留。\n' +
+               '個股查詢的標色/筆記(如果這份備份檔有)也會照同樣方式處理。\n' +
                '兩種方式都會先把現有資料另存一份到瀏覽器,萬一按錯還救得回來。',
       actions: [
         { label: '合併(保留現有,更新同 id)', value: 'merge', cls: 'btn-primary' },
@@ -1075,6 +1082,16 @@
         data.forEach(function (r) { byId[r.id] = r; });
         records.forEach(function (r) { byId[r.id] = r; });
         data = Object.keys(byId).map(function (k) { return byId[k]; });
+      }
+
+      if (importedNotes) {
+        if (res.action === 'replace') {
+          saveLookupNotesMap(importedNotes);
+        } else {
+          var mergedNotes = loadLookupNotesMap();
+          Object.keys(importedNotes).forEach(function (k) { mergedNotes[k] = importedNotes[k]; });
+          saveLookupNotesMap(mergedNotes);
+        }
       }
 
       if (saveAll()) {
@@ -2096,10 +2113,77 @@
   var lookupLoaded = false;
   var lookupData = null;
   var lookupCode = null;
+  var lookupOpenDate = null;   // 目前展開中的筆記編輯列(日期字串)
 
   function lookupNum(v, digits) {
     if (v == null) return '—';
     return digits == null ? fmtInt(Math.round(v)) : v.toFixed(digits);
+  }
+
+  // ------------------------------------------- 個股查詢的螢光筆標色 + 文字筆記
+  // 存在 localStorage,不是排程產出的資料(那份每天會被覆寫)。
+  // key 用「代號|日期」,表格視窗往前滑動、舊日期滑出去之後筆記自然看不到,
+  // 跟資料本身的行為一致,不需要額外清理。
+
+  var LOOKUP_NOTES_KEY = 'stock_pipeline_lookup_notes';
+  var LOOKUP_COLORS = ['yellow', 'red', 'green', 'purple'];
+
+  function lookupNoteKey(code, date) { return code + '|' + date; }
+
+  function loadLookupNotesMap() {
+    try {
+      var raw = window.localStorage.getItem(LOOKUP_NOTES_KEY);
+      var obj = raw ? JSON.parse(raw) : null;
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLookupNotesMap(map) {
+    try {
+      window.localStorage.setItem(LOOKUP_NOTES_KEY, JSON.stringify(map));
+      return true;
+    } catch (e) {
+      toast('筆記存不進瀏覽器儲存空間:' + (e.message || e), 'err');
+      return false;
+    }
+  }
+
+  function setLookupColor(code, date, color) {
+    var map = loadLookupNotesMap();
+    var key = lookupNoteKey(code, date);
+    var entry = map[key] || {};
+    if (color) entry.color = color; else delete entry.color;
+    if (entry.color || entry.note) map[key] = entry; else delete map[key];
+    saveLookupNotesMap(map);
+  }
+
+  function setLookupNote(code, date, note) {
+    var map = loadLookupNotesMap();
+    var key = lookupNoteKey(code, date);
+    var entry = map[key] || {};
+    note = (note || '').trim();
+    if (note) entry.note = note; else delete entry.note;
+    if (entry.color || entry.note) map[key] = entry; else delete map[key];
+    if (saveLookupNotesMap(map)) toast('已儲存筆記', 'ok');
+  }
+
+  function lookupEditorHtml(code, date, entry) {
+    var swatches = LOOKUP_COLORS.map(function (c) {
+      return '<button type="button" class="lookup-swatch swatch-' + c +
+        (entry.color === c ? ' is-active' : '') + '" data-lookup-color="' + c + '"></button>';
+    }).join('') +
+      '<button type="button" class="lookup-swatch swatch-clear" data-lookup-color="">✕</button>';
+
+    return '<tr class="lookup-editor-row"><td colspan="13"><div class="lookup-editor">' +
+      '<div class="lookup-editor-head">' + esc(date) + ' 標色與筆記</div>' +
+      '<div class="lookup-swatches">' + swatches + '</div>' +
+      '<label class="field"><span class="field-label">筆記</span>' +
+        '<textarea id="lookup-note-input" rows="3" placeholder="例如:融資單日暴增,疑似作帳">' +
+          esc(entry.note || '') + '</textarea></label>' +
+      '<button type="button" class="btn btn-block btn-outline" id="lookup-note-save">儲存筆記</button>' +
+    '</div></td></tr>';
   }
 
   function renderLookup() {
@@ -2148,12 +2232,19 @@
 
     table.hidden = false;
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="12" class="scan-empty">沒有資料</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="13" class="scan-empty">沒有資料</td></tr>';
       return;
     }
 
+    var notesMap = loadLookupNotesMap();
+
     tbody.innerHTML = rows.map(function (r) {
-      return '<tr>' +
+      var entry = notesMap[lookupNoteKey(lookupCode, r.date)] || {};
+      var hlCls = entry.color ? ' hl-' + entry.color : '';
+      var noteCell = entry.note
+        ? esc(entry.note.length > 24 ? entry.note.slice(0, 24) + '…' : entry.note)
+        : '<span class="dim">＋</span>';
+      var row = '<tr class="lookup-row' + hlCls + '" data-lookup-date="' + esc(r.date) + '">' +
         '<td class="mono">' + esc(r.date) + '</td>' +
         '<td class="num mono">' + lookupNum(r.open, 2) + '</td>' +
         '<td class="num mono">' + lookupNum(r.high, 2) + '</td>' +
@@ -2170,7 +2261,10 @@
           (r.foreign_net == null ? '—' : signed(r.foreign_net)) + '</td>' +
         '<td class="num mono ' + plClass(r.trust_net) + '">' +
           (r.trust_net == null ? '—' : signed(r.trust_net)) + '</td>' +
+        '<td class="lookup-note-cell">' + noteCell + '</td>' +
       '</tr>';
+      if (lookupOpenDate === r.date) row += lookupEditorHtml(lookupCode, r.date, entry);
+      return row;
     }).join('');
   }
 
@@ -4160,6 +4254,27 @@
 
     el('lookup-select').addEventListener('change', function (e) {
       lookupCode = e.target.value;
+      lookupOpenDate = null;
+      renderLookup();
+    });
+
+    el('lookup-tbody').addEventListener('click', function (e) {
+      var swatch = e.target.closest('.lookup-swatch');
+      if (swatch) {
+        setLookupColor(lookupCode, lookupOpenDate, swatch.getAttribute('data-lookup-color') || null);
+        renderLookup();
+        return;
+      }
+      if (e.target.closest('#lookup-note-save')) {
+        setLookupNote(lookupCode, lookupOpenDate, el('lookup-note-input').value);
+        renderLookup();
+        return;
+      }
+      if (e.target.closest('.lookup-editor')) return;   // 點編輯區其他地方(textarea 等)不要觸發收合
+      var tr = e.target.closest('.lookup-row');
+      if (!tr) return;
+      var date = tr.getAttribute('data-lookup-date');
+      lookupOpenDate = (lookupOpenDate === date) ? null : date;
       renderLookup();
     });
 
