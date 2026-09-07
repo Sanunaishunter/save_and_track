@@ -136,6 +136,13 @@ jobs:
             --top "${{ github.event.inputs.crash_top || '60' }}" \
             --limit "${{ github.event.inputs.crash_limit || '0' }}"
 
+      # 個股查詢:手動維護的代號清單(stock_lookup.json),融資融券 + 三大法人
+      # 逐日大表格,開高低收量沿用 data/history 不再打 FinMind
+      - name: 更新個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: python scripts/fetch_stock_lookup.py
+
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。
       - name: 提交結果

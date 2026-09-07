@@ -27,6 +27,7 @@
 | `market-grid-latest.json` | 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測,放在籌碼/風險分頁 |
 | `fx-futures-latest.json` | 匯率(央行)+ 台指期貨三大法人未平倉(FinMind),放在籌碼/風險分頁 |
 | `themes.json` | 題材分類清單,**手動維護,不是排程產出**,由 Hugo 判斷資料後請 Claude Code 直接編輯這份檔案 |
+| `stock-lookup-latest.json` | 個股查詢:清單裡每檔的逐日開高低收量 + 融資融券 + 外資投信,前端讀這支。只留最新一份,**沒有每日存查** |
 
 資料來源全部是 TWSE,免 token、免額度:
 
@@ -127,6 +128,37 @@ Hugo 跟 Claude Code 討論後定案的邏輯,寫在 `fomo_score.py` 的
 
 ⚠️ 這套真跌/虛跌邏輯是這次新設計的,不是移植自 SH2 或任何驗證過的
 外部公式,樣本也還沒累積,拿來當參考就好,不是驗證過的訊號。
+
+
+---
+
+## 個股查詢(2026-09-07 加入)
+
+跟爆量/暴跌/FOMO/暴跌FOMO 平行但獨立,同一個 workflow 裡最後執行
+(`fetch_stock_lookup.py`)。跟 FOMO 用的 `watchlist.json` 一樣是
+**手動維護的代號清單**(repo 根目錄的 `stock_lookup.json`)——這個
+App 沒有後端,沒辦法讓使用者在前端即時查任意一檔,只能「先把想深入
+看的代號加進清單,下次排程或手動觸發 Actions 之後才有資料」。
+
+每檔股票組一張最近 N 個交易日(受 `data/history` 的 `KEEP_DAYS` 限制,
+目前 30 天)的逐日大表格:
+
+- **開高低收量**:直接用 `data/history`(TWSE,免費),不再打 FinMind。
+  FinMind `TaiwanStockPrice` 的開高低欄位這個專案還沒探測驗證過
+  (FOMO 只驗證過 `close`/`Trading_Volume`,沒有用到開高低),與其照
+  文件猜欄位名稱,不如沿用已經在用、已經驗證過的 TWSE 資料
+- **融資融券餘額(含日增減)、外資/投信買賣超**:FinMind
+  `TaiwanStockMarginPurchaseShortSale` / `TaiwanStockInstitutionalInvestorsBuySell`,
+  跟 FOMO 用的是同一個資料源,欄位已經驗證過。抓的日曆天視窗
+  (60 天)比 `data/history` 寬,合併後只留 `data/history` 涵蓋到的
+  交易日,但融資/融券的「日增減」是用視窗內完整序列往前找上一筆
+  有值的資料算出來的,不會因為 `data/history` 只有 30 天就讓第一列
+  的增減量變成 null
+- 一檔只要 2 次 FinMind 呼叫(沒有 TaiwanStockPrice、沒有 PER),
+  清單維持在個位數/十位數規模,額度幾乎不會是問題
+
+輸出 `data/stock-lookup-latest.json`,**只留最新一份,沒有每日存查**——
+回頭看「某天的查詢清單長怎樣」沒有意義,清單只會隨手動維護慢慢變動。
 
 
 ---

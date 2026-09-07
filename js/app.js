@@ -1987,6 +1987,121 @@
       });
   }
 
+  // ---------------------------------------------------------- 個股查詢
+  // 手動維護的代號清單(stock_lookup.json),沒有後端沒辦法即時查任意一檔。
+  // 開高低收量沿用 data/history,融資融券/外資投信來自 FinMind,
+  // 見 scripts/fetch_stock_lookup.py。
+
+  var LOOKUP_URL = 'data/stock-lookup-latest.json';
+  var lookupLoaded = false;
+  var lookupData = null;
+  var lookupCode = null;
+
+  function lookupNum(v, digits) {
+    if (v == null) return '—';
+    return digits == null ? fmtInt(Math.round(v)) : v.toFixed(digits);
+  }
+
+  function renderLookup() {
+    var meta = el('lookup-meta');
+    var controls = el('lookup-controls');
+    var select = el('lookup-select');
+    var table = el('lookup-table');
+    var tbody = el('lookup-tbody');
+
+    if (!lookupData || lookupData.error) {
+      meta.innerHTML = lookupData && lookupData.error
+        ? '<span class="warn">' + esc(lookupData.error) + '</span>' : '載入中…';
+      controls.hidden = true;
+      table.hidden = true;
+      return;
+    }
+
+    var codes = lookupData.codes || [];
+    var okCodes = codes.filter(function (c) { return lookupData.data && lookupData.data[c]; });
+
+    if (!okCodes.length) {
+      meta.innerHTML = '<span class="warn">查詢清單裡的代號都抓不到資料,' +
+        '看 failures 欄位或排程 log。</span>';
+      controls.hidden = true;
+      table.hidden = true;
+      return;
+    }
+
+    if (!lookupCode || !lookupData.data[lookupCode]) lookupCode = okCodes[0];
+
+    controls.hidden = false;
+    select.innerHTML = okCodes.map(function (c) {
+      var name = lookupData.data[c].stock_name || '';
+      return '<option value="' + esc(c) + '"' + (c === lookupCode ? ' selected' : '') + '>' +
+        esc(c) + ' ' + esc(name) + '</option>';
+    }).join('');
+
+    var range = lookupData.history_range || {};
+    var failNote = (lookupData.failures || []).length
+      ? '、抓失敗 ' + lookupData.failures.length + ' 檔' : '';
+    meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
+      '(' + okCodes.length + ' 檔可查' + failNote + ')';
+
+    var rec = lookupData.data[lookupCode];
+    var rows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
+
+    table.hidden = false;
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="12" class="scan-empty">沒有資料</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(function (r) {
+      return '<tr>' +
+        '<td class="mono">' + esc(r.date) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.open, 2) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.high, 2) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.low, 2) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.close, 2) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.volume) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
+        '<td class="num mono ' + plClass(r.margin_change) + '">' +
+          (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
+        '<td class="num mono">' + lookupNum(r.short_balance) + '</td>' +
+        '<td class="num mono ' + plClass(r.short_change) + '">' +
+          (r.short_change == null ? '—' : signed(r.short_change)) + '</td>' +
+        '<td class="num mono ' + plClass(r.foreign_net) + '">' +
+          (r.foreign_net == null ? '—' : signed(r.foreign_net)) + '</td>' +
+        '<td class="num mono ' + plClass(r.trust_net) + '">' +
+          (r.trust_net == null ? '—' : signed(r.trust_net)) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadLookup(force) {
+    if (lookupLoaded && !force) return;
+    el('lookup-meta').textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      lookupData = { error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                            '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' };
+      renderLookup();
+      return;
+    }
+
+    fetch(LOOKUP_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        lookupLoaded = true;
+        lookupData = data;
+        renderLookup();
+      })
+      .catch(function (e) {
+        lookupData = { error: '讀不到個股查詢結果(' + (e.message || e) + ')。' +
+                              '每日排程尚未跑過,或 stock_lookup.json 還沒加代號。' };
+        renderLookup();
+      });
+  }
+
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
@@ -2000,6 +2115,7 @@
     el('dca-wrap').hidden = v !== 'dca';
     el('risk-wrap').hidden = v !== 'risk';
     el('signals-wrap').hidden = v !== 'signals';
+    el('lookup-wrap').hidden = v !== 'lookup';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -2013,11 +2129,12 @@
     if (v === 'dca') loadDca(false);
     if (v === 'risk') loadRisk(false);
     if (v === 'signals') loadSignals(false);
+    if (v === 'lookup') loadLookup(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals'];
+  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals', 'lookup'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -3939,6 +4056,11 @@
       var id = tr.getAttribute('data-fomo');
       fomoOpen = (fomoOpen === id) ? null : id;
       renderFomo(fomoData);
+    });
+
+    el('lookup-select').addEventListener('change', function (e) {
+      lookupCode = e.target.value;
+      renderLookup();
     });
 
     el('crashfomo-tbody').addEventListener('click', function (e) {
