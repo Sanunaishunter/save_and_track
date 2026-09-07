@@ -382,6 +382,7 @@
     data.push(fresh);
     if (saveAll()) toast('已加入追蹤:' + displayTitle(fresh), 'ok');
     renderList();
+    promptQuickAddPosition(fresh);
   }
 
   /** 掛在任何一個容器上,委派處理裡面所有「+ 追蹤」按鈕的點擊。*/
