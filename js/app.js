@@ -2169,6 +2169,81 @@
     if (saveLookupNotesMap(map)) toast('已儲存筆記', 'ok');
   }
 
+  // ------------------------------------------- 個股查詢的欄/列暫時隱藏
+  // 跟螢光筆標色一樣存在 localStorage,但這是「暫時不看」的檢視偏好,不是資料,
+  // 所以不放進「匯出」備份 —— 換一台瀏覽器或清快取,表格會自然恢復全部顯示。
+
+  var LOOKUP_HIDDEN_COLS_KEY = 'stock_pipeline_lookup_hidden_cols';
+  var LOOKUP_HIDDEN_ROWS_KEY = 'stock_pipeline_lookup_hidden_rows';
+  var LOOKUP_COL_COUNT = 13;
+
+  function loadLookupHiddenMap(key) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      var obj = raw ? JSON.parse(raw) : null;
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveLookupHiddenMap(key, map, label) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(map));
+    } catch (e) {
+      toast(label + '存不進瀏覽器儲存空間:' + (e.message || e), 'err');
+    }
+  }
+
+  var lookupHiddenCols = loadLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY);   // { colIndex: true },所有代號共用
+  var lookupHiddenRows = loadLookupHiddenMap(LOOKUP_HIDDEN_ROWS_KEY);   // { "代號|日期": true }
+  var lookupShowHiddenRows = false;   // 展開已隱藏列的檢視開關,切換代號時重置,不落地儲存
+
+  function lookupVisibleColCount() {
+    var n = LOOKUP_COL_COUNT;
+    for (var k in lookupHiddenCols) { if (lookupHiddenCols[k]) n--; }
+    return n;
+  }
+
+  function toggleLookupCol(idx) {
+    if (idx === 0) return;   // 日期欄是列的身分識別,不給隱藏
+    if (lookupHiddenCols[idx]) delete lookupHiddenCols[idx]; else lookupHiddenCols[idx] = true;
+    saveLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY, lookupHiddenCols, '欄位顯示設定');
+    renderLookup();
+  }
+
+  function resetLookupHiddenCols() {
+    lookupHiddenCols = {};
+    saveLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY, lookupHiddenCols, '欄位顯示設定');
+    renderLookup();
+  }
+
+  function setLookupRowHidden(code, date, hidden) {
+    var key = lookupNoteKey(code, date);
+    if (hidden) lookupHiddenRows[key] = true; else delete lookupHiddenRows[key];
+    saveLookupHiddenMap(LOOKUP_HIDDEN_ROWS_KEY, lookupHiddenRows, '列顯示設定');
+  }
+
+  function colHiddenAttr(idx) { return lookupHiddenCols[idx] ? ' hidden' : ''; }
+
+  function applyLookupColVisibility(table) {
+    Array.prototype.forEach.call(table.querySelectorAll('th[data-col]'), function (th) {
+      th.hidden = !!lookupHiddenCols[th.getAttribute('data-col')];
+    });
+    var hiddenCount = LOOKUP_COL_COUNT - lookupVisibleColCount();
+    var resetBtn = el('lookup-cols-reset');
+    resetBtn.hidden = hiddenCount <= 0;
+    if (hiddenCount > 0) resetBtn.textContent = '顯示已隱藏 ' + hiddenCount + ' 欄';
+  }
+
+  function updateLookupRowHint(hiddenCount) {
+    var toggleBtn = el('lookup-rows-toggle');
+    toggleBtn.hidden = hiddenCount <= 0;
+    if (hiddenCount > 0) {
+      toggleBtn.textContent = (lookupShowHiddenRows ? '收起已隱藏 ' : '顯示已隱藏 ') + hiddenCount + ' 列';
+    }
+  }
+
   function lookupEditorHtml(code, date, entry) {
     var swatches = LOOKUP_COLORS.map(function (c) {
       return '<button type="button" class="lookup-swatch swatch-' + c +
@@ -2176,7 +2251,7 @@
     }).join('') +
       '<button type="button" class="lookup-swatch swatch-clear" data-lookup-color="">✕</button>';
 
-    return '<tr class="lookup-editor-row"><td colspan="13"><div class="lookup-editor">' +
+    return '<tr class="lookup-editor-row"><td colspan="' + lookupVisibleColCount() + '"><div class="lookup-editor">' +
       '<div class="lookup-editor-head">' + esc(date) + ' 標色與筆記</div>' +
       '<div class="lookup-swatches">' + swatches + '</div>' +
       '<label class="field"><span class="field-label">筆記</span>' +
@@ -2227,41 +2302,58 @@
     meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
       '(' + okCodes.length + ' 檔可查' + failNote + ')';
 
+    applyLookupColVisibility(table);
+
     var rec = lookupData.data[lookupCode];
-    var rows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
+    var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
 
     table.hidden = false;
-    if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="13" class="scan-empty">沒有資料</td></tr>';
+    if (!allRows.length) {
+      tbody.innerHTML = '<tr><td colspan="' + lookupVisibleColCount() + '" class="scan-empty">沒有資料</td></tr>';
+      updateLookupRowHint(0);
       return;
     }
 
     var notesMap = loadLookupNotesMap();
+    var hiddenRowCount = 0;
+    var rows = [];
+    allRows.forEach(function (r) {
+      var isHidden = !!lookupHiddenRows[lookupNoteKey(lookupCode, r.date)];
+      if (isHidden) hiddenRowCount++;
+      if (!isHidden || lookupShowHiddenRows) rows.push(r);
+    });
+    updateLookupRowHint(hiddenRowCount);
 
     tbody.innerHTML = rows.map(function (r) {
-      var entry = notesMap[lookupNoteKey(lookupCode, r.date)] || {};
+      var rowKey = lookupNoteKey(lookupCode, r.date);
+      var entry = notesMap[rowKey] || {};
+      var isHidden = !!lookupHiddenRows[rowKey];
       var hlCls = entry.color ? ' hl-' + entry.color : '';
+      var hiddenCls = isHidden ? ' is-hidden-row' : '';
       var noteCell = entry.note
         ? esc(entry.note.length > 24 ? entry.note.slice(0, 24) + '…' : entry.note)
         : '<span class="dim">＋</span>';
-      var row = '<tr class="lookup-row' + hlCls + '" data-lookup-date="' + esc(r.date) + '">' +
+      var hideBtn = '<button type="button" class="lookup-hide-btn" data-hide-date="' + esc(r.date) +
+        '" title="' + (isHidden ? '取消隱藏此列' : '暫時隱藏此列') + '">' +
+        (isHidden ? '👁' : '🙈') + '</button>';
+      var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
         '<td class="mono">' + esc(r.date) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.open, 2) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.high, 2) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.low, 2) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.close, 2) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.volume) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
-        '<td class="num mono ' + plClass(r.margin_change) + '">' +
+        '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
+        '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
+        '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
+        '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
+        '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupNum(r.volume) + '</td>' +
+        '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
+        '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
           (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
-        '<td class="num mono">' + lookupNum(r.short_balance) + '</td>' +
-        '<td class="num mono ' + plClass(r.short_change) + '">' +
+        '<td' + colHiddenAttr(8) + ' class="num mono">' + lookupNum(r.short_balance) + '</td>' +
+        '<td' + colHiddenAttr(9) + ' class="num mono ' + plClass(r.short_change) + '">' +
           (r.short_change == null ? '—' : signed(r.short_change)) + '</td>' +
-        '<td class="num mono ' + plClass(r.foreign_net) + '">' +
+        '<td' + colHiddenAttr(10) + ' class="num mono ' + plClass(r.foreign_net) + '">' +
           (r.foreign_net == null ? '—' : signed(r.foreign_net)) + '</td>' +
-        '<td class="num mono ' + plClass(r.trust_net) + '">' +
+        '<td' + colHiddenAttr(11) + ' class="num mono ' + plClass(r.trust_net) + '">' +
           (r.trust_net == null ? '—' : signed(r.trust_net)) + '</td>' +
-        '<td class="lookup-note-cell">' + noteCell + '</td>' +
+        '<td' + colHiddenAttr(12) + ' class="lookup-note-cell">' + hideBtn + noteCell + '</td>' +
       '</tr>';
       if (lookupOpenDate === r.date) row += lookupEditorHtml(lookupCode, r.date, entry);
       return row;
@@ -4255,10 +4347,34 @@
     el('lookup-select').addEventListener('change', function (e) {
       lookupCode = e.target.value;
       lookupOpenDate = null;
+      lookupShowHiddenRows = false;
+      renderLookup();
+    });
+
+    el('lookup-table').addEventListener('click', function (e) {
+      var th = e.target.closest('th[data-col]');
+      if (!th) return;
+      toggleLookupCol(parseInt(th.getAttribute('data-col'), 10));
+    });
+
+    el('lookup-cols-reset').addEventListener('click', function () {
+      resetLookupHiddenCols();
+    });
+
+    el('lookup-rows-toggle').addEventListener('click', function () {
+      lookupShowHiddenRows = !lookupShowHiddenRows;
       renderLookup();
     });
 
     el('lookup-tbody').addEventListener('click', function (e) {
+      var hideBtn = e.target.closest('.lookup-hide-btn');
+      if (hideBtn) {
+        var hideDate = hideBtn.getAttribute('data-hide-date');
+        var wasHidden = !!lookupHiddenRows[lookupNoteKey(lookupCode, hideDate)];
+        setLookupRowHidden(lookupCode, hideDate, !wasHidden);
+        renderLookup();
+        return;
+      }
       var swatch = e.target.closest('.lookup-swatch');
       if (swatch) {
         setLookupColor(lookupCode, lookupOpenDate, swatch.getAttribute('data-lookup-color') || null);

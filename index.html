@@ -477,30 +477,35 @@
     <span class="ctrl-label">代號</span>
     <select id="lookup-select"></select>
   </div>
+  <div class="ctrl-row" id="lookup-hidden-hint">
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-cols-reset" hidden></button>
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-rows-toggle" hidden></button>
+  </div>
   <p class="panel-note">
     只列得出「個股查詢清單」(<code>stock_lookup.json</code>)裡已經加過的代號 ——
     這個 App 沒有後端,沒辦法即時查任意一檔。想看新的代號,直接跟 Nomad 說一聲,
     加進清單、下次排程跑完就有資料。開高低收量沿用爆量/暴跌掃描的 30 天基準線,
     融資融券與外資投信來自 FinMind。點一列可以標色、寫筆記,存在瀏覽器裡,
-    「匯出」備份會一起帶走。
+    「匯出」備份會一起帶走。點欄位標題可以暫時隱藏那一欄,列右側的按鈕可以暫時隱藏那一列——
+    這兩個只存在這台瀏覽器,「匯出」不會帶走。
   </p>
   <div class="table-scroll">
     <table class="scan-table" id="lookup-table" hidden>
       <thead>
         <tr>
-          <th>日期</th>
-          <th class="num">開</th>
-          <th class="num">高</th>
-          <th class="num">低</th>
-          <th class="num">收</th>
-          <th class="num">量</th>
-          <th class="num">融資餘額</th>
-          <th class="num">融資增減</th>
-          <th class="num">融券餘額</th>
-          <th class="num">融券增減</th>
-          <th class="num">外資買賣超</th>
-          <th class="num">投信買賣超</th>
-          <th>備註</th>
+          <th data-col="0">日期</th>
+          <th class="num lookup-th" data-col="1" title="點一下暫時隱藏這欄">開</th>
+          <th class="num lookup-th" data-col="2" title="點一下暫時隱藏這欄">高</th>
+          <th class="num lookup-th" data-col="3" title="點一下暫時隱藏這欄">低</th>
+          <th class="num lookup-th" data-col="4" title="點一下暫時隱藏這欄">收</th>
+          <th class="num lookup-th" data-col="5" title="點一下暫時隱藏這欄">量</th>
+          <th class="num lookup-th" data-col="6" title="點一下暫時隱藏這欄">融資餘額</th>
+          <th class="num lookup-th" data-col="7" title="點一下暫時隱藏這欄">融資增減</th>
+          <th class="num lookup-th" data-col="8" title="點一下暫時隱藏這欄">融券餘額</th>
+          <th class="num lookup-th" data-col="9" title="點一下暫時隱藏這欄">融券增減</th>
+          <th class="num lookup-th" data-col="10" title="點一下暫時隱藏這欄">外資買賣超</th>
+          <th class="num lookup-th" data-col="11" title="點一下暫時隱藏這欄">投信買賣超</th>
+          <th class="lookup-th" data-col="12" title="點一下暫時隱藏這欄">備註</th>
         </tr>
       </thead>
       <tbody id="lookup-tbody"></tbody>

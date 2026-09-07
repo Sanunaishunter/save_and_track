@@ -1172,6 +1172,20 @@ input[type="date"] {
 .lookup-row.hl-red    { background: rgba(244, 67, 54, 0.18); }
 .lookup-row.hl-green  { background: rgba(76, 175, 80, 0.18); }
 .lookup-row.hl-purple { background: rgba(171, 71, 188, 0.20); }
+.lookup-row.is-hidden-row { opacity: .45; }
+
+.lookup-th { cursor: pointer; }
+.lookup-th:hover { text-decoration: underline; }
+
+.lookup-hide-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0 4px 0 0;
+  font-size: 12px;
+  line-height: 1;
+  vertical-align: middle;
+}
 
 .lookup-note-cell {
   max-width: 10em;
