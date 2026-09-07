@@ -2246,7 +2246,8 @@
     return map;
   }
 
-  // 產業列順序沿用後端排好的順序(三層 sample_count 加總,多的在前)
+  // 後端排好的原始順序(三層 sample_count 加總,多的在前)——renderTick() 拿到
+  // 之後會再依「大」這個市值級距當前指標值由大到小重排一次,這裡只負責去重取列表。
   function tickIndustries() {
     var seen = {}, out = [];
     var rows = (tickData && tickData.rows) || [];
@@ -2396,7 +2397,14 @@
       ' 檔凍結樣本,序列 ' + ((tickData.days || []).length) + ' 個交易日';
 
     var map = tickGroupMap();
-    var inds = tickIndustries();
+    var inds = tickIndustries().slice().sort(function (a, b) {
+      var ra = map[a + '|大'], rb = map[b + '|大'];
+      var va = ra ? ra[tickMetricKey()] : null;
+      var vb = rb ? rb[tickMetricKey()] : null;
+      if (va === null || va === undefined) return (vb === null || vb === undefined) ? 0 : 1;
+      if (vb === null || vb === undefined) return -1;
+      return vb - va; // 以「大」這個市值級距當基準,由大排到小
+    });
     var html = '';
     for (var i = 0; i < inds.length; i++) {
       var ind = inds[i];
