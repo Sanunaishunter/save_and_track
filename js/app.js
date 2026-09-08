@@ -2181,6 +2181,71 @@
     }
   }
 
+  // ------------------------------------------- 個股查詢的「量縮轉買」參考標記
+  // 討論脈絡(2313):8/12~8/25 量縮、8/26 外資投信同步轉買、量能放大。
+  // 純前端算,吃這台表格既有的 volume/foreign_net/trust_net,不用新資料源。
+  //
+  // 「量縮」的基準是近期高點(trailing 10 天內最高量),不是滾動均量——
+  // 實測過滾動均量(MA5/10/15/20)當基準,2313 這段量縮完全測不出來
+  // (均量本身會跟著量縮一起往下掉,比值不會低到門檻以下)。改跟近期高點比
+  // 才量得出「跟爆量的高點比,縮了多少」這種直覺感受。
+  //
+  // 條件(使用者定案):
+  //   1. 觸發日前 5 個交易日裡,至少 3 天「量/近期高點(前10天)」< 0.6
+  //   2. 觸發日當天外資、投信買賣超同步 > 0
+  //   3. 觸發日量能 ≥ 那 5 天窗口均量的 1.2 倍
+  // 沒有加「隔天不能反轉」的過濾——2313 的 8/20 也符合以上三條,隔天就被
+  // 外資翻臉倒貨,但那天當下確實是真的同步買超+量增,使用者要求兩天都標,
+  // 不假裝這個標記能預測後續走勢。
+  //
+  // ⚠️ 只有 2313 這一次樣本驗證過,沒有回測,純參考,跟 fomo_score.py 的
+  // 真跌/虛跌一樣不是驗證過的訊號。
+  var LOOKUP_BREAKOUT_PEAK_WINDOW = 10;   // 近期高點抓前幾個交易日
+  var LOOKUP_BREAKOUT_LOOKBACK = 5;       // 觸發日往前看幾天判斷量縮
+  var LOOKUP_BREAKOUT_MIN_SHRINK = 3;     // 這幾天裡至少要有幾天量縮
+  var LOOKUP_BREAKOUT_SHRINK_RATIO = 0.6; // 量縮門檻:量/近期高點 要低於這個值
+  var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 觸發日量能要比窗口均量高這個倍數以上
+
+  function computeLookupBreakouts(rowsAsc) {
+    var out = {};
+    var vols = rowsAsc.map(function (r) { return r.volume; });
+
+    function trailingPeak(from, to) {   // [from, to) 的最大值,任何一筆缺值/超出範圍就回傳 null
+      if (from < 0) return null;
+      var mx = null;
+      for (var i = from; i < to; i++) {
+        if (vols[i] == null) return null;
+        if (mx == null || vols[i] > mx) mx = vols[i];
+      }
+      return mx;
+    }
+
+    for (var i = LOOKUP_BREAKOUT_LOOKBACK; i < rowsAsc.length; i++) {
+      var lo = i - LOOKUP_BREAKOUT_LOOKBACK;
+      var shrinkCount = 0;
+      var windowVols = [];
+      var ok = true;
+      for (var j = lo; j < i; j++) {
+        var peak = trailingPeak(j - LOOKUP_BREAKOUT_PEAK_WINDOW, j);
+        if (peak == null || vols[j] == null) { ok = false; break; }
+        windowVols.push(vols[j]);
+        if (vols[j] / peak < LOOKUP_BREAKOUT_SHRINK_RATIO) shrinkCount++;
+      }
+      if (!ok || shrinkCount < LOOKUP_BREAKOUT_MIN_SHRINK) continue;
+
+      var r = rowsAsc[i];
+      if (!(r.foreign_net > 0 && r.trust_net > 0) || vols[i] == null) continue;
+
+      var avgWindow = windowVols.reduce(function (a, b) { return a + b; }, 0) / windowVols.length;
+      if (!avgWindow) continue;
+      var surgeMult = vols[i] / avgWindow;
+      if (surgeMult < LOOKUP_BREAKOUT_SURGE_MULT) continue;
+
+      out[r.date] = { shrinkCount: shrinkCount, lookback: LOOKUP_BREAKOUT_LOOKBACK, surgeMult: surgeMult };
+    }
+    return out;
+  }
+
   function lookupEditorHtml(code, date, entry) {
     var swatches = LOOKUP_COLORS.map(function (c) {
       return '<button type="button" class="lookup-swatch swatch-' + c +
@@ -2242,6 +2307,7 @@
     applyLookupColVisibility(table);
 
     var rec = lookupData.data[lookupCode];
+    var breakoutMap = computeLookupBreakouts(rec.rows || []);
     var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
 
     table.hidden = false;
@@ -2273,8 +2339,15 @@
       var hideBtn = '<button type="button" class="lookup-hide-btn" data-hide-date="' + esc(r.date) +
         '" title="' + (isHidden ? '取消隱藏此列' : '暫時隱藏此列') + '">' +
         (isHidden ? '👁' : '🙈') + '</button>';
+      var breakout = breakoutMap[r.date];
+      var breakoutBadge = breakout
+        ? ' <span class="lookup-breakout-badge" title="近' + breakout.lookback + '天有' +
+          breakout.shrinkCount + '天量縮(&lt;近期高點 60%),當天外資投信同步買超,量能放大' +
+          breakout.surgeMult.toFixed(2) + ' 倍(參考用,只驗證過一次樣本,沒有回測)">' +
+          '🔔量縮轉買</span>'
+        : '';
       var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
-        '<td class="mono">' + esc(r.date) + '</td>' +
+        '<td class="mono">' + esc(r.date) + breakoutBadge + '</td>' +
         '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
         '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
         '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
