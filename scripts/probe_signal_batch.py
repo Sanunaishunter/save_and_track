@@ -13,8 +13,10 @@ TaiwanStockInstitutionalInvestorsBuySell——三個標記都用不到融資融�
 
 三個判斷邏輯是 js/app.js 的 computeLookupShrinkDays / computeLookupBreakouts /
 computeLookupSelloffDays 原封不動搬過來的 Python 版,常數要跟前端保持一致
-(PEAK_WINDOW/LOOKBACK/MIN_SHRINK/SHRINK_RATIO/SURGE_MULT/SELLOFF_DROP_PCT),
-改一邊要記得改另一邊,不然前端表格跟這支批次腳本會對不起來。
+(PEAK_WINDOW/LOOKBACK/MIN_SHRINK/SHRINK_RATIO/SHRINK_DISPLAY_RATIO/
+SURGE_MULT/SELLOFF_DROP_PCT),改一邊要記得改另一邊,不然前端表格跟這支
+批次腳本會對不起來。SHRINK_RATIO 跟 SHRINK_DISPLAY_RATIO 是兩個獨立門檻
+(見下面常數區的說明),不要合併。
 """
 
 import argparse
@@ -30,11 +32,17 @@ from fetch_stock_lookup import build_rows
 
 # ---------------------------------------------------------------- 三個標記的判斷邏輯
 # 跟 js/app.js 的常數必須一致,見上面的檔案說明。
-
+#
+# SHRINK_RATIO(給轉買邏輯用)跟 SHRINK_DISPLAY_RATIO(給單日量縮標記用)
+# 是兩個獨立門檻,不要合併成一個——這支腳本第一次批次測試就是拿來驗證
+# 這件事的:0.6 當單日門檻命中率 64%(244/380 格),太吵;但收緊到 0.4
+# 會讓 2313 的 8/26 轉買訊號消失(前 5 天只剩 2 天壓得到 0.4 以下,湊不滿
+# 3 天)。所以轉買邏輯維持 0.6,單日顯示標記另外收緊到 0.3。
 PEAK_WINDOW = 10
 LOOKBACK = 5
 MIN_SHRINK = 3
-SHRINK_RATIO = 0.6
+SHRINK_RATIO = 0.6            # 🔔量縮轉買:5 天窗口裡數「量縮天數」用這個門檻,別動
+SHRINK_DISPLAY_RATIO = 0.3    # 🔽量縮:純顯示用的單日標記,門檻比轉買嚴格
 SURGE_MULT = 1.2
 SELLOFF_DROP_PCT = -4
 
@@ -60,7 +68,7 @@ def shrink_days(rows):
     ratios = vol_ratios(rows)
     out = {}
     for i, ratio in enumerate(ratios):
-        if ratio is not None and ratio < SHRINK_RATIO:
+        if ratio is not None and ratio < SHRINK_DISPLAY_RATIO:
             out[rows[i]["date"]] = {"ratio": ratio}
     return out
 
@@ -197,7 +205,7 @@ def main():
     for sid, name, d, chg, fn in sorted(selloff_hits, key=lambda x: x[2]):
         print("  %s %-6s %s  跌幅 %.2f%%  外資賣超 %s 股" % (sid, name, d, chg, format(int(abs(fn)), ",")))
 
-    print("\n== 🔽量縮(量/近期高點 < %s)共 %d 筆 ==" % (SHRINK_RATIO, len(shrink_hits)))
+    print("\n== 🔽量縮(量/近期高點 < %s)共 %d 筆 ==" % (SHRINK_DISPLAY_RATIO, len(shrink_hits)))
     for sid, name, d, ratio in sorted(shrink_hits, key=lambda x: x[2]):
         print("  %s %-6s %s  比值 %.2f" % (sid, name, d, ratio))
 

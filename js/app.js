@@ -2203,10 +2203,21 @@
   // 「量縮」單獨也是一個標記(2026-09-08 加入):不等轉買訊號成立,
   // 只要當天量 / 近期高點 < 門檻就標,讓使用者自己盯著量縮期間、自己判斷
   // 什麼時候要進場,不是只有轉買那天才看得到量縮訊號。
+  //
+  // 兩個門檻分開算(2026-09-08 批次測試後拆開):對 FOMO+暴跌FOMO 隨機
+  // 20 檔跑過,0.6 這個門檻命中率高達 64%(244/380 格),當單日標記太吵
+  // ——但轉買訊號(🔔)本身在同一批測試裡只中 1/20,已經夠精準,是靠
+  // 「連續窗口 3/5 天量縮 + 外資投信同步買超 + 量增」組合條件把住的,
+  // 不是靠量縮門檻本身。原本想把 0.6 一起收緊到 0.4,套回 2313 資料
+  // 卻讓 8/26 那個轉買訊號(這整套標記最初的動機)直接消失——8/26 前
+  // 5 天只有 2 天壓得到 0.4 以下,3 天門檻就不成立了。所以轉買邏輯的
+  // 量縮門檻維持 0.6 不動,只有「單日量縮」這個獨立顯示標記另外收緊到
+  // 0.3(批次測試命中率降到 27%,不再是幾乎每天都會出現)。
   var LOOKUP_BREAKOUT_PEAK_WINDOW = 10;   // 近期高點抓前幾個交易日
   var LOOKUP_BREAKOUT_LOOKBACK = 5;       // 轉買觸發日往前看幾天判斷量縮
   var LOOKUP_BREAKOUT_MIN_SHRINK = 3;     // 這幾天裡至少要有幾天量縮,才算轉買觸發
-  var LOOKUP_BREAKOUT_SHRINK_RATIO = 0.6; // 量縮門檻:量/近期高點 要低於這個值
+  var LOOKUP_BREAKOUT_SHRINK_RATIO = 0.6; // 轉買訊號用的量縮門檻,不要動(動了 8/26 會消失)
+  var LOOKUP_SHRINK_DISPLAY_RATIO = 0.3;  // 🔽量縮單日標記用的門檻,比轉買門檻嚴格
   var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 轉買觸發日量能要比窗口均量高這個倍數以上
 
   function lookupVolRatios(rowsAsc) {
@@ -2230,7 +2241,7 @@
     var ratios = lookupVolRatios(rowsAsc);
     var out = {};
     ratios.forEach(function (ratio, i) {
-      if (ratio != null && ratio < LOOKUP_BREAKOUT_SHRINK_RATIO) {
+      if (ratio != null && ratio < LOOKUP_SHRINK_DISPLAY_RATIO) {
         out[rowsAsc[i].date] = { ratio: ratio, peakWindow: LOOKUP_BREAKOUT_PEAK_WINDOW };
       }
     });
