@@ -2267,6 +2267,26 @@
     return out;
   }
 
+  // 外資出貨下殺標記(2026-09-08 加入,跟量縮/量縮轉買同一批,純前端)。
+  // 討論脈絡:2313 7/30 當天跌 6.95%、外資賣超。跟 7/29 對照才看得出重點
+  // 不是「賣超金額大小」——7/29 也跌得很重(-6.30%)但外資是買超(接刀),
+  // 7/30 外資賣超金額(-202 萬)其實是抓到的三天裡最小的一筆,不是賣最多。
+  // 所以規則只看方向(當天賣超)配大跌幅,不設賣超金額門檻。
+  var LOOKUP_SELLOFF_DROP_PCT = -4;   // 跌幅門檻(%),(close-open)/open 要低於這個值
+
+  function computeLookupSelloffDays(rowsAsc) {
+    var out = {};
+    rowsAsc.forEach(function (r) {
+      if (r.open == null || r.close == null || r.foreign_net == null) return;
+      if (r.foreign_net >= 0) return;
+      var chgPct = (r.close - r.open) / r.open * 100;
+      if (chgPct <= LOOKUP_SELLOFF_DROP_PCT) {
+        out[r.date] = { chgPct: chgPct, foreignNet: r.foreign_net };
+      }
+    });
+    return out;
+  }
+
   function lookupEditorHtml(code, date, entry) {
     var swatches = LOOKUP_COLORS.map(function (c) {
       return '<button type="button" class="lookup-swatch swatch-' + c +
@@ -2330,6 +2350,7 @@
     var rec = lookupData.data[lookupCode];
     var breakoutMap = computeLookupBreakouts(rec.rows || []);
     var shrinkMap = computeLookupShrinkDays(rec.rows || []);
+    var selloffMap = computeLookupSelloffDays(rec.rows || []);
     var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
 
     table.hidden = false;
@@ -2374,8 +2395,14 @@
           '天內最高量)= ' + (shrink.ratio * 100).toFixed(0) +
           '%,量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
         : '';
+      var selloff = selloffMap[r.date];
+      var selloffBadge = selloff
+        ? ' <span class="lookup-selloff-badge" title="當天跌幅 ' + selloff.chgPct.toFixed(2) +
+          '%,外資賣超 ' + fmtInt(Math.abs(Math.round(selloff.foreignNet))) +
+          ' 股(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
+        : '';
       var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
-        '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + '</td>' +
+        '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + '</td>' +
         '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
         '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
         '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +

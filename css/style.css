@@ -1178,7 +1178,8 @@ input[type="date"] {
 .lookup-th:hover { text-decoration: underline; }
 
 .lookup-breakout-badge,
-.lookup-shrink-badge {
+.lookup-shrink-badge,
+.lookup-selloff-badge {
   display: inline-block;
   margin-left: 4px;
   padding: 1px 6px;
@@ -1194,6 +1195,10 @@ input[type="date"] {
 .lookup-shrink-badge {
   background: rgba(120, 144, 255, 0.16);
   color: #9db2ff;
+}
+.lookup-selloff-badge {
+  background: rgba(38, 166, 91, 0.18);
+  color: var(--down);
 }
 
 .lookup-hide-btn {
