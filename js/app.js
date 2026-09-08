@@ -1407,69 +1407,6 @@
       });
   }
 
-  // ---------------------------------------------------------- 定期定額統計
-
-  var DCA_URL = 'data/dca-latest.json';
-  var dcaLoaded = false;
-
-  function renderDca(res) {
-    var meta = el('dca-meta');
-    var tbody = el('dca-tbody');
-
-    if (res.error) {
-      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
-      tbody.innerHTML = '';
-      el('dca-table').hidden = true;
-      return;
-    }
-
-    el('dca-table').hidden = false;
-    meta.textContent = 'TWSE 定期定額交易戶數統計排行月報表 · 抓取於 ' + esc(res.fetched_date) +
-      '(來源沒有月份欄位,不代表資料所屬月份) · 前 ' + fmtInt(res.count || 0) + ' 名';
-
-    var rows = res.rows || [];
-    if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = rows.map(function (r) {
-      return '<tr>' +
-        '<td class="num mono">' + fmtInt(r.rank || 0) + '</td>' +
-        '<td>' + esc(r.stock_code) + ' ' + esc(r.stock_name || '') + '</td>' +
-        '<td class="num mono">' + fmtInt(r.stock_accounts || 0) + '</td>' +
-        '<td>' + esc(r.etf_code) + ' ' + esc(r.etf_name || '') + '</td>' +
-        '<td class="num mono">' + fmtInt(r.etf_accounts || 0) + '</td>' +
-      '</tr>';
-    }).join('');
-  }
-
-  function loadDca(force) {
-    if (dcaLoaded && !force) return;
-    var meta = el('dca-meta');
-    meta.textContent = '載入中…';
-
-    if (location.protocol === 'file:') {
-      renderDca({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
-                         '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
-      return;
-    }
-
-    fetch(DCA_URL, { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        dcaLoaded = true;
-        renderDca(data);
-      })
-      .catch(function (e) {
-        renderDca({ error: '讀不到定期定額統計(' + (e.message || e) + ')。' +
-                           '每日排程尚未跑過,或檔案還沒產生。' });
-      });
-  }
-
   // ---------------------------------------------------------- 籌碼/風險
 
   var RISK_URL = 'data/risk-latest.json';
@@ -2398,7 +2335,6 @@
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
     el('themes-wrap').hidden = v !== 'themes';
-    el('dca-wrap').hidden = v !== 'dca';
     el('risk-wrap').hidden = v !== 'risk';
     el('signals-wrap').hidden = v !== 'signals';
     el('lookup-wrap').hidden = v !== 'lookup';
@@ -2412,7 +2348,6 @@
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
     if (v === 'themes') loadThemes(false);
-    if (v === 'dca') loadDca(false);
     if (v === 'risk') loadRisk(false);
     if (v === 'signals') loadSignals(false);
     if (v === 'lookup') loadLookup(false);
@@ -2420,7 +2355,7 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'dca', 'risk', 'signals', 'lookup'];
+  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');

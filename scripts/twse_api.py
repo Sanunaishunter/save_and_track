@@ -287,42 +287,6 @@ def company_info():
     return out
 
 
-# ---------------------------------------------------------------- 定期定額統計
-
-DCA_RANK_URL = "https://openapi.twse.com.tw/v1/ETFReport/ETFRank"
-
-
-def dca_rank():
-    """
-    定期定額交易戶數統計排行月報表,實測 20 筆,個股/ETF 排行並列。
-
-    ⚠️ 回應本身沒有月份欄位,只知道是 TWSE 網站當下公布的最新一期 ——
-    呼叫端要自己記錄抓取日期,不能當成「這個月的數字」。
-
-    回傳 [{rank, stock_code, stock_name, stock_accounts,
-           etf_code, etf_name, etf_accounts}, ...]。
-    """
-    data = _get_json(DCA_RANK_URL)
-    if not isinstance(data, list) or not data:
-        raise TWSEError("ETFRank 回傳空資料")
-
-    out = []
-    for r in data:
-        rank = _num(r.get("No"))
-        stock_acc = _num(r.get("STOCKsNumberofTradingAccounts"))
-        etf_acc = _num(r.get("ETFsNumberofTradingAccounts"))
-        out.append({
-            "rank": None if rank is None else int(rank),
-            "stock_code": str(r.get("STOCKsSecurityCode") or "").strip(),
-            "stock_name": str(r.get("STOCKsName") or "").strip(),
-            "stock_accounts": None if stock_acc is None else int(stock_acc),
-            "etf_code": str(r.get("ETFsSecurityCode") or "").strip(),
-            "etf_name": str(r.get("ETFsName") or "").strip(),
-            "etf_accounts": None if etf_acc is None else int(etf_acc),
-        })
-    return out
-
-
 # ---------------------------------------------------------------- 大盤成交資訊
 
 MARKET_SUMMARY_URL = "https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK"
