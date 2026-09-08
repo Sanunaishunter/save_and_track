@@ -1,0 +1,31 @@
+name: 測試 量縮系列標記批次(一次性,用完即刪)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: '隨機抽幾檔(從 FOMO+暴跌FOMO 候選池)'
+        required: false
+        default: '20'
+      seed:
+        description: '亂數種子(留空 = 每次不同)'
+        required: false
+        default: ''
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 批次測試三個標記
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/probe_signal_batch.py \
+            --limit "${{ github.event.inputs.limit }}" \
+            --seed "${{ github.event.inputs.seed }}"
