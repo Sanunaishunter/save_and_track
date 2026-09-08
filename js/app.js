@@ -2182,40 +2182,39 @@
   }
 
   // ------------------------------------------- 個股查詢的「量縮轉買」參考標記
-  // 討論脈絡(2313):8/12~8/25 量縮、8/26 外資投信同步轉買、量能放大。
-  // 純前端算,吃這台表格既有的 volume/foreign_net/trust_net,不用新資料源。
+  // 討論脈絡(2313):使用者自己手算的方法是「量縮至少 10 天,題材一到位
+  // 就會往上一波」——不是等單日觸發,是先確認蹲了夠久的量縮,再等進場的
+  // 那一天。8/12~8/25(10 個交易日)裡有 8 天量縮,8/26 外資投信同步
+  // 轉買、量能放大,就是這個方法抓到的真實案例。純前端算,吃這台表格
+  // 既有的 volume/foreign_net/trust_net,不用新資料源。
   //
   // 「量縮」的基準是近期高點(trailing 10 天內最高量),不是滾動均量——
   // 實測過滾動均量(MA5/10/15/20)當基準,2313 這段量縮完全測不出來
   // (均量本身會跟著量縮一起往下掉,比值不會低到門檻以下)。改跟近期高點比
   // 才量得出「跟爆量的高點比,縮了多少」這種直覺感受。
   //
-  // 條件(使用者定案):
-  //   1. 觸發日前 5 個交易日裡,至少 3 天「量/近期高點(前10天)」< 0.6
+  // 條件(照使用者手算的方法定案,2026-09-08 從 5 天窗口改成 10 天):
+  //   1. 觸發日前 10 個交易日裡,至少 8 天「量/近期高點(前10天)」< 0.6
   //   2. 觸發日當天外資、投信買賣超同步 > 0
-  //   3. 觸發日量能 ≥ 那 5 天窗口均量的 1.2 倍
-  // 沒有加「隔天不能反轉」的過濾——2313 的 8/20 也符合以上三條,隔天就被
-  // 外資翻臉倒貨,但那天當下確實是真的同步買超+量增,使用者要求兩天都標,
-  // 不假裝這個標記能預測後續走勢。
+  //   3. 觸發日量能 ≥ 那 10 天窗口均量的 1.2 倍
+  // 原本窗口只抓 5 天、門檻 3 天,套 2313 資料會多抓到一個 8/20 的假訊號
+  // (符合條件但隔天就被外資翻臉倒貨)。改成 10 天窗口、8 天門檻之後
+  // 8/20 自然被濾掉、只剩 8/26 這一天——不是額外加「隔天不能反轉」的
+  // 過濾規則,是窗口拉長到跟使用者手算的方法一致之後自然的結果。
   //
   // ⚠️ 只有 2313 這一次樣本驗證過,沒有回測,純參考,跟 fomo_score.py 的
   // 真跌/虛跌一樣不是驗證過的訊號。
+  //
   // 「量縮」單獨也是一個標記(2026-09-08 加入):不等轉買訊號成立,
   // 只要當天量 / 近期高點 < 門檻就標,讓使用者自己盯著量縮期間、自己判斷
-  // 什麼時候要進場,不是只有轉買那天才看得到量縮訊號。
-  //
-  // 兩個門檻分開算(2026-09-08 批次測試後拆開):對 FOMO+暴跌FOMO 隨機
-  // 20 檔跑過,0.6 這個門檻命中率高達 64%(244/380 格),當單日標記太吵
-  // ——但轉買訊號(🔔)本身在同一批測試裡只中 1/20,已經夠精準,是靠
-  // 「連續窗口 3/5 天量縮 + 外資投信同步買超 + 量增」組合條件把住的,
-  // 不是靠量縮門檻本身。原本想把 0.6 一起收緊到 0.4,套回 2313 資料
-  // 卻讓 8/26 那個轉買訊號(這整套標記最初的動機)直接消失——8/26 前
-  // 5 天只有 2 天壓得到 0.4 以下,3 天門檻就不成立了。所以轉買邏輯的
-  // 量縮門檻維持 0.6 不動,只有「單日量縮」這個獨立顯示標記另外收緊到
-  // 0.3(批次測試命中率降到 27%,不再是幾乎每天都會出現)。
+  // 什麼時候要進場,不是只有轉買那天才看得到量縮訊號。這個門檻(0.3)
+  // 跟轉買邏輯用來算「窗口裡幾天量縮」的門檻(0.6)是兩個獨立常數,不要
+  // 合併——對 FOMO+暴跌FOMO 隨機 20 檔批次測試過,0.6 當單日標記命中率
+  // 高達 64%(244/380 格),太吵,所以單日顯示標記另外收緊到 0.3
+  // (命中率降到 27%);轉買邏輯的 0.6 不能動,動了會讓 8/26 那個訊號消失。
   var LOOKUP_BREAKOUT_PEAK_WINDOW = 10;   // 近期高點抓前幾個交易日
-  var LOOKUP_BREAKOUT_LOOKBACK = 5;       // 轉買觸發日往前看幾天判斷量縮
-  var LOOKUP_BREAKOUT_MIN_SHRINK = 3;     // 這幾天裡至少要有幾天量縮,才算轉買觸發
+  var LOOKUP_BREAKOUT_LOOKBACK = 10;      // 轉買觸發日往前看幾天判斷量縮(= 使用者手算的「至少10天」)
+  var LOOKUP_BREAKOUT_MIN_SHRINK = 8;     // 這幾天裡至少要有幾天量縮,才算轉買觸發
   var LOOKUP_BREAKOUT_SHRINK_RATIO = 0.6; // 轉買訊號用的量縮門檻,不要動(動了 8/26 會消失)
   var LOOKUP_SHRINK_DISPLAY_RATIO = 0.3;  // 🔽量縮單日標記用的門檻,比轉買門檻嚴格
   var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 轉買觸發日量能要比窗口均量高這個倍數以上
@@ -2276,6 +2275,32 @@
       out[r.date] = { shrinkCount: shrinkCount, lookback: LOOKUP_BREAKOUT_LOOKBACK, surgeMult: surgeMult };
     }
     return out;
+  }
+
+  // 「目前是不是蹲在量縮蓄勢裡,還沒等到轉買」(2026-09-08 加入)。
+  // 用跟 computeLookupBreakouts 完全一樣的窗口/門檻,只是不要求「今天」
+  // 有外資投信同步買超+量增——只看「最新一天之前的 10 個交易日裡,
+  // 量縮天數夠不夠」,回答「這檔現在算不算蹲好了,可以開始盯進場」。
+  function computeLookupShrinkZone(rowsAsc) {
+    var vols = rowsAsc.map(function (r) { return r.volume; });
+    var ratios = lookupVolRatios(rowsAsc);
+    var i = rowsAsc.length - 1;
+    if (i < LOOKUP_BREAKOUT_LOOKBACK) return null;
+
+    var lo = i - LOOKUP_BREAKOUT_LOOKBACK;
+    var shrinkCount = 0;
+    for (var j = lo; j < i; j++) {
+      if (ratios[j] == null) return null;
+      if (ratios[j] < LOOKUP_BREAKOUT_SHRINK_RATIO) shrinkCount++;
+    }
+    if (shrinkCount < LOOKUP_BREAKOUT_MIN_SHRINK) return null;
+
+    return {
+      date: rowsAsc[i].date,
+      shrinkCount: shrinkCount,
+      lookback: LOOKUP_BREAKOUT_LOOKBACK,
+      alreadyTriggered: !!(rowsAsc[i].foreign_net > 0 && rowsAsc[i].trust_net > 0)
+    };
   }
 
   // 外資出貨下殺標記(2026-09-08 加入,跟量縮/量縮轉買同一批,純前端)。
@@ -2353,8 +2378,6 @@
     var range = lookupData.history_range || {};
     var failNote = (lookupData.failures || []).length
       ? '、抓失敗 ' + lookupData.failures.length + ' 檔' : '';
-    meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-      '(' + okCodes.length + ' 檔可查' + failNote + ')';
 
     applyLookupColVisibility(table);
 
@@ -2362,6 +2385,15 @@
     var breakoutMap = computeLookupBreakouts(rec.rows || []);
     var shrinkMap = computeLookupShrinkDays(rec.rows || []);
     var selloffMap = computeLookupSelloffDays(rec.rows || []);
+    var shrinkZone = computeLookupShrinkZone(rec.rows || []);
+
+    var zoneNote = '';
+    if (shrinkZone && !shrinkZone.alreadyTriggered) {
+      zoneNote = '  ·  🕐 目前蹲在量縮蓄勢中(近' + shrinkZone.lookback + '天有' +
+        shrinkZone.shrinkCount + '天量縮),還沒等到轉買訊號';
+    }
+    meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
+      '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote;
     var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
 
     table.hidden = false;
