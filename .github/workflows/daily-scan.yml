@@ -95,6 +95,16 @@ jobs:
           FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
         run: python scripts/fetch_stock_lookup.py
 
+      # 爆量個股查詢:跟上面同一支腳本,只是換一份清單(stock_lookup_scan.json,
+      # 從爆量掃描候選隨機抽的 20 檔)跟輸出檔,前端另開一個分頁顯示。
+      - name: 更新爆量個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_stock_lookup.py \
+            --list-file stock_lookup_scan.json \
+            --out-file data/stock-lookup-scan-latest.json
+
       - name: 計算產業流向
         run: |
           python scripts/compute_tick_flow.py \

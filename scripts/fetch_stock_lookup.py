@@ -24,8 +24,13 @@ compute_fomo.py 驗證過,直接沿用同一個 fm.request() 呼叫方式。
 表格天數受 data/history 的保留天數(KEEP_DAYS,目前 30 天)限制,
 融資融券/外資投信抓的日曆天window比這個寬,合併後只留 data/history
 涵蓋到的交易日,確保每一列的開高低收量欄位都不是空的。
+
+前端有兩個分頁在用這支腳本的輸出(FOMO個股查詢/爆量個股查詢),
+清單跟輸出檔各自獨立,靠 --list-file / --out-file 參數指定,
+預設值維持原本的 stock_lookup.json → stock-lookup-latest.json 不變。
 """
 
+import argparse
 import datetime as dt
 import os
 import sys
@@ -35,8 +40,8 @@ import common
 import finmind_api as fm
 from compute_scan import load_day
 
-STOCK_LOOKUP_FILE = os.path.join(common.ROOT, "stock_lookup.json")
-LOOKUP_LATEST = os.path.join(common.DATA_DIR, "stock-lookup-latest.json")
+DEFAULT_STOCK_LOOKUP_FILE = os.path.join(common.ROOT, "stock_lookup.json")
+DEFAULT_LOOKUP_LATEST = os.path.join(common.DATA_DIR, "stock-lookup-latest.json")
 
 DATASETS = ["TaiwanStockMarginPurchaseShortSale", "TaiwanStockInstitutionalInvestorsBuySell"]
 LOOKBACK_CALENDAR_DAYS = 60  # data/history 只保留 30 個交易日,60 個日曆天當緩衝綽綽有餘
@@ -46,10 +51,10 @@ def taipei_today():
     return (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=8)).date()
 
 
-def load_codes():
-    codes = common.read_json(STOCK_LOOKUP_FILE)
+def load_codes(list_file):
+    codes = common.read_json(list_file)
     if not isinstance(codes, list) or not codes:
-        raise SystemExit("錯誤:找不到 stock_lookup.json 或格式不是非空陣列")
+        raise SystemExit("錯誤:找不到 %s 或格式不是非空陣列" % list_file)
     out = []
     for c in codes:
         c = str(c).strip()
@@ -140,8 +145,18 @@ def build_rows(stock_id, history_dates, margin_rows, inst_rows):
     return rows
 
 
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--list-file", default=DEFAULT_STOCK_LOOKUP_FILE,
+                    help="代號清單 JSON(預設 stock_lookup.json)")
+    p.add_argument("--out-file", default=DEFAULT_LOOKUP_LATEST,
+                    help="輸出檔路徑(預設 data/stock-lookup-latest.json)")
+    return p.parse_args()
+
+
 def main():
-    codes = load_codes()
+    args = parse_args()
+    codes = load_codes(args.list_file)
     history_dates = common.history_dates()
     if not history_dates:
         print("錯誤:data/history 沒有任何資料,請先跑 fetch_prices.py", file=sys.stderr)
@@ -208,7 +223,7 @@ def main():
         "failures": failures,
         "data": data,
     }
-    common.write_json(LOOKUP_LATEST, result)
+    common.write_json(args.out_file, result)
 
     print("\n== 完成:%d 檔、失敗 %d ==" % (len(data), len(failures)))
     return 0

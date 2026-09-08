@@ -26,7 +26,8 @@
 | `market-grid-latest.json` | 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測,放在籌碼/風險分頁 |
 | `fx-futures-latest.json` | 匯率(央行)+ 台指期貨三大法人未平倉(FinMind),放在籌碼/風險分頁 |
 | `themes.json` | 題材分類清單,**手動維護,不是排程產出**,由 Hugo 判斷資料後請 Claude Code 直接編輯這份檔案 |
-| `stock-lookup-latest.json` | 個股查詢:清單裡每檔的逐日開高低收量 + 融資融券 + 外資投信,前端讀這支。只留最新一份,**沒有每日存查** |
+| `stock-lookup-latest.json` | FOMO個股查詢:清單裡每檔的逐日開高低收量 + 融資融券 + 外資投信,前端讀這支。只留最新一份,**沒有每日存查** |
+| `stock-lookup-scan-latest.json` | 爆量個股查詢:結構跟上面那份一模一樣,只是清單來源不同(見下)。只留最新一份,**沒有每日存查** |
 
 資料來源全部是 TWSE,免 token、免額度:
 
@@ -131,13 +132,31 @@ Hugo 跟 Claude Code 討論後定案的邏輯,寫在 `fomo_score.py` 的
 
 ---
 
-## 個股查詢(2026-09-07 加入)
+## 個股查詢(2026-09-07 加入,2026-09-08 拆成兩個分頁)
 
 跟爆量/暴跌/FOMO/暴跌FOMO 平行但獨立,同一個 workflow 裡最後執行
 (`fetch_stock_lookup.py`)。跟 FOMO 用的 `watchlist.json` 一樣是
-**手動維護的代號清單**(repo 根目錄的 `stock_lookup.json`)——這個
-App 沒有後端,沒辦法讓使用者在前端即時查任意一檔,只能「先把想深入
-看的代號加進清單,下次排程或手動觸發 Actions 之後才有資料」。
+**手動維護的代號清單**——這個 App 沒有後端,沒辦法讓使用者在前端即時
+查任意一檔,只能「先把想深入看的代號加進清單,下次排程或手動觸發
+Actions 之後才有資料」。
+
+**前端分兩個分頁,清單各自獨立、表格/標記邏輯完全相同:**
+
+| 分頁 | 清單(repo 根目錄) | 輸出 |
+| --- | --- | --- |
+| FOMO個股查詢 | `stock_lookup.json` | `data/stock-lookup-latest.json` |
+| 爆量個股查詢 | `stock_lookup_scan.json` | `data/stock-lookup-scan-latest.json` |
+
+`stock_lookup.json` 最早是手動加 2313 開始的,後來加了一批從 FOMO/暴跌FOMO
+候選池批次測試過的股票(見下面「量縮/量縮轉買」章節)。`stock_lookup_scan.json`
+是 2026-09-08 從當天 `scan-latest.json`(爆量掃描候選,34 檔)隨機抽 20 檔
+建的初始清單,同樣是手動維護,不會每天重抽——想換就直接改這個檔案。
+
+`fetch_stock_lookup.py` 現在吃 `--list-file`/`--out-file` 兩個參數決定讀
+哪份清單、寫到哪個輸出檔,`daily-scan.yml` 裡對兩份清單各跑一次(共用
+同一支腳本、同一組欄位驗證)。`js/app.js` 用 `createLookupPanel(idPrefix, url)`
+工廠函式生兩個獨立的分頁實例(閉包各自持有 loaded/data/code/openDate 等
+狀態),表格渲染、量縮系列標記、標色筆記全部共用同一套程式碼,不重複。
 
 每檔股票組一張最近 N 個交易日(受 `data/history` 的 `KEEP_DAYS` 限制,
 目前 30 天)的逐日大表格:

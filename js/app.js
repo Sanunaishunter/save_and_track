@@ -2046,11 +2046,8 @@
   // 開高低收量沿用 data/history,融資融券/外資投信來自 FinMind,
   // 見 scripts/fetch_stock_lookup.py。
 
-  var LOOKUP_URL = 'data/stock-lookup-latest.json';
-  var lookupLoaded = false;
-  var lookupData = null;
-  var lookupCode = null;
-  var lookupOpenDate = null;   // 目前展開中的筆記編輯列(日期字串)
+  // 兩個分頁(FOMO個股查詢 / 爆量個股查詢)共用同一套邏輯,靠 createLookupPanel()
+  // 用閉包各自持有 loaded/data/code/openDate 等狀態,差別只在 id 前綴跟資料來源網址。
 
   function lookupNum(v, digits) {
     if (v == null) return '—';
@@ -2122,9 +2119,8 @@
   // ------------------------------------------- 個股查詢的欄/列暫時隱藏
   // 跟螢光筆標色一樣存在 localStorage,但這是「暫時不看」的檢視偏好,不是資料,
   // 所以不放進「匯出」備份 —— 換一台瀏覽器或清快取,表格會自然恢復全部顯示。
+  // 每個分頁(id 前綴)各自存一份,互不影響 —— createLookupPanel() 裡用。
 
-  var LOOKUP_HIDDEN_COLS_KEY = 'stock_pipeline_lookup_hidden_cols';
-  var LOOKUP_HIDDEN_ROWS_KEY = 'stock_pipeline_lookup_hidden_rows';
   var LOOKUP_COL_COUNT = 13;
 
   function loadLookupHiddenMap(key) {
@@ -2142,55 +2138,6 @@
       window.localStorage.setItem(key, JSON.stringify(map));
     } catch (e) {
       toast(label + '存不進瀏覽器儲存空間:' + (e.message || e), 'err');
-    }
-  }
-
-  var lookupHiddenCols = loadLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY);   // { colIndex: true },所有代號共用
-  var lookupHiddenRows = loadLookupHiddenMap(LOOKUP_HIDDEN_ROWS_KEY);   // { "代號|日期": true }
-  var lookupShowHiddenRows = false;   // 展開已隱藏列的檢視開關,切換代號時重置,不落地儲存
-
-  function lookupVisibleColCount() {
-    var n = LOOKUP_COL_COUNT;
-    for (var k in lookupHiddenCols) { if (lookupHiddenCols[k]) n--; }
-    return n;
-  }
-
-  function toggleLookupCol(idx) {
-    if (idx === 0) return;   // 日期欄是列的身分識別,不給隱藏
-    if (lookupHiddenCols[idx]) delete lookupHiddenCols[idx]; else lookupHiddenCols[idx] = true;
-    saveLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY, lookupHiddenCols, '欄位顯示設定');
-    renderLookup();
-  }
-
-  function resetLookupHiddenCols() {
-    lookupHiddenCols = {};
-    saveLookupHiddenMap(LOOKUP_HIDDEN_COLS_KEY, lookupHiddenCols, '欄位顯示設定');
-    renderLookup();
-  }
-
-  function setLookupRowHidden(code, date, hidden) {
-    var key = lookupNoteKey(code, date);
-    if (hidden) lookupHiddenRows[key] = true; else delete lookupHiddenRows[key];
-    saveLookupHiddenMap(LOOKUP_HIDDEN_ROWS_KEY, lookupHiddenRows, '列顯示設定');
-  }
-
-  function colHiddenAttr(idx) { return lookupHiddenCols[idx] ? ' hidden' : ''; }
-
-  function applyLookupColVisibility(table) {
-    Array.prototype.forEach.call(table.querySelectorAll('th[data-col]'), function (th) {
-      th.hidden = !!lookupHiddenCols[th.getAttribute('data-col')];
-    });
-    var hiddenCount = LOOKUP_COL_COUNT - lookupVisibleColCount();
-    var resetBtn = el('lookup-cols-reset');
-    resetBtn.hidden = hiddenCount <= 0;
-    if (hiddenCount > 0) resetBtn.textContent = '顯示已隱藏 ' + hiddenCount + ' 欄';
-  }
-
-  function updateLookupRowHint(hiddenCount) {
-    var toggleBtn = el('lookup-rows-toggle');
-    toggleBtn.hidden = hiddenCount <= 0;
-    if (hiddenCount > 0) {
-      toggleBtn.textContent = (lookupShowHiddenRows ? '收起已隱藏 ' : '顯示已隱藏 ') + hiddenCount + ' 列';
     }
   }
 
@@ -2367,179 +2314,318 @@
     return out;
   }
 
-  function lookupEditorHtml(code, date, entry) {
-    var swatches = LOOKUP_COLORS.map(function (c) {
-      return '<button type="button" class="lookup-swatch swatch-' + c +
-        (entry.color === c ? ' is-active' : '') + '" data-lookup-color="' + c + '"></button>';
-    }).join('') +
-      '<button type="button" class="lookup-swatch swatch-clear" data-lookup-color="">✕</button>';
+  // 個股查詢分頁工廠:idPrefix 決定 DOM id('lookup' / 'lookup-scan'),
+  // url 是各自的資料來源。標色/筆記(loadLookupNotesMap 那組)是照「代號|日期」存,
+  // 兩個分頁共用同一份沒關係——講的是同一檔股票。欄/列隱藏偏好各自存一份
+  // (localStorage key 用 idPrefix 隔開),互不影響。
+  function createLookupPanel(idPrefix, url) {
+    var hiddenColsKey = 'stock_pipeline_' + idPrefix.replace(/-/g, '_') + '_hidden_cols';
+    var hiddenRowsKey = 'stock_pipeline_' + idPrefix.replace(/-/g, '_') + '_hidden_rows';
 
-    return '<tr class="lookup-editor-row"><td colspan="' + lookupVisibleColCount() + '"><div class="lookup-editor">' +
-      '<div class="lookup-editor-head">' + esc(date) + ' 標色與筆記</div>' +
-      '<div class="lookup-swatches">' + swatches + '</div>' +
-      '<label class="field"><span class="field-label">筆記</span>' +
-        '<textarea id="lookup-note-input" rows="3" placeholder="例如:融資單日暴增,疑似作帳">' +
-          esc(entry.note || '') + '</textarea></label>' +
-      '<button type="button" class="btn btn-block btn-outline" id="lookup-note-save">儲存筆記</button>' +
-    '</div></td></tr>';
-  }
+    var loaded = false;
+    var data = null;
+    var code = null;
+    var openDate = null;        // 目前展開中的筆記編輯列(日期字串)
+    var showHiddenRows = false; // 展開已隱藏列的檢視開關,切換代號時重置,不落地儲存
+    var hiddenCols = loadLookupHiddenMap(hiddenColsKey);   // { colIndex: true },這個分頁所有代號共用
+    var hiddenRows = loadLookupHiddenMap(hiddenRowsKey);   // { "代號|日期": true }
 
-  function renderLookup() {
-    var meta = el('lookup-meta');
-    var controls = el('lookup-controls');
-    var select = el('lookup-select');
-    var table = el('lookup-table');
-    var tbody = el('lookup-tbody');
-
-    if (!lookupData || lookupData.error) {
-      meta.innerHTML = lookupData && lookupData.error
-        ? '<span class="warn">' + esc(lookupData.error) + '</span>' : '載入中…';
-      controls.hidden = true;
-      table.hidden = true;
-      return;
+    function visibleColCount() {
+      var n = LOOKUP_COL_COUNT;
+      for (var k in hiddenCols) { if (hiddenCols[k]) n--; }
+      return n;
     }
 
-    var codes = lookupData.codes || [];
-    var okCodes = codes.filter(function (c) { return lookupData.data && lookupData.data[c]; });
-
-    if (!okCodes.length) {
-      meta.innerHTML = '<span class="warn">查詢清單裡的代號都抓不到資料,' +
-        '看 failures 欄位或排程 log。</span>';
-      controls.hidden = true;
-      table.hidden = true;
-      return;
+    function toggleCol(idx) {
+      if (idx === 0) return;   // 日期欄是列的身分識別,不給隱藏
+      if (hiddenCols[idx]) delete hiddenCols[idx]; else hiddenCols[idx] = true;
+      saveLookupHiddenMap(hiddenColsKey, hiddenCols, '欄位顯示設定');
+      render();
     }
 
-    if (!lookupCode || !lookupData.data[lookupCode]) lookupCode = okCodes[0];
-
-    controls.hidden = false;
-    select.innerHTML = okCodes.map(function (c) {
-      var name = lookupData.data[c].stock_name || '';
-      return '<option value="' + esc(c) + '"' + (c === lookupCode ? ' selected' : '') + '>' +
-        esc(c) + ' ' + esc(name) + '</option>';
-    }).join('');
-
-    var range = lookupData.history_range || {};
-    var failNote = (lookupData.failures || []).length
-      ? '、抓失敗 ' + lookupData.failures.length + ' 檔' : '';
-
-    applyLookupColVisibility(table);
-
-    var rec = lookupData.data[lookupCode];
-    var breakoutMap = computeLookupBreakouts(rec.rows || []);
-    var shrinkMap = computeLookupShrinkDays(rec.rows || []);
-    var selloffMap = computeLookupSelloffDays(rec.rows || []);
-    var shrinkZone = computeLookupShrinkZone(rec.rows || []);
-
-    var zoneNote = '';
-    if (shrinkZone && !shrinkZone.alreadyTriggered) {
-      zoneNote = '  ·  🕐 目前蹲在量縮蓄勢中(近' + shrinkZone.lookback + '天有' +
-        shrinkZone.shrinkCount + '天量縮,平均日振幅 ' + shrinkZone.avgRangePct.toFixed(1) +
-        '%),還沒等到轉買訊號';
-    }
-    meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-      '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote;
-    var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
-
-    table.hidden = false;
-    if (!allRows.length) {
-      tbody.innerHTML = '<tr><td colspan="' + lookupVisibleColCount() + '" class="scan-empty">沒有資料</td></tr>';
-      updateLookupRowHint(0);
-      return;
+    function resetHiddenCols() {
+      hiddenCols = {};
+      saveLookupHiddenMap(hiddenColsKey, hiddenCols, '欄位顯示設定');
+      render();
     }
 
-    var notesMap = loadLookupNotesMap();
-    var hiddenRowCount = 0;
-    var rows = [];
-    allRows.forEach(function (r) {
-      var isHidden = !!lookupHiddenRows[lookupNoteKey(lookupCode, r.date)];
-      if (isHidden) hiddenRowCount++;
-      if (!isHidden || lookupShowHiddenRows) rows.push(r);
-    });
-    updateLookupRowHint(hiddenRowCount);
-
-    tbody.innerHTML = rows.map(function (r) {
-      var rowKey = lookupNoteKey(lookupCode, r.date);
-      var entry = notesMap[rowKey] || {};
-      var isHidden = !!lookupHiddenRows[rowKey];
-      var hlCls = entry.color ? ' hl-' + entry.color : '';
-      var hiddenCls = isHidden ? ' is-hidden-row' : '';
-      var noteCell = entry.note
-        ? esc(entry.note.length > 24 ? entry.note.slice(0, 24) + '…' : entry.note)
-        : '<span class="dim">＋</span>';
-      var hideBtn = '<button type="button" class="lookup-hide-btn" data-hide-date="' + esc(r.date) +
-        '" title="' + (isHidden ? '取消隱藏此列' : '暫時隱藏此列') + '">' +
-        (isHidden ? '👁' : '🙈') + '</button>';
-      var breakout = breakoutMap[r.date];
-      var breakoutBadge = breakout
-        ? ' <span class="lookup-breakout-badge" title="近' + breakout.lookback + '天有' +
-          breakout.shrinkCount + '天量縮(&lt;近期高點 60%,平均日振幅 ' +
-          breakout.avgRangePct.toFixed(1) + '%),當天外資投信同步買超,量能放大' +
-          breakout.surgeMult.toFixed(2) + ' 倍(參考用,只驗證過一次樣本,沒有回測)">' +
-          '🔔量縮轉買</span>'
-        : '';
-      var shrink = shrinkMap[r.date];
-      var shrinkBadge = shrink
-        ? ' <span class="lookup-shrink-badge" title="量 / 近期高點(前' + shrink.peakWindow +
-          '天內最高量)= ' + (shrink.ratio * 100).toFixed(0) +
-          '%,量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
-        : '';
-      var selloff = selloffMap[r.date];
-      var selloffBadge = selloff
-        ? ' <span class="lookup-selloff-badge" title="當天跌幅 ' + selloff.chgPct.toFixed(2) +
-          '%,外資賣超 ' + lookupLots(Math.abs(selloff.foreignNet)) +
-          ' 張(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
-        : '';
-      var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
-        '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + '</td>' +
-        '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
-        '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
-        '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
-        '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
-        '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupLots(r.volume) + '</td>' +
-        '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
-        '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
-          (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
-        '<td' + colHiddenAttr(8) + ' class="num mono">' + lookupNum(r.short_balance) + '</td>' +
-        '<td' + colHiddenAttr(9) + ' class="num mono ' + plClass(r.short_change) + '">' +
-          (r.short_change == null ? '—' : signed(r.short_change)) + '</td>' +
-        '<td' + colHiddenAttr(10) + ' class="num mono ' + plClass(r.foreign_net) + '">' +
-          (r.foreign_net == null ? '—' : lookupSignedLots(r.foreign_net)) + '</td>' +
-        '<td' + colHiddenAttr(11) + ' class="num mono ' + plClass(r.trust_net) + '">' +
-          (r.trust_net == null ? '—' : lookupSignedLots(r.trust_net)) + '</td>' +
-        '<td' + colHiddenAttr(12) + ' class="lookup-note-cell">' + hideBtn + noteCell + '</td>' +
-      '</tr>';
-      if (lookupOpenDate === r.date) row += lookupEditorHtml(lookupCode, r.date, entry);
-      return row;
-    }).join('');
-  }
-
-  function loadLookup(force) {
-    if (lookupLoaded && !force) return;
-    el('lookup-meta').textContent = '載入中…';
-
-    if (location.protocol === 'file:') {
-      lookupData = { error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
-                            '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' };
-      renderLookup();
-      return;
+    function isRowHidden(date) {
+      return !!hiddenRows[lookupNoteKey(code, date)];
     }
 
-    fetch(LOOKUP_URL, { cache: 'no-store' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (data) {
-        lookupLoaded = true;
-        lookupData = data;
-        renderLookup();
-      })
-      .catch(function (e) {
-        lookupData = { error: '讀不到個股查詢結果(' + (e.message || e) + ')。' +
-                              '每日排程尚未跑過,或 stock_lookup.json 還沒加代號。' };
-        renderLookup();
+    function setRowHidden(c, date, hidden) {
+      var key = lookupNoteKey(c, date);
+      if (hidden) hiddenRows[key] = true; else delete hiddenRows[key];
+      saveLookupHiddenMap(hiddenRowsKey, hiddenRows, '列顯示設定');
+    }
+
+    function colHiddenAttr(idx) { return hiddenCols[idx] ? ' hidden' : ''; }
+
+    function applyColVisibility(table) {
+      Array.prototype.forEach.call(table.querySelectorAll('th[data-col]'), function (th) {
+        th.hidden = !!hiddenCols[th.getAttribute('data-col')];
       });
+      var hiddenCount = LOOKUP_COL_COUNT - visibleColCount();
+      var resetBtn = el(idPrefix + '-cols-reset');
+      resetBtn.hidden = hiddenCount <= 0;
+      if (hiddenCount > 0) resetBtn.textContent = '顯示已隱藏 ' + hiddenCount + ' 欄';
+    }
+
+    function updateRowHint(hiddenCount) {
+      var toggleBtn = el(idPrefix + '-rows-toggle');
+      toggleBtn.hidden = hiddenCount <= 0;
+      if (hiddenCount > 0) {
+        toggleBtn.textContent = (showHiddenRows ? '收起已隱藏 ' : '顯示已隱藏 ') + hiddenCount + ' 列';
+      }
+    }
+
+    function editorHtml(c, date, entry) {
+      var swatches = LOOKUP_COLORS.map(function (col) {
+        return '<button type="button" class="lookup-swatch swatch-' + col +
+          (entry.color === col ? ' is-active' : '') + '" data-lookup-color="' + col + '"></button>';
+      }).join('') +
+        '<button type="button" class="lookup-swatch swatch-clear" data-lookup-color="">✕</button>';
+
+      return '<tr class="lookup-editor-row"><td colspan="' + visibleColCount() + '"><div class="lookup-editor">' +
+        '<div class="lookup-editor-head">' + esc(date) + ' 標色與筆記</div>' +
+        '<div class="lookup-swatches">' + swatches + '</div>' +
+        '<label class="field"><span class="field-label">筆記</span>' +
+          '<textarea id="' + idPrefix + '-note-input" rows="3" placeholder="例如:融資單日暴增,疑似作帳">' +
+            esc(entry.note || '') + '</textarea></label>' +
+        '<button type="button" class="btn btn-block btn-outline" id="' + idPrefix + '-note-save">儲存筆記</button>' +
+      '</div></td></tr>';
+    }
+
+    function render() {
+      var meta = el(idPrefix + '-meta');
+      var controls = el(idPrefix + '-controls');
+      var select = el(idPrefix + '-select');
+      var table = el(idPrefix + '-table');
+      var tbody = el(idPrefix + '-tbody');
+
+      if (!data || data.error) {
+        meta.innerHTML = data && data.error
+          ? '<span class="warn">' + esc(data.error) + '</span>' : '載入中…';
+        controls.hidden = true;
+        table.hidden = true;
+        return;
+      }
+
+      var codes = data.codes || [];
+      var okCodes = codes.filter(function (c) { return data.data && data.data[c]; });
+
+      if (!okCodes.length) {
+        meta.innerHTML = '<span class="warn">查詢清單裡的代號都抓不到資料,' +
+          '看 failures 欄位或排程 log。</span>';
+        controls.hidden = true;
+        table.hidden = true;
+        return;
+      }
+
+      if (!code || !data.data[code]) code = okCodes[0];
+
+      controls.hidden = false;
+      select.innerHTML = okCodes.map(function (c) {
+        var name = data.data[c].stock_name || '';
+        return '<option value="' + esc(c) + '"' + (c === code ? ' selected' : '') + '>' +
+          esc(c) + ' ' + esc(name) + '</option>';
+      }).join('');
+
+      var range = data.history_range || {};
+      var failNote = (data.failures || []).length
+        ? '、抓失敗 ' + data.failures.length + ' 檔' : '';
+
+      applyColVisibility(table);
+
+      var rec = data.data[code];
+      var breakoutMap = computeLookupBreakouts(rec.rows || []);
+      var shrinkMap = computeLookupShrinkDays(rec.rows || []);
+      var selloffMap = computeLookupSelloffDays(rec.rows || []);
+      var shrinkZone = computeLookupShrinkZone(rec.rows || []);
+
+      var zoneNote = '';
+      if (shrinkZone && !shrinkZone.alreadyTriggered) {
+        zoneNote = '  ·  🕐 目前蹲在量縮蓄勢中(近' + shrinkZone.lookback + '天有' +
+          shrinkZone.shrinkCount + '天量縮,平均日振幅 ' + shrinkZone.avgRangePct.toFixed(1) +
+          '%),還沒等到轉買訊號';
+      }
+      meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
+        '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote;
+      var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
+
+      table.hidden = false;
+      if (!allRows.length) {
+        tbody.innerHTML = '<tr><td colspan="' + visibleColCount() + '" class="scan-empty">沒有資料</td></tr>';
+        updateRowHint(0);
+        return;
+      }
+
+      var notesMap = loadLookupNotesMap();
+      var hiddenRowCount = 0;
+      var rows = [];
+      allRows.forEach(function (r) {
+        var isHidden = isRowHidden(r.date);
+        if (isHidden) hiddenRowCount++;
+        if (!isHidden || showHiddenRows) rows.push(r);
+      });
+      updateRowHint(hiddenRowCount);
+
+      tbody.innerHTML = rows.map(function (r) {
+        var rowKey = lookupNoteKey(code, r.date);
+        var entry = notesMap[rowKey] || {};
+        var isHidden = isRowHidden(r.date);
+        var hlCls = entry.color ? ' hl-' + entry.color : '';
+        var hiddenCls = isHidden ? ' is-hidden-row' : '';
+        var noteCell = entry.note
+          ? esc(entry.note.length > 24 ? entry.note.slice(0, 24) + '…' : entry.note)
+          : '<span class="dim">＋</span>';
+        var hideBtn = '<button type="button" class="lookup-hide-btn" data-hide-date="' + esc(r.date) +
+          '" title="' + (isHidden ? '取消隱藏此列' : '暫時隱藏此列') + '">' +
+          (isHidden ? '👁' : '🙈') + '</button>';
+        var breakout = breakoutMap[r.date];
+        var breakoutBadge = breakout
+          ? ' <span class="lookup-breakout-badge" title="近' + breakout.lookback + '天有' +
+            breakout.shrinkCount + '天量縮(&lt;近期高點 60%,平均日振幅 ' +
+            breakout.avgRangePct.toFixed(1) + '%),當天外資投信同步買超,量能放大' +
+            breakout.surgeMult.toFixed(2) + ' 倍(參考用,只驗證過一次樣本,沒有回測)">' +
+            '🔔量縮轉買</span>'
+          : '';
+        var shrink = shrinkMap[r.date];
+        var shrinkBadge = shrink
+          ? ' <span class="lookup-shrink-badge" title="量 / 近期高點(前' + shrink.peakWindow +
+            '天內最高量)= ' + (shrink.ratio * 100).toFixed(0) +
+            '%,量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
+          : '';
+        var selloff = selloffMap[r.date];
+        var selloffBadge = selloff
+          ? ' <span class="lookup-selloff-badge" title="當天跌幅 ' + selloff.chgPct.toFixed(2) +
+            '%,外資賣超 ' + lookupLots(Math.abs(selloff.foreignNet)) +
+            ' 張(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
+          : '';
+        var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
+          '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + '</td>' +
+          '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
+          '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
+          '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
+          '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
+          '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupLots(r.volume) + '</td>' +
+          '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
+          '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
+            (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
+          '<td' + colHiddenAttr(8) + ' class="num mono">' + lookupNum(r.short_balance) + '</td>' +
+          '<td' + colHiddenAttr(9) + ' class="num mono ' + plClass(r.short_change) + '">' +
+            (r.short_change == null ? '—' : signed(r.short_change)) + '</td>' +
+          '<td' + colHiddenAttr(10) + ' class="num mono ' + plClass(r.foreign_net) + '">' +
+            (r.foreign_net == null ? '—' : lookupSignedLots(r.foreign_net)) + '</td>' +
+          '<td' + colHiddenAttr(11) + ' class="num mono ' + plClass(r.trust_net) + '">' +
+            (r.trust_net == null ? '—' : lookupSignedLots(r.trust_net)) + '</td>' +
+          '<td' + colHiddenAttr(12) + ' class="lookup-note-cell">' + hideBtn + noteCell + '</td>' +
+        '</tr>';
+        if (openDate === r.date) row += editorHtml(code, r.date, entry);
+        return row;
+      }).join('');
+    }
+
+    function load(force) {
+      if (loaded && !force) return;
+      el(idPrefix + '-meta').textContent = '載入中…';
+
+      if (location.protocol === 'file:') {
+        data = { error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
+                        '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' };
+        render();
+        return;
+      }
+
+      fetch(url, { cache: 'no-store' })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (json) {
+          loaded = true;
+          data = json;
+          render();
+        })
+        .catch(function (e) {
+          data = { error: '讀不到查詢結果(' + (e.message || e) + ')。' +
+                          '每日排程尚未跑過,或清單還沒加代號。' };
+          render();
+        });
+    }
+
+    return {
+      idPrefix: idPrefix,
+      load: load,
+      render: render,
+      toggleCol: toggleCol,
+      resetHiddenCols: resetHiddenCols,
+      setRowHidden: setRowHidden,
+      isRowHidden: isRowHidden,
+      getCode: function () { return code; },
+      setCode: function (c) { code = c; },
+      getOpenDate: function () { return openDate; },
+      setOpenDate: function (d) { openDate = d; },
+      resetShowHiddenRows: function () { showHiddenRows = false; },
+      toggleShowHiddenRows: function () { showHiddenRows = !showHiddenRows; }
+    };
+  }
+
+  var lookupPanel = createLookupPanel('lookup', 'data/stock-lookup-latest.json');
+  var lookupScanPanel = createLookupPanel('lookup-scan', 'data/stock-lookup-scan-latest.json');
+
+  function bindLookupPanelEvents(panel) {
+    var prefix = panel.idPrefix;
+
+    el(prefix + '-select').addEventListener('change', function (e) {
+      panel.setCode(e.target.value);
+      panel.setOpenDate(null);
+      panel.resetShowHiddenRows();
+      panel.render();
+    });
+
+    el(prefix + '-table').addEventListener('click', function (e) {
+      var th = e.target.closest('th[data-col]');
+      if (!th) return;
+      panel.toggleCol(parseInt(th.getAttribute('data-col'), 10));
+    });
+
+    el(prefix + '-cols-reset').addEventListener('click', function () {
+      panel.resetHiddenCols();
+    });
+
+    el(prefix + '-rows-toggle').addEventListener('click', function () {
+      panel.toggleShowHiddenRows();
+      panel.render();
+    });
+
+    el(prefix + '-tbody').addEventListener('click', function (e) {
+      var hideBtn = e.target.closest('.lookup-hide-btn');
+      if (hideBtn) {
+        var hideDate = hideBtn.getAttribute('data-hide-date');
+        var wasHidden = panel.isRowHidden(hideDate);
+        panel.setRowHidden(panel.getCode(), hideDate, !wasHidden);
+        panel.render();
+        return;
+      }
+      var swatch = e.target.closest('.lookup-swatch');
+      if (swatch) {
+        setLookupColor(panel.getCode(), panel.getOpenDate(), swatch.getAttribute('data-lookup-color') || null);
+        panel.render();
+        return;
+      }
+      if (e.target.closest('#' + prefix + '-note-save')) {
+        setLookupNote(panel.getCode(), panel.getOpenDate(), el(prefix + '-note-input').value);
+        panel.render();
+        return;
+      }
+      if (e.target.closest('.lookup-editor')) return;   // 點編輯區其他地方(textarea 等)不要觸發收合
+      var tr = e.target.closest('.lookup-row');
+      if (!tr) return;
+      var date = tr.getAttribute('data-lookup-date');
+      panel.setOpenDate(panel.getOpenDate() === date ? null : date);
+      panel.render();
+    });
   }
 
   function switchView(v) {
@@ -2555,6 +2641,7 @@
     el('risk-wrap').hidden = v !== 'risk';
     el('signals-wrap').hidden = v !== 'signals';
     el('lookup-wrap').hidden = v !== 'lookup';
+    el('lookup-scan-wrap').hidden = v !== 'lookup-scan';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -2567,12 +2654,13 @@
     if (v === 'themes') loadThemes(false);
     if (v === 'risk') loadRisk(false);
     if (v === 'signals') loadSignals(false);
-    if (v === 'lookup') loadLookup(false);
+    if (v === 'lookup') lookupPanel.load(false);
+    if (v === 'lookup-scan') lookupScanPanel.load(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup'];
+  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -4496,55 +4584,8 @@
       renderFomo(fomoData);
     });
 
-    el('lookup-select').addEventListener('change', function (e) {
-      lookupCode = e.target.value;
-      lookupOpenDate = null;
-      lookupShowHiddenRows = false;
-      renderLookup();
-    });
-
-    el('lookup-table').addEventListener('click', function (e) {
-      var th = e.target.closest('th[data-col]');
-      if (!th) return;
-      toggleLookupCol(parseInt(th.getAttribute('data-col'), 10));
-    });
-
-    el('lookup-cols-reset').addEventListener('click', function () {
-      resetLookupHiddenCols();
-    });
-
-    el('lookup-rows-toggle').addEventListener('click', function () {
-      lookupShowHiddenRows = !lookupShowHiddenRows;
-      renderLookup();
-    });
-
-    el('lookup-tbody').addEventListener('click', function (e) {
-      var hideBtn = e.target.closest('.lookup-hide-btn');
-      if (hideBtn) {
-        var hideDate = hideBtn.getAttribute('data-hide-date');
-        var wasHidden = !!lookupHiddenRows[lookupNoteKey(lookupCode, hideDate)];
-        setLookupRowHidden(lookupCode, hideDate, !wasHidden);
-        renderLookup();
-        return;
-      }
-      var swatch = e.target.closest('.lookup-swatch');
-      if (swatch) {
-        setLookupColor(lookupCode, lookupOpenDate, swatch.getAttribute('data-lookup-color') || null);
-        renderLookup();
-        return;
-      }
-      if (e.target.closest('#lookup-note-save')) {
-        setLookupNote(lookupCode, lookupOpenDate, el('lookup-note-input').value);
-        renderLookup();
-        return;
-      }
-      if (e.target.closest('.lookup-editor')) return;   // 點編輯區其他地方(textarea 等)不要觸發收合
-      var tr = e.target.closest('.lookup-row');
-      if (!tr) return;
-      var date = tr.getAttribute('data-lookup-date');
-      lookupOpenDate = (lookupOpenDate === date) ? null : date;
-      renderLookup();
-    });
+    bindLookupPanelEvents(lookupPanel);
+    bindLookupPanelEvents(lookupScanPanel);
 
     el('crashfomo-tbody').addEventListener('click', function (e) {
       var qa = e.target.closest('.btn-quickadd');
