@@ -97,11 +97,18 @@ def vol_ratios(rows):
 
 
 def shrink_days(rows):
+    # 2026-09-08 加「有效振幅」門檻,跟 js/app.js 的 computeLookupShrinkDays()
+    # 同步:窗口跟量縮比值同一份(前 PEAK_WINDOW 天,不含當天)。
     ratios = vol_ratios(rows)
     out = {}
     for i, ratio in enumerate(ratios):
-        if ratio is not None and ratio < SHRINK_DISPLAY_RATIO:
-            out[rows[i]["date"]] = {"ratio": ratio}
+        if ratio is None or ratio >= SHRINK_DISPLAY_RATIO:
+            continue
+        lo = i - PEAK_WINDOW
+        avg_range = avg_range_pct(rows, lo, i)
+        if avg_range is None or avg_range < MIN_RANGE_PCT:
+            continue
+        out[rows[i]["date"]] = {"ratio": ratio, "avg_range_pct": avg_range}
     return out
 
 

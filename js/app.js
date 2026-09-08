@@ -2218,12 +2218,19 @@
   }
 
   function computeLookupShrinkDays(rowsAsc) {
+    // 2026-09-08 加「有效振幅」門檻(跟 🔔量縮轉買/🕐蓄勢觀察名單同一套邏輯):
+    // 只看量縮比值會把「量縮但死盤」的股票也標出來,使用者盯著三個分頁發現
+    // 這種標記沒有意義——量縮期間振幅太窄(< 3.5%)代表根本沒有價格發現,
+    // 不值得提醒「這天值得多看一眼」。窗口用跟量縮比值同一份(前 10 天,
+    // 不含當天,跟 lookupVolRatios() 的「近期高點」基準窗口一致)。
     var ratios = lookupVolRatios(rowsAsc);
     var out = {};
     ratios.forEach(function (ratio, i) {
-      if (ratio != null && ratio < LOOKUP_SHRINK_DISPLAY_RATIO) {
-        out[rowsAsc[i].date] = { ratio: ratio, peakWindow: LOOKUP_BREAKOUT_PEAK_WINDOW };
-      }
+      if (ratio == null || ratio >= LOOKUP_SHRINK_DISPLAY_RATIO) return;
+      var lo = i - LOOKUP_BREAKOUT_PEAK_WINDOW;
+      var avgRange = lookupAvgRangePct(rowsAsc, lo, i);
+      if (avgRange == null || avgRange < LOOKUP_MIN_RANGE_PCT) return;
+      out[rowsAsc[i].date] = { ratio: ratio, peakWindow: LOOKUP_BREAKOUT_PEAK_WINDOW, avgRangePct: avgRange };
     });
     return out;
   }
@@ -2494,7 +2501,8 @@
         var shrinkBadge = shrink
           ? ' <span class="lookup-shrink-badge" title="量 / 近期高點(前' + shrink.peakWindow +
             '天內最高量)= ' + (shrink.ratio * 100).toFixed(0) +
-            '%,量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
+            '%,前' + shrink.peakWindow + '天平均日振幅 ' + shrink.avgRangePct.toFixed(1) +
+            '%(排除量縮但沒在動的死盤),量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
           : '';
         var selloff = selloffMap[r.date];
         var selloffBadge = selloff
