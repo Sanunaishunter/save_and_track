@@ -1,0 +1,43 @@
+name: 初始化 爆量個股查詢資料 (一次性,用完可刪)
+
+# 只做 daily-scan.yml 裡新加的那一步,不重跑爆量/暴跌/產業流向/FOMO/暴跌FOMO——
+# 那幾步今天已經跑過、資料已經 commit 在 repo 裡,重跑只會白白重打 FinMind。
+# 這支純粹讓 stock_lookup_scan.json 的 20 檔今天就有資料可看,不用等明天排程。
+# 用完之後 daily-scan.yml 每天都會自動更新,這支就沒用了,可以刪掉。
+
+on:
+  workflow_dispatch:
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 抓爆量個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_stock_lookup.py \
+            --list-file stock_lookup_scan.json \
+            --out-file data/stock-lookup-scan-latest.json
+
+      - name: 提交結果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/stock-lookup-scan-latest.json
+          if git diff --cached --quiet; then
+            echo "沒有新資料,不產生 commit。"
+            exit 0
+          fi
+          git commit -m "初始化爆量個股查詢資料(一次性)"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase origin main || true
+          done
+          exit 1
