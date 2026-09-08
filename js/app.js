@@ -2200,25 +2200,47 @@
   //
   // ⚠️ 只有 2313 這一次樣本驗證過,沒有回測,純參考,跟 fomo_score.py 的
   // 真跌/虛跌一樣不是驗證過的訊號。
+  // 「量縮」單獨也是一個標記(2026-09-08 加入):不等轉買訊號成立,
+  // 只要當天量 / 近期高點 < 門檻就標,讓使用者自己盯著量縮期間、自己判斷
+  // 什麼時候要進場,不是只有轉買那天才看得到量縮訊號。
   var LOOKUP_BREAKOUT_PEAK_WINDOW = 10;   // 近期高點抓前幾個交易日
-  var LOOKUP_BREAKOUT_LOOKBACK = 5;       // 觸發日往前看幾天判斷量縮
-  var LOOKUP_BREAKOUT_MIN_SHRINK = 3;     // 這幾天裡至少要有幾天量縮
+  var LOOKUP_BREAKOUT_LOOKBACK = 5;       // 轉買觸發日往前看幾天判斷量縮
+  var LOOKUP_BREAKOUT_MIN_SHRINK = 3;     // 這幾天裡至少要有幾天量縮,才算轉買觸發
   var LOOKUP_BREAKOUT_SHRINK_RATIO = 0.6; // 量縮門檻:量/近期高點 要低於這個值
-  var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 觸發日量能要比窗口均量高這個倍數以上
+  var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 轉買觸發日量能要比窗口均量高這個倍數以上
+
+  function lookupVolRatios(rowsAsc) {
+    // 每天的量 / 近期高點(前 LOOKUP_BREAKOUT_PEAK_WINDOW 個交易日內最高量),
+    // 基準不足或缺量的日子回傳 null。轉買訊號跟量縮訊號共用同一份比值,
+    // 避免兩邊各算一次卻走不同定義。
+    var vols = rowsAsc.map(function (r) { return r.volume; });
+    return vols.map(function (v, i) {
+      var from = i - LOOKUP_BREAKOUT_PEAK_WINDOW;
+      if (from < 0 || v == null) return null;
+      var peak = null;
+      for (var k = from; k < i; k++) {
+        if (vols[k] == null) return null;
+        if (peak == null || vols[k] > peak) peak = vols[k];
+      }
+      return peak ? v / peak : null;
+    });
+  }
+
+  function computeLookupShrinkDays(rowsAsc) {
+    var ratios = lookupVolRatios(rowsAsc);
+    var out = {};
+    ratios.forEach(function (ratio, i) {
+      if (ratio != null && ratio < LOOKUP_BREAKOUT_SHRINK_RATIO) {
+        out[rowsAsc[i].date] = { ratio: ratio, peakWindow: LOOKUP_BREAKOUT_PEAK_WINDOW };
+      }
+    });
+    return out;
+  }
 
   function computeLookupBreakouts(rowsAsc) {
-    var out = {};
     var vols = rowsAsc.map(function (r) { return r.volume; });
-
-    function trailingPeak(from, to) {   // [from, to) 的最大值,任何一筆缺值/超出範圍就回傳 null
-      if (from < 0) return null;
-      var mx = null;
-      for (var i = from; i < to; i++) {
-        if (vols[i] == null) return null;
-        if (mx == null || vols[i] > mx) mx = vols[i];
-      }
-      return mx;
-    }
+    var ratios = lookupVolRatios(rowsAsc);
+    var out = {};
 
     for (var i = LOOKUP_BREAKOUT_LOOKBACK; i < rowsAsc.length; i++) {
       var lo = i - LOOKUP_BREAKOUT_LOOKBACK;
@@ -2226,10 +2248,9 @@
       var windowVols = [];
       var ok = true;
       for (var j = lo; j < i; j++) {
-        var peak = trailingPeak(j - LOOKUP_BREAKOUT_PEAK_WINDOW, j);
-        if (peak == null || vols[j] == null) { ok = false; break; }
+        if (ratios[j] == null) { ok = false; break; }
         windowVols.push(vols[j]);
-        if (vols[j] / peak < LOOKUP_BREAKOUT_SHRINK_RATIO) shrinkCount++;
+        if (ratios[j] < LOOKUP_BREAKOUT_SHRINK_RATIO) shrinkCount++;
       }
       if (!ok || shrinkCount < LOOKUP_BREAKOUT_MIN_SHRINK) continue;
 
@@ -2308,6 +2329,7 @@
 
     var rec = lookupData.data[lookupCode];
     var breakoutMap = computeLookupBreakouts(rec.rows || []);
+    var shrinkMap = computeLookupShrinkDays(rec.rows || []);
     var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
 
     table.hidden = false;
@@ -2346,8 +2368,14 @@
           breakout.surgeMult.toFixed(2) + ' 倍(參考用,只驗證過一次樣本,沒有回測)">' +
           '🔔量縮轉買</span>'
         : '';
+      var shrink = shrinkMap[r.date];
+      var shrinkBadge = shrink
+        ? ' <span class="lookup-shrink-badge" title="量 / 近期高點(前' + shrink.peakWindow +
+          '天內最高量)= ' + (shrink.ratio * 100).toFixed(0) +
+          '%,量縮中(參考用,不代表接下來會轉買)">🔽量縮</span>'
+        : '';
       var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
-        '<td class="mono">' + esc(r.date) + breakoutBadge + '</td>' +
+        '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + '</td>' +
         '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
         '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
         '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
