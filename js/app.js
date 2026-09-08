@@ -2232,6 +2232,27 @@
   var LOOKUP_SHRINK_DISPLAY_RATIO = 0.3;  // 🔽量縮單日標記用的門檻,比轉買門檻嚴格
   var LOOKUP_BREAKOUT_SURGE_MULT = 1.2;   // 轉買觸發日量能要比窗口均量高這個倍數以上
 
+  // 「有效振幅」過濾(2026-09-08 加入):使用者盯著批次測試結果發現,
+  // 21 檔裡只有 2313/4576/6168/2409/3006 這幾隻「量縮的時候價錢還是有
+  // 真正在動」,其餘量縮的股票其實是死盤(整段期間每日高低差距都壓在
+  // 1~2% 左右,根本沒有價格發現)。試過「振幅逐漸收窄」(K 線實體變短)
+  // 對不上 2313 自己的資料(8/12~8/25 振幅是 2.63%→6.60%→4.18%→...
+  // 上下跳動,不是單調收斂);改用「窗口內平均日振幅」才對得上——
+  // 使用者點名的 5 檔量縮窗口平均振幅都在 3.6% 以上,「死盤」那幾檔
+  // (1325/2102/9902/1441 等)都在 1.1~1.7% 之間,中間有清楚的落差。
+  var LOOKUP_MIN_RANGE_PCT = 3.5;   // 窗口內平均日振幅((高-低)/收盤×100)至少要這麼多%
+
+  function lookupAvgRangePct(rowsAsc, lo, hi) {
+    var sum = 0, n = 0;
+    for (var i = lo; i < hi; i++) {
+      var r = rowsAsc[i];
+      if (r.high == null || r.low == null || !r.close) continue;
+      sum += (r.high - r.low) / r.close * 100;
+      n++;
+    }
+    return n ? sum / n : null;
+  }
+
   function lookupVolRatios(rowsAsc) {
     // 每天的量 / 近期高點(前 LOOKUP_BREAKOUT_PEAK_WINDOW 個交易日內最高量),
     // 基準不足或缺量的日子回傳 null。轉買訊號跟量縮訊號共用同一份比值,
@@ -2277,6 +2298,9 @@
       }
       if (!ok || shrinkCount < LOOKUP_BREAKOUT_MIN_SHRINK) continue;
 
+      var avgRange = lookupAvgRangePct(rowsAsc, lo, i);
+      if (avgRange == null || avgRange < LOOKUP_MIN_RANGE_PCT) continue;
+
       var r = rowsAsc[i];
       if (!(r.foreign_net > 0 && r.trust_net > 0) || vols[i] == null) continue;
 
@@ -2285,7 +2309,10 @@
       var surgeMult = vols[i] / avgWindow;
       if (surgeMult < LOOKUP_BREAKOUT_SURGE_MULT) continue;
 
-      out[r.date] = { shrinkCount: shrinkCount, lookback: LOOKUP_BREAKOUT_LOOKBACK, surgeMult: surgeMult };
+      out[r.date] = {
+        shrinkCount: shrinkCount, lookback: LOOKUP_BREAKOUT_LOOKBACK,
+        surgeMult: surgeMult, avgRangePct: avgRange
+      };
     }
     return out;
   }
@@ -2293,9 +2320,9 @@
   // 「目前是不是蹲在量縮蓄勢裡,還沒等到轉買」(2026-09-08 加入)。
   // 用跟 computeLookupBreakouts 完全一樣的窗口/門檻,只是不要求「今天」
   // 有外資投信同步買超+量增——只看「最新一天之前的 10 個交易日裡,
-  // 量縮天數夠不夠」,回答「這檔現在算不算蹲好了,可以開始盯進場」。
+  // 量縮天數夠不夠、振幅夠不夠」,回答「這檔現在算不算蹲好了,可以開始
+  // 盯進場」。
   function computeLookupShrinkZone(rowsAsc) {
-    var vols = rowsAsc.map(function (r) { return r.volume; });
     var ratios = lookupVolRatios(rowsAsc);
     var i = rowsAsc.length - 1;
     if (i < LOOKUP_BREAKOUT_LOOKBACK) return null;
@@ -2308,10 +2335,14 @@
     }
     if (shrinkCount < LOOKUP_BREAKOUT_MIN_SHRINK) return null;
 
+    var avgRange = lookupAvgRangePct(rowsAsc, lo, i);
+    if (avgRange == null || avgRange < LOOKUP_MIN_RANGE_PCT) return null;
+
     return {
       date: rowsAsc[i].date,
       shrinkCount: shrinkCount,
       lookback: LOOKUP_BREAKOUT_LOOKBACK,
+      avgRangePct: avgRange,
       alreadyTriggered: !!(rowsAsc[i].foreign_net > 0 && rowsAsc[i].trust_net > 0)
     };
   }
@@ -2403,7 +2434,8 @@
     var zoneNote = '';
     if (shrinkZone && !shrinkZone.alreadyTriggered) {
       zoneNote = '  ·  🕐 目前蹲在量縮蓄勢中(近' + shrinkZone.lookback + '天有' +
-        shrinkZone.shrinkCount + '天量縮),還沒等到轉買訊號';
+        shrinkZone.shrinkCount + '天量縮,平均日振幅 ' + shrinkZone.avgRangePct.toFixed(1) +
+        '%),還沒等到轉買訊號';
     }
     meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
       '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote;
@@ -2441,7 +2473,8 @@
       var breakout = breakoutMap[r.date];
       var breakoutBadge = breakout
         ? ' <span class="lookup-breakout-badge" title="近' + breakout.lookback + '天有' +
-          breakout.shrinkCount + '天量縮(&lt;近期高點 60%),當天外資投信同步買超,量能放大' +
+          breakout.shrinkCount + '天量縮(&lt;近期高點 60%,平均日振幅 ' +
+          breakout.avgRangePct.toFixed(1) + '%),當天外資投信同步買超,量能放大' +
           breakout.surgeMult.toFixed(2) + ' 倍(參考用,只驗證過一次樣本,沒有回測)">' +
           '🔔量縮轉買</span>'
         : '';

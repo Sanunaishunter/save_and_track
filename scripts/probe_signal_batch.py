@@ -14,9 +14,9 @@ TaiwanStockInstitutionalInvestorsBuySell——三個標記都用不到融資融�
 三個判斷邏輯是 js/app.js 的 computeLookupShrinkDays / computeLookupBreakouts /
 computeLookupSelloffDays 原封不動搬過來的 Python 版,常數要跟前端保持一致
 (PEAK_WINDOW/LOOKBACK/MIN_SHRINK/SHRINK_RATIO/SHRINK_DISPLAY_RATIO/
-SURGE_MULT/SELLOFF_DROP_PCT),改一邊要記得改另一邊,不然前端表格跟這支
-批次腳本會對不起來。SHRINK_RATIO 跟 SHRINK_DISPLAY_RATIO 是兩個獨立門檻
-(見下面常數區的說明),不要合併。
+SURGE_MULT/SELLOFF_DROP_PCT/MIN_RANGE_PCT),改一邊要記得改另一邊,不然
+前端表格跟這支批次腳本會對不起來。SHRINK_RATIO 跟 SHRINK_DISPLAY_RATIO
+是兩個獨立門檻(見下面常數區的說明),不要合併。
 
 另外多印一段「目前蹲在量縮蓄勢裡、還沒等到轉買」的候選名單
 (shrink_zone_now(),對應 js/app.js 的 computeLookupShrinkZone())——
@@ -57,6 +57,26 @@ SHRINK_RATIO = 0.6            # 🔔量縮轉買:窗口裡數「量縮天數」�
 SHRINK_DISPLAY_RATIO = 0.3    # 🔽量縮:純顯示用的單日標記,門檻比轉買嚴格
 SURGE_MULT = 1.2
 SELLOFF_DROP_PCT = -4
+
+# 「有效振幅」過濾(2026-09-08 加入):使用者盯著批次測試結果發現,
+# 21 檔裡只有 2313/4576/6168/2409/3006 這幾隻「量縮的時候價錢還是有
+# 真正在動」,其餘量縮的股票其實是死盤(整段期間每日高低差距都壓在
+# 1~2% 左右,根本沒有價格發現)。試過「振幅逐漸收窄」(K 線實體變短)
+# 對不上 2313 自己的資料(8/12~8/25 振幅是 2.63%→6.60%→4.18%→...
+# 上下跳動,不是單調收斂);改用「窗口內平均日振幅」才對得上——使用者
+# 點名的 5 檔量縮窗口平均振幅都在 3.6% 以上,「死盤」那幾檔(1325/2102/
+# 9902/1441 等)都在 1.1~1.7% 之間,中間有清楚的落差。
+MIN_RANGE_PCT = 3.5            # 窗口內平均日振幅((高-低)/收盤×100)至少要這麼多%
+
+
+def avg_range_pct(rows, lo, hi):
+    vals = []
+    for i in range(lo, hi):
+        r = rows[i]
+        if r["high"] is None or r["low"] is None or not r["close"]:
+            continue
+        vals.append((r["high"] - r["low"]) / r["close"] * 100.0)
+    return sum(vals) / len(vals) if vals else None
 
 
 def vol_ratios(rows):
@@ -104,6 +124,10 @@ def breakout_days(rows):
         if not ok or shrink_count < MIN_SHRINK:
             continue
 
+        avg_range = avg_range_pct(rows, lo, i)
+        if avg_range is None or avg_range < MIN_RANGE_PCT:
+            continue
+
         r = rows[i]
         fn, tn = r.get("foreign_net"), r.get("trust_net")
         if fn is None or tn is None or not (fn > 0 and tn > 0) or vols[i] is None:
@@ -116,7 +140,7 @@ def breakout_days(rows):
         if surge < SURGE_MULT:
             continue
 
-        out[r["date"]] = {"shrink_count": shrink_count, "surge_mult": surge}
+        out[r["date"]] = {"shrink_count": shrink_count, "surge_mult": surge, "avg_range_pct": avg_range}
     return out
 
 
@@ -126,7 +150,6 @@ def shrink_zone_now(rows):
     夠不夠」,回答「這檔現在算不算蹲好了,可以開始盯進場」。回傳 None
     代表現在不在蓄勢區間。
     """
-    vols = [r["volume"] for r in rows]
     ratios = vol_ratios(rows)
     i = len(rows) - 1
     if i < LOOKBACK:
@@ -142,10 +165,17 @@ def shrink_zone_now(rows):
     if shrink_count < MIN_SHRINK:
         return None
 
+    avg_range = avg_range_pct(rows, lo, i)
+    if avg_range is None or avg_range < MIN_RANGE_PCT:
+        return None
+
     r = rows[i]
     fn, tn = r.get("foreign_net"), r.get("trust_net")
     already_triggered = bool(fn is not None and tn is not None and fn > 0 and tn > 0)
-    return {"date": r["date"], "shrink_count": shrink_count, "already_triggered": already_triggered}
+    return {
+        "date": r["date"], "shrink_count": shrink_count,
+        "avg_range_pct": avg_range, "already_triggered": already_triggered,
+    }
 
 
 def selloff_days(rows):
@@ -236,11 +266,12 @@ def main():
         for d, v in s.items():
             shrink_hits.append((sid, name, d, v["ratio"]))
         for d, v in b.items():
-            breakout_hits.append((sid, name, d, v["shrink_count"], v["surge_mult"]))
+            breakout_hits.append((sid, name, d, v["shrink_count"], v["surge_mult"], v["avg_range_pct"]))
         for d, v in so.items():
             selloff_hits.append((sid, name, d, v["chg_pct"], v["foreign_net"]))
         if zone:
-            zone_hits.append((sid, name, zone["date"], zone["shrink_count"], zone["already_triggered"]))
+            zone_hits.append((sid, name, zone["date"], zone["shrink_count"],
+                               zone["avg_range_pct"], zone["already_triggered"]))
 
         print("  [%d/%d] %s %-6s %d 列  量縮 %d 天、量縮轉買 %d 天、外資出貨 %d 天%s"
               % (i, len(codes), sid, name, len(rows), len(s), len(b), len(so),
@@ -254,14 +285,17 @@ def main():
     for sid, name, d, ratio in sorted(shrink_hits, key=lambda x: x[2]):
         print("  %s %-6s %s  比值 %.2f" % (sid, name, d, ratio))
 
-    print("\n== 🔔量縮轉買(量縮後外資投信同步買超+量增)共 %d 筆 ==" % len(breakout_hits))
-    for sid, name, d, cnt, surge in sorted(breakout_hits, key=lambda x: x[2]):
-        print("  %s %-6s %s  量縮 %d/%d 天  量增 %.2f 倍" % (sid, name, d, cnt, LOOKBACK, surge))
+    print("\n== 🔔量縮轉買(量縮後外資投信同步買超+量增,平均日振幅 >= %s%%)共 %d 筆 =="
+          % (MIN_RANGE_PCT, len(breakout_hits)))
+    for sid, name, d, cnt, surge, rng in sorted(breakout_hits, key=lambda x: x[2]):
+        print("  %s %-6s %s  量縮 %d/%d 天  量增 %.2f 倍  振幅 %.1f%%"
+              % (sid, name, d, cnt, LOOKBACK, surge, rng))
 
-    print("\n== 🕐 目前蹲在量縮蓄勢區、還沒等到轉買訊號(觀察名單)共 %d 筆 ==" % len(zone_hits))
-    for sid, name, d, cnt, triggered in sorted(zone_hits, key=lambda x: -x[3]):
+    print("\n== 🕐 目前蹲在量縮蓄勢區、還沒等到轉買訊號(觀察名單,平均日振幅 >= %s%%)共 %d 筆 =="
+          % (MIN_RANGE_PCT, len(zone_hits)))
+    for sid, name, d, cnt, rng, triggered in sorted(zone_hits, key=lambda x: -x[3]):
         note = "(今天已經買超同步,只差量增門檻)" if triggered else ""
-        print("  %s %-6s 截至 %s  量縮 %d/%d 天%s" % (sid, name, d, cnt, LOOKBACK, note))
+        print("  %s %-6s 截至 %s  量縮 %d/%d 天  振幅 %.1f%%%s" % (sid, name, d, cnt, LOOKBACK, rng, note))
 
     if failures:
         print("\n== 抓取失敗 %d 檔 ==" % len(failures))
