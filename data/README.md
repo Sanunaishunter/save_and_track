@@ -156,6 +156,13 @@ App 沒有後端,沒辦法讓使用者在前端即時查任意一檔,只能「�
 - 一檔只要 2 次 FinMind 呼叫(沒有 TaiwanStockPrice、沒有 PER),
   清單維持在個位數/十位數規模,額度幾乎不會是問題
 
+⚠️ **單位:** `stock-lookup-latest.json` 存的量、外資/投信買賣超都是「股」
+(TWSE、FinMind 兩邊原始單位就是股),融資融券餘額/增減則已經是「張」
+(FinMind `TaiwanStockMarginPurchaseShortSale` 原始單位)——同一張表格兩種
+單位混在一起,不是筆誤。前端(`js/app.js` 的 `lookupLots()`/
+`lookupSignedLots()`)只在顯示時把量、外資、投信換算成張(÷1000)方便跟
+融資融券的張數對照,資料檔本身不動。表頭都加了「(張)」標示。
+
 輸出 `data/stock-lookup-latest.json`,**只留最新一份,沒有每日存查**——
 回頭看「某天的查詢清單長怎樣」沒有意義,清單只會隨手動維護慢慢變動。
 

@@ -2057,6 +2057,19 @@
     return digits == null ? fmtInt(Math.round(v)) : v.toFixed(digits);
   }
 
+  // 量、外資/投信買賣超原始資料是「股」(data/stock-lookup-latest.json 不動),
+  // 這裡只轉換顯示——1 張 = 1,000 股。融資融券欄位本來就是張,不用轉。
+  function lookupLots(v) {
+    if (v == null) return '—';
+    return fmtInt((v / 1000).toFixed(1));
+  }
+
+  function lookupSignedLots(v) {
+    if (v == null) return '—';
+    var lots = v / 1000;
+    return (lots > 0 ? '+' : lots < 0 ? '-' : '') + fmtInt(Math.abs(lots).toFixed(1));
+  }
+
   // ------------------------------------------- 個股查詢的螢光筆標色 + 文字筆記
   // 存在 localStorage,不是排程產出的資料(那份每天會被覆寫)。
   // key 用「代號|日期」,表格視窗往前滑動、舊日期滑出去之後筆記自然看不到,
@@ -2441,8 +2454,8 @@
       var selloff = selloffMap[r.date];
       var selloffBadge = selloff
         ? ' <span class="lookup-selloff-badge" title="當天跌幅 ' + selloff.chgPct.toFixed(2) +
-          '%,外資賣超 ' + fmtInt(Math.abs(Math.round(selloff.foreignNet))) +
-          ' 股(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
+          '%,外資賣超 ' + lookupLots(Math.abs(selloff.foreignNet)) +
+          ' 張(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
         : '';
       var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
         '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + '</td>' +
@@ -2450,7 +2463,7 @@
         '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
         '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
         '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
-        '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupNum(r.volume) + '</td>' +
+        '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupLots(r.volume) + '</td>' +
         '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
         '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
           (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
@@ -2458,9 +2471,9 @@
         '<td' + colHiddenAttr(9) + ' class="num mono ' + plClass(r.short_change) + '">' +
           (r.short_change == null ? '—' : signed(r.short_change)) + '</td>' +
         '<td' + colHiddenAttr(10) + ' class="num mono ' + plClass(r.foreign_net) + '">' +
-          (r.foreign_net == null ? '—' : signed(r.foreign_net)) + '</td>' +
+          (r.foreign_net == null ? '—' : lookupSignedLots(r.foreign_net)) + '</td>' +
         '<td' + colHiddenAttr(11) + ' class="num mono ' + plClass(r.trust_net) + '">' +
-          (r.trust_net == null ? '—' : signed(r.trust_net)) + '</td>' +
+          (r.trust_net == null ? '—' : lookupSignedLots(r.trust_net)) + '</td>' +
         '<td' + colHiddenAttr(12) + ' class="lookup-note-cell">' + hideBtn + noteCell + '</td>' +
       '</tr>';
       if (lookupOpenDate === r.date) row += lookupEditorHtml(lookupCode, r.date, entry);
