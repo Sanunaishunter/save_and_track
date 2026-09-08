@@ -2573,6 +2573,7 @@
 
   var lookupPanel = createLookupPanel('lookup', 'data/stock-lookup-latest.json');
   var lookupScanPanel = createLookupPanel('lookup-scan', 'data/stock-lookup-scan-latest.json');
+  var lookupCrashFomoPanel = createLookupPanel('lookup-crashfomo', 'data/stock-lookup-crashfomo-latest.json');
 
   function bindLookupPanelEvents(panel) {
     var prefix = panel.idPrefix;
@@ -2642,6 +2643,7 @@
     el('signals-wrap').hidden = v !== 'signals';
     el('lookup-wrap').hidden = v !== 'lookup';
     el('lookup-scan-wrap').hidden = v !== 'lookup-scan';
+    el('lookup-crashfomo-wrap').hidden = v !== 'lookup-crashfomo';
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
@@ -2656,11 +2658,12 @@
     if (v === 'signals') loadSignals(false);
     if (v === 'lookup') lookupPanel.load(false);
     if (v === 'lookup-scan') lookupScanPanel.load(false);
+    if (v === 'lookup-crashfomo') lookupCrashFomoPanel.load(false);
   }
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan'];
+  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -4586,6 +4589,7 @@
 
     bindLookupPanelEvents(lookupPanel);
     bindLookupPanelEvents(lookupScanPanel);
+    bindLookupPanelEvents(lookupCrashFomoPanel);
 
     el('crashfomo-tbody').addEventListener('click', function (e) {
       var qa = e.target.closest('.btn-quickadd');

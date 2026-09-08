@@ -69,6 +69,7 @@
     <button type="button" class="viewbtn" data-view="signals">量價訊號</button>
     <button type="button" class="viewbtn" data-view="lookup">FOMO個股查詢</button>
     <button type="button" class="viewbtn" data-view="lookup-scan">爆量個股查詢</button>
+    <button type="button" class="viewbtn" data-view="lookup-crashfomo">暴跌FOMO個股查詢</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -466,7 +467,7 @@
   <p class="panel-note">
     只列得出「FOMO個股查詢清單」(<code>stock_lookup.json</code>)裡已經加過的代號——
     這份清單最早是 2313 手動加的,後來加了一批從 FOMO/暴跌FOMO 候選裡批次測試過的股票,
-    跟下面「爆量個股查詢」是兩份獨立清單。這個 App 沒有後端,沒辦法即時查任意一檔。
+    跟「爆量個股查詢」「暴跌FOMO個股查詢」是三份獨立清單。這個 App 沒有後端,沒辦法即時查任意一檔。
     想看新的代號,直接跟 Nomad 說一聲,
     加進清單、下次排程跑完就有資料。開高低收量沿用爆量/暴跌掃描的 30 天基準線,
     融資融券與外資投信來自 FinMind。點一列可以標色、寫筆記,存在瀏覽器裡,
@@ -521,7 +522,7 @@
   </div>
   <p class="panel-note">
     只列得出「爆量個股查詢清單」(<code>stock_lookup_scan.json</code>)裡已經加過的代號 ——
-    這份清單是從爆量掃描的候選裡隨機抽的,跟上面「FOMO個股查詢」是兩份獨立清單,
+    這份清單是從爆量掃描的候選裡隨機抽的,跟「FOMO個股查詢」「暴跌FOMO個股查詢」是三份獨立清單,
     但表格欄位、標記邏輯完全一樣。這個 App 沒有後端,沒辦法即時查任意一檔。
     想看新的代號,直接跟 Nomad 說一聲,加進清單、下次排程跑完就有資料。
     開高低收量沿用爆量/暴跌掃描的 30 天基準線,融資融券與外資投信來自 FinMind。
@@ -561,6 +562,62 @@
         </tr>
       </thead>
       <tbody id="lookup-scan-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="list-wrap" id="lookup-crashfomo-wrap" hidden>
+  <div class="scan-meta" id="lookup-crashfomo-meta">載入中…</div>
+  <div class="ctrl-row" id="lookup-crashfomo-controls" hidden>
+    <span class="ctrl-label">代號</span>
+    <select id="lookup-crashfomo-select"></select>
+  </div>
+  <div class="ctrl-row" id="lookup-crashfomo-hidden-hint">
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-crashfomo-cols-reset" hidden></button>
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-crashfomo-rows-toggle" hidden></button>
+  </div>
+  <p class="panel-note">
+    只列得出「暴跌FOMO個股查詢清單」(<code>stock_lookup_crashfomo.json</code>)裡已經加過的代號 ——
+    這份清單是從暴跌FOMO的候選裡隨機抽的,跟「FOMO個股查詢」「爆量個股查詢」是三份獨立清單,
+    但表格欄位、標記邏輯完全一樣。這個 App 沒有後端,沒辦法即時查任意一檔。
+    想看新的代號,直接跟 Nomad 說一聲,加進清單、下次排程跑完就有資料。
+    開高低收量沿用爆量/暴跌掃描的 30 天基準線,融資融券與外資投信來自 FinMind。
+    點一列可以標色、寫筆記,存在瀏覽器裡,「匯出」備份會一起帶走。點欄位標題可以
+    暫時隱藏那一欄,列右側的按鈕可以暫時隱藏那一列——這兩個只存在這台瀏覽器,
+    「匯出」不會帶走。日期旁可能出現三種純前端算的
+    參考標記:<span class="lookup-shrink-badge">🔽量縮</span>
+    是單日當天量比近期高點(前 10 天內最高量)縮到 30% 以下就標,不代表接下來
+    會轉買;<span class="lookup-breakout-badge">🔔量縮轉買</span>
+    是近 10 個交易日內至少 8 天量縮(比值 &lt; 60%)、窗口內平均日振幅至少 3.5%
+    (排除量縮但根本沒在動的死盤)、當天外資投信同步買超且量能放大 1.2 倍
+    以上才標——門檻照使用者自己手算的方法「量縮至少 10 天,題材一到位就
+    往上一波」訂;<span class="lookup-selloff-badge">🔻外資出貨</span>
+    是當天跌幅 4% 以上、外資同時賣超就標,只看賣超方向不看金額大小——
+    同樣是大跌,外資買超接刀的日子不會被標。三者都只驗證過一次樣本,沒有
+    回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。選定的股票如果目前
+    正蹲在量縮蓄勢裡但還沒等到轉買訊號,上面那行資料範圍後面會多一句
+    🕐 提示。
+  </p>
+  <div class="table-scroll">
+    <table class="scan-table" id="lookup-crashfomo-table" hidden>
+      <thead>
+        <tr>
+          <th data-col="0">日期</th>
+          <th class="num lookup-th" data-col="1" title="點一下暫時隱藏這欄">開</th>
+          <th class="num lookup-th" data-col="2" title="點一下暫時隱藏這欄">高</th>
+          <th class="num lookup-th" data-col="3" title="點一下暫時隱藏這欄">低</th>
+          <th class="num lookup-th" data-col="4" title="點一下暫時隱藏這欄">收</th>
+          <th class="num lookup-th" data-col="5" title="點一下暫時隱藏這欄">量(張)</th>
+          <th class="num lookup-th" data-col="6" title="點一下暫時隱藏這欄">融資餘額(張)</th>
+          <th class="num lookup-th" data-col="7" title="點一下暫時隱藏這欄">融資增減(張)</th>
+          <th class="num lookup-th" data-col="8" title="點一下暫時隱藏這欄">融券餘額(張)</th>
+          <th class="num lookup-th" data-col="9" title="點一下暫時隱藏這欄">融券增減(張)</th>
+          <th class="num lookup-th" data-col="10" title="點一下暫時隱藏這欄">外資買賣超(張)</th>
+          <th class="num lookup-th" data-col="11" title="點一下暫時隱藏這欄">投信買賣超(張)</th>
+          <th class="lookup-th" data-col="12" title="點一下暫時隱藏這欄">備註</th>
+        </tr>
+      </thead>
+      <tbody id="lookup-crashfomo-tbody"></tbody>
     </table>
   </div>
 </main>

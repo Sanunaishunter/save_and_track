@@ -105,6 +105,20 @@ jobs:
             --list-file stock_lookup_scan.json \
             --out-file data/stock-lookup-scan-latest.json
 
+      # 暴跌FOMO個股查詢:同一支腳本,清單(stock_lookup_crashfomo.json,
+      # 從暴跌FOMO候選隨機抽的 20 檔)跟輸出檔再換一次。
+      # 額度備註:三份查詢清單合計 61 檔 × 2 次 = 122 次,加上 FOMO/暴跌FOMO
+      # 兩步(2026-09-08 實測合計約 376 次)、產業別/匯率期貨等零星呼叫,
+      # 一輪跑下來抓 500 次上下,600 次/小時的上限還有餘裕但不算寬——
+      # 之後要再加清單或加檔數,記得先看 daily-scan job log 有沒有頂到上限。
+      - name: 更新暴跌FOMO個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_stock_lookup.py \
+            --list-file stock_lookup_crashfomo.json \
+            --out-file data/stock-lookup-crashfomo-latest.json
+
       - name: 計算產業流向
         run: |
           python scripts/compute_tick_flow.py \
