@@ -4164,9 +4164,15 @@
     return changed;
   }
 
+  // 每組(依觸發規則分)的詳細資料展開狀態,只存記憶體、不落地儲存——
+  // 純粹是「這次瀏覽想不想看明細」的檢視偏好,重新整理就收合回去,
+  // 跟持倉摘要的 posSummaryExpanded 同一個作法。
+  var exitStatsExpanded = {};
+
   /**
    * 自動出場紀錄的勝率統計,依觸發規則分組。用 exit_result 這份「觸發當下」
-   * 的快照算,不會因為之後報價變動而跑掉。
+   * 的快照算,不會因為之後報價變動而跑掉。每組可以展開看是哪幾筆紀錄
+   * 組成這個統計數字——使用者反應原本只看得到彙總數字,看不到細節。
    */
   function exitStatsHtml() {
     var exited = data.filter(function (r) { return r.exit_result; });
@@ -4184,11 +4190,17 @@
       var recs = groups[k];
       var wins = recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
       var avgPct = recs.reduce(function (s, r) { return s + (r.exit_result.pl_pct || 0); }, 0) / recs.length;
-      return '<div class="exit-stat-row">' +
-        '<span>' + esc(ruleLabels[k] || k) + '</span>' +
-        '<span class="mono">N=' + recs.length + '</span>' +
-        '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
-        '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+      var expanded = !!exitStatsExpanded[k];
+      return '<div class="exit-stat-group">' +
+        '<div class="exit-stat-row">' +
+          '<span>' + esc(ruleLabels[k] || k) + '</span>' +
+          '<span class="mono">N=' + recs.length + '</span>' +
+          '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
+          '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+          '<button type="button" class="link-btn exit-stat-toggle" data-exit-rule="' + esc(k) + '">' +
+            (expanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
+        '</div>' +
+        (expanded ? renderExitStatsDetail(recs) : '') +
       '</div>';
     }).join('');
 
@@ -4199,6 +4211,35 @@
           Math.round(totalWins / exited.length * 100) + '%</span></div>' +
       '<p class="dim">樣本數還很少(見 CLAUDE.md 已知限制),當參考,不是驗證過的勝率。</p>' +
       '<div class="exit-stats">' + rows + '</div>' +
+    '</div>';
+  }
+
+  /** 某個觸發規則組的明細表:哪幾檔、哪天、假設成交價多少、賺賠多少。
+   * 點一列可以直接跳到那筆紀錄的詳細頁。*/
+  function renderExitStatsDetail(recs) {
+    var sorted = recs.slice().sort(function (a, b) {
+      return (b.exit_result.date || '').localeCompare(a.exit_result.date || '');
+    });
+    var trs = sorted.map(function (r) {
+      var er = r.exit_result;
+      return '<tr class="exit-stat-detail-row" data-exit-detail-id="' + esc(r.id) + '">' +
+        '<td>' + esc(displayTitle(r)) + '</td>' +
+        '<td class="mono">' + esc(er.date || '—') + '</td>' +
+        '<td>' + esc(er.reason || '—') + '</td>' +
+        '<td class="num mono">' + (er.price != null ? er.price.toFixed(2) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(er.pl) + '">' + signed(er.pl) + '</td>' +
+        '<td class="num mono ' + plClass(er.pl_pct) + '">' + fmtPct(er.pl_pct, 1) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="table-scroll">' +
+      '<table class="scan-table exit-stat-detail-table">' +
+        '<thead><tr>' +
+          '<th>股票</th><th>出場日</th><th>觸發原因</th>' +
+          '<th class="num">假設成交價</th><th class="num">損益</th><th class="num">報酬率</th>' +
+        '</tr></thead>' +
+        '<tbody>' + trs + '</tbody>' +
+      '</table>' +
     '</div>';
   }
 
@@ -4753,6 +4794,18 @@
       if (!e.target.closest('#pos-sum-toggle')) return;
       posSummaryExpanded = !posSummaryExpanded;
       renderPosSummary();
+    });
+
+    el('exit-stats').addEventListener('click', function (e) {
+      var toggle = e.target.closest('.exit-stat-toggle');
+      if (toggle) {
+        var rule = toggle.getAttribute('data-exit-rule');
+        exitStatsExpanded[rule] = !exitStatsExpanded[rule];
+        el('exit-stats').innerHTML = exitStatsHtml();
+        return;
+      }
+      var row = e.target.closest('.exit-stat-detail-row');
+      if (row) openDetail(row.getAttribute('data-exit-detail-id'));
     });
 
     bindQuickAdd(el('scan-tbody'));
