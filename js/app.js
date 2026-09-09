@@ -2321,6 +2321,22 @@
     return out;
   }
 
+  // 低活躍度過濾(2026-09-09 加入):跟量縮/轉買那套「參考標記」不一樣,
+  // 這條是直接把日子從表格裡拿掉,不進 badge 判斷、不進「顯示已隱藏」
+  // 那套使用者手動隱藏的機制——單純是資料太薄(當天外資幾乎沒動作、
+  // 成交量也小),沒什麼好看的。三個分頁共用同一組門檻。
+  // 用「且」不是「或」:量縮期間本來成交量就會小,只有外資也幾乎沒進出的
+  // 那幾天才算真的沒訊號可看;任一邊有量,還是留著讓使用者自己判斷。
+  var LOOKUP_LOW_ACTIVITY_VOLUME_LOTS = 300;   // 當天成交量(張)低於這個值
+  var LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS = 100;  // 當天外資買賣超絕對值(張)低於這個值
+
+  function lookupIsLowActivity(r) {
+    if (r.volume == null || r.foreign_net == null) return false;   // 資料不全,不要誤濾
+    var volLots = r.volume / 1000;
+    var foreignLots = Math.abs(r.foreign_net) / 1000;
+    return volLots < LOOKUP_LOW_ACTIVITY_VOLUME_LOTS && foreignLots < LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS;
+  }
+
   // 個股查詢分頁工廠:idPrefix 決定 DOM id('lookup' / 'lookup-scan'),
   // url 是各自的資料來源。標色/筆記(loadLookupNotesMap 那組)是照「代號|日期」存,
   // 兩個分頁共用同一份沒關係——講的是同一檔股票。欄/列隱藏偏好各自存一份
@@ -2456,9 +2472,16 @@
           shrinkZone.shrinkCount + '天量縮,平均日振幅 ' + shrinkZone.avgRangePct.toFixed(1) +
           '%),還沒等到轉買訊號';
       }
-      meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-        '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote;
       var allRows = (rec.rows || []).slice().reverse();   // 最新的日期排最上面
+      var rawRowCount = allRows.length;
+      allRows = allRows.filter(function (r) { return !lookupIsLowActivity(r); });
+      var lowActivityCount = rawRowCount - allRows.length;
+      var lowActivityNote = lowActivityCount > 0
+        ? '  ·  已濾掉 ' + lowActivityCount + ' 天低活躍度(外資買賣超 < ' +
+          LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' + LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張)'
+        : '';
+      meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
+        '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote + lowActivityNote;
 
       table.hidden = false;
       if (!allRows.length) {
