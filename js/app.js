@@ -659,17 +659,21 @@
     var html;
     if (listSortMode === 'trigger') {
       var lastKey = null;
-      html = list.map(function (rec) {
+      var groupOpen = false;
+      html = '';
+      list.forEach(function (rec) {
         var key = triggerGroupKey(rec);
-        var head = '';
         if (key !== lastKey) {
-          head = '<div class="list-group-head">' +
+          if (groupOpen) html += '</div>';
+          html += '<div class="list-group"><div class="list-group-head">' +
             esc(key === 'none' ? '其他(沒有自動出場紀錄)' : (EXIT_RULE_LABELS[key] || key)) +
           '</div>';
           lastKey = key;
+          groupOpen = true;
         }
-        return head + cardHtml(rec);
-      }).join('');
+        html += cardHtml(rec);
+      });
+      if (groupOpen) html += '</div>';
     } else {
       html = list.map(cardHtml).join('');
     }
