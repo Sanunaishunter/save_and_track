@@ -34,10 +34,36 @@
 
   var STATUS_LABEL = { active: '進行中', exited: '已出場', rejected: '已放棄' };
 
-  // 自動出場的觸發規則,exit_result.rule 用這三種值。清單依觸發類型排序、
-  // 自動出場統計分組都共用同一份 label/順序,只在這裡定義一次。
+  // 自動出場的觸發規則,exit_result.rule 用這三種值。「自動出場統計」分組
+  // 用這份 label/順序 —— 這是「出場」原因,跟下面的「進場訊號」分類是兩回事。
   var EXIT_RULE_LABELS = { target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損' };
   var EXIT_RULE_ORDER = ['target', 'days', 'drawdown'];
+
+  // 進場訊號分類:沒有獨立欄位記錄「為什麼加進來」,只能從第 1 步「觸發」
+  // 的自由文字(notes[1])關鍵字比對回推 —— 有些是 quickAddTracking 自動帶入
+  // (例如 FOMO 的「FOMO(75 分):真漲」),有些是使用者自己手打(例如「爆量 /
+  // 無量上漲來源,美股新聞背景...」)。一筆紀錄可能同時命中多個關鍵字(上面
+  // 的例子就同時有「爆量」「無量上漲」),排序/分組時取優先順序中第一個命中
+  // 的當代表類別。「無明顯真漲/虛漲訊號」「無明顯真跌/虛跌訊號」這兩句
+  // FOMO 自動文字本身就包含「真漲」「虛漲」等字,要排除才不會誤判成有訊號;
+  // 「暴跌FOMO(⋯」開頭的文字本身也包含「暴跌」兩字,「暴跌」規則要排除
+  // 後面接「FOMO」的情況,才不會把暴跌FOMO 加入的紀錄全部誤判成暴跌掃描。
+  var ENTRY_TAG_RULES = [
+    { key: 'surge', label: '爆量', test: /爆量/ },
+    { key: 'thinrally', label: '無量上漲', test: /無量上漲/ },
+    { key: 'real_rally', label: '真漲', test: /真漲/, exclude: /無明顯真漲\/虛漲/ },
+    { key: 'fake_rally', label: '虛漲', test: /虛漲/, exclude: /無明顯真漲\/虛漲/ },
+    { key: 'real_crash', label: '真跌', test: /真跌/, exclude: /無明顯真跌\/虛跌/ },
+    { key: 'fake_crash', label: '虛跌', test: /虛跌/, exclude: /無明顯真跌\/虛跌/ },
+    { key: 'crash', label: '暴跌', test: /暴跌(?!FOMO)/ },
+    { key: 'divergence', label: '背離', test: /背離/ }
+  ];
+  var ENTRY_TAG_LABELS = (function () {
+    var m = { none: '未分類' };
+    ENTRY_TAG_RULES.forEach(function (r) { m[r.key] = r.label; });
+    return m;
+  })();
+  var ENTRY_TAG_ORDER = ENTRY_TAG_RULES.map(function (r) { return r.key; }).concat(['none']);
 
   // ---------------------------------------------------------------- 狀態
 
@@ -46,7 +72,7 @@
   var currentId = null;     // 詳情頁正在看的 id
   var openStep = 1;         // 詳情頁展開中的步驟
   var storageOk = true;     // localStorage 是否可用
-  var listSortMode = 'time'; // 追蹤清單排序:'time'(預設,依更新時間)或 'trigger'(依自動出場觸發類型分組)
+  var listSortMode = 'time'; // 追蹤清單排序:'time'(預設,依更新時間)或 'entry'(依進場訊號分類分組)
 
   // ---------------------------------------------------------------- 工具
 
@@ -570,23 +596,29 @@
     return c;
   }
 
-  /** 依觸發類型排序時的分組鍵:沒有自動出場紀錄的(進行中/手動出場/放棄)
-   * 統一歸在「其他」,排在三種觸發規則後面——排序模式是給「想比較同一種
-   * 觸發規則抓到的股票」用的,不是取代時間排序,沒觸發過的本來就不是
-   * 這個排序想凸顯的重點。 */
-  function triggerGroupKey(rec) {
-    return (rec.exit_result && rec.exit_result.rule) || 'none';
+  /** 依進場訊號分類的分組鍵:掃過第 1 步「觸發」文字(notes[1]),依
+   * ENTRY_TAG_RULES 優先順序回傳第一個命中的類別;沒有文字或沒命中任何
+   * 關鍵字的統一歸在「未分類」,排在最後——排序模式是給「想比較同一種
+   * 進場訊號抓到的股票」用的,不是取代時間排序。 */
+  function entryGroupKey(rec) {
+    var text = (rec.notes && rec.notes[1]) ? String(rec.notes[1]) : '';
+    if (!text.trim()) return 'none';
+    for (var i = 0; i < ENTRY_TAG_RULES.length; i++) {
+      var rule = ENTRY_TAG_RULES[i];
+      if (rule.exclude && rule.exclude.test(text)) continue;
+      if (rule.test.test(text)) return rule.key;
+    }
+    return 'none';
   }
 
   function visibleRecords() {
     var list = currentTab === 'all'
       ? data.slice()
       : data.filter(function (r) { return r.status === currentTab; });
-    if (listSortMode === 'trigger') {
-      var order = EXIT_RULE_ORDER.concat(['none']);
+    if (listSortMode === 'entry') {
       list.sort(function (a, b) {
-        var ra = order.indexOf(triggerGroupKey(a));
-        var rb = order.indexOf(triggerGroupKey(b));
+        var ra = ENTRY_TAG_ORDER.indexOf(entryGroupKey(a));
+        var rb = ENTRY_TAG_ORDER.indexOf(entryGroupKey(b));
         if (ra !== rb) return ra - rb;
         return String(b.updated_at).localeCompare(String(a.updated_at));
       });
@@ -653,20 +685,20 @@
     });
 
     var sortBtn = el('list-sort-toggle');
-    if (sortBtn) sortBtn.textContent = listSortMode === 'trigger' ? '排序:觸發類型' : '排序:時間';
+    if (sortBtn) sortBtn.textContent = listSortMode === 'entry' ? '排序:進場訊號' : '排序:時間';
 
     var list = visibleRecords();
     var html;
-    if (listSortMode === 'trigger') {
+    if (listSortMode === 'entry') {
       var lastKey = null;
       var groupOpen = false;
       html = '';
       list.forEach(function (rec) {
-        var key = triggerGroupKey(rec);
+        var key = entryGroupKey(rec);
         if (key !== lastKey) {
           if (groupOpen) html += '</div>';
           html += '<div class="list-group"><div class="list-group-head">' +
-            esc(key === 'none' ? '其他(沒有自動出場紀錄)' : (EXIT_RULE_LABELS[key] || key)) +
+            esc(ENTRY_TAG_LABELS[key] || key) +
           '</div>';
           lastKey = key;
           groupOpen = true;
@@ -4828,7 +4860,7 @@
     });
 
     el('list-sort-toggle').addEventListener('click', function () {
-      listSortMode = listSortMode === 'trigger' ? 'time' : 'trigger';
+      listSortMode = listSortMode === 'entry' ? 'time' : 'entry';
       renderList();
     });
 
