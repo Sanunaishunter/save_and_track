@@ -29,6 +29,7 @@
 | `stock-lookup-latest.json` | FOMO個股查詢:清單裡每檔的逐日開高低收量 + 融資融券 + 外資投信,前端讀這支。只留最新一份,**沒有每日存查** |
 | `stock-lookup-scan-latest.json` | 爆量個股查詢:結構跟上面那份一模一樣,只是清單來源不同(見下)。只留最新一份,**沒有每日存查** |
 | `stock-lookup-crashfomo-latest.json` | 暴跌FOMO個股查詢:結構同上,清單來源不同(見下)。只留最新一份,**沒有每日存查** |
+| `stock-lookup-fullscan-latest.json` | 9/8全掃:結構同上,但清單是當天爆量+暴跌候選「全部」(84 檔),不是抽樣,也不是每日自動更新的一次性快照(見下) |
 
 資料來源全部是 TWSE,免 token、免額度:
 
@@ -145,7 +146,7 @@ Hugo 跟 Claude Code 討論後定案的邏輯,寫在 `fomo_score.py` 的
 
 ---
 
-## 個股查詢(2026-09-07 加入,2026-09-08 拆成三個分頁)
+## 個股查詢(2026-09-07 加入,2026-09-08 拆成三個分頁,2026-09-09 加第四個一次性分頁)
 
 跟爆量/暴跌/FOMO/暴跌FOMO 平行但獨立,同一個 workflow 裡最後執行
 (`fetch_stock_lookup.py`)。跟 FOMO 用的 `watchlist.json` 一樣是
@@ -153,13 +154,14 @@ Hugo 跟 Claude Code 討論後定案的邏輯,寫在 `fomo_score.py` 的
 查任意一檔,只能「先把想深入看的代號加進清單,下次排程或手動觸發
 Actions 之後才有資料」。
 
-**前端分三個分頁,清單各自獨立、表格/標記邏輯完全相同:**
+**前端分四個分頁,表格/標記邏輯完全相同(共用同一份 `createLookupPanel()`):**
 
-| 分頁 | 清單(repo 根目錄) | 輸出 |
-| --- | --- | --- |
-| FOMO個股查詢 | `stock_lookup.json` | `data/stock-lookup-latest.json` |
-| 爆量個股查詢 | `stock_lookup_scan.json` | `data/stock-lookup-scan-latest.json` |
-| 暴跌FOMO個股查詢 | `stock_lookup_crashfomo.json` | `data/stock-lookup-crashfomo-latest.json` |
+| 分頁 | 清單來源 | 輸出 | 更新方式 |
+| --- | --- | --- | --- |
+| FOMO個股查詢 | `stock_lookup.json`(手動維護) | `data/stock-lookup-latest.json` | 每日排程 |
+| 爆量個股查詢 | `stock_lookup_scan.json`(手動維護) | `data/stock-lookup-scan-latest.json` | 每日排程 |
+| 暴跌FOMO個股查詢 | `stock_lookup_crashfomo.json`(手動維護) | `data/stock-lookup-crashfomo-latest.json` | 每日排程 |
+| 9/8全掃 | 當天 `scan-latest.json`+`crash-latest.json` 候選全部(84 檔,不是抽樣) | `data/stock-lookup-fullscan-latest.json` | 一次性,手動觸發 `scan-full-candidates.yml` |
 
 `stock_lookup.json` 最早是手動加 2313 開始的,後來加了一批從 FOMO/暴跌FOMO
 候選池批次測試過的股票(見下面「量縮/量縮轉買」章節)。`stock_lookup_scan.json`
@@ -169,16 +171,42 @@ Actions 之後才有資料」。
 重抽——想換就直接改對應的檔案。
 
 `fetch_stock_lookup.py` 吃 `--list-file`/`--out-file` 兩個參數決定讀
-哪份清單、寫到哪個輸出檔,`daily-scan.yml` 裡對三份清單各跑一次(共用
-同一支腳本、同一組欄位驗證)。`js/app.js` 用 `createLookupPanel(idPrefix, url)`
-工廠函式生三個獨立的分頁實例(閉包各自持有 loaded/data/code/openDate 等
-狀態),表格渲染、量縮系列標記、標色筆記全部共用同一套程式碼,不重複。
+哪份清單、寫到哪個輸出檔,`daily-scan.yml` 裡對三份手動維護的清單各跑
+一次(共用同一支腳本、同一組欄位驗證)。`js/app.js` 用
+`createLookupPanel(idPrefix, url)` 工廠函式生四個獨立的分頁實例(閉包
+各自持有 loaded/data/code/openDate 等狀態),表格渲染、量縮系列標記、
+標色筆記全部共用同一套程式碼,不重複。
 
-⚠️ **額度備註:** 三份清單合計 61 檔 × 2 次 FinMind 呼叫 = 122 次,加上
-FOMO/暴跌FOMO 兩步(2026-09-08 實測合計約 376 次:FOMO 34 檔×4、暴跌FOMO
-60 檔×4)、產業別/匯率期貨等零星呼叫,一輪 `daily-scan.yml` 下來抓 500 次
-上下,600 次/小時的上限還有餘裕但不算寬。之後想再加清單或加檔數,先看
-daily-scan job 的 log 有沒有頂到上限。
+⚠️ **額度備註:** 三份手動清單合計 61 檔 × 2 次 FinMind 呼叫 = 122 次,
+加上 FOMO/暴跌FOMO 兩步(2026-09-08 實測合計約 376 次:FOMO 34 檔×4、
+暴跌FOMO 60 檔×4)、產業別/匯率期貨等零星呼叫,一輪 `daily-scan.yml`
+下來抓 500 次上下,600 次/小時的上限還有餘裕但不算寬。之後想再加清單
+或加檔數,先看 daily-scan job 的 log 有沒有頂到上限。
+
+### 9/8全掃(2026-09-09 加入,一次性分頁)
+
+討論脈絡:三份手動清單各自只抽樣 20 檔,使用者發現這樣「只驗證了抽到
+的那幾檔,沒驗證整個候選池」,想直接掃當天全部候選、套同一套過濾條件
+把不合格的排除,再看剩下誰被標記。
+
+跟其他三個分頁的關鍵差異是**清單來源不是手動維護的固定名單**,是當天
+`data/scan-latest.json`(爆量,25 檔)+ `data/crash-latest.json`
+(暴跌,59 檔)候選的**聯集**(兩者價格條件互斥,天生不重複,加總剛好
+84 檔)。用 `.github/workflows/scan-full-candidates.yml`(一次性
+workflow,跟 `probe-*.yml` 系列同一個「用完可留可刪」慣例)手動觸發:
+inline 一段 Python 合併兩份候選代號,丟給 `fetch_stock_lookup.py`
+(同一支腳本,只是清單/輸出檔換成 `/tmp/fullscan_codes.json` →
+`data/stock-lookup-fullscan-latest.json`,不寫回根目錄的清單檔)。
+84 檔 × 2 次 FinMind = 168 次,遠低於額度,而且是獨立觸發、不同小時
+視窗,不會跟 `daily-scan.yml` 搶額度。
+
+⚠️ **不會每天自動更新。** 這是「2026-09-08 收盤那天的候選全部長怎樣」
+的快照,不是每日排程的一部分——`daily-scan.yml` 不會覆寫這個檔案。
+想看新的一天,要再手動觸發一次 `scan-full-candidates.yml`(會覆寫成
+新一天的候選池)。實測(2026-09-09):84 檔抓完 0 failures,套過低
+活躍度+無標記兩道過濾後剩 65 檔可查,19 檔被濾掉(全部是「整檔無標記」
+——今天的候選本來就是爆量/暴跌篩出來的,量本身不會太薄,低活躍度過濾
+這次沒濾掉半檔)。
 
 每檔股票組一張最近 N 個交易日(受 `data/history` 的 `KEEP_DAYS` 限制,
 目前 30 天)的逐日大表格:

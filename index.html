@@ -70,6 +70,7 @@
     <button type="button" class="viewbtn" data-view="lookup">FOMO個股查詢</button>
     <button type="button" class="viewbtn" data-view="lookup-scan">爆量個股查詢</button>
     <button type="button" class="viewbtn" data-view="lookup-crashfomo">暴跌FOMO個股查詢</button>
+    <button type="button" class="viewbtn" data-view="lookup-fullscan">9/8全掃</button>
   </nav>
   <nav class="tabs" id="tabs">
     <button type="button" class="tab is-active" data-tab="active">進行中 <span class="tab-count" data-count="active">0</span></button>
@@ -544,7 +545,7 @@
     開高低收量沿用爆量/暴跌掃描的 30 天基準線,融資融券與外資投信來自 FinMind。
     點一列可以標色、寫筆記,存在瀏覽器裡,「匯出」備份會一起帶走。點欄位標題可以
     暫時隱藏那一欄,列右側的按鈕可以暫時隱藏那一列——這兩個只存在這台瀏覽器,
-    「匯出」不會帶走。日期旁可能出現三種純前端算的
+    「匯出」不會帶走。日期旁可能出現四種純前端算的
     參考標記:<span class="lookup-shrink-badge">🔽量縮</span>
     是單日當天量比近期高點(前 10 天內最高量)縮到 30% 以下、且前 10 天平均
     日振幅至少 3.5%(排除量縮但根本沒在動的死盤)才標,不代表接下來
@@ -554,8 +555,13 @@
     以上才標——門檻照使用者自己手算的方法「量縮至少 10 天,題材一到位就
     往上一波」訂;<span class="lookup-selloff-badge">🔻外資出貨</span>
     是當天跌幅 4% 以上、外資同時賣超就標,只看賣超方向不看金額大小——
-    同樣是大跌,外資買超接刀的日子不會被標。三者都只驗證過一次樣本,沒有
-    回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。選定的股票如果目前
+    同樣是大跌,外資買超接刀的日子不會被標;<span class="lookup-warming-badge">🔥連續增溫</span>
+    是連續 2 天量創近期新高(量 ≥ 前 10 天最高量)且外資同步買超就標,
+    不要求先蹲量,只看外資不看投信——跟🔔量縮轉買是獨立的兩套邏輯,
+    抓的是「還沒蹲夠但量能已經連續墊高」的股票(6657 就是這種案例,
+    投信整段歷史都沒交易紀錄,🔔的投信條件永遠不會成立)。四者都只驗證過
+    一次樣本,沒有回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。
+    選定的股票如果目前
     正蹲在量縮蓄勢裡但還沒等到轉買訊號,上面那行資料範圍後面會多一句
     🕐 提示。當天外資買賣超絕對值 &lt; 100 張、且成交量 &lt; 300 張的日子
     直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
@@ -609,7 +615,7 @@
     開高低收量沿用爆量/暴跌掃描的 30 天基準線,融資融券與外資投信來自 FinMind。
     點一列可以標色、寫筆記,存在瀏覽器裡,「匯出」備份會一起帶走。點欄位標題可以
     暫時隱藏那一欄,列右側的按鈕可以暫時隱藏那一列——這兩個只存在這台瀏覽器,
-    「匯出」不會帶走。日期旁可能出現三種純前端算的
+    「匯出」不會帶走。日期旁可能出現四種純前端算的
     參考標記:<span class="lookup-shrink-badge">🔽量縮</span>
     是單日當天量比近期高點(前 10 天內最高量)縮到 30% 以下、且前 10 天平均
     日振幅至少 3.5%(排除量縮但根本沒在動的死盤)才標,不代表接下來
@@ -619,8 +625,13 @@
     以上才標——門檻照使用者自己手算的方法「量縮至少 10 天,題材一到位就
     往上一波」訂;<span class="lookup-selloff-badge">🔻外資出貨</span>
     是當天跌幅 4% 以上、外資同時賣超就標,只看賣超方向不看金額大小——
-    同樣是大跌,外資買超接刀的日子不會被標。三者都只驗證過一次樣本,沒有
-    回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。選定的股票如果目前
+    同樣是大跌,外資買超接刀的日子不會被標;<span class="lookup-warming-badge">🔥連續增溫</span>
+    是連續 2 天量創近期新高(量 ≥ 前 10 天最高量)且外資同步買超就標,
+    不要求先蹲量,只看外資不看投信——跟🔔量縮轉買是獨立的兩套邏輯,
+    抓的是「還沒蹲夠但量能已經連續墊高」的股票(6657 就是這種案例,
+    投信整段歷史都沒交易紀錄,🔔的投信條件永遠不會成立)。四者都只驗證過
+    一次樣本,沒有回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。
+    選定的股票如果目前
     正蹲在量縮蓄勢裡但還沒等到轉買訊號,上面那行資料範圍後面會多一句
     🕐 提示。當天外資買賣超絕對值 &lt; 100 張、且成交量 &lt; 300 張的日子
     直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
@@ -650,6 +661,77 @@
         </tr>
       </thead>
       <tbody id="lookup-crashfomo-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="list-wrap" id="lookup-fullscan-wrap" hidden>
+  <div class="scan-meta" id="lookup-fullscan-meta">載入中…</div>
+  <div class="ctrl-row" id="lookup-fullscan-controls" hidden>
+    <span class="ctrl-label">代號</span>
+    <select id="lookup-fullscan-select"></select>
+  </div>
+  <div class="ctrl-row" id="lookup-fullscan-hidden-hint">
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-fullscan-cols-reset" hidden></button>
+    <button type="button" class="btn btn-ghost btn-sm" id="lookup-fullscan-rows-toggle" hidden></button>
+  </div>
+  <details class="note-details">
+    <summary>使用說明(標記/過濾規則)</summary>
+    <p class="panel-note">
+    這份不是手動維護的清單,是 2026-09-08 收盤後把當天爆量掃描(25 檔)+
+    暴跌掃描(59 檔)候選「全部」抓一次的一次性快照(<code>data/stock-lookup-fullscan-latest.json</code>),
+    不是抽樣、也不會每天自動更新——想看更新的一天,要再手動觸發一次
+    <code>scan-full-candidates.yml</code>。跟「FOMO個股查詢」「爆量個股查詢」
+    「暴跌FOMO個股查詢」是四份獨立清單,但表格欄位、標記邏輯完全一樣。
+    開高低收量沿用爆量/暴跌掃描的 30 天基準線,融資融券與外資投信來自 FinMind。
+    點一列可以標色、寫筆記,存在瀏覽器裡,「匯出」備份會一起帶走。點欄位標題可以
+    暫時隱藏那一欄,列右側的按鈕可以暫時隱藏那一列——這兩個只存在這台瀏覽器,
+    「匯出」不會帶走。日期旁可能出現四種純前端算的
+    參考標記:<span class="lookup-shrink-badge">🔽量縮</span>
+    是單日當天量比近期高點(前 10 天內最高量)縮到 30% 以下、且前 10 天平均
+    日振幅至少 3.5%(排除量縮但根本沒在動的死盤)才標,不代表接下來
+    會轉買;<span class="lookup-breakout-badge">🔔量縮轉買</span>
+    是近 10 個交易日內至少 8 天量縮(比值 &lt; 60%)、窗口內平均日振幅至少 3.5%
+    (排除量縮但根本沒在動的死盤)、當天外資投信同步買超且量能放大 1.2 倍
+    以上才標——門檻照使用者自己手算的方法「量縮至少 10 天,題材一到位就
+    往上一波」訂;<span class="lookup-selloff-badge">🔻外資出貨</span>
+    是當天跌幅 4% 以上、外資同時賣超就標,只看賣超方向不看金額大小——
+    同樣是大跌,外資買超接刀的日子不會被標;<span class="lookup-warming-badge">🔥連續增溫</span>
+    是連續 2 天量創近期新高(量 ≥ 前 10 天最高量)且外資同步買超就標,
+    不要求先蹲量,只看外資不看投信——跟🔔量縮轉買是獨立的兩套邏輯,
+    抓的是「還沒蹲夠但量能已經連續墊高」的股票(6657 就是這種案例,
+    投信整段歷史都沒交易紀錄,🔔的投信條件永遠不會成立)。四者都只驗證過
+    一次樣本,沒有回測、不保證後續走勢,純粹提醒「這天值得多看一眼」。
+    選定的股票如果目前
+    正蹲在量縮蓄勢裡但還沒等到轉買訊號,上面那行資料範圍後面會多一句
+    🕐 提示。當天外資買賣超絕對值 &lt; 100 張、且成交量 &lt; 300 張的日子
+    直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
+    資料範圍後面列出來,沒有辦法個別叫回來看。整檔股票如果 30 天全部都是
+    低活躍度,連下拉選單都不會出現,不是列出來但空白。有活躍度但整段
+    30 天歷史裡四種標記跟🕐蓄勢提示一次都沒觸發過的股票,一樣從下拉
+    選單移除。
+    </p>
+  </details>
+  <div class="table-scroll">
+    <table class="scan-table" id="lookup-fullscan-table" hidden>
+      <thead>
+        <tr>
+          <th data-col="0">日期</th>
+          <th class="num lookup-th" data-col="1" title="點一下暫時隱藏這欄">開</th>
+          <th class="num lookup-th" data-col="2" title="點一下暫時隱藏這欄">高</th>
+          <th class="num lookup-th" data-col="3" title="點一下暫時隱藏這欄">低</th>
+          <th class="num lookup-th" data-col="4" title="點一下暫時隱藏這欄">收</th>
+          <th class="num lookup-th" data-col="5" title="點一下暫時隱藏這欄">量(張)</th>
+          <th class="num lookup-th" data-col="6" title="點一下暫時隱藏這欄">融資餘額(張)</th>
+          <th class="num lookup-th" data-col="7" title="點一下暫時隱藏這欄">融資增減(張)</th>
+          <th class="num lookup-th" data-col="8" title="點一下暫時隱藏這欄">融券餘額(張)</th>
+          <th class="num lookup-th" data-col="9" title="點一下暫時隱藏這欄">融券增減(張)</th>
+          <th class="num lookup-th" data-col="10" title="點一下暫時隱藏這欄">外資買賣超(張)</th>
+          <th class="num lookup-th" data-col="11" title="點一下暫時隱藏這欄">投信買賣超(張)</th>
+          <th class="lookup-th" data-col="12" title="點一下暫時隱藏這欄">備註</th>
+        </tr>
+      </thead>
+      <tbody id="lookup-fullscan-tbody"></tbody>
     </table>
   </div>
 </main>
