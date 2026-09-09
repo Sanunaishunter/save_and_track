@@ -4324,6 +4324,104 @@
     '</div>';
   }
 
+  // ------------------------------------------- 進場訊號準度統計
+  //
+  // 依進場訊號分類(entryGroupKey)驗證訊號可不可信:進場當天(created_at)
+  // 收盤價 vs. 最新收盤價,漲了算「上漲」、跌了算「下跌」。有明確方向預期
+  // 的分類(真漲該漲、虛漲該回檔、真跌該跌、虛跌該反彈、爆量/暴跌沿用
+  // 掃描本身 close>open/close<open 的多空定義)另外算「命中率」——命中的
+  // 定義是我(Claude)推出來的,不是使用者明講,UI 上要講清楚怎麼算的,
+  // 方便使用者一眼看出跟自己認知合不合。收盤價只吃 quotes-latest.json
+  // 的 30 天滾動視窗,進場日在視窗之外(超過 30 天前)就不算,標「視窗外」。
+
+  var ENTRY_TAG_DIRECTION = {
+    surge: { dir: 1, label: '預期偏多(掃描定義 close>open)' },
+    real_rally: { dir: 1, label: '預期續漲' },
+    fake_rally: { dir: -1, label: '預期不是真的,該回檔' },
+    crash: { dir: -1, label: '預期偏空(掃描定義 close<open)' },
+    real_crash: { dir: -1, label: '預期續跌' },
+    fake_crash: { dir: 1, label: '預期不是真的,該反彈' }
+    // thinrally(無量上漲)、divergence(背離)沒有明確方向預期,只看漲跌家數
+  };
+
+  /** 一筆紀錄的進場訊號後續表現。quotes 還沒載入、沒有進場日/代號、
+   * 或收盤價資料缺值時回傳 null(不計入統計)。*/
+  function signalOutcomeFor(rec) {
+    var key = entryGroupKey(rec);
+    if (key === 'none') return null;
+    if (!quotes || !quotes.days || !quotes.daily_close || !quotesIdx) return null;
+    var code = String(rec.stock_id || '').trim();
+    if (!code) return null;
+    var qi = quotesIdx[code];
+    if (qi == null) return null;
+    var closes = quotes.daily_close[qi];
+    if (!closes) return null;
+    var entryDate = String(rec.created_at || '').slice(0, 10);
+    if (!entryDate) return null;
+    var days = quotes.days;
+    if (entryDate < days[days.length - 1]) return { key: key, status: 'out_of_window' };
+    var idx = -1;
+    for (var i = days.length - 1; i >= 0; i--) {
+      if (days[i] >= entryDate) { idx = i; break; }
+    }
+    if (idx <= 0) return { key: key, status: 'too_recent' }; // 進場日就是最新一天,還沒有後續資料可比
+    var entryClose = closes[idx], nowClose = closes[0];
+    if (entryClose == null || nowClose == null) return { key: key, status: 'no_price' };
+    var chgPct = (nowClose - entryClose) / entryClose;
+    return {
+      key: key, status: 'ok',
+      chgPct: chgPct, dir: chgPct > 0 ? 1 : (chgPct < 0 ? -1 : 0),
+      entryDate: days[idx], entryClose: entryClose, nowClose: nowClose
+    };
+  }
+
+  function signalAccuracyHtml() {
+    if (!quotes) return '';
+    var byKey = {};
+    data.forEach(function (rec) {
+      var o = signalOutcomeFor(rec);
+      if (!o) return;
+      (byKey[o.key] = byKey[o.key] || []).push(o);
+    });
+    var keys = ENTRY_TAG_ORDER.filter(function (k) { return k !== 'none' && byKey[k] && byKey[k].length; });
+    if (!keys.length) return '';
+
+    var rows = keys.map(function (k) {
+      var items = byKey[k];
+      var ok = items.filter(function (o) { return o.status === 'ok'; });
+      var pending = items.length - ok.length;
+      var up = ok.filter(function (o) { return o.dir > 0; }).length;
+      var down = ok.filter(function (o) { return o.dir < 0; }).length;
+      var flat = ok.length - up - down;
+      var expect = ENTRY_TAG_DIRECTION[k];
+      var hitHtml = '<span class="dim">沒有明確方向預期</span>';
+      if (expect && ok.length) {
+        var wins = ok.filter(function (o) { return o.dir === expect.dir; }).length;
+        hitHtml = '<span class="mono">命中率 ' + Math.round(wins / ok.length * 100) + '%</span>' +
+          '<span class="dim">(' + esc(expect.label) + ')</span>';
+      }
+      return '<div class="exit-stat-group">' +
+        '<div class="exit-stat-row">' +
+          '<span>' + esc(ENTRY_TAG_LABELS[k] || k) + '</span>' +
+          '<span class="mono">N=' + ok.length + (pending ? '(' + pending + ' 檔視窗外/太新,未計入)' : '') + '</span>' +
+          '<span class="mono up">上漲 ' + up + '</span>' +
+          '<span class="mono down">下跌 ' + down + '</span>' +
+          (flat ? '<span class="mono">平盤 ' + flat + '</span>' : '') +
+          hitHtml +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    return '<div class="pos-block">' +
+      '<div class="pos-head"><span>進場訊號準度統計</span></div>' +
+      '<p class="dim">依「加入追蹤」當天收盤價 vs. 最新收盤價驗證訊號——' +
+        '例如訊號是真漲,後續真的漲了就算命中。命中率的方向預期(真漲該漲、' +
+        '虛漲該回檔⋯)是程式推定的,不是統計驗證過的結論;收盤價只有近 30 天,' +
+        '進場日超過這個範圍就不計入。樣本數少,當參考。</p>' +
+      '<div class="exit-stats">' + rows + '</div>' +
+    '</div>';
+  }
+
   /**
    * 一筆紀錄的持倉損益。沒有報價時 priced 為 false —— 成本仍然算得出來,
    * 但市值與損益一律留 null,不要拿成本當市值假裝沒事。
@@ -4407,6 +4505,11 @@
   }
 
   function renderPosSummary() {
+    // 訊號準度統計跟有沒有持倉無關(還沒買也可能有進場訊號分類),獨立更新,
+    // 不要放進下面「沒有持倉就整塊隱藏」的 early return 之後。
+    var sigBox = el('signal-stats');
+    if (sigBox) sigBox.innerHTML = signalAccuracyHtml();
+
     var box = el('pos-summary');
     var cost = 0, value = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
     var bestSum = 0, worstSum = 0, hasRange = false, noRange = 0;
@@ -5200,8 +5303,10 @@
     renderList();
     renderPosSummary();
 
-    // 有持倉才去抓報價 —— 沒持倉的人不用為了首頁多下載一份 130KB
-    if (data.some(function (r) { return (r.positions || []).length; })) {
+    // 有持倉,或有紀錄標了進場訊號分類(需要報價驗證準度)才去抓報價——
+    // 兩者都沒有的話,不用為了首頁多下載一份 130KB。
+    if (data.some(function (r) { return (r.positions || []).length; }) ||
+        data.some(function (r) { return entryGroupKey(r) !== 'none'; })) {
       loadQuotes().then(function () {
         checkAutoExits();             // 出場設定觸發就自動轉已出場,一天跑一次
         renderList();
