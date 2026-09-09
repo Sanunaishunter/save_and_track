@@ -1,16 +1,17 @@
 {
   "date": "2026-09-08",
-  "generated_at": "2026-09-08T08:31:15Z",
+  "generated_at": "2026-09-09T03:22:24Z",
   "market": "twse-listed-common",
   "params": {
     "ma_window": 20,
     "ma_shift": 1,
     "vol_ratio_threshold": 1.5,
-    "condition": "vol_ratio > 1.5 且 close > open"
+    "min_volume_shares": 300000,
+    "condition": "vol_ratio > 1.5 且 close > open 且成交量 >= 300000 股(300 張)"
   },
   "universe": 1084,
   "evaluated": 1061,
-  "count": 34,
+  "count": 25,
   "rows": [
     {
       "stock_id": "4961",
@@ -139,15 +140,6 @@
       "ma20_volume": 650723
     },
     {
-      "stock_id": "2748",
-      "stock_name": "雲品",
-      "vol_ratio": 2.86,
-      "change_pct": 1.42,
-      "close": 39.4,
-      "volume": 174568,
-      "ma20_volume": 60965
-    },
-    {
       "stock_id": "3055",
       "stock_name": "蔚華科",
       "vol_ratio": 2.8,
@@ -155,15 +147,6 @@
       "close": 146.0,
       "volume": 8161748,
       "ma20_volume": 2920002
-    },
-    {
-      "stock_id": "1445",
-      "stock_name": "大宇",
-      "vol_ratio": 2.49,
-      "change_pct": 0.0,
-      "close": 10.4,
-      "volume": 181191,
-      "ma20_volume": 72792
     },
     {
       "stock_id": "2360",
@@ -202,15 +185,6 @@
       "ma20_volume": 5772786
     },
     {
-      "stock_id": "1441",
-      "stock_name": "大東",
-      "vol_ratio": 2.21,
-      "change_pct": 0.0,
-      "close": 8.8,
-      "volume": 31570,
-      "ma20_volume": 14270
-    },
-    {
       "stock_id": "3645",
       "stock_name": "達邁",
       "vol_ratio": 2.04,
@@ -227,15 +201,6 @@
       "close": 555.0,
       "volume": 2757172,
       "ma20_volume": 1349805
-    },
-    {
-      "stock_id": "6581",
-      "stock_name": "鋼聯",
-      "vol_ratio": 2.01,
-      "change_pct": 2.29,
-      "close": 111.5,
-      "volume": 39626,
-      "ma20_volume": 19672
     },
     {
       "stock_id": "6515",
@@ -256,24 +221,6 @@
       "ma20_volume": 19471436
     },
     {
-      "stock_id": "6722",
-      "stock_name": "輝創",
-      "vol_ratio": 1.76,
-      "change_pct": -1.06,
-      "close": 32.55,
-      "volume": 42286,
-      "ma20_volume": 23993
-    },
-    {
-      "stock_id": "1220",
-      "stock_name": "台榮",
-      "vol_ratio": 1.69,
-      "change_pct": 2.8,
-      "close": 11.0,
-      "volume": 180306,
-      "ma20_volume": 106849
-    },
-    {
       "stock_id": "2009",
       "stock_name": "第一銅",
       "vol_ratio": 1.64,
@@ -290,33 +237,6 @@
       "close": 740.0,
       "volume": 1736193,
       "ma20_volume": 1063850
-    },
-    {
-      "stock_id": "1456",
-      "stock_name": "怡華",
-      "vol_ratio": 1.57,
-      "change_pct": 5.51,
-      "close": 14.35,
-      "volume": 95038,
-      "ma20_volume": 60433
-    },
-    {
-      "stock_id": "2706",
-      "stock_name": "第一店",
-      "vol_ratio": 1.57,
-      "change_pct": -2.79,
-      "close": 12.2,
-      "volume": 157618,
-      "ma20_volume": 100109
-    },
-    {
-      "stock_id": "3168",
-      "stock_name": "眾福科",
-      "vol_ratio": 1.55,
-      "change_pct": 0.93,
-      "close": 43.5,
-      "volume": 23171,
-      "ma20_volume": 14927
     }
   ]
 }

@@ -1,26 +1,18 @@
 {
   "date": "2026-09-08",
-  "generated_at": "2026-09-08T08:31:15Z",
+  "generated_at": "2026-09-09T03:22:24Z",
   "market": "twse-listed-common",
   "params": {
     "ma_window": 20,
     "ma_shift": 1,
     "vol_ratio_threshold": 1.5,
-    "condition": "vol_ratio > 1.5 且 close < open"
+    "min_volume_shares": 300000,
+    "condition": "vol_ratio > 1.5 且 close < open 且成交量 >= 300000 股(300 張)"
   },
   "universe": 1084,
   "evaluated": 1061,
-  "count": 84,
+  "count": 59,
   "rows": [
-    {
-      "stock_id": "6916",
-      "stock_name": "華凌",
-      "vol_ratio": 9.31,
-      "change_pct": 1.35,
-      "close": 18.8,
-      "volume": 175733,
-      "ma20_volume": 18866
-    },
     {
       "stock_id": "3338",
       "stock_name": "泰碩",
@@ -38,24 +30,6 @@
       "close": 11.55,
       "volume": 1185893,
       "ma20_volume": 194194
-    },
-    {
-      "stock_id": "6792",
-      "stock_name": "詠業",
-      "vol_ratio": 5.84,
-      "change_pct": 0.0,
-      "close": 60.2,
-      "volume": 172941,
-      "ma20_volume": 29604
-    },
-    {
-      "stock_id": "1438",
-      "stock_name": "三地開發",
-      "vol_ratio": 5.34,
-      "change_pct": 2.64,
-      "close": 23.3,
-      "volume": 194440,
-      "ma20_volume": 36408
     },
     {
       "stock_id": "6133",
@@ -94,15 +68,6 @@
       "ma20_volume": 3886793
     },
     {
-      "stock_id": "7765",
-      "stock_name": "中華資安",
-      "vol_ratio": 3.95,
-      "change_pct": -0.91,
-      "close": 218.5,
-      "volume": 130408,
-      "ma20_volume": 33002
-    },
-    {
       "stock_id": "6426",
       "stock_name": "統新",
       "vol_ratio": 3.83,
@@ -128,15 +93,6 @@
       "close": 33.2,
       "volume": 21635033,
       "ma20_volume": 5980555
-    },
-    {
-      "stock_id": "3150",
-      "stock_name": "鈺寶-創",
-      "vol_ratio": 3.62,
-      "change_pct": -3.3,
-      "close": 16.1,
-      "volume": 92383,
-      "ma20_volume": 25526
     },
     {
       "stock_id": "2413",
@@ -202,15 +158,6 @@
       "ma20_volume": 331604
     },
     {
-      "stock_id": "3419",
-      "stock_name": "譁裕",
-      "vol_ratio": 3.07,
-      "change_pct": -2.17,
-      "close": 11.25,
-      "volume": 296550,
-      "ma20_volume": 96545
-    },
-    {
       "stock_id": "3535",
       "stock_name": "晶彩科",
       "vol_ratio": 2.86,
@@ -265,15 +212,6 @@
       "ma20_volume": 580145
     },
     {
-      "stock_id": "2380",
-      "stock_name": "虹光",
-      "vol_ratio": 2.54,
-      "change_pct": -3.28,
-      "close": 17.7,
-      "volume": 225463,
-      "ma20_volume": 88862
-    },
-    {
       "stock_id": "3257",
       "stock_name": "虹冠電",
       "vol_ratio": 2.48,
@@ -310,15 +248,6 @@
       "ma20_volume": 127638
     },
     {
-      "stock_id": "6645",
-      "stock_name": "金萬林-創",
-      "vol_ratio": 2.37,
-      "change_pct": 0.0,
-      "close": 12.2,
-      "volume": 49203,
-      "ma20_volume": 20781
-    },
-    {
       "stock_id": "3016",
       "stock_name": "嘉晶",
       "vol_ratio": 2.28,
@@ -335,15 +264,6 @@
       "close": 41.25,
       "volume": 10973412,
       "ma20_volume": 4860441
-    },
-    {
-      "stock_id": "6835",
-      "stock_name": "圓裕",
-      "vol_ratio": 2.21,
-      "change_pct": -0.48,
-      "close": 31.15,
-      "volume": 38197,
-      "ma20_volume": 17310
     },
     {
       "stock_id": "2072",
@@ -373,15 +293,6 @@
       "ma20_volume": 3035989
     },
     {
-      "stock_id": "7823",
-      "stock_name": "奧義賽博-KY創",
-      "vol_ratio": 2.11,
-      "change_pct": -3.0,
-      "close": 80.7,
-      "volume": 61019,
-      "ma20_volume": 28858
-    },
-    {
       "stock_id": "2382",
       "stock_name": "廣達",
       "vol_ratio": 2.07,
@@ -409,15 +320,6 @@
       "ma20_volume": 2357722
     },
     {
-      "stock_id": "1418",
-      "stock_name": "東華",
-      "vol_ratio": 2.03,
-      "change_pct": -0.28,
-      "close": 17.8,
-      "volume": 23422,
-      "ma20_volume": 11515
-    },
-    {
       "stock_id": "2388",
       "stock_name": "威盛",
       "vol_ratio": 1.95,
@@ -425,15 +327,6 @@
       "close": 76.1,
       "volume": 8501828,
       "ma20_volume": 4349728
-    },
-    {
-      "stock_id": "1726",
-      "stock_name": "永記",
-      "vol_ratio": 1.94,
-      "change_pct": -0.39,
-      "close": 77.5,
-      "volume": 49512,
-      "ma20_volume": 25474
     },
     {
       "stock_id": "6669",
@@ -517,15 +410,6 @@
       "ma20_volume": 789951
     },
     {
-      "stock_id": "5546",
-      "stock_name": "永固-KY",
-      "vol_ratio": 1.79,
-      "change_pct": -2.34,
-      "close": 14.6,
-      "volume": 89056,
-      "ma20_volume": 49640
-    },
-    {
       "stock_id": "2442",
       "stock_name": "新美齊",
       "vol_ratio": 1.76,
@@ -544,15 +428,6 @@
       "ma20_volume": 202659
     },
     {
-      "stock_id": "6184",
-      "stock_name": "大豐電",
-      "vol_ratio": 1.72,
-      "change_pct": -0.5,
-      "close": 39.9,
-      "volume": 144133,
-      "ma20_volume": 83965
-    },
-    {
       "stock_id": "3705",
       "stock_name": "永信",
       "vol_ratio": 1.7,
@@ -569,33 +444,6 @@
       "close": 44.3,
       "volume": 680239,
       "ma20_volume": 400140
-    },
-    {
-      "stock_id": "6128",
-      "stock_name": "上福",
-      "vol_ratio": 1.7,
-      "change_pct": -1.77,
-      "close": 19.45,
-      "volume": 130572,
-      "ma20_volume": 77029
-    },
-    {
-      "stock_id": "9906",
-      "stock_name": "欣巴巴",
-      "vol_ratio": 1.7,
-      "change_pct": -1.76,
-      "close": 41.8,
-      "volume": 87948,
-      "ma20_volume": 51744
-    },
-    {
-      "stock_id": "6988",
-      "stock_name": "威力暘-創",
-      "vol_ratio": 1.69,
-      "change_pct": -2.45,
-      "close": 11.95,
-      "volume": 78421,
-      "ma20_volume": 46304
     },
     {
       "stock_id": "1444",
@@ -623,69 +471,6 @@
       "close": 270.0,
       "volume": 1837612,
       "ma20_volume": 1098095
-    },
-    {
-      "stock_id": "3038",
-      "stock_name": "全台",
-      "vol_ratio": 1.67,
-      "change_pct": -0.5,
-      "close": 20.0,
-      "volume": 246952,
-      "ma20_volume": 147637
-    },
-    {
-      "stock_id": "8429",
-      "stock_name": "金麗-KY",
-      "vol_ratio": 1.67,
-      "change_pct": -0.33,
-      "close": 5.96,
-      "volume": 179043,
-      "ma20_volume": 107281
-    },
-    {
-      "stock_id": "4755",
-      "stock_name": "三福化",
-      "vol_ratio": 1.63,
-      "change_pct": -0.86,
-      "close": 115.0,
-      "volume": 285434,
-      "ma20_volume": 175611
-    },
-    {
-      "stock_id": "5203",
-      "stock_name": "訊連",
-      "vol_ratio": 1.62,
-      "change_pct": -2.75,
-      "close": 56.6,
-      "volume": 239909,
-      "ma20_volume": 148297
-    },
-    {
-      "stock_id": "2028",
-      "stock_name": "威致",
-      "vol_ratio": 1.6,
-      "change_pct": -0.63,
-      "close": 15.65,
-      "volume": 133372,
-      "ma20_volume": 83148
-    },
-    {
-      "stock_id": "8341",
-      "stock_name": "日友",
-      "vol_ratio": 1.6,
-      "change_pct": -0.67,
-      "close": 74.6,
-      "volume": 238417,
-      "ma20_volume": 149315
-    },
-    {
-      "stock_id": "3607",
-      "stock_name": "谷崧",
-      "vol_ratio": 1.58,
-      "change_pct": -1.09,
-      "close": 13.55,
-      "volume": 256224,
-      "ma20_volume": 162369
     },
     {
       "stock_id": "8163",
@@ -758,15 +543,6 @@
       "close": 193.0,
       "volume": 1129829,
       "ma20_volume": 752761
-    },
-    {
-      "stock_id": "4999",
-      "stock_name": "鑫禾",
-      "vol_ratio": 1.5,
-      "change_pct": -1.63,
-      "close": 18.05,
-      "volume": 53875,
-      "ma20_volume": 35845
     }
   ]
 }

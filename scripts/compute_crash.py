@@ -65,6 +65,8 @@ def main():
         vol_ratio = cur["volume"] / ma20
         if vol_ratio <= common.VOL_RATIO_THRESHOLD:
             continue
+        if cur["volume"] < common.MIN_VOLUME_SHARES:
+            continue                              # 薄股票量再怎麼放大還是薄,擋在源頭
         if not (cur["close"] < cur["open"]):
             continue
 
@@ -94,7 +96,9 @@ def main():
             "ma_window": common.MA_WINDOW,
             "ma_shift": 1,
             "vol_ratio_threshold": common.VOL_RATIO_THRESHOLD,
-            "condition": "vol_ratio > %s 且 close < open" % common.VOL_RATIO_THRESHOLD,
+            "min_volume_shares": common.MIN_VOLUME_SHARES,
+            "condition": "vol_ratio > %s 且 close < open 且成交量 >= %d 股(%d 張)"
+                         % (common.VOL_RATIO_THRESHOLD, common.MIN_VOLUME_SHARES, common.MIN_VOLUME_LOTS),
         },
         "universe": len(today),
         "evaluated": evaluated,

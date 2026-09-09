@@ -43,7 +43,18 @@
 ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個股也會剔除。
 
 計算:`vol_ratio = 當日量 / MA20`,MA20 為 shift(1) 的前 20 個交易日均量(不含當日);
-爆量條件為 `vol_ratio > 1.5` 且 `close > open`。
+爆量條件為 `vol_ratio > 1.5` 且 `close > open` 且成交量 `>= 300,000 股(300 張)`
+(`common.MIN_VOLUME_SHARES`,2026-09-09 加入,暴跌掃描共用同一個常數)。
+
+⚠️ **絕對量下限的動機:** vol_ratio 只看「比平常放大幾倍」,一檔平常一天
+只成交幾張的極薄股票,量放大 1.5 倍還是幾張,一樣會被 vol_ratio 抓進爆量/
+暴跌清單。這種候選往下傳給 FOMO/暴跌FOMO 當觀察名單、又被「爆量個股
+查詢」「暴跌FOMO個股查詢」隨機抽中,結果打完 FinMind 抓資料才發現
+整檔都被個股查詢自己的低活躍度過濾器(`js/app.js` 的
+`LOOKUP_LOW_ACTIVITY_VOLUME_LOTS`)濾掉——資料都抓完才知道沒用,額度
+白花。門檻在源頭用同一個數字(300 張)先擋掉,vol_ratio 排序邏輯不變,
+只是候選池變乾淨。2026-09-09 套用當天資料實測:爆量掃描 34→25 檔、
+暴跌掃描 84→59 檔。
 
 
 ---
@@ -87,9 +98,10 @@ ETF(00 開頭)、權證(六位數)、特別股(如 2887A);當日無成交的個�
 (`compute_crash.py` 接在 `compute_scan.py` 後面,`compute_crash_fomo.py`
 接在 `compute_fomo.py` 後面)。
 
-**暴跌掃描**(`compute_crash.py`):跟爆量掃描共用同一個 `vol_ratio` 門檻與
-`data/history`,唯一差別是價格條件相反 —— `vol_ratio > 1.5` 且 `close < open`。
-邏輯完全對稱,`load_day()` 直接 import 自 `compute_scan.py`,不重複實作。
+**暴跌掃描**(`compute_crash.py`):跟爆量掃描共用同一個 `vol_ratio` 門檻、
+絕對量下限(300 張)與 `data/history`,唯一差別是價格條件相反 ——
+`vol_ratio > 1.5` 且 `close < open`。邏輯完全對稱,`load_day()` 直接
+import 自 `compute_scan.py`,不重複實作。
 
 **暴跌 FOMO**(`compute_crash_fomo.py`):判斷一檔股票的下跌是「真跌」(法人
 出貨主導,大機率續跌)還是「虛跌」(融資斷頭式恐慌錯殺,法人趁機承接,

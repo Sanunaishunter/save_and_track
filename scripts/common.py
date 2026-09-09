@@ -54,6 +54,16 @@ KEEP_DAYS = 30
 # 爆量門檻(沿用 SH2 project102)
 VOL_RATIO_THRESHOLD = 1.5
 
+# 絕對量下限(2026-09-09 加入,爆量/暴跌掃描共用)。vol_ratio 只看「比平常
+# 放大幾倍」,薄股票平常量只有幾張、放大 1.5 倍還是幾張,一樣會被抓進爆量/
+# 暴跌清單,往下傳給 FOMO/暴跌FOMO 當候選池,又被個股查詢隨機抽中拿去打
+# FinMind、結果因為個股查詢自己的低活躍度過濾器(見 js/app.js
+# LOOKUP_LOW_ACTIVITY_VOLUME_LOTS)整檔濾掉——資料都抓完了才發現沒用,
+# 額度白花。門檻跟個股查詢那邊用同一個數字(300 張),在源頭先擋掉這種
+# 股票,vol_ratio 篩選跟排名不受影響(只是候選池變乾淨,不是換一套邏輯)。
+MIN_VOLUME_LOTS = 300
+MIN_VOLUME_SHARES = MIN_VOLUME_LOTS * 1000
+
 # 只要上市普通股:四位數、開頭非 0(排除 00 開頭的 ETF 與六位數權證)
 LISTED_CODE = re.compile(r"^[1-9]\d{3}$")
 
