@@ -34,6 +34,11 @@
 
   var STATUS_LABEL = { active: '進行中', exited: '已出場', rejected: '已放棄' };
 
+  // 自動出場的觸發規則,exit_result.rule 用這三種值。清單依觸發類型排序、
+  // 自動出場統計分組都共用同一份 label/順序,只在這裡定義一次。
+  var EXIT_RULE_LABELS = { target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損' };
+  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown'];
+
   // ---------------------------------------------------------------- 狀態
 
   var data = [];            // 全部紀錄
@@ -41,6 +46,7 @@
   var currentId = null;     // 詳情頁正在看的 id
   var openStep = 1;         // 詳情頁展開中的步驟
   var storageOk = true;     // localStorage 是否可用
+  var listSortMode = 'time'; // 追蹤清單排序:'time'(預設,依更新時間)或 'trigger'(依自動出場觸發類型分組)
 
   // ---------------------------------------------------------------- 工具
 
@@ -564,13 +570,31 @@
     return c;
   }
 
+  /** 依觸發類型排序時的分組鍵:沒有自動出場紀錄的(進行中/手動出場/放棄)
+   * 統一歸在「其他」,排在三種觸發規則後面——排序模式是給「想比較同一種
+   * 觸發規則抓到的股票」用的,不是取代時間排序,沒觸發過的本來就不是
+   * 這個排序想凸顯的重點。 */
+  function triggerGroupKey(rec) {
+    return (rec.exit_result && rec.exit_result.rule) || 'none';
+  }
+
   function visibleRecords() {
     var list = currentTab === 'all'
       ? data.slice()
       : data.filter(function (r) { return r.status === currentTab; });
-    list.sort(function (a, b) {
-      return String(b.updated_at).localeCompare(String(a.updated_at));
-    });
+    if (listSortMode === 'trigger') {
+      var order = EXIT_RULE_ORDER.concat(['none']);
+      list.sort(function (a, b) {
+        var ra = order.indexOf(triggerGroupKey(a));
+        var rb = order.indexOf(triggerGroupKey(b));
+        if (ra !== rb) return ra - rb;
+        return String(b.updated_at).localeCompare(String(a.updated_at));
+      });
+    } else {
+      list.sort(function (a, b) {
+        return String(b.updated_at).localeCompare(String(a.updated_at));
+      });
+    }
     return list;
   }
 
@@ -628,8 +652,28 @@
       if (node) node.textContent = c[k] || 0;
     });
 
+    var sortBtn = el('list-sort-toggle');
+    if (sortBtn) sortBtn.textContent = listSortMode === 'trigger' ? '排序:觸發類型' : '排序:時間';
+
     var list = visibleRecords();
-    el('list').innerHTML = list.map(cardHtml).join('');
+    var html;
+    if (listSortMode === 'trigger') {
+      var lastKey = null;
+      html = list.map(function (rec) {
+        var key = triggerGroupKey(rec);
+        var head = '';
+        if (key !== lastKey) {
+          head = '<div class="list-group-head">' +
+            esc(key === 'none' ? '其他(沒有自動出場紀錄)' : (EXIT_RULE_LABELS[key] || key)) +
+          '</div>';
+          lastKey = key;
+        }
+        return head + cardHtml(rec);
+      }).join('');
+    } else {
+      html = list.map(cardHtml).join('');
+    }
+    el('list').innerHTML = html;
     el('empty').hidden = list.length > 0;
   }
 
@@ -4185,15 +4229,16 @@
       groups[k].push(r);
     });
 
-    var ruleLabels = { target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損' };
-    var rows = Object.keys(groups).map(function (k) {
+    var groupKeys = EXIT_RULE_ORDER.filter(function (k) { return groups[k]; })
+      .concat(Object.keys(groups).filter(function (k) { return EXIT_RULE_ORDER.indexOf(k) < 0; }));
+    var rows = groupKeys.map(function (k) {
       var recs = groups[k];
       var wins = recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
       var avgPct = recs.reduce(function (s, r) { return s + (r.exit_result.pl_pct || 0); }, 0) / recs.length;
       var expanded = !!exitStatsExpanded[k];
       return '<div class="exit-stat-group">' +
         '<div class="exit-stat-row">' +
-          '<span>' + esc(ruleLabels[k] || k) + '</span>' +
+          '<span>' + esc(EXIT_RULE_LABELS[k] || k) + '</span>' +
           '<span class="mono">N=' + recs.length + '</span>' +
           '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
           '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
@@ -4775,6 +4820,11 @@
       Array.prototype.forEach.call(el('tabs').children, function (t) {
         t.classList.toggle('is-active', t === tab);
       });
+      renderList();
+    });
+
+    el('list-sort-toggle').addEventListener('click', function () {
+      listSortMode = listSortMode === 'trigger' ? 'time' : 'trigger';
       renderList();
     });
 
