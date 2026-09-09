@@ -204,6 +204,39 @@ def selloff_days(rows):
     return out
 
 
+def zone_days(rows):
+    """shrink_zone_now() 只看「最新一天」,這支把同一套窗口/門檻套到
+    每一天,回傳整段歷史裡「這天算不算蹲好了」的完整序列——用來統計
+    「蹲好之後多久會等到轉買」,不是只看今天蹲不蹲。定義完全對齊
+    breakout_days() 判斷「量縮天數/振幅夠不夠」的那段,只是不要求觸發日
+    當天有外資投信同步買超+量增。"""
+    ratios = vol_ratios(rows)
+    out = {}
+    for i in range(LOOKBACK, len(rows)):
+        lo = i - LOOKBACK
+        shrink_count = 0
+        ok = True
+        for j in range(lo, i):
+            if ratios[j] is None:
+                ok = False
+                break
+            if ratios[j] < SHRINK_RATIO:
+                shrink_count += 1
+        if not ok or shrink_count < MIN_SHRINK:
+            continue
+        avg_range = avg_range_pct(rows, lo, i)
+        if avg_range is None or avg_range < MIN_RANGE_PCT:
+            continue
+        r = rows[i]
+        fn, tn = r.get("foreign_net"), r.get("trust_net")
+        already_triggered = bool(fn is not None and tn is not None and fn > 0 and tn > 0)
+        out[r["date"]] = {
+            "shrink_count": shrink_count, "avg_range_pct": avg_range,
+            "already_triggered": already_triggered,
+        }
+    return out
+
+
 def warming_days(rows):
     ratios = vol_ratios(rows)
     out = {}
