@@ -2381,6 +2381,23 @@
     return volLow && foreignLow;
   }
 
+  // 整檔都沒有任何參考標記(2026-09-09 加入)。討論脈絡:暴跌FOMO個股查詢
+  // 的 2062(橋椿)雖然沒被低活躍度濾掉(量還算夠),但 30 天裡🔽/🔔/🕐
+  // 四個都沒觸發過——查了資料才發現:振幅一直在 0.8~2.6%(離 3.5% 門檻
+  // 遠),投信買賣超每天都是 0(FinMind 完全沒抓到這檔的投信交易紀錄),
+  // 單日跌幅最重也只有 -0.78%(離 🔻的 -4% 門檻遠)。股價太平穩、投信沒
+  // 在交易,四個標記天生都踩不到,留著也是白算 badge。這種股票直接從
+  // 下拉選單移除,判定用「整段歷史一次都沒觸發過」,不是看目前這一天。
+  function lookupHasAnySignal(rec) {
+    var rows = rec.rows || [];
+    if (Object.keys(computeLookupBreakouts(rows)).length) return true;
+    if (Object.keys(computeLookupShrinkDays(rows)).length) return true;
+    if (Object.keys(computeLookupSelloffDays(rows)).length) return true;
+    var zone = computeLookupShrinkZone(rows);
+    if (zone && !zone.alreadyTriggered) return true;
+    return false;
+  }
+
   // 個股查詢分頁工廠:idPrefix 決定 DOM id('lookup' / 'lookup-scan'),
   // url 是各自的資料來源。標色/筆記(loadLookupNotesMap 那組)是照「代號|日期」存,
   // 兩個分頁共用同一份沒關係——講的是同一檔股票。欄/列隱藏偏好各自存一份
@@ -2491,16 +2508,22 @@
 
       // 整檔全部交易日都低活躍度(每天都外資<100張且量<300張)就直接從
       // 下拉選單移除,不是只濾掉那幾天——這種股票留著也沒東西可看。
-      var okCodes = fetchedCodes.filter(function (c) {
+      var activeCodes = fetchedCodes.filter(function (c) {
         var rows = data.data[c].rows || [];
         return rows.some(function (r) { return !lookupIsLowActivity(r); });
       });
-      var deadCodeCount = fetchedCodes.length - okCodes.length;
+      var deadCodeCount = fetchedCodes.length - activeCodes.length;
+
+      // 有活躍度但 30 天裡🔽/🔔/🔻/🕐 一個都沒觸發過,一樣沒東西好看,
+      // 也從下拉選單移除(2026-09-09 加,見 lookupHasAnySignal 註解)。
+      var okCodes = activeCodes.filter(function (c) {
+        return lookupHasAnySignal(data.data[c]);
+      });
+      var noSignalCount = activeCodes.length - okCodes.length;
 
       if (!okCodes.length) {
-        meta.innerHTML = '<span class="warn">查詢清單裡的代號整檔都是低活躍度' +
-          '(外資買賣超 < ' + LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' +
-          LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張),已全部濾掉。</span>';
+        meta.innerHTML = '<span class="warn">查詢清單裡的代號整檔都是低活躍度或完全沒觸發過任何標記,' +
+          '已全部濾掉。</span>';
         controls.hidden = true;
         table.hidden = true;
         return;
@@ -2520,6 +2543,8 @@
         ? '、抓失敗 ' + data.failures.length + ' 檔' : '';
       var deadCodeNote = deadCodeCount > 0
         ? '、整檔低活躍度濾掉 ' + deadCodeCount + ' 檔' : '';
+      var noSignalNote = noSignalCount > 0
+        ? '、整檔無標記濾掉 ' + noSignalCount + ' 檔' : '';
 
       applyColVisibility(table);
 
@@ -2544,7 +2569,7 @@
           LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' + LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張)'
         : '';
       meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-        '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + ')' + zoneNote + lowActivityNote;
+        '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' + zoneNote + lowActivityNote;
 
       table.hidden = false;
       if (!allRows.length) {
