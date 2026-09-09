@@ -2402,7 +2402,15 @@
   // 其餘 28 天全部都是每天量不到 40 張的極薄股票也照樣留在清單裡。
   // 缺漏的那一項當它符合低活躍度(用另一項還有值的欄位正常判斷),
   // 兩項都缺才整天都算低活躍度。
+  // 2026-09-09 再改:融資融券+外資+投信「三個都是 null」的日子不套這條
+  // 過濾。單一欄位缺漏(FinMind 抓漏)仍然照上面的規則處理;但三個全部
+  // 一起缺,是 append_fullscan_price.py 刻意只補開高低收量、不補法人
+  // 資料的「價格延伸列」(9/8全掃拿來跟後續交易日比價格用,見
+  // data/README.md)——這種列本來就沒打算有法人資料,不是抓漏,不該
+  // 因為剛好那天量普通就被低活躍度過濾整列吃掉,不然使用者看不到自己
+  // 要比較的那一天。
   function lookupIsLowActivity(r) {
+    if (r.margin_balance == null && r.foreign_net == null && r.trust_net == null) return false;
     var volLots = r.volume != null ? r.volume / 1000 : null;
     var foreignLots = r.foreign_net != null ? Math.abs(r.foreign_net) / 1000 : null;
     var volLow = volLots == null || volLots < LOOKUP_LOW_ACTIVITY_VOLUME_LOTS;
