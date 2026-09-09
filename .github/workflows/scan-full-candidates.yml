@@ -1,0 +1,64 @@
+name: 一次性:今天爆量+暴跌候選全掃 (一次性,用完可刪)
+
+# 個股查詢平常只挑 stock_lookup*.json 裡手動維護的一小撮股票(61 檔)。
+# 這支是一次性分析用的:把今天 data/scan-latest.json(爆量)+
+# data/crash-latest.json(暴跌)的候選「全部」抓一份 30 天逐日大表格
+# (含融資融券、外資投信),不再隨機抽樣——用來驗證量縮/轉買/外資出貨/
+# 連續增溫這幾個標記套到完整候選池會抓到誰,不是只看抽到的那 61 檔。
+#
+# 84 檔 × 2 次 FinMind 呼叫(融資融券 + 三大法人)= 168 次,遠低於
+# 300~600 次/小時的額度,不影響 daily-scan.yml 那邊的用量(不同小時
+# 觸發,各自的額度視窗)。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 合併今天爆量+暴跌候選代號
+        run: |
+          python - <<'PY'
+          import json
+          scan = json.load(open('data/scan-latest.json', encoding='utf-8'))
+          crash = json.load(open('data/crash-latest.json', encoding='utf-8'))
+          codes = sorted(set(r['stock_id'] for r in scan.get('rows') or [])
+                         | set(r['stock_id'] for r in crash.get('rows') or []))
+          json.dump(codes, open('/tmp/fullscan_codes.json', 'w', encoding='utf-8'))
+          print('合併後共 %d 檔(爆量 %d + 暴跌 %d)' % (
+              len(codes), len(scan.get('rows') or []), len(crash.get('rows') or [])))
+          PY
+
+      - name: 抓全部候選的個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_stock_lookup.py \
+            --list-file /tmp/fullscan_codes.json \
+            --out-file data/stock-lookup-fullscan-latest.json
+
+      - name: 提交結果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/stock-lookup-fullscan-latest.json
+          if git diff --cached --quiet; then
+            echo "沒有新資料,不產生 commit。"
+            exit 0
+          fi
+          git commit -m "一次性全量掃描:今天爆量+暴跌候選(一次性)"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase origin main || true
+          done
+          exit 1
