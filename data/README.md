@@ -10,7 +10,7 @@
 | `scan-latest.json` | 最新一次掃描結果,前端讀這支 |
 | `crashes/YYYY-MM-DD.json` | 當日暴跌掃描結果存查(跟爆量掃描對稱,`close < open`) |
 | `crash-latest.json` | 最新一次暴跌掃描結果,前端讀這支 |
-| `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應) |
+| `stock_names.json` | 代碼 → 名稱對照(直接取自 TWSE 回應)。2026-09-09 起「追蹤」分頁的新增/編輯表單也讀這支,打代號自動帶出名稱 |
 | `no_trade_dates.json` | 已確認休市的日期,避免每天重複查詢 |
 | `fomo-latest.json` | 最新一次 FOMO 掃描結果,前端讀這支 |
 | `fomo/YYYY-MM-DD.json` | 當日 FOMO 結果存底 |

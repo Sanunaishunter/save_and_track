@@ -814,16 +814,52 @@
 
   var formEditingId = null;
 
+  // 股票代號 → 名稱自動帶入(2026-09-09 加入)。data/stock_names.json 是
+  // 排程本來就會維護的全市場代號對照表(fetch_stock_meta.py 產出),
+  // 純唯讀查表,不影響手動輸入或既有紀錄——查不到、抓不到都不擋填表。
+  var STOCK_NAMES_URL = 'data/stock_names.json';
+  var stockNamesMap = null;
+  var stockNamesLoading = false;
+  var fStockNameAutofilled = false;   // 名稱欄目前的值是不是自動帶的,使用者手動改過就不再覆蓋
+
+  function loadStockNamesMap() {
+    if (stockNamesMap || stockNamesLoading) return;
+    if (location.protocol === 'file:') return;   // file:// 下 fetch 不能用,直接跳過,不影響手動輸入
+    stockNamesLoading = true;
+    fetch(STOCK_NAMES_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        stockNamesMap = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {};
+        tryAutofillStockName();   // 資料剛好在使用者打完代號後才載入完成,補一次
+      })
+      .catch(function () { stockNamesMap = {}; })
+      .then(function () { stockNamesLoading = false; });
+  }
+
+  function tryAutofillStockName() {
+    if (!stockNamesMap) return;
+    var sid = el('f-stock-id').value.trim();
+    var name = stockNamesMap[sid];
+    if (!name) return;
+    var nameField = el('f-stock-name');
+    if (nameField.value.trim() === '' || fStockNameAutofilled) {
+      nameField.value = name;
+      fStockNameAutofilled = true;
+    }
+  }
+
   function openForm(id) {
     formEditingId = id || null;
     var rec = id ? findById(id) : null;
     el('form-title').textContent = rec ? '編輯基本資料' : '新增股票';
     el('f-stock-id').value = rec ? rec.stock_id : '';
     el('f-stock-name').value = rec ? rec.stock_name : '';
+    fStockNameAutofilled = false;   // 編輯既有紀錄時名稱已經有值,不要無故被查表蓋掉
     el('form').hidden = false;
     el('form').setAttribute('aria-hidden', 'false');
     // 同步對焦。用 setTimeout 延遲對焦會在使用者已經點到別的欄位後才搶走游標。
     el('f-stock-id').focus();
+    loadStockNamesMap();
   }
 
   function closeForm() {
@@ -4789,6 +4825,10 @@
 
     el('form-cancel').addEventListener('click', closeForm);
     el('form-save').addEventListener('click', submitForm);
+    el('f-stock-id').addEventListener('input', tryAutofillStockName);
+    el('f-stock-name').addEventListener('input', function () {
+      fStockNameAutofilled = false;   // 使用者自己動手改了,以後代號欄再變也不要蓋掉
+    });
     el('f-stock-name').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); submitForm(); }
     });
