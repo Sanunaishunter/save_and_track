@@ -58,6 +58,13 @@ SHRINK_DISPLAY_RATIO = 0.3    # 🔽量縮:純顯示用的單日標記,門檻比
 SURGE_MULT = 1.2
 SELLOFF_DROP_PCT = -4
 
+# 連續增溫(2026-09-09 加入),跟 js/app.js 的 computeLookupWarmingDays()
+# 保持一致。不要求先蹲量,只看「連續幾天量創近期新高 + 外資同步買超」,
+# 跟🔔量縮轉買互補——6657 這種投信買賣超整段歷史都是 0 的股票,🔔的
+# 「外資投信同步買超」永遠不會成立,這個標記只看外資,刻意繞開這個死角。
+WARMING_STREAK_DAYS = 2
+WARMING_RATIO_MIN = 1.0
+
 # 「有效振幅」過濾(2026-09-08 加入):使用者盯著批次測試結果發現,
 # 21 檔裡只有 2313/4576/6168/2409/3006 這幾隻「量縮的時候價錢還是有
 # 真正在動」,其餘量縮的股票其實是死盤(整段期間每日高低差距都壓在
@@ -194,6 +201,19 @@ def selloff_days(rows):
         chg = (c - o) / o * 100.0
         if chg <= SELLOFF_DROP_PCT:
             out[r["date"]] = {"chg_pct": chg, "foreign_net": fn}
+    return out
+
+
+def warming_days(rows):
+    ratios = vol_ratios(rows)
+    out = {}
+    streak = 0
+    for i, r in enumerate(rows):
+        fn = r.get("foreign_net")
+        ok = ratios[i] is not None and ratios[i] >= WARMING_RATIO_MIN and fn is not None and fn > 0
+        streak = streak + 1 if ok else 0
+        if streak >= WARMING_STREAK_DAYS:
+            out[r["date"]] = {"streak": streak, "ratio": ratios[i], "foreign_net": fn}
     return out
 
 

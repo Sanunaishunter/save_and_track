@@ -2357,6 +2357,35 @@
     return out;
   }
 
+  // 連續增溫標記(2026-09-09 加入)。討論脈絡:6657(華安)9/9 噴出漲停附近
+  // 之前,🔔量縮轉買、🕐蓄勢觀察名單都沒抓到——量縮天數(6/8)、窗口平均
+  // 振幅(2.65%/3.5%)都差一點沒到門檻,而且這檔投信買賣超 30 天全是 0,
+  // 🔔要求的「外資投信同步買超」永遠不會成立(不是門檻問題,是這檔投信
+  // 根本不交易)。但回頭看量比序列,9/7(1.59)、9/8(1.62)已經連續
+  // 兩天站上近期高點、外資也連續兩天買超,是很明顯的「量能連續墊高」——
+  // 只是不符合「先蹲後爆」的假設。
+  //
+  // 這個標記刻意跟🔔量縮轉買獨立、互補,不要求先有安靜期,只看外資
+  // (不看投信,解決上面那個「投信不交易的股票永遠篩不到」的問題)。
+  // 用同一份 lookupVolRatios()(量 / 前 10 天最高量),不必再定義一套
+  // 新的基準線。
+  var LOOKUP_WARMING_STREAK_DAYS = 2;   // 連續幾天才算「增溫」
+  var LOOKUP_WARMING_RATIO_MIN = 1.0;   // 量比門檻:當天量 >= 前10天最高量
+
+  function computeLookupWarmingDays(rowsAsc) {
+    var ratios = lookupVolRatios(rowsAsc);
+    var out = {};
+    var streak = 0;
+    rowsAsc.forEach(function (r, i) {
+      var ok = ratios[i] != null && ratios[i] >= LOOKUP_WARMING_RATIO_MIN && r.foreign_net > 0;
+      streak = ok ? streak + 1 : 0;
+      if (streak >= LOOKUP_WARMING_STREAK_DAYS) {
+        out[r.date] = { streak: streak, ratio: ratios[i], foreignNet: r.foreign_net };
+      }
+    });
+    return out;
+  }
+
   // 低活躍度過濾(2026-09-09 加入):跟量縮/轉買那套「參考標記」不一樣,
   // 這條是直接把日子從表格裡拿掉,不進 badge 判斷、不進「顯示已隱藏」
   // 那套使用者手動隱藏的機制——單純是資料太薄(當天外資幾乎沒動作、
@@ -2393,6 +2422,7 @@
     if (Object.keys(computeLookupBreakouts(rows)).length) return true;
     if (Object.keys(computeLookupShrinkDays(rows)).length) return true;
     if (Object.keys(computeLookupSelloffDays(rows)).length) return true;
+    if (Object.keys(computeLookupWarmingDays(rows)).length) return true;
     var zone = computeLookupShrinkZone(rows);
     if (zone && !zone.alreadyTriggered) return true;
     return false;
@@ -2552,6 +2582,7 @@
       var breakoutMap = computeLookupBreakouts(rec.rows || []);
       var shrinkMap = computeLookupShrinkDays(rec.rows || []);
       var selloffMap = computeLookupSelloffDays(rec.rows || []);
+      var warmingMap = computeLookupWarmingDays(rec.rows || []);
       var shrinkZone = computeLookupShrinkZone(rec.rows || []);
 
       var zoneNote = '';
@@ -2621,8 +2652,15 @@
             '%,外資賣超 ' + lookupLots(Math.abs(selloff.foreignNet)) +
             ' 張(參考用,只看方向不看賣超金額大小,只驗證過一次樣本,沒有回測)">🔻外資出貨</span>'
           : '';
+        var warming = warmingMap[r.date];
+        var warmingBadge = warming
+          ? ' <span class="lookup-warming-badge" title="連續 ' + warming.streak +
+            ' 天量創近期新高(量/前10天最高量 = ' + (warming.ratio * 100).toFixed(0) +
+            '%)且外資同步買超,不要求先蹲量,跟🔔量縮轉買是獨立的兩套邏輯' +
+            '(參考用,只驗證過一次樣本,沒有回測)">🔥連續增溫</span>'
+          : '';
         var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
-          '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + '</td>' +
+          '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + warmingBadge + '</td>' +
           '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
           '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
           '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
