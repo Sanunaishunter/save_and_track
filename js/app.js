@@ -2330,11 +2330,19 @@
   var LOOKUP_LOW_ACTIVITY_VOLUME_LOTS = 300;   // 當天成交量(張)低於這個值
   var LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS = 100;  // 當天外資買賣超絕對值(張)低於這個值
 
+  // 2026-09-09 改:資料缺漏(null)當低活躍度算,不是「不濾」。原本
+  // 想避免把「FinMind 抓不到資料」誤判成「沒活動」而直接放行,結果
+  // 1441(大東)因為 8/21、9/4 外資買賣超剛好是 null,兩天被排除在
+  // 低活躍度判斷之外,導致「整檔 30 天都低活躍度」永遠不成立,即使
+  // 其餘 28 天全部都是每天量不到 40 張的極薄股票也照樣留在清單裡。
+  // 缺漏的那一項當它符合低活躍度(用另一項還有值的欄位正常判斷),
+  // 兩項都缺才整天都算低活躍度。
   function lookupIsLowActivity(r) {
-    if (r.volume == null || r.foreign_net == null) return false;   // 資料不全,不要誤濾
-    var volLots = r.volume / 1000;
-    var foreignLots = Math.abs(r.foreign_net) / 1000;
-    return volLots < LOOKUP_LOW_ACTIVITY_VOLUME_LOTS && foreignLots < LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS;
+    var volLots = r.volume != null ? r.volume / 1000 : null;
+    var foreignLots = r.foreign_net != null ? Math.abs(r.foreign_net) / 1000 : null;
+    var volLow = volLots == null || volLots < LOOKUP_LOW_ACTIVITY_VOLUME_LOTS;
+    var foreignLow = foreignLots == null || foreignLots < LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS;
+    return volLow && foreignLow;
   }
 
   // 個股查詢分頁工廠:idPrefix 決定 DOM id('lookup' / 'lookup-scan'),
