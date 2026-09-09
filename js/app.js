@@ -2435,9 +2435,9 @@
       }
 
       var codes = data.codes || [];
-      var okCodes = codes.filter(function (c) { return data.data && data.data[c]; });
+      var fetchedCodes = codes.filter(function (c) { return data.data && data.data[c]; });
 
-      if (!okCodes.length) {
+      if (!fetchedCodes.length) {
         meta.innerHTML = '<span class="warn">查詢清單裡的代號都抓不到資料,' +
           '看 failures 欄位或排程 log。</span>';
         controls.hidden = true;
@@ -2445,7 +2445,24 @@
         return;
       }
 
-      if (!code || !data.data[code]) code = okCodes[0];
+      // 整檔全部交易日都低活躍度(每天都外資<100張且量<300張)就直接從
+      // 下拉選單移除,不是只濾掉那幾天——這種股票留著也沒東西可看。
+      var okCodes = fetchedCodes.filter(function (c) {
+        var rows = data.data[c].rows || [];
+        return rows.some(function (r) { return !lookupIsLowActivity(r); });
+      });
+      var deadCodeCount = fetchedCodes.length - okCodes.length;
+
+      if (!okCodes.length) {
+        meta.innerHTML = '<span class="warn">查詢清單裡的代號整檔都是低活躍度' +
+          '(外資買賣超 < ' + LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' +
+          LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張),已全部濾掉。</span>';
+        controls.hidden = true;
+        table.hidden = true;
+        return;
+      }
+
+      if (!code || !data.data[code] || okCodes.indexOf(code) === -1) code = okCodes[0];
 
       controls.hidden = false;
       select.innerHTML = okCodes.map(function (c) {
@@ -2457,6 +2474,8 @@
       var range = data.history_range || {};
       var failNote = (data.failures || []).length
         ? '、抓失敗 ' + data.failures.length + ' 檔' : '';
+      var deadCodeNote = deadCodeCount > 0
+        ? '、整檔低活躍度濾掉 ' + deadCodeCount + ' 檔' : '';
 
       applyColVisibility(table);
 
@@ -2481,7 +2500,7 @@
           LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' + LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張)'
         : '';
       meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-        '(' + okCodes.length + ' 檔可查' + failNote + ')' + zoneNote + lowActivityNote;
+        '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + ')' + zoneNote + lowActivityNote;
 
       table.hidden = false;
       if (!allRows.length) {
