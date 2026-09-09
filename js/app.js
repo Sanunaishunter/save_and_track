@@ -2436,6 +2436,27 @@
     return false;
   }
 
+  // 下拉選單「代號 名稱」後面疊的標記摘要(2026-09-09 加入)。整段 30 天
+  // 歷史裡 🔽/🔔/🔻/🔥 四種各自觸發過的每一天都算一筆(同一種標記觸發
+  // 幾次就疊幾次,不去重),按日期先後排序串起來——不用點開每一檔就能
+  // 掃過整個下拉選單找出哪些股票有訊號。🕐蓄勢區不算進來,那是「現在
+  // 算不算蹲好了」的即時狀態,不是某一天觸發的離散事件,已經在選到
+  // 該股票時另外用文字提示。
+  function lookupSignalBadgeSummary(rec) {
+    var rows = rec.rows || [];
+    var events = [];
+    var breakoutMap = computeLookupBreakouts(rows);
+    var shrinkMap = computeLookupShrinkDays(rows);
+    var selloffMap = computeLookupSelloffDays(rows);
+    var warmingMap = computeLookupWarmingDays(rows);
+    for (var d1 in breakoutMap) events.push({ date: d1, emoji: '🔔' });
+    for (var d2 in shrinkMap) events.push({ date: d2, emoji: '🔽' });
+    for (var d3 in selloffMap) events.push({ date: d3, emoji: '🔻' });
+    for (var d4 in warmingMap) events.push({ date: d4, emoji: '🔥' });
+    events.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return events.map(function (e) { return e.emoji; }).join('');
+  }
+
   // 個股查詢分頁工廠:idPrefix 決定 DOM id('lookup' / 'lookup-scan'),
   // url 是各自的資料來源。標色/筆記(loadLookupNotesMap 那組)是照「代號|日期」存,
   // 兩個分頁共用同一份沒關係——講的是同一檔股票。欄/列隱藏偏好各自存一份
@@ -2571,9 +2592,11 @@
 
       controls.hidden = false;
       select.innerHTML = okCodes.map(function (c) {
-        var name = data.data[c].stock_name || '';
+        var rec2 = data.data[c];
+        var name = rec2.stock_name || '';
+        var badges = lookupSignalBadgeSummary(rec2);
         return '<option value="' + esc(c) + '"' + (c === code ? ' selected' : '') + '>' +
-          esc(c) + ' ' + esc(name) + '</option>';
+          esc(c) + ' ' + esc(name) + (badges ? '  ' + badges : '') + '</option>';
       }).join('');
 
       var range = data.history_range || {};
