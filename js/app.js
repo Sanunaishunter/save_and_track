@@ -1228,6 +1228,15 @@
     return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 
+  /** 加入追蹤時,第 1 步「觸發」預設帶入爆量掃描的判定結果——FOMO/暴跌FOMO
+   * 的「+ 追蹤」都會自動帶字,爆量掃描/暴跌掃描原本沒帶,「進場訊號準度
+   * 統計」永遠看不到爆量/暴跌這兩類就是因為這樣,所以補上。*/
+  function scanTriggerNote(r) {
+    var chg = r.change_pct;
+    var chgTxt = chg == null ? '' : ('、漲 ' + (chg > 0 ? '+' : '') + chg.toFixed(2) + '%');
+    return '爆量掃描(量比 ' + Number(r.vol_ratio).toFixed(2) + 'x' + chgTxt + ')';
+  }
+
   function renderScan(res) {
     var meta = el('scan-meta');
     var tbody = el('scan-tbody');
@@ -1268,7 +1277,7 @@
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
         '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, scanTriggerNote(r)) + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -1316,6 +1325,14 @@
   var crashLoaded = false;
   var crashData = null;
 
+  /** 加入追蹤時,第 1 步「觸發」預設帶入暴跌掃描的判定結果,理由同上面的
+   * scanTriggerNote。*/
+  function crashTriggerNote(r) {
+    var chg = r.change_pct;
+    var chgTxt = chg == null ? '' : ('、跌 ' + (chg > 0 ? '+' : '') + chg.toFixed(2) + '%');
+    return '暴跌掃描(量比 ' + Number(r.vol_ratio).toFixed(2) + 'x' + chgTxt + ')';
+  }
+
   function renderCrash(res) {
     var meta = el('crash-meta');
     var tbody = el('crash-tbody');
@@ -1356,7 +1373,7 @@
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
         '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashTriggerNote(r)) + '</td>' +
       '</tr>';
     }).join('');
   }
