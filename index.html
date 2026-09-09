@@ -464,7 +464,9 @@
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-cols-reset" hidden></button>
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-rows-toggle" hidden></button>
   </div>
-  <p class="panel-note">
+  <details class="note-details">
+    <summary>使用說明(標記/過濾規則)</summary>
+    <p class="panel-note">
     只列得出「FOMO個股查詢清單」(<code>stock_lookup.json</code>)裡已經加過的代號——
     這份清單最早是 2313 手動加的,後來加了一批從 FOMO/暴跌FOMO 候選裡批次測試過的股票,
     跟「爆量個股查詢」「暴跌FOMO個股查詢」是三份獨立清單。這個 App 沒有後端,沒辦法即時查任意一檔。
@@ -489,7 +491,8 @@
     直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
     資料範圍後面列出來,沒有辦法個別叫回來看。整檔股票如果 30 天全部都是
     低活躍度,連下拉選單都不會出現,不是列出來但空白。
-  </p>
+    </p>
+  </details>
   <div class="table-scroll">
     <table class="scan-table" id="lookup-table" hidden>
       <thead>
@@ -524,7 +527,9 @@
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-scan-cols-reset" hidden></button>
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-scan-rows-toggle" hidden></button>
   </div>
-  <p class="panel-note">
+  <details class="note-details">
+    <summary>使用說明(標記/過濾規則)</summary>
+    <p class="panel-note">
     只列得出「爆量個股查詢清單」(<code>stock_lookup_scan.json</code>)裡已經加過的代號 ——
     這份清單是從爆量掃描的候選裡隨機抽的,跟「FOMO個股查詢」「暴跌FOMO個股查詢」是三份獨立清單,
     但表格欄位、標記邏輯完全一樣。這個 App 沒有後端,沒辦法即時查任意一檔。
@@ -549,7 +554,8 @@
     直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
     資料範圍後面列出來,沒有辦法個別叫回來看。整檔股票如果 30 天全部都是
     低活躍度,連下拉選單都不會出現,不是列出來但空白。
-  </p>
+    </p>
+  </details>
   <div class="table-scroll">
     <table class="scan-table" id="lookup-scan-table" hidden>
       <thead>
@@ -584,7 +590,9 @@
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-crashfomo-cols-reset" hidden></button>
     <button type="button" class="btn btn-ghost btn-sm" id="lookup-crashfomo-rows-toggle" hidden></button>
   </div>
-  <p class="panel-note">
+  <details class="note-details">
+    <summary>使用說明(標記/過濾規則)</summary>
+    <p class="panel-note">
     只列得出「暴跌FOMO個股查詢清單」(<code>stock_lookup_crashfomo.json</code>)裡已經加過的代號 ——
     這份清單是從暴跌FOMO的候選裡隨機抽的,跟「FOMO個股查詢」「爆量個股查詢」是三份獨立清單,
     但表格欄位、標記邏輯完全一樣。這個 App 沒有後端,沒辦法即時查任意一檔。
@@ -609,7 +617,8 @@
     直接濾掉不列出來(資料太薄、沒什麼好看的),被濾掉幾天會在上面那行
     資料範圍後面列出來,沒有辦法個別叫回來看。整檔股票如果 30 天全部都是
     低活躍度,連下拉選單都不會出現,不是列出來但空白。
-  </p>
+    </p>
+  </details>
   <div class="table-scroll">
     <table class="scan-table" id="lookup-crashfomo-table" hidden>
       <thead>
