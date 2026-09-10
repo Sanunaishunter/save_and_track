@@ -42,6 +42,14 @@
   };
   var EXIT_RULE_ORDER = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit'];
 
+  /** exitStatsHtml() 分組標題用的規則文字。trail_limit 固定寫「漲停出場」,
+   * 但看空的移動停利用的是跌停(見 evalExitPlan),這裡依分組方向(dirKey:
+   * 'long'/'short')換字,其餘規則跟方向無關,直接用 EXIT_RULE_LABELS。*/
+  function exitRuleLabelFor(key, dirKey) {
+    if (key === 'trail_limit') return dirKey === 'short' ? '移動停利(跌停出場)' : '移動停利(漲停出場)';
+    return EXIT_RULE_LABELS[key] || key;
+  }
+
   // 進場訊號分類:沒有獨立欄位記錄「為什麼加進來」,只能從第 1 步「觸發」
   // 的自由文字(notes[1])關鍵字比對回推 —— 有些是 quickAddTracking 自動帶入
   // (例如 FOMO 的「FOMO(75 分):可能會漲」),有些是使用者自己手打(例如「爆量 /
@@ -386,13 +394,14 @@
     return { mode: 'hold', target_pct: '', max_days: '', max_drawdown_pct: '' };
   }
 
-  function newRecord(stockId, stockName) {
+  function newRecord(stockId, stockName, direction) {
     var ts = nowISO();
     return {
       id: uid(),
       stock_id: stockId,
       stock_name: stockName,
       status: 'active',
+      direction: direction === 'short' ? 'short' : 'long',
       current_step: 1,
       notes: blankNotes(),
       entry_reason: '',
@@ -441,6 +450,7 @@
       stock_id: String(r.stock_id || ''),
       stock_name: String(r.stock_name || ''),
       status: status,
+      direction: r.direction === 'short' ? 'short' : 'long',
       current_step: step,
       notes: notes,
       entry_reason: String(r.entry_reason || ''),
@@ -503,27 +513,61 @@
   /**
    * 產生一顆「+ 追蹤」按鈕,已經在追蹤中就顯示成灰色不可點。
    * note 選填:加入追蹤時要預先帶進第 1 步「觸發」的預設內容(例如 FOMO 的可能會漲/虛漲判定)。
+   * defaultDir 選填:'long'(預設)或 'short',決定按下按鈕時彈出的多空選擇對話框
+   * 哪一個選項排在前面/當主按鈕——依來源分頁預設(爆量/FOMO→多、暴跌/暴跌FOMO→空),
+   * 使用者仍可在對話框當下覆寫。
    */
-  function quickAddBtnHtml(code, name, note) {
+  function quickAddBtnHtml(code, name, note, defaultDir) {
     code = String(code || '').trim();
     if (!code) return '';
     if (isTracked(code)) return '<button type="button" class="btn-quickadd is-added" disabled>已追蹤</button>';
     return '<button type="button" class="btn-quickadd" data-qa-code="' + esc(code) +
       '" data-qa-name="' + esc(name || '') + '"' +
       (note ? ' data-qa-note="' + esc(note) + '"' : '') +
+      ' data-qa-dir="' + (defaultDir === 'short' ? 'short' : 'long') + '"' +
       '>+ 追蹤</button>';
   }
 
-  function quickAddTracking(stockId, stockName, triggerNote) {
+  function quickAddTracking(stockId, stockName, triggerNote, direction) {
     stockId = String(stockId || '').trim();
     stockName = String(stockName || '').trim();
     if (!stockId && !stockName) return;
-    var fresh = newRecord(stockId, stockName);
+    var fresh = newRecord(stockId, stockName, direction);
     if (triggerNote) fresh.notes[1] = triggerNote;
     data.push(fresh);
-    if (saveAll()) toast('已加入追蹤:' + displayTitle(fresh), 'ok');
+    if (saveAll()) {
+      toast('已加入追蹤(' + (fresh.direction === 'short' ? '看空' : '看多') + '):' + displayTitle(fresh), 'ok');
+    }
     renderList();
     promptQuickAddPosition(fresh);
+  }
+
+  /**
+   * 「+ 追蹤」按鈕的共用點擊處理:先跳出多空選擇對話框(依按鈕的 data-qa-dir
+   * 決定哪個選項排前面當預設),確定後才真的建立紀錄。取消就什麼都不做,
+   * 按鈕保持可點。三個掛按鈕的地方(bindQuickAdd 委派的四個容器、FOMO、
+   * 暴跌FOMO 各自的 tbody 點擊處理)都呼叫這個函式,避免各自重複一份邏輯。
+   */
+  function handleQuickAddClick(btn) {
+    if (!btn || btn.disabled) return;
+    var code = btn.getAttribute('data-qa-code');
+    var name = btn.getAttribute('data-qa-name');
+    var note = btn.getAttribute('data-qa-note');
+    var defaultDir = btn.getAttribute('data-qa-dir') === 'short' ? 'short' : 'long';
+    var longBtn = { label: '看多(做多)', value: 'long', cls: 'btn-primary' };
+    var shortBtn = { label: '看空(做空)', value: 'short', cls: 'btn-danger' };
+    dialog({
+      title: '加入追蹤:' + (name ? (code + ' ' + name) : code),
+      message: '這檔要看多(做多)還是看空(做空)?決定後持倉損益會照對應方向計算,' +
+        '加入後仍可在追蹤詳情頁的「持倉紀錄」區塊切換。',
+      actions: defaultDir === 'short' ? [shortBtn, longBtn] : [longBtn, shortBtn]
+    }).then(function (res) {
+      if (!res.action) return;
+      quickAddTracking(code, name, note, res.action);
+      btn.textContent = '已追蹤';
+      btn.disabled = true;
+      btn.classList.add('is-added');
+    });
   }
 
   /** 掛在任何一個容器上,委派處理裡面所有「+ 追蹤」按鈕的點擊。*/
@@ -532,11 +576,7 @@
       var btn = e.target.closest('.btn-quickadd');
       if (!btn || btn.disabled) return;
       e.stopPropagation();
-      quickAddTracking(btn.getAttribute('data-qa-code'), btn.getAttribute('data-qa-name'),
-        btn.getAttribute('data-qa-note'));
-      btn.textContent = '已追蹤';
-      btn.disabled = true;
-      btn.classList.add('is-added');
+      handleQuickAddClick(btn);
     });
   }
 
@@ -677,6 +717,8 @@
         '<div class="card-head">' +
           '<span class="card-code mono">' + esc(rec.stock_id || '—') + '</span>' +
           '<span class="card-name">' + esc(rec.stock_name) + '</span>' +
+          '<span class="pill-dir ' + (rec.direction === 'short' ? 'is-short' : 'is-long') + '">' +
+            (rec.direction === 'short' ? '空' : '多') + '</span>' +
           '<span class="pill pill-' + rec.status + '">' + STATUS_LABEL[rec.status] + '</span>' +
         '</div>' +
         dotsHtml(rec) +
@@ -1330,7 +1372,7 @@
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
         '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, scanTriggerNote(r)) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, scanTriggerNote(r), 'long') + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -1426,7 +1468,7 @@
         '<td class="num mono ' + plClass(marginDelta) + '">' +
           (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
         '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashTriggerNote(r)) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashTriggerNote(r), 'short') + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -1549,7 +1591,7 @@
             '<td>' + esc(r.benefit_reason || '') + '</td>' +
             '<td class="num mono">' + stars + '</td>' +
             '<td>' + sigTxt + '</td>' +
-            '<td>' + quickAddBtnHtml(r.stock_code, r.company_name) + '</td>' +
+            '<td>' + quickAddBtnHtml(r.stock_code, r.company_name, null, 'long') + '</td>' +
           '</tr>';
         }).join('') +
         '</tbody></table>';
@@ -2195,6 +2237,12 @@
   // 由多頭到空頭排,方便從上面往下看
   var HUNTER_SIGNAL_ORDER = ['①', '⑤', '②', '⑥', '③', '④'];
 
+  /** 六訊號各自對應的「+ 追蹤」預設多空方向:①量價同步爆量(暴漲)、⑤量增溫和上漲
+   * 偏多;③量增暴跌、④無量暴跌、⑥量增溫和下跌偏空;②量增價不太動方向不明顯,預設多。*/
+  function hunterSigDefaultDir(sig) {
+    return (sig === '③' || sig === '④' || sig === '⑥') ? 'short' : 'long';
+  }
+
   function renderSignals(errMsg) {
     var meta = el('signals-meta');
     var table = el('signals-table');
@@ -2248,7 +2296,7 @@
         '<td class="num mono">' + r.s.toFixed(2) + '</td>' +
         '<td title="' + esc(HUNTER_SIGNAL_LABELS[r.sig]) + '">' + r.sig + ' ' +
           esc(HUNTER_SIGNAL_LABELS[r.sig]) + '</td>' +
-        '<td>' + quickAddBtnHtml(r.code, r.name) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.code, r.name, null, hunterSigDefaultDir(r.sig)) + '</td>' +
       '</tr>';
     }).join('');
   }
@@ -3262,7 +3310,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ' + scoreClass(r.fomo_score) + '">' + r.fomo_score + '</td>' +
         '<td>' + badges(r) + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, fomoTriggerNote(r)) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, fomoTriggerNote(r), 'long') + '</td>' +
       '</tr>';
       if (fomoOpen === r.stock_id) row += fomoDetailHtml(r);
       return row;
@@ -3387,7 +3435,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ' + scoreClass(r.crash_score) + '">' + r.crash_score + '</td>' +
         '<td>' + crashBadges(r) + '</td>' +
-        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashFomoTriggerNote(r)) + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, crashFomoTriggerNote(r), 'short') + '</td>' +
       '</tr>';
       if (crashFomoOpen === r.stock_id) row += crashFomoDetailHtml(r);
       return row;
@@ -4301,9 +4349,13 @@
     }
     if (bestPrice == null || worstPrice == null) return null;
 
+    // 看空(做空)的損益跟看多相反(股價跌越多賺越多),乘上 dir 反轉——見
+    // positionStats() 開頭同一個 dir 的說明。high/low 仍然是字面上的期間最高/
+    // 最低價,不因方向而互換,只有「若在這個價位出場」的損益跟著反轉。
+    var dir = rec.direction === 'short' ? -1 : 1;
     return {
-      high: { date: bestDate, price: bestPrice, pl: shares * bestPrice - cost },
-      low: { date: worstDate, price: worstPrice, pl: shares * worstPrice - cost }
+      high: { date: bestDate, price: bestPrice, pl: dir * (shares * bestPrice - cost) },
+      low: { date: worstDate, price: worstPrice, pl: dir * (shares * worstPrice - cost) }
     };
   }
 
@@ -4359,16 +4411,21 @@
     var plan = rec.exit_plan;
     if (!plan || !st || !st.priced) return null;
     var alerts = [];
+    // 看空(做空)的所有出場條件都要反過來看:「獲利」是跌、「期間最有利價」
+    // 是期間最低(不是最高)、回撤是「從低點反彈」。dir=1 多、dir=-1 空,
+    // 下面每個條件都乘 dir 統一算,不用整段複製一份空頭邏輯——跟 compute_crash.py
+    // 跟 compute_scan.py 對稱的作法是同一個精神。
+    var dir = rec.direction === 'short' ? -1 : 1;
 
     if ((plan.mode === 'daytrade' || plan.mode === 'profit') && plan.target_pct) {
       var pct = Number(plan.target_pct);
       if (pct > 0 && st.avg > 0) {
-        var target = st.avg * (1 + pct / 100);
+        var target = st.avg * (1 + dir * pct / 100);
         alerts.push({
           key: 'target',
-          hit: st.close >= target,
+          hit: dir > 0 ? st.close >= target : st.close <= target,
           price: target,
-          label: (plan.mode === 'daytrade' ? '當沖出場' : '獲利出場') + ' +' + pct + '%',
+          label: (plan.mode === 'daytrade' ? '當沖出場' : '獲利出場') + (dir > 0 ? ' +' : ' -') + pct + '%',
           detail: '目標價 ' + target.toFixed(2) + '(現價 ' + st.close + ')'
         });
       }
@@ -4397,15 +4454,17 @@
     if (plan.mode === 'trail' && plan.target_pct && st.avg > 0 && st.range) {
       var tPct = Number(plan.target_pct);
       if (tPct > 0) {
-        var tTarget = st.avg * (1 + tPct / 100);
-        var tPeak = st.range.high.price;
-        if (tPeak < tTarget) {
+        var tTarget = st.avg * (1 + dir * tPct / 100);
+        // 看多的「期間最有利價」是期間最高;看空是期間最低(跌越多對空單越有利)。
+        var tPeak = dir > 0 ? st.range.high.price : st.range.low.price;
+        var notActivated = dir > 0 ? (tPeak < tTarget) : (tPeak > tTarget);
+        if (notActivated) {
           alerts.push({
             key: 'trail_wait',
             hit: false,
             price: null,
-            label: '移動停利:尚未啟動(門檻 +' + tPct + '%)',
-            detail: '期間最高 ' + tPeak + '(啟動價 ' + tTarget.toFixed(2) + ')'
+            label: '移動停利:尚未啟動(門檻 ' + (dir > 0 ? '+' : '-') + tPct + '%)',
+            detail: '期間' + (dir > 0 ? '最高' : '最低') + ' ' + tPeak + '(啟動價 ' + tTarget.toFixed(2) + ')'
           });
         } else {
           var vr = volRatioMa5(rec.stock_id);
@@ -4422,11 +4481,14 @@
           var tq = quoteOf(rec.stock_id);
           if (tq && tq.prev > 0) {
             var tChg = (st.close - tq.prev) / tq.prev;
+            // 看多用「漲停」(單日噴出、動能衰竭)當出場訊號;看空對稱地用「跌停」。
+            var limitHit = dir > 0 ? (tChg >= TRAIL_LIMITUP_PCT) : (tChg <= -TRAIL_LIMITUP_PCT);
             alerts.push({
               key: 'trail_limit',
-              hit: tChg >= TRAIL_LIMITUP_PCT,
+              hit: limitHit,
               price: st.close,
-              label: '移動停利:漲停出場(單日 +' + (TRAIL_LIMITUP_PCT * 100) + '% 以上)',
+              label: '移動停利:' + (dir > 0 ? '漲停' : '跌停') + '出場(單日' +
+                (dir > 0 ? '+' : '-') + (TRAIL_LIMITUP_PCT * 100) + '% 以上)',
               detail: '今日漲幅 ' + (tChg * 100).toFixed(1) + '%'
             });
           }
@@ -4436,16 +4498,17 @@
 
     if (plan.max_drawdown_pct && st.range) {
       var ddPct = Number(plan.max_drawdown_pct);
-      var peak = st.range.high.price;
+      // 看多的回撤基準是期間最高(從高點拉回);看空對稱地是期間最低(從低點反彈)。
+      var peak = dir > 0 ? st.range.high.price : st.range.low.price;
       if (ddPct > 0 && peak > 0) {
-        var dd = (st.close - peak) / peak;
-        var stopPrice = peak * (1 - ddPct / 100);
+        var dd = dir * (st.close - peak) / peak;
+        var stopPrice = peak * (1 - dir * ddPct / 100);
         alerts.push({
           key: 'drawdown',
           hit: dd <= -ddPct / 100,
           price: stopPrice,
           label: '最大回撤 -' + ddPct + '%(獨立生效,不受模式影響)',
-          detail: '目前回撤 ' + (dd * 100).toFixed(1) + '%(期間高點 ' + peak + ')'
+          detail: '目前回撤 ' + (dd * 100).toFixed(1) + '%(期間' + (dir > 0 ? '高點' : '低點') + ' ' + peak + ')'
         });
       }
     }
@@ -4476,7 +4539,8 @@
       var hit = alerts.filter(function (a) { return a.hit; })[0];
       if (!hit) return;
 
-      var pl = st.shares * hit.price - st.cost;
+      var dir = rec.direction === 'short' ? -1 : 1;
+      var pl = dir * (st.shares * hit.price - st.cost);
       rec.exit_result = {
         date: quotes.date, price: hit.price, reason: hit.label,
         rule: hit.key, pl: pl, pl_pct: st.cost > 0 ? pl / st.cost : null
@@ -4501,48 +4565,63 @@
   var exitStatsExpanded = {};
 
   /**
-   * 自動出場紀錄的勝率統計,依觸發規則分組。用 exit_result 這份「觸發當下」
-   * 的快照算,不會因為之後報價變動而跑掉。每組可以展開看是哪幾筆紀錄
-   * 組成這個統計數字——使用者反應原本只看得到彙總數字,看不到細節。
+   * 自動出場紀錄的勝率統計,先依看多/看空分兩組,組內再依觸發規則分。用
+   * exit_result 這份「觸發當下」的快照算(pl 已經是 checkAutoExits() 依方向
+   * 反轉過的數字),不會因為之後報價變動而跑掉。每組可以展開看是哪幾筆
+   * 紀錄組成這個統計數字。展開狀態的 key 從純規則 key 改成「方向:規則」
+   * (例如 'long:target'),避免看多的 target 組跟看空的 target 組共用同一個
+   * 展開狀態。
    */
   function exitStatsHtml() {
     var exited = data.filter(function (r) { return r.exit_result; });
     if (!exited.length) return '';
 
-    var groups = {};
-    exited.forEach(function (r) {
-      var k = r.exit_result.rule;
-      if (!groups[k]) groups[k] = [];
-      groups[k].push(r);
-    });
-
-    var groupKeys = EXIT_RULE_ORDER.filter(function (k) { return groups[k]; })
-      .concat(Object.keys(groups).filter(function (k) { return EXIT_RULE_ORDER.indexOf(k) < 0; }));
-    var rows = groupKeys.map(function (k) {
-      var recs = groups[k];
-      var wins = recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
-      var avgPct = recs.reduce(function (s, r) { return s + (r.exit_result.pl_pct || 0); }, 0) / recs.length;
-      var expanded = !!exitStatsExpanded[k];
-      return '<div class="exit-stat-group">' +
-        '<div class="exit-stat-row">' +
-          '<span>' + esc(EXIT_RULE_LABELS[k] || k) + '</span>' +
-          '<span class="mono">N=' + recs.length + '</span>' +
-          '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
-          '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
-          '<button type="button" class="link-btn exit-stat-toggle" data-exit-rule="' + esc(k) + '">' +
-            (expanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
-        '</div>' +
-        (expanded ? renderExitStatsDetail(recs) : '') +
+    var dirGroups = [
+      { key: 'long', label: '看多', recs: exited.filter(function (r) { return r.direction !== 'short'; }) },
+      { key: 'short', label: '看空', recs: exited.filter(function (r) { return r.direction === 'short'; }) }
+    ];
+    var sections = dirGroups.map(function (dg) {
+      if (!dg.recs.length) return '';
+      var groups = {};
+      dg.recs.forEach(function (r) {
+        var k = r.exit_result.rule;
+        if (!groups[k]) groups[k] = [];
+        groups[k].push(r);
+      });
+      var groupKeys = EXIT_RULE_ORDER.filter(function (k) { return groups[k]; })
+        .concat(Object.keys(groups).filter(function (k) { return EXIT_RULE_ORDER.indexOf(k) < 0; }));
+      var rows = groupKeys.map(function (k) {
+        var recs = groups[k];
+        var wins = recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
+        var avgPct = recs.reduce(function (s, r) { return s + (r.exit_result.pl_pct || 0); }, 0) / recs.length;
+        var groupId = dg.key + ':' + k;
+        var expanded = !!exitStatsExpanded[groupId];
+        return '<div class="exit-stat-group">' +
+          '<div class="exit-stat-row">' +
+            '<span>' + esc(exitRuleLabelFor(k, dg.key)) + '</span>' +
+            '<span class="mono">N=' + recs.length + '</span>' +
+            '<span class="mono">勝率 ' + Math.round(wins / recs.length * 100) + '%</span>' +
+            '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+            '<button type="button" class="link-btn exit-stat-toggle" data-exit-rule="' + esc(groupId) + '">' +
+              (expanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
+          '</div>' +
+          (expanded ? renderExitStatsDetail(recs) : '') +
+        '</div>';
+      }).join('');
+      var dgWins = dg.recs.filter(function (r) { return r.exit_result.pl > 0; }).length;
+      return '<div class="exit-stat-subgroup">' +
+        '<div class="exit-stat-subhead"><span>' + esc(dg.label) + '</span>' +
+          '<span class="dim">N=' + dg.recs.length + '、整體勝率 ' +
+            Math.round(dgWins / dg.recs.length * 100) + '%</span></div>' +
+        '<div class="exit-stats">' + rows + '</div>' +
       '</div>';
     }).join('');
 
-    var totalWins = exited.filter(function (r) { return r.exit_result.pl > 0; }).length;
     return '<div class="pos-block">' +
-      '<div class="pos-head"><span>自動出場統計</span>' +
-        '<span class="dim">N=' + exited.length + '、整體勝率 ' +
-          Math.round(totalWins / exited.length * 100) + '%</span></div>' +
-      '<p class="dim">樣本數還很少(見 CLAUDE.md 已知限制),當參考,不是驗證過的勝率。</p>' +
-      '<div class="exit-stats">' + rows + '</div>' +
+      '<div class="pos-head"><span>自動出場統計</span></div>' +
+      '<p class="dim">樣本數還很少(見 CLAUDE.md 已知限制),當參考,不是驗證過的勝率;' +
+        '做多做空的損益計算方向不同,分開統計才不會混在一起看。</p>' +
+      sections +
     '</div>';
   }
 
@@ -4575,42 +4654,55 @@
     '</div>';
   }
 
-  // 明細展開狀態,只存記憶體,跟 exitStatsExpanded 同一個作法。
-  var manualExitStatsExpanded = false;
+  // 明細展開狀態,依方向('long'/'short')分開存,跟 exitStatsExpanded 同一個作法。
+  var manualExitStatsExpanded = {};
+
+  /** 全出統計單一方向(看多或看空)那組的區塊 html,沒有資料回傳空字串。 */
+  function manualExitStatsGroupHtml(recs, dirKey, dirLabel) {
+    if (!recs.length) return '';
+    var wins = recs.filter(function (r) { return r.manual_exit_result.pl > 0; }).length;
+    var avgPct = recs.reduce(function (s, r) { return s + (r.manual_exit_result.pl_pct || 0); }, 0) / recs.length;
+    var winRate = Math.round(wins / recs.length * 100);
+    var expanded = !!manualExitStatsExpanded[dirKey];
+    return '<div class="exit-stat-group">' +
+      '<div class="exit-stat-row">' +
+        '<span>' + esc(dirLabel) + '</span>' +
+        '<span class="mono">N=' + recs.length + '</span>' +
+        '<span class="mono">勝率 ' + winRate + '%</span>' +
+        '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+        '<button type="button" class="link-btn manual-exit-stat-toggle" data-manual-dir="' + dirKey + '">' +
+          (expanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
+      '</div>' +
+      (expanded ? renderManualExitStatsDetail(recs) : '') +
+    '</div>';
+  }
 
   /**
    * 「全出」批次手動出場的勝率統計,故意跟自動出場統計分開算——這批是
    * doExitAll() 按下「全出」當下標記的,不是 checkAutoExits() 判斷出場,
    * 沒有觸發規則可以分組(target/days/drawdown/trail_vol/trail_limit 那套
-   * 對這裡沒意義),所以只有一組彙總數字,不像 exitStatsHtml() 依規則分組。
+   * 對這裡沒意義),所以組內只有一組彙總數字,不像 exitStatsHtml() 依規則
+   * 分組;但還是先依看多/看空分開(理由同 exitStatsHtml())。
    * 用 manual_exit_result 這份「按下全出當下」的快照算。
    */
   function manualExitStatsHtml() {
     var exited = data.filter(function (r) { return r.manual_exit_result; });
     if (!exited.length) return '';
 
-    var wins = exited.filter(function (r) { return r.manual_exit_result.pl > 0; }).length;
-    var avgPct = exited.reduce(function (s, r) { return s + (r.manual_exit_result.pl_pct || 0); }, 0) / exited.length;
-    var winRate = Math.round(wins / exited.length * 100);
+    var longRecs = exited.filter(function (r) { return r.direction !== 'short'; });
+    var shortRecs = exited.filter(function (r) { return r.direction === 'short'; });
+    var rows = manualExitStatsGroupHtml(longRecs, 'long', '看多') +
+      manualExitStatsGroupHtml(shortRecs, 'short', '看空');
 
+    var wins = exited.filter(function (r) { return r.manual_exit_result.pl > 0; }).length;
     return '<div class="pos-block">' +
       '<div class="pos-head"><span>全出統計</span>' +
-        '<span class="dim">N=' + exited.length + '、勝率 ' + winRate + '%</span></div>' +
+        '<span class="dim">N=' + exited.length + '、整體勝率 ' +
+          Math.round(wins / exited.length * 100) + '%</span></div>' +
       '<p class="dim">用按「全出」當下的現價快照算,是手動批次動作、不是自動出場,' +
-        '故意跟上面的自動出場統計分開算,不會混在一起。樣本數還很少,當參考,不是驗證過的勝率。</p>' +
-      '<div class="exit-stats">' +
-        '<div class="exit-stat-group">' +
-          '<div class="exit-stat-row">' +
-            '<span>全出</span>' +
-            '<span class="mono">N=' + exited.length + '</span>' +
-            '<span class="mono">勝率 ' + winRate + '%</span>' +
-            '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
-            '<button type="button" class="link-btn manual-exit-stat-toggle">' +
-              (manualExitStatsExpanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
-          '</div>' +
-          (manualExitStatsExpanded ? renderManualExitStatsDetail(exited) : '') +
-        '</div>' +
-      '</div>' +
+        '故意跟上面的自動出場統計分開算,不會混在一起;做多做空的損益計算方向不同,' +
+        '分開統計才不會混在一起看。樣本數還很少,當參考,不是驗證過的勝率。</p>' +
+      '<div class="exit-stats">' + rows + '</div>' +
     '</div>';
   }
 
@@ -4692,10 +4784,13 @@
     };
   }
 
-  function signalAccuracyHtml() {
-    if (!quotes) return '';
+  /** 進場訊號準度統計單一方向(看多或看空)那組的區塊 html,沒有資料回傳空字串。
+   * 命中率的「方向預期」(ENTRY_TAG_DIRECTION)講的是訊號本身該漲該跌,跟這裡
+   * 分組用的「使用者看多還是看空」是兩件事——分組只是把兩種交易情境的樣本
+   * 分開看,命中率定義不變。*/
+  function signalAccuracyGroupHtml(records, dirLabel) {
     var byKey = {};
-    data.forEach(function (rec) {
+    records.forEach(function (rec) {
       var o = signalOutcomeFor(rec);
       if (!o) return;
       (byKey[o.key] = byKey[o.key] || []).push(o);
@@ -4729,23 +4824,44 @@
       '</div>';
     }).join('');
 
+    return '<div class="exit-stat-subgroup">' +
+      '<div class="exit-stat-subhead"><span>' + esc(dirLabel) + '</span></div>' +
+      '<div class="exit-stats">' + rows + '</div>' +
+    '</div>';
+  }
+
+  function signalAccuracyHtml() {
+    if (!quotes) return '';
+    var longs = data.filter(function (r) { return r.direction !== 'short'; });
+    var shorts = data.filter(function (r) { return r.direction === 'short'; });
+    var sections = signalAccuracyGroupHtml(longs, '看多') + signalAccuracyGroupHtml(shorts, '看空');
+    if (!sections) return '';
+
     return '<div class="pos-block">' +
       '<div class="pos-head"><span>進場訊號準度統計</span></div>' +
       '<p class="dim">依「加入追蹤」當天收盤價 vs. 最新收盤價驗證訊號——' +
         '例如訊號是可能會漲,後續真的漲了就算命中。命中率的方向預期(可能會漲該漲、' +
         '虛漲該回檔⋯)是程式推定的,不是統計驗證過的結論;收盤價只有近 30 天,' +
-        '進場日超過這個範圍就不計入。樣本數少,當參考。</p>' +
-      '<div class="exit-stats">' + rows + '</div>' +
+        '進場日超過這個範圍就不計入。先依「+ 追蹤」時選的看多/看空分開統計,' +
+        '樣本數少,當參考。</p>' +
+      sections +
     '</div>';
   }
 
   /**
    * 一筆紀錄的持倉損益。沒有報價時 priced 為 false —— 成本仍然算得出來,
    * 但市值與損益一律留 null,不要拿成本當市值假裝沒事。
+   *
+   * 2026-09-10 加入 direction(看多/看空)後,看空的損益要反轉:positions 記錄的
+   * 股數/成交價欄位定義不變(不管多空都是同一套「股數 × 價格 + 手續費」算成本),
+   * 只有「賺賠」乘上 dir(多 +1、空 -1)——看空是股價跌越多賺越多,
+   * pl = dir × (市值 − 成本)。cost 本身維持正值當分母算報酬率,plPct 符號
+   * 跟 pl 走。
    */
   function positionStats(rec) {
     var ps = rec.positions || [];
     if (!ps.length) return null;
+    var dir = rec.direction === 'short' ? -1 : 1;
 
     var shares = 0, cost = 0, i;
     for (i = 0; i < ps.length; i++) {
@@ -4764,9 +4880,9 @@
     out.priced = true;
     out.close = q.close;
     out.value = shares * q.close;
-    out.pl = out.value - cost;
+    out.pl = dir * (out.value - cost);
     out.plPct = cost > 0 ? out.pl / cost : null;
-    if (q.prev > 0) out.today = shares * (q.close - q.prev);
+    if (q.prev > 0) out.today = dir * shares * (q.close - q.prev);
     return out;
   }
 
@@ -4828,7 +4944,7 @@
     if (sigBox) sigBox.innerHTML = signalAccuracyHtml();
 
     var box = el('pos-summary');
-    var cost = 0, value = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
+    var cost = 0, value = 0, plSum = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
     var bestSum = 0, worstSum = 0, hasRange = false, noRange = 0;
     var rows = [];
     for (var i = 0; i < data.length; i++) {
@@ -4839,6 +4955,7 @@
       cost += st.cost;
       if (st.priced) {
         value += st.value;
+        plSum += st.pl;
         if (st.today != null) { today += st.today; hasToday = true; }
       } else {
         unpriced++;
@@ -4853,8 +4970,11 @@
     if (!n) { box.hidden = true; return; }
     box.hidden = false;
 
-    // 有報價不到的個股時,市值與損益只涵蓋得到報價的部分,要講清楚
-    var pl = unpriced ? null : value - cost;
+    // 有報價不到的個股時,市值與損益只涵蓋得到報價的部分,要講清楚。
+    // 總損益要加總每一筆已經算好方向的 st.pl,不能直接拿市值總和減成本總和——
+    // 混了看空的紀錄之後,市值(shares × close)跟看多的市值加在一起沒有意義,
+    // 但 st.pl 本身已經是每筆各自照多空反轉好的數字,加總才會對。
+    var pl = unpriced ? null : plSum;
     box.innerHTML = '' +
       '<div class="pos-sum-row">' +
         '<div><span>持倉成本</span><b>' + fmtMoney(cost) + '</b></div>' +
@@ -4907,8 +5027,10 @@
     }).join('') + '</div>';
   }
 
-  /** 出場設定表單,值從 rec.exit_plan 帶入。*/
-  function exitPlanFormHtml(plan) {
+  /** 出場設定表單,值從 rec.exit_plan 帶入。direction 決定門檻/漲跌方向的文字說明。*/
+  function exitPlanFormHtml(plan, direction) {
+    var dir = direction === 'short' ? -1 : 1;
+    var dirWord = dir > 0 ? '漲' : '跌';
     var showTarget = plan.mode === 'daytrade' || plan.mode === 'profit' || plan.mode === 'trail';
     var showDays = plan.mode === 'days';
     var isTrail = plan.mode === 'trail';
@@ -4924,7 +5046,7 @@
             }).join('') +
           '</select></label>' +
         '<label class="field" id="exit-target-field"' + (showTarget ? '' : ' hidden') + '>' +
-          '<span class="field-label">' + (isTrail ? '啟動門檻 %(對均價)' : '目標漲幅 %(對均價)') + '</span>' +
+          '<span class="field-label">' + (isTrail ? '啟動門檻 %(對均價,' + dirWord + ')' : '目標' + dirWord + '幅 %(對均價)') + '</span>' +
           '<input type="text" id="exit-target-pct" inputmode="decimal" placeholder="例如 5" value="' +
             esc(plan.target_pct) + '"></label>' +
         '<label class="field" id="exit-days-field"' + (showDays ? '' : ' hidden') + '>' +
@@ -4935,9 +5057,14 @@
           '<input type="text" id="exit-max-drawdown" inputmode="decimal" placeholder="例如 8" value="' +
             esc(plan.max_drawdown_pct) + '"></label>' +
       '</div>' +
-      (isTrail ? '<p class="dim">漲到啟動門檻之後才開始追蹤(拉回也算已啟動),之後只要' +
-        '「今量 / 前5日均量 &lt; ' + TRAIL_VOL_SHRINK_RATIO + '」或「單日漲幅 ≥ ' +
-        (TRAIL_LIMITUP_PCT * 100) + '%」任一命中就出場。這兩個門檻先試這組固定值,還沒開放調整。</p>' : '') +
+      (isTrail ? '<p class="dim">' + (dir > 0
+        ? ('漲到啟動門檻之後才開始追蹤(拉回也算已啟動),之後只要' +
+           '「今量 / 前5日均量 &lt; ' + TRAIL_VOL_SHRINK_RATIO + '」或「單日漲幅 ≥ ' +
+           (TRAIL_LIMITUP_PCT * 100) + '%」任一命中就出場。')
+        : ('跌到啟動門檻之後才開始追蹤(反彈也算已啟動),之後只要' +
+           '「今量 / 前5日均量 &lt; ' + TRAIL_VOL_SHRINK_RATIO + '」或「單日跌幅 ≥ ' +
+           (TRAIL_LIMITUP_PCT * 100) + '%」任一命中就出場。')) +
+        '這兩個門檻先試這組固定值,還沒開放調整。</p>' : '') +
       '<button type="button" class="btn btn-block btn-outline" id="exit-save">儲存出場設定</button>' +
     '</div>';
   }
@@ -4945,15 +5072,20 @@
   function positionsHtml(rec) {
     var ps = rec.positions || [];
     var st = positionStats(rec);
+    var dir = rec.direction === 'short' ? -1 : 1;
+    var dirLabel = rec.direction === 'short' ? '看空(做空)' : '看多(做多)';
     var head = '<div class="pos-head"><span>持倉紀錄</span>' +
-      '<span class="dim">只是紀錄,不會真的下單</span></div>';
+      '<span class="dim">只是紀錄,不會真的下單</span></div>' +
+      '<p class="dim">方向:<b>' + esc(dirLabel) + '</b>' +
+        ' <button type="button" class="link-btn" id="pos-dir-toggle">切換為' +
+        (rec.direction === 'short' ? '看多' : '看空') + '</button></p>';
 
     var rows = '';
     for (var i = 0; i < ps.length; i++) {
       var p = ps[i];
       var c = p.shares * p.price + p.fee;
       var v = st && st.priced ? p.shares * st.close : null;
-      var pl = v == null ? null : v - c;
+      var pl = v == null ? null : dir * (v - c);
       rows += '<tr>' +
         '<td class="mono">' + esc(p.date || '—') + '</td>' +
         '<td class="num">' + fmtInt(p.shares) + '</td>' +
@@ -5004,7 +5136,7 @@
 
     var plan = rec.exit_plan || blankExitPlan();
     var alerts = positionAlertsHtml(rec, st, plan);
-    var exitForm = exitPlanFormHtml(plan);
+    var exitForm = exitPlanFormHtml(plan, rec.direction);
 
     var todayQuote = quoteOf(rec.stock_id);
     var defaultPrice = (todayQuote && todayQuote.close > 0) ? String(todayQuote.close) : '';
@@ -5256,6 +5388,20 @@
     });
   }
 
+  /** 「+ 追蹤」當下選的看多/看空,之後隨時可以在持倉紀錄區塊切換——不彈確認框,
+   * 跟切換出場設定模式一樣是低風險操作,切換後損益會照新方向重算。 */
+  function toggleDirection() {
+    var rec = findById(currentId);
+    if (!rec) return;
+    rec.direction = rec.direction === 'short' ? 'long' : 'short';
+    touch(rec);
+    if (!saveAll()) return;
+    toast('已切換為' + (rec.direction === 'short' ? '看空(做空)' : '看多(做多)'), 'ok');
+    renderPositions();
+    renderList();
+    renderPosSummary();
+  }
+
   function saveExitPlan() {
     var rec = findById(currentId);
     if (!rec) return;
@@ -5324,7 +5470,8 @@
     el('manual-exit-stats').addEventListener('click', function (e) {
       var toggle = e.target.closest('.manual-exit-stat-toggle');
       if (toggle) {
-        manualExitStatsExpanded = !manualExitStatsExpanded;
+        var mdir = toggle.getAttribute('data-manual-dir');
+        manualExitStatsExpanded[mdir] = !manualExitStatsExpanded[mdir];
         el('manual-exit-stats').innerHTML = manualExitStatsHtml();
         return;
       }
@@ -5339,15 +5486,7 @@
 
     el('fomo-tbody').addEventListener('click', function (e) {
       var qa = e.target.closest('.btn-quickadd');
-      if (qa) {
-        if (qa.disabled) return;
-        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'),
-          qa.getAttribute('data-qa-note'));
-        qa.textContent = '已追蹤';
-        qa.disabled = true;
-        qa.classList.add('is-added');
-        return;
-      }
+      if (qa) { handleQuickAddClick(qa); return; }
       var tr = e.target.closest('.fomo-row');
       if (!tr || !fomoData) return;
       var id = tr.getAttribute('data-fomo');
@@ -5362,15 +5501,7 @@
 
     el('crashfomo-tbody').addEventListener('click', function (e) {
       var qa = e.target.closest('.btn-quickadd');
-      if (qa) {
-        if (qa.disabled) return;
-        quickAddTracking(qa.getAttribute('data-qa-code'), qa.getAttribute('data-qa-name'),
-          qa.getAttribute('data-qa-note'));
-        qa.textContent = '已追蹤';
-        qa.disabled = true;
-        qa.classList.add('is-added');
-        return;
-      }
+      if (qa) { handleQuickAddClick(qa); return; }
       var tr = e.target.closest('.fomo-row');
       if (!tr || !crashFomoData) return;
       var id = tr.getAttribute('data-fomo');
@@ -5440,6 +5571,7 @@
       if (del) { deletePosition(del.getAttribute('data-del-pos')); return; }
       if (e.target.closest('#pos-add')) addPosition();
       if (e.target.closest('#exit-save')) saveExitPlan();
+      if (e.target.closest('#pos-dir-toggle')) toggleDirection();
     });
 
     el('detail-positions').addEventListener('change', function (e) {

@@ -295,6 +295,18 @@ body {
 .pill-exited { color: var(--down); }
 .pill-rejected { color: var(--neutral); }
 
+/* 追蹤卡片上的看多/看空標籤(2026-09-10),故意不用 margin-left:auto——
+   放在名稱後面、狀態 pill 前面,狀態 pill 仍然靠右對齊。 */
+.pill-dir {
+  font-size: 11.5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.pill-dir.is-long { color: var(--up); }
+.pill-dir.is-short { color: var(--down); }
+
 .card-step {
   margin-top: 8px;
   font-size: 13px;
@@ -1161,6 +1173,21 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .exit-stat-row .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .exit-stat-row .up { color: var(--up); }
 .exit-stat-row .down { color: var(--down); }
+
+/* 進場訊號準度統計/自動出場統計/全出統計依看多/看空分組時的子標題(2026-09-10)。*/
+.exit-stat-subgroup { margin-top: 10px; }
+.exit-stat-subgroup:first-child { margin-top: 0; }
+.exit-stat-subhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed var(--line);
+}
 
 .exit-stat-detail-table { font-size: 12.5px; }
 .exit-stat-detail-row { cursor: pointer; }
