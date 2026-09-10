@@ -296,15 +296,36 @@
     <h2 class="panel-title">大盤九宮格</h2>
     <p class="panel-note">
       Y 軸 ΔP_idx(加權指數單日報酬率)× X 軸 ρ_idx(大盤成交值 5日均/20日均比,
-      成交值用 Σ收盤價×成交量 自算)。跟個股獵人九宮格同構但參數不同 ——
-      指數波動天生被市值加權壓縮,門檻比個股窄。純觀察型,不是進出場訊號,
-      所有判讀都還沒經過勝率驗證。
+      成交值是 TWSE 官方每日「大盤統計資訊」的成交金額,不是自算的近似值)。
+      跟個股獵人九宮格同構但參數不同 —— 指數波動天生被市值加權壓縮,門檻比
+      個股窄。純觀察型,不是進出場訊號,所有判讀都還沒經過勝率驗證。
     </p>
     <div class="hunter-grid-3x3" id="market-grid-cells"></div>
     <div class="k-sum" id="market-grid-sum"></div>
     <div class="cross-box" id="market-cross-signal" hidden></div>
     <div class="sentiment-box" id="market-sentiment" hidden></div>
     <div class="lajiban-banner" id="market-lajiban" hidden></div>
+  </section>
+
+  <section class="panel" id="market-history-panel" hidden>
+    <h2 class="panel-title">大盤 30 日追蹤表</h2>
+    <p class="panel-note" id="market-history-note">
+      每個交易日的加權指數收盤/漲跌、官方成交金額、官方漲跌家數、外資+投信
+      買賣超(約,逐日回補)、九宮格分類、拉積盤警告。TWSE 的日報表沒有公布
+      指數的開高低,只有收盤,不是這裡漏抓。九宮格要有前 20 個交易日的成交
+      金額才能判斷「量」,資料剛開始累積、天數不夠時那幾天的九宮格/拉積盤
+      欄位會是「—」,會隨每天排程逐漸補滿。
+    </p>
+    <div class="table-scroll">
+      <table class="scan-table" id="market-history-table">
+        <thead><tr>
+          <th>日期</th><th class="num">收盤</th><th class="num">漲跌%</th>
+          <th class="num">成交金額(億)</th><th class="num">上漲</th><th class="num">下跌</th>
+          <th>九宮格</th><th>拉積盤</th><th class="num">外資+投信(約,億)</th>
+        </tr></thead>
+        <tbody id="market-history-tbody"></tbody>
+      </table>
+    </div>
   </section>
 
   <section class="panel" id="risk-market-panel" hidden>

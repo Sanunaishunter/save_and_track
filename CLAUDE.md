@@ -64,7 +64,7 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
 ```
 
 手動觸發參數:`backfill_days` / `source` / `top`(預設 60)/ `limit` / `refreeze_tick` /
-`crash_source` / `crash_top`(預設 60)/ `crash_limit`。
+`crash_source` / `crash_top`(預設 60)/ `crash_limit` / `market_backfill_days`。
 
 ---
 
@@ -182,6 +182,40 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
     或還沒入倉的紀錄按全出時拿不到快照,不會計入這份統計(只是照樣標記出場)。用
     Playwright 灌了一組會贏、一組會賠的假資料驗證過:快照的 pl/pl_pct/price 對上手算值、
     統計區塊 N/勝率/平均正確、展開明細正確、reactivate 後快照清空且統計數字跟著更新。
+15. **2026-09-10 新增「大盤 30 日追蹤表」,順便把大盤九宮格的資料來源換成官方數字。**
+    起因:使用者看到籌碼分頁的拉積盤提示後想要一張追蹤表,結果發現原本的大盤九宮格
+    (`compute_market_grid.py`)只算「今天」,不存歷史——ΔP_idx 靠 FMTQIK(只回兩個
+    交易日)、Turnover/漲跌家數是拿 `data/history` 自己加總近似出來的。先 probe
+    `MI_INDEX?date=&type=ALL`(結論寫進 `data/README.md`,probe 腳本已刪)確認除了
+    現有在用的個股報價表,還有大盤指數本身的收盤(`指數` 欄位等於「發行量加權股價
+    指數」那一列)、官方成交金額/股數/筆數、官方漲跌家數三張表沒被用過,而且這支
+    API 日期可定址,可以回補歷史。跟使用者確認兩件事:**指數開高低 TWSE 日報表沒
+    公布,只留收盤**;成交金額/漲跌家數**改用官方數字**,取代原本的近似值。
+    - `scripts/twse_api.py` 新增 `market_index_by_date()`,解析那三張表(TAIEX 收盤/
+      漲跌、官方 Turnover、官方漲跌家數),不影響 `by_date()` 原本在用的個股報價表。
+    - `scripts/compute_market_grid.py` 改成累積式:`data/market-grid-latest.json` 新增
+      `history` 陣列(新到舊,每天一筆),跟 `data/history` 一樣「逐日累積長到
+      `KEEP_DAYS`(30)天,同一天以新抓到的為準跟舊檔案合併,不用每次回補」。加了
+      `--backfill-days`(daily-scan.yml 對應 `market_backfill_days` 手動觸發參數),
+      第一次想馬上填滿 30 天可以用。法人買賣超(T86)一起逐日回補;**融資餘額/增減
+      只有「今天」有值**,沒有大盤融資總額的歷史資料源,`history` 裡舊日子這幾個
+      欄位是 null。`price_state`/`breadth_ratio`/`is_lajiban` 不需要歷史視窗,從第一天
+      就有值;`volume_state`/`grid_label`(完整九宮格分類)需要前 20 天 Turnover,天數
+      不夠時是 null,會隨每天排程補上。
+    - 頂層的「今日快照」欄位名稱維持不變(`idx_close`/`price_state`/`grid_label`/
+      `is_lajiban`/`advancing_count`⋯),前端既有的九宮格區塊不用改,只是數值來源
+      從自算近似值換成官方數字——9/10 那天官方漲跌家數(259/744/69)跟原本自算的
+      (259/753/69)差 9 家,不算大差但官方更準。
+    - `js/app.js` 新增「大盤 30 日追蹤表」(`#market-history-panel`,籌碼分頁裡九宮格
+      正下方):逐日收盤/漲跌%/成交金額(億)/漲跌家數/九宮格短標籤/拉積盤警告/
+      外資+投信約(億),純渲染 `history` 陣列,不現算。
+    - `twse_api.market_index_by_date()` 拿 probe 抓到的真實 9/10 資料手算過(10 項全過);
+      `compute_market_grid.py` 的 `avg_window`/`price_state`/`vol_state`/
+      `derive_grid_fields` 純邏輯測過(22 項),`main()` 的回補/合併/裁切邏輯用暫存
+      資料夾整合測過(15 項,含「第二次沒給 backfill 也不會弄丟舊天數」這個關鍵行為);
+      前端 `renderMarketHistory()` 用 Playwright 端對端測過(10 項)。過程中這份測試
+      抓到一個真的 bug——`instTxt` 一開始用 `signed()` 包小數金額,但 `signed()`
+      內部會 `Math.round` 成整數,小數會被吃掉,改成手動組字串才對。
 
 ---
 

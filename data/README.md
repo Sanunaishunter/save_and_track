@@ -23,7 +23,7 @@
 | `tick-sample-members.json` | 凍結的抽樣名單。**長期狀態,不是每日產出** |
 | `quotes-latest.json` | 報價快照:最新與前一日收盤價 + 30 天日報酬。持倉損益與 Kelly 的相關係數共用 |
 | `risk-latest.json` | 大盤成交資訊 + 注意股 + 融資融券 + 停資停券預告 + 除權息預告,獨立分頁。今日漲跌停是前端自算,不在這份檔案裡 |
-| `market-grid-latest.json` | 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測,放在籌碼/風險分頁 |
+| `market-grid-latest.json` | 大盤九宮格 + 法人融資交叉分析 + 市場情緒 + 拉積盤偵測(今日快照)+ `history` 陣列(大盤 30 日追蹤表,逐日累積長到 30 天),放在籌碼/風險分頁 |
 | `fx-futures-latest.json` | 匯率(央行)+ 台指期貨三大法人未平倉(FinMind),放在籌碼/風險分頁 |
 | `themes.json` | 題材分類清單,**手動維護,不是排程產出**,由 Hugo 判斷資料後請 Claude Code 直接編輯這份檔案 |
 | `stock-lookup-latest.json` | FOMO個股查詢:清單裡每檔的逐日開高低收量 + 融資融券 + 外資投信,前端讀這支。只留最新一份,**沒有每日存查** |
@@ -758,26 +758,62 @@ prev_close(持倉損益本來就在用的同一份資料)自己算,算法是台�
 FinMind,更不需要碰 SH2**(這點直接回答了規格第 8 節「上漲/下跌家數要不要
 接 finmind.db」的疑問——不用,本地資料就有):
 
-- **ΔP_idx(加權指數單日報酬率)**:`twse_api.market_summary()`(FMTQIK)。
-  這支 API 實測只回最近兩個交易日,但 ΔP_idx 只需要 t 對 t-1,兩天夠用,
-  不用額外累積歷史
-- **ρ_idx 用的 Turnover(大盤成交值)**:**沒有用** FMTQIK 的 `trade_value`
-  (只有兩天,算不出 MA20)。改成用 `data/history` 既有的全市場
-  `Σ 收盤價×成交量` 自己加總——這正是規格自己給的 Turnover 定義
-  ($Turnover_t = \sum_i P_{i,t} \times V_{i,t}$),而且 `data/history`
-  現有 `KEEP_DAYS=30` 天,一部署就有滿的 MA5/MA20,不用像原本以為的
-  「新開一份歷史檔案、等一個月長出來」
-- **上漲/下跌/平盤家數**(市場情緒溫度計、拉積盤 breadth_ratio 共用):
-  同樣用 `data/history` 比較連續兩天收盤價自己算,同樣立即可用
+- **ΔP_idx(加權指數單日報酬率)+ 官方成交金額/漲跌家數**:
+  `twse_api.market_index_by_date()`(2026-09-10 新增)。**改版前**用
+  `twse_api.market_summary()`(FMTQIK,實測只回最近兩個交易日)算 ΔP_idx,
+  Turnover/漲跌家數是拿 `data/history` 的個股資料自己加總近似出來的,不是
+  真正的指數或官方數字。使用者看到籌碼分頁的拉積盤提示後想要一張「大盤
+  30 日追蹤表」,逼我們重新 probe 過一次(`scripts/probe_market_index_history.py`,
+  已刪除,結論記在這裡):`MI_INDEX?date=&type=ALL` 除了個股報價表之外,
+  還有三張表沒被用到過:
+  - 「OO年OO月OO日 價格指數(臺灣證券交易所)」:56 檔指數的當日收盤/漲跌,
+    `指數` 欄位等於 `"發行量加權股價指數"` 的那一列就是 TAIEX。
+    **只有收盤,沒有開高低**——TWSE 的日報表本來就沒公布指數的開高低,
+    跟使用者確認過,大盤 30 日追蹤表的開高低欄位留空,不是這裡漏抓。
+  - 「OO年OO月OO日 大盤統計資訊」:依證券類別分類的官方成交金額/股數/
+    筆數,`成交統計` 欄位 `"1.一般股票"` 那列最接近「上市普通股」,拿來當
+    Turnover,取代原本自算的近似值。
+  - 「漲跌證券數合計」:官方漲跌家數統計,`股票` 欄位(不是 `整體市場`,
+    那個含 ETF/權證等)是格式化字串 `"259(8)"`(259 家、其中 8 家漲停),
+    只取家數。跟自算的近似值對過(9/10 那天:官方 259/744/69,自算
+    259/753/69),上漲/持平一致,下跌差 9 家,官方數字更準,取代自算。
+  這支 API 是日期可定址的(個股回補資料本來就在用同一支),所以這三個數字
+  現在**可以回補過去的交易日**,不再受限於 FMTQIK 只有兩天的問題——見下面
+  「大盤 30 日追蹤表」。
 - **法人買賣超金額**:`twse_api.institutional_by_date()`(T86),
   `compute_fomo.py` 已經在打同一支 API,這裡獨立再打一次(T86 免費、
   無額度限制,不像 FinMind 要省配額)。用淨股數 × 當日收盤價估算金額,
   跟 FOMO 既有的估算法一致(dataset 沒有金額欄位,是「約」數)。
   **只計入外資(不含外資自營商)+ 投信,不含自營商**——跟專案裡「外資」
   既有定義一致,但嚴格來說不是規格講的完整「三大法人」,自營商淨額
-  目前沒有從 T86 拆出來
+  目前沒有從 T86 拆出來。T86 同樣日期可定址,**逐日回補**(用當天
+  `data/history` 的收盤價估價,回補範圍受 `data/history` 保留天數限制)。
 - **融資餘額與增減**:沿用 `risk-latest.json` 的 `margin` dict 逐檔加總,
-  今日/前日都在同一份快照裡,不用歷史累積
+  今日/前日都在同一份快照裡,不用歷史累積,**只有「今天」這格有值**——
+  沒有「大盤融資總額」的歷史資料源,history 裡舊的日子這幾個欄位是 null,
+  `market_total`/`margin_delta`/`cross_signal`/`sentiment_ma5` 都一樣只算
+  今天,不在 `history` 陣列的每一筆裡面。
+
+### 大盤 30 日追蹤表(2026-09-10 新增)
+
+`data/market-grid-latest.json` 除了原本的「今日快照」欄位(前端既有的九宮格
+區塊照舊讀這些,欄位名稱沒有改,只是數值來源從自算近似值換成官方數字),
+新增 `history` 陣列:新到舊,每個交易日一筆
+`{date, idx_close, idx_change, idx_change_pct, turnover_amount,
+advancing_count, declining_count, unchanged_count, institutional_net,
+delta_p_idx, rho_idx, price_state, volume_state, grid_label, breadth_ratio,
+is_lajiban}`。
+
+跟 `data/history` 一樣的「逐日累積長到 `KEEP_DAYS`(30)天」設計:每天排程
+跑 `compute_market_grid.py` 會把新的一天跟舊檔案裡的 `history` 合併(同一天
+以新抓到的為準),裁到 30 天,**不需要每次都回補**。想一次補滿 30 天,
+手動觸發 `daily-scan.yml` 時 `market_backfill_days` 填 29(見
+`scripts/compute_market_grid.py --backfill-days`)。
+
+`volume_state`/`grid_label`(九宮格分類)需要前 20 個交易日的 Turnover 才能
+判斷「量」,`history` 天數不夠 20 天時那幾天這兩個欄位是 `null`,會隨每天
+排程逐日補上,不是漏算——`price_state`/`breadth_ratio`/`is_lajiban` 不需要
+歷史視窗,從第一天就有值。
 
 ### 門檻常數(spec 沒給精確值的,先用預設值,之後可調)
 

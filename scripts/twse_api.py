@@ -320,6 +320,144 @@ def market_summary():
     return out
 
 
+# ---------------------------------------------------------------- 大盤指數歷史(日期可定址)
+#
+# 2026-09-10 probe 確認(scripts/probe_market_index_history.py,結論見
+# data/README.md):MI_INDEX?date=&type=ALL 的 tables 裡,除了 by_date()
+# 在用的「每日收盤行情」個股表之外,還有三張表有用:
+#   - 「OO年OO月OO日 價格指數(臺灣證券交易所)」:56 檔指數的當日收盤/漲跌,
+#     「發行量加權股價指數」那一列就是 TAIEX——但**只有收盤,沒有開高低**,
+#     TWSE 的日報表本來就沒公布指數的開高低。
+#   - 「OO年OO月OO日 大盤統計資訊」:依證券類別分類的官方成交金額/股數/
+#     筆數,「1.一般股票」那列最接近「上市普通股」。
+#   - 「漲跌證券數合計」:官方漲跌家數統計,「股票」欄位(不是「整體市場」,
+#     那個含 ETF/權證等),格式「259(8)」= 259 家(其中 8 家漲停)。
+# 這三張表跟個股報價是同一次 MI_INDEX 回應,理論上可以合併省一次呼叫,
+# 但目前用途分開(這支給大盤九宮格,by_date() 給個股回補),各自獨立呼叫
+# 比較不會互相牽動,MI_INDEX 免費無額度限制,重複呼叫不是問題。
+
+TAIEX_NAME = "發行量加權股價指數"
+TURNOVER_ROW_LABEL = "1.一般股票"
+
+
+def _find_table(payload, required_fields):
+    for t in payload.get("tables") or []:
+        if not isinstance(t, dict):
+            continue
+        fields = t.get("fields") or []
+        if all(f in fields for f in required_fields):
+            return fields, (t.get("data") or [])
+    return None, None
+
+
+def _num_comma(v):
+    """把 '46,940.49' 這種千分位字串轉成 float,格式不對回傳 None。"""
+    if v is None:
+        return None
+    s = str(v).replace(",", "").strip()
+    if not s:
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _breadth_num(v):
+    """漲跌證券數合計的格式是 '259(8)'(家數(其中漲跌停家數)),只取前面的家數。"""
+    s = str(v or "").split("(")[0].replace(",", "").strip()
+    try:
+        return int(s)
+    except ValueError:
+        return None
+
+
+def market_index_by_date(ymd):
+    """
+    指定日期(YYYYMMDD)的大盤指數收盤/漲跌 + 官方成交金額/股數/筆數 +
+    官方漲跌證券數。休市日回傳 None。
+
+    回傳 dict:
+      date, idx_close, idx_change, idx_change_pct,
+      turnover_amount, turnover_shares, turnover_tx,
+      advancing, declining, unchanged
+
+    沒有 idx_open/idx_high/idx_low——TWSE 的日報表沒有公布指數開高低,
+    不是這支漏抓。
+    """
+    last_err = None
+    for tpl in MI_INDEX_URLS:
+        try:
+            payload = _get_json(tpl % ymd)
+        except TWSEError as e:
+            last_err = e
+            continue
+
+        if payload.get("stat") != "OK":
+            return None
+
+        date_iso = str(payload.get("date") or ymd)
+        date_iso = "%s-%s-%s" % (date_iso[:4], date_iso[4:6], date_iso[6:8])
+
+        out = {
+            "date": date_iso, "idx_close": None, "idx_change": None, "idx_change_pct": None,
+            "turnover_amount": None, "turnover_shares": None, "turnover_tx": None,
+            "advancing": None, "declining": None, "unchanged": None,
+        }
+
+        idx_fields, idx_data = _find_table(payload, ["指數", "收盤指數", "漲跌點數", "漲跌百分比(%)"])
+        if idx_data:
+            idx_i = {name: i for i, name in enumerate(idx_fields)}
+            for row in idx_data:
+                try:
+                    name = row[idx_i["指數"]]
+                except (IndexError, TypeError):
+                    continue
+                if name != TAIEX_NAME:
+                    continue
+                out["idx_close"] = _num_comma(row[idx_i["收盤指數"]])
+                pct = _num_comma(row[idx_i["漲跌百分比(%)"]])
+                pts = _num_comma(row[idx_i["漲跌點數"]])
+                out["idx_change_pct"] = pct
+                if pts is not None and pct is not None:
+                    out["idx_change"] = -pts if pct < 0 else pts
+                break
+
+        to_fields, to_data = _find_table(payload, ["成交統計", "成交金額(元)", "成交股數(股)", "成交筆數"])
+        if to_data:
+            to_i = {name: i for i, name in enumerate(to_fields)}
+            for row in to_data:
+                try:
+                    label = row[to_i["成交統計"]]
+                except (IndexError, TypeError):
+                    continue
+                if label != TURNOVER_ROW_LABEL:
+                    continue
+                out["turnover_amount"] = _num_comma(row[to_i["成交金額(元)"]])
+                out["turnover_shares"] = _num_comma(row[to_i["成交股數(股)"]])
+                out["turnover_tx"] = _num_comma(row[to_i["成交筆數"]])
+                break
+
+        bd_fields, bd_data = _find_table(payload, ["類型", "整體市場", "股票"])
+        if bd_data:
+            bd_i = {name: i for i, name in enumerate(bd_fields)}
+            for row in bd_data:
+                try:
+                    label, val = row[bd_i["類型"]], row[bd_i["股票"]]
+                except (IndexError, TypeError):
+                    continue
+                if label == "上漲(漲停)":
+                    out["advancing"] = _breadth_num(val)
+                elif label == "下跌(跌停)":
+                    out["declining"] = _breadth_num(val)
+                elif label == "持平":
+                    out["unchanged"] = _breadth_num(val)
+
+        return out
+
+    raise TWSEError("MI_INDEX 兩條路徑都失敗:%s" % last_err)
+
+
 # ---------------------------------------------------------------- 注意股
 
 ATTENTION_URL = "https://openapi.twse.com.tw/v1/announcement/notice"

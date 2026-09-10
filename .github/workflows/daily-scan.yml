@@ -46,6 +46,10 @@ on:
         default: 'false'
         type: choice
         options: ['false', 'true']
+      market_backfill_days:
+        description: '大盤30日追蹤表:額外回補幾個交易日(第一次想馬上填滿填 29,平常留 0)'
+        required: false
+        default: '0'
 
 permissions:
   contents: write
@@ -132,9 +136,13 @@ jobs:
       - name: 更新籌碼/風險資料
         run: python scripts/fetch_risk_flags.py
 
-      # 大盤九宮格排在籌碼/風險之後,重用同一份 risk-latest.json 的融資融券快照
+      # 大盤九宮格排在籌碼/風險之後,重用同一份 risk-latest.json 的融資融券快照。
+      # 平常不用給 backfill,history 靠每天跑一次自然累積長到 30 天;
+      # 第一次想馬上看到滿的 30 天追蹤表,手動觸發時 market_backfill_days 填 29。
       - name: 計算大盤九宮格
-        run: python scripts/compute_market_grid.py
+        run: |
+          python scripts/compute_market_grid.py \
+            --backfill-days "${{ github.event.inputs.market_backfill_days || '0' }}"
 
       # 匯率(央行)+ 台指期貨三大法人未平倉(FinMind)—— 獨立區塊,跟其他步驟無關
       - name: 更新匯率與期貨三大法人

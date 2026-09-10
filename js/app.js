@@ -2065,6 +2065,40 @@
     }
   }
 
+  /** 大盤 30 日追蹤表:history 是 compute_market_grid.py 逐日累積出來的新到舊
+   * 陣列,前端只負責排版,不現算——跟大盤九宮格今日快照同一份資料源,
+   * 差別只是這裡把每一天都攤開顯示。見 index.html #market-history-panel 的
+   * 說明:指數沒有開高低(TWSE 沒公布)、九宮格要前 20 天成交金額才判得出來。*/
+  function renderMarketHistory(res) {
+    var panel = el('market-history-panel');
+    var tbody = el('market-history-tbody');
+    if (!res || res.error || !res.history || !res.history.length) { panel.hidden = true; return; }
+    panel.hidden = false;
+
+    tbody.innerHTML = res.history.map(function (e) {
+      var pctCls = plClass(e.idx_change_pct);
+      var pctTxt = e.idx_change_pct == null ? '—'
+        : (e.idx_change_pct >= 0 ? '+' : '') + e.idx_change_pct.toFixed(2) + '%';
+      var turnoverTxt = e.turnover_amount == null ? '—' : (e.turnover_amount / 1e8).toFixed(1);
+      var gridKey = (e.price_state || '') + (e.volume_state || '');
+      var gridTxt = MARKET_GRID_SHORT_LABELS[gridKey] || '—';
+      var lajibanTxt = e.is_lajiban ? '⚠ 是' : '—';
+      var instYi = e.institutional_net == null ? null : e.institutional_net / 1e8;
+      var instTxt = instYi == null ? '—' : (instYi >= 0 ? '+' : '') + instYi.toFixed(1);
+      return '<tr>' +
+        '<td class="mono">' + esc(e.date || '—') + '</td>' +
+        '<td class="num mono">' + (e.idx_close == null ? '—' : e.idx_close.toFixed(2)) + '</td>' +
+        '<td class="num mono ' + pctCls + '">' + pctTxt + '</td>' +
+        '<td class="num mono">' + turnoverTxt + '</td>' +
+        '<td class="num mono">' + (e.advancing_count == null ? '—' : fmtInt(e.advancing_count)) + '</td>' +
+        '<td class="num mono">' + (e.declining_count == null ? '—' : fmtInt(e.declining_count)) + '</td>' +
+        '<td>' + esc(gridTxt) + '</td>' +
+        '<td class="' + (e.is_lajiban ? 'up' : '') + '">' + esc(lajibanTxt) + '</td>' +
+        '<td class="num mono ' + plClass(e.institutional_net) + '">' + instTxt + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
   // ---------------------------------------------------------- 匯率 / 期貨三大法人
   //
   // 央行匯率 + 台指期貨(TX)三大法人未平倉,獨立區塊,放在籌碼/風險分頁。
@@ -2132,8 +2166,11 @@
 
     if (force) marketGridData = null;
     loadMarketGrid()
-      .then(function (data) { renderMarketGrid(data); })
-      .catch(function () { el('market-grid-panel').hidden = true; });
+      .then(function (data) { renderMarketGrid(data); renderMarketHistory(data); })
+      .catch(function () {
+        el('market-grid-panel').hidden = true;
+        el('market-history-panel').hidden = true;
+      });
 
     if (force) fxFuturesData = null;
     loadFxFutures()
