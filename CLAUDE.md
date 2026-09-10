@@ -171,6 +171,17 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
     要求輸入確認字串,只有一般確認對話框(七個步驟內容、持倉紀錄都保留,不是刪除)。
     用 Playwright 驗證過:active 的兩筆正確轉成 exited 並補上追蹤紀錄,已經是
     exited/rejected 的紀錄完全沒被動到,`exit_result` 維持 null。
+14. **2026-09-10 加「全出統計」,獨立於「自動出場統計」之外。** `doExitAll()` 按下
+    「全出」的當下,對每筆有報價的紀錄用 `positionStats()` 存一份快照到新欄位
+    `manual_exit_result`(date/price/pl/pl_pct,形狀跟 `exit_result`類似但**刻意獨立**,
+    `normalizeManualExitResult()` 沒有 `rule` 白名單問題)。`manualExitStatsHtml()` 用這份
+    快照算彙總勝率/平均報酬,畫面上是「自動出場統計」下面單獨一塊(`#manual-exit-stats`),
+    只有一組數字,不像自動出場統計依 target/days/drawdown/trail_vol/trail_limit 分組
+    ——「全出」永遠只有一種觸發來源,分組沒有意義。`doReactivate()`(「重新設為進行中」)
+    連 `exit_result` 一起把 `manual_exit_result` 也清空,兩邊統計都會跟著調整。沒有報價
+    或還沒入倉的紀錄按全出時拿不到快照,不會計入這份統計(只是照樣標記出場)。用
+    Playwright 灌了一組會贏、一組會賠的假資料驗證過:快照的 pl/pl_pct/price 對上手算值、
+    統計區塊 N/勝率/平均正確、展開明細正確、reactivate 後快照清空且統計數字跟著更新。
 
 ---
 

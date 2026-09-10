@@ -403,6 +403,7 @@
       positions: [],
       exit_plan: blankExitPlan(),
       exit_result: null,
+      manual_exit_result: null,
       rejected_step: null,
       rejected_reason: '',
       created_at: ts,
@@ -450,6 +451,7 @@
       positions: normalizePositions(r.positions),
       exit_plan: normalizeExitPlan(r.exit_plan),
       exit_result: normalizeExitResult(r.exit_result),
+      manual_exit_result: normalizeManualExitResult(r.manual_exit_result),
       rejected_step: (r.rejected_step == null || r.rejected_step === '') ? null : parseInt(r.rejected_step, 10) || null,
       rejected_reason: String(r.rejected_reason || ''),
       created_at: r.created_at || nowISO(),
@@ -1061,6 +1063,11 @@
    * (doExit)是同一個 rec.status 欄位、同樣不設 exit_result——這不是自動
    * 出場,不該混進「自動出場統計」的勝率計算。每筆補一則追蹤紀錄留痕,
    * 單筆想復原用 doReactivate()(「重新設為進行中」)個別救回來。
+   *
+   * 另外存一份 manual_exit_result 快照(按下全出當下的現價/損益,用
+   * positionStats——沒有報價或還沒入倉的紀錄就沒有這份快照,只是標記
+   * 出場,不計入「全出統計」),供獨立的「全出統計」算勝率用,見
+   * manualExitStatsHtml()。
    */
   function doExitAll() {
     var actives = data.filter(function (r) { return r.status === 'active'; });
@@ -1076,6 +1083,13 @@
       if (res.action !== 'exitAll') return;
       actives.forEach(function (rec) {
         rec.tracking.unshift({ date: todayStr(), note: '【全出】手動批次標記出場' });
+        var st = positionStats(rec);
+        if (st && st.priced && st.shares) {
+          rec.manual_exit_result = {
+            date: (quotes && quotes.date) || todayStr(),
+            price: st.close, pl: st.pl, pl_pct: st.plPct
+          };
+        }
         rec.status = 'exited';
         rec.current_step = 7;
         touch(rec);
@@ -1100,6 +1114,7 @@
       rec.rejected_step = null;
       rec.rejected_reason = '';
       rec.exit_result = null;
+      rec.manual_exit_result = null;
       touch(rec);
       if (saveAll()) toast('已改回進行中', 'ok');
       renderDetail();
@@ -4189,6 +4204,19 @@
     };
   }
 
+  /** 「全出」批次手動出場當下的快照,形狀跟 exit_result 類似但獨立欄位——
+   * 故意不共用 exit_result,才不會混進自動出場統計的勝率計算(見 doExitAll)。
+   * 沒有 rule/reason,因為來源永遠是「全出」這一種,不需要分組。 */
+  function normalizeManualExitResult(v) {
+    if (!v || typeof v !== 'object') return null;
+    return {
+      date: String(v.date || ''),
+      price: Number(v.price) || 0,
+      pl: Number(v.pl) || 0,
+      pl_pct: (v.pl_pct == null || v.pl_pct === '') ? null : Number(v.pl_pct)
+    };
+  }
+
   function normalizePositions(v) {
     if (!Array.isArray(v)) return [];
     return v.filter(function (p) { return p && typeof p === 'object'; })
@@ -4510,6 +4538,72 @@
     '</div>';
   }
 
+  // 明細展開狀態,只存記憶體,跟 exitStatsExpanded 同一個作法。
+  var manualExitStatsExpanded = false;
+
+  /**
+   * 「全出」批次手動出場的勝率統計,故意跟自動出場統計分開算——這批是
+   * doExitAll() 按下「全出」當下標記的,不是 checkAutoExits() 判斷出場,
+   * 沒有觸發規則可以分組(target/days/drawdown/trail_vol/trail_limit 那套
+   * 對這裡沒意義),所以只有一組彙總數字,不像 exitStatsHtml() 依規則分組。
+   * 用 manual_exit_result 這份「按下全出當下」的快照算。
+   */
+  function manualExitStatsHtml() {
+    var exited = data.filter(function (r) { return r.manual_exit_result; });
+    if (!exited.length) return '';
+
+    var wins = exited.filter(function (r) { return r.manual_exit_result.pl > 0; }).length;
+    var avgPct = exited.reduce(function (s, r) { return s + (r.manual_exit_result.pl_pct || 0); }, 0) / exited.length;
+    var winRate = Math.round(wins / exited.length * 100);
+
+    return '<div class="pos-block">' +
+      '<div class="pos-head"><span>全出統計</span>' +
+        '<span class="dim">N=' + exited.length + '、勝率 ' + winRate + '%</span></div>' +
+      '<p class="dim">用按「全出」當下的現價快照算,是手動批次動作、不是自動出場,' +
+        '故意跟上面的自動出場統計分開算,不會混在一起。樣本數還很少,當參考,不是驗證過的勝率。</p>' +
+      '<div class="exit-stats">' +
+        '<div class="exit-stat-group">' +
+          '<div class="exit-stat-row">' +
+            '<span>全出</span>' +
+            '<span class="mono">N=' + exited.length + '</span>' +
+            '<span class="mono">勝率 ' + winRate + '%</span>' +
+            '<span class="mono ' + plClass(avgPct) + '">平均 ' + fmtPct(avgPct, 1) + '</span>' +
+            '<button type="button" class="link-btn manual-exit-stat-toggle">' +
+              (manualExitStatsExpanded ? '收合明細 ▲' : '看明細 ▼') + '</button>' +
+          '</div>' +
+          (manualExitStatsExpanded ? renderManualExitStatsDetail(exited) : '') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /** 全出明細表:哪幾檔、哪天按的、當時假設成交價多少、賺賠多少。*/
+  function renderManualExitStatsDetail(recs) {
+    var sorted = recs.slice().sort(function (a, b) {
+      return (b.manual_exit_result.date || '').localeCompare(a.manual_exit_result.date || '');
+    });
+    var trs = sorted.map(function (r) {
+      var er = r.manual_exit_result;
+      return '<tr class="exit-stat-detail-row" data-exit-detail-id="' + esc(r.id) + '">' +
+        '<td>' + esc(displayTitle(r)) + '</td>' +
+        '<td class="mono">' + esc(er.date || '—') + '</td>' +
+        '<td class="num mono">' + (er.price != null ? er.price.toFixed(2) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(er.pl) + '">' + signed(er.pl) + '</td>' +
+        '<td class="num mono ' + plClass(er.pl_pct) + '">' + fmtPct(er.pl_pct, 1) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="table-scroll">' +
+      '<table class="scan-table exit-stat-detail-table">' +
+        '<thead><tr>' +
+          '<th>股票</th><th>出場日</th>' +
+          '<th class="num">假設成交價</th><th class="num">損益</th><th class="num">報酬率</th>' +
+        '</tr></thead>' +
+        '<tbody>' + trs + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }
+
   // ------------------------------------------- 進場訊號準度統計
   //
   // 依進場訊號分類(entryGroupKey)驗證訊號可不可信:進場當天(created_at)
@@ -4750,6 +4844,8 @@
 
     var exitBox = el('exit-stats');
     if (exitBox) exitBox.innerHTML = exitStatsHtml();
+    var manualExitBox = el('manual-exit-stats');
+    if (manualExitBox) manualExitBox.innerHTML = manualExitStatsHtml();
   }
 
   var EXIT_MODE_LABELS = {
@@ -5182,6 +5278,17 @@
         var rule = toggle.getAttribute('data-exit-rule');
         exitStatsExpanded[rule] = !exitStatsExpanded[rule];
         el('exit-stats').innerHTML = exitStatsHtml();
+        return;
+      }
+      var row = e.target.closest('.exit-stat-detail-row');
+      if (row) openDetail(row.getAttribute('data-exit-detail-id'));
+    });
+
+    el('manual-exit-stats').addEventListener('click', function (e) {
+      var toggle = e.target.closest('.manual-exit-stat-toggle');
+      if (toggle) {
+        manualExitStatsExpanded = !manualExitStatsExpanded;
+        el('manual-exit-stats').innerHTML = manualExitStatsHtml();
         return;
       }
       var row = e.target.closest('.exit-stat-detail-row');
