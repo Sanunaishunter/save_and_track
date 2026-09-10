@@ -34,10 +34,13 @@
 
   var STATUS_LABEL = { active: '進行中', exited: '已出場', rejected: '已放棄' };
 
-  // 自動出場的觸發規則,exit_result.rule 用這三種值。「自動出場統計」分組
+  // 自動出場的觸發規則,exit_result.rule 用這五種值。「自動出場統計」分組
   // 用這份 label/順序 —— 這是「出場」原因,跟下面的「進場訊號」分類是兩回事。
-  var EXIT_RULE_LABELS = { target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損' };
-  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown'];
+  var EXIT_RULE_LABELS = {
+    target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損',
+    trail_vol: '移動停利(量縮出場)', trail_limit: '移動停利(漲停出場)'
+  };
+  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit'];
 
   // 進場訊號分類:沒有獨立欄位記錄「為什麼加進來」,只能從第 1 步「觸發」
   // 的自由文字(notes[1])關鍵字比對回推 —— 有些是 quickAddTracking 自動帶入
@@ -4060,7 +4063,12 @@
 
   // 只是紀錄,不會真的下單。存在同一份 localStorage 的紀錄裡,
   // 匯出備份會一併帶走。
-  var EXIT_MODES = ['hold', 'daytrade', 'profit', 'days'];
+  var EXIT_MODES = ['hold', 'daytrade', 'profit', 'days', 'trail'];
+
+  // 移動停利(trail)的兩個門檻是使用者要求「先試這組」的固定值,現階段
+  // 不開放 UI 調整 —— 要調整就是改這兩個常數,不是動資料結構。
+  var TRAIL_VOL_SHRINK_RATIO = 0.7;  // 今日成交量 / MA5(前5日,不含當日) < 0.7 → 量縮出場
+  var TRAIL_LIMITUP_PCT = 0.09;      // 單日漲幅 >= 9% 視為漲停,直接出場鎖住獲利
 
   function normalizeExitPlan(v) {
     v = (v && typeof v === 'object') ? v : {};
@@ -4076,7 +4084,7 @@
   /** 自動出場當下的快照(觸發規則/假設成交價/當時損益),事後算勝率要用這份,不能用「現在」的報價回推。*/
   function normalizeExitResult(v) {
     if (!v || typeof v !== 'object') return null;
-    var rule = ['target', 'days', 'drawdown'].indexOf(v.rule) >= 0 ? v.rule : null;
+    var rule = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit'].indexOf(v.rule) >= 0 ? v.rule : null;
     if (!rule) return null;
     return {
       date: String(v.date || ''),
@@ -4142,6 +4150,28 @@
   }
 
   /**
+   * 移動停利(trail 模式)量縮判斷用:今日成交量 / MA5(前5個交易日,shift 1、
+   * 不含當日),跟爆量掃描 vol_ratio = 量/MA20(shift 1) 同一種「不含當日」算法,
+   * 避免當日量把自己的均量墊高。quotes.daily_volume 是新到舊,index 0 = 今日。
+   * 回傳 {ratio, today, ma5} 或 null(資料不足,至少要今日 + 前 5 日都有值)。
+   */
+  function volRatioMa5(stockId) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(stockId || '').trim()];
+    if (i == null) return null;
+    var vols = quotes.daily_volume && quotes.daily_volume[i];
+    if (!vols || vols.length < 6 || vols[0] == null) return null;
+    var sum = 0, k;
+    for (k = 1; k <= 5; k++) {
+      if (vols[k] == null) return null;
+      sum += vols[k];
+    }
+    var ma5 = sum / 5;
+    if (!(ma5 > 0)) return null;
+    return { ratio: vols[0] / ma5, today: vols[0], ma5: ma5 };
+  }
+
+  /**
    * 從最早一筆下單日到報價日,實際交易日數(用 quotes.days 數,不是日曆天)。
    * quotes.days 只保留 KEEP_DAYS(30)天,持倉超過這個天數的舊倉位會被低估,
    * 這是既有 30 天視窗的限制,不是這裡另外造成的。查不到就回傳 null。
@@ -4197,6 +4227,52 @@
           label: '持倉上限 ' + maxDays + ' 個交易日',
           detail: '已持有 ' + held + ' 個交易日'
         });
+      }
+    }
+
+    // 移動停利:用「目標漲幅 %」欄位當啟動門檻,還沒漲到那個門檻之前不出場
+    // (跟 hold 模式一樣放著);一旦持有期間最高價(st.range.high,來自逐日
+    // 高點,不是收盤價)曾經到過門檻,才開始檢查量縮/漲停這兩個出場條件。
+    // 用「期間最高價曾經到過」而不是「現價 >= 門檻」,是因為這是使用者原本
+    // 想解決的情境:已經漲到 +4.5% 附近了,想繼續抱,不想在門檻價就被停利
+    // 出場——所以就算之後拉回、現價低於門檻,只要曾經到過,一樣視為已啟動。
+    if (plan.mode === 'trail' && plan.target_pct && st.avg > 0 && st.range) {
+      var tPct = Number(plan.target_pct);
+      if (tPct > 0) {
+        var tTarget = st.avg * (1 + tPct / 100);
+        var tPeak = st.range.high.price;
+        if (tPeak < tTarget) {
+          alerts.push({
+            key: 'trail_wait',
+            hit: false,
+            price: null,
+            label: '移動停利:尚未啟動(門檻 +' + tPct + '%)',
+            detail: '期間最高 ' + tPeak + '(啟動價 ' + tTarget.toFixed(2) + ')'
+          });
+        } else {
+          var vr = volRatioMa5(rec.stock_id);
+          if (vr) {
+            alerts.push({
+              key: 'trail_vol',
+              hit: vr.ratio < TRAIL_VOL_SHRINK_RATIO,
+              price: st.close,
+              label: '移動停利:量縮出場(量/MA5 < ' + TRAIL_VOL_SHRINK_RATIO + ')',
+              detail: '今量 ' + fmtInt(vr.today) + '、MA5(前5日) ' + fmtInt(Math.round(vr.ma5)) +
+                '、比值 ' + vr.ratio.toFixed(2)
+            });
+          }
+          var tq = quoteOf(rec.stock_id);
+          if (tq && tq.prev > 0) {
+            var tChg = (st.close - tq.prev) / tq.prev;
+            alerts.push({
+              key: 'trail_limit',
+              hit: tChg >= TRAIL_LIMITUP_PCT,
+              price: st.close,
+              label: '移動停利:漲停出場(單日 +' + (TRAIL_LIMITUP_PCT * 100) + '% 以上)',
+              detail: '今日漲幅 ' + (tChg * 100).toFixed(1) + '%'
+            });
+          }
+        }
       }
     }
 
@@ -4584,7 +4660,8 @@
   }
 
   var EXIT_MODE_LABELS = {
-    hold: '留倉不賣', daytrade: '當沖出場', profit: '獲利出場', days: '持倉天數到期'
+    hold: '留倉不賣', daytrade: '當沖出場', profit: '獲利出場', days: '持倉天數到期',
+    trail: '移動停利(量縮/漲停)'
   };
 
   /** 出場設定目前的達成狀況,觸發的用紅色標出來。純提醒,不會自動下單。*/
@@ -4606,8 +4683,9 @@
 
   /** 出場設定表單,值從 rec.exit_plan 帶入。*/
   function exitPlanFormHtml(plan) {
-    var showTarget = plan.mode === 'daytrade' || plan.mode === 'profit';
+    var showTarget = plan.mode === 'daytrade' || plan.mode === 'profit' || plan.mode === 'trail';
     var showDays = plan.mode === 'days';
+    var isTrail = plan.mode === 'trail';
     return '<div class="pos-exit">' +
       '<div class="pos-head"><span>出場設定</span>' +
         '<span class="dim">只是提醒,不會自動下單;資料一天更新一次,不是即時報價</span></div>' +
@@ -4620,7 +4698,7 @@
             }).join('') +
           '</select></label>' +
         '<label class="field" id="exit-target-field"' + (showTarget ? '' : ' hidden') + '>' +
-          '<span class="field-label">目標漲幅 %(對均價)</span>' +
+          '<span class="field-label">' + (isTrail ? '啟動門檻 %(對均價)' : '目標漲幅 %(對均價)') + '</span>' +
           '<input type="text" id="exit-target-pct" inputmode="decimal" placeholder="例如 5" value="' +
             esc(plan.target_pct) + '"></label>' +
         '<label class="field" id="exit-days-field"' + (showDays ? '' : ' hidden') + '>' +
@@ -4631,6 +4709,9 @@
           '<input type="text" id="exit-max-drawdown" inputmode="decimal" placeholder="例如 8" value="' +
             esc(plan.max_drawdown_pct) + '"></label>' +
       '</div>' +
+      (isTrail ? '<p class="dim">漲到啟動門檻之後才開始追蹤(拉回也算已啟動),之後只要' +
+        '「今量 / 前5日均量 &lt; ' + TRAIL_VOL_SHRINK_RATIO + '」或「單日漲幅 ≥ ' +
+        (TRAIL_LIMITUP_PCT * 100) + '%」任一命中就出場。這兩個門檻先試這組固定值,還沒開放調整。</p>' : '') +
       '<button type="button" class="btn btn-block btn-outline" id="exit-save">儲存出場設定</button>' +
     '</div>';
   }
@@ -5129,7 +5210,7 @@
       var mode = e.target.value;
       var targetField = el('exit-target-field');
       var daysField = el('exit-days-field');
-      if (targetField) targetField.hidden = !(mode === 'daytrade' || mode === 'profit');
+      if (targetField) targetField.hidden = !(mode === 'daytrade' || mode === 'profit' || mode === 'trail');
       if (daysField) daysField.hidden = (mode !== 'days');
     });
 
