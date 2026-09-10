@@ -3111,6 +3111,7 @@
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
+    el('trail-wrap').hidden = v !== 'trail';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
     el('fomo-wrap').hidden = v !== 'fomo';
@@ -3127,6 +3128,7 @@
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
+    if (v === 'trail') loadTrailWatch();
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
     if (v === 'fomo') loadFomo(false);
@@ -3144,7 +3146,7 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['track', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -4559,6 +4561,140 @@
     return changed;
   }
 
+  // ------------------------------------------------------ 移動停利觀察(獨立分頁)
+  //
+  // 彙總所有「進行中」且出場設定為移動停利模式(exit_plan.mode === 'trail')
+  // 的紀錄,一次掃過去看每檔的啟動狀況、距峰回落、量縮/漲停(跌停)訊號,
+  // 方便判斷該不該手動清倉——純觀察,不會多做任何自動出場判斷,實際的
+  // 命中/自動出場邏輯還是只有 evalExitPlan()/checkAutoExits() 這一套,這裡
+  // 直接呼叫 evalExitPlan() 重用,不重複算一次公式。
+  var trailOpen = null;   // 目前展開明細的紀錄 id
+
+  function trailWatchRecords() {
+    return data.filter(function (r) {
+      return r.status === 'active' && r.exit_plan && r.exit_plan.mode === 'trail' &&
+        Number(r.exit_plan.target_pct) > 0;
+    });
+  }
+
+  /**
+   * 移動停利的觀察指標:啟動門檻價、期間峰值(多看最高、空看最低)、
+   * 是否已啟動、距峰回落幅度(啟動後才有意義)。跟 evalExitPlan() 用同一套
+   * dir 記法,但這裡只算「狀態」不算「要不要出場」,出不出場仍然只看
+   * evalExitPlan() 回傳的 alerts。
+   */
+  function trailIndicators(rec, st) {
+    var dir = rec.direction === 'short' ? -1 : 1;
+    var tPct = Number(rec.exit_plan.target_pct);
+    var out = { dir: dir, tPct: tPct, targetPrice: null, peakPrice: null, peakDate: null, activated: false, pullbackPct: null };
+    if (!(st && st.avg > 0 && st.range)) return out;
+    out.targetPrice = st.avg * (1 + dir * tPct / 100);
+    out.peakPrice = dir > 0 ? st.range.high.price : st.range.low.price;
+    out.peakDate = dir > 0 ? st.range.high.date : st.range.low.date;
+    out.activated = dir > 0 ? (out.peakPrice >= out.targetPrice) : (out.peakPrice <= out.targetPrice);
+    if (out.activated && st.priced) {
+      out.pullbackPct = dir > 0
+        ? (out.peakPrice - st.close) / out.peakPrice
+        : (st.close - out.peakPrice) / out.peakPrice;
+    }
+    return out;
+  }
+
+  function trailStatusBadge(key) {
+    if (key === 'hit') return '<span class="trail-badge trail-badge-hit">⚠ 出場訊號</span>';
+    if (key === 'watch') return '<span class="trail-badge trail-badge-watch">觀察中</span>';
+    if (key === 'wait') return '<span class="trail-badge trail-badge-wait">未啟動</span>';
+    return '<span class="trail-badge trail-badge-wait">尚無報價</span>';
+  }
+
+  /** 展開明細:啟動門檻/峰值/距峰回落/量比/今日漲跌 + 完整 evalExitPlan() 清單。*/
+  function trailDetailHtml(rec, st, ind, alerts) {
+    var facts = [];
+    facts.push('啟動門檻 ' + (ind.dir > 0 ? '+' : '-') + ind.tPct + '%' +
+      (ind.targetPrice != null ? '(' + ind.targetPrice.toFixed(2) + ')' : ''));
+    if (ind.peakPrice != null) {
+      facts.push('期間' + (ind.dir > 0 ? '最高' : '最低') + ' ' + ind.peakPrice + '(' + esc(ind.peakDate) + ')');
+    }
+    if (ind.pullbackPct != null) facts.push('距峰回落 ' + fmtPct(ind.pullbackPct, 1));
+    var vr = st && st.priced ? volRatioMa5(rec.stock_id) : null;
+    if (vr) {
+      facts.push('量/MA5 ' + vr.ratio.toFixed(2) + '(今量 ' + fmtInt(vr.today) + '、MA5 ' + fmtInt(Math.round(vr.ma5)) + ')');
+    }
+    var q = st && st.priced ? quoteOf(rec.stock_id) : null;
+    if (q && q.prev > 0) facts.push('今日漲跌 ' + fmtPct((st.close - q.prev) / q.prev, 1));
+
+    var alertsHtml = alerts
+      ? '<div class="exit-alerts">' + alerts.map(function (a) {
+          return '<div class="exit-alert' + (a.hit ? ' is-hit' : '') + '">' +
+            '<span>' + (a.hit ? '⚠ ' : '') + esc(a.label) + '</span>' +
+            '<span class="dim">' + esc(a.detail) + '</span>' +
+          '</div>';
+        }).join('') + '</div>'
+      : '<p class="dim">還沒有足夠資料判斷(缺報價或近5日均量)。</p>';
+
+    return '<tr class="trail-detail"><td colspan="6">' +
+      '<div>' + esc(facts.join('　·　')) + '</div>' +
+      alertsHtml +
+      '<button type="button" class="link-btn" data-trail-manage="' + esc(rec.id) + '">在追蹤分頁管理這筆 →</button>' +
+    '</td></tr>';
+  }
+
+  function renderTrailWatch() {
+    var meta = el('trail-meta');
+    var tbody = el('trail-tbody');
+    if (!meta || !tbody) return;
+    var recs = trailWatchRecords();
+    if (!recs.length) {
+      meta.textContent = '目前沒有設定「移動停利」出場模式的進行中紀錄。到追蹤分頁個股的出場設定,把模式改成「移動停利」就會出現在這裡。';
+      tbody.innerHTML = '';
+      return;
+    }
+
+    var hitN = 0, watchN = 0, waitN = 0;
+    var rows = recs.map(function (rec) {
+      var st = positionStats(rec);
+      var ind = trailIndicators(rec, st);
+      var alerts = st && st.priced ? evalExitPlan(rec, st) : null;
+      var hitAlert = alerts ? alerts.filter(function (a) { return a.hit; })[0] : null;
+      var statusKey = !st || !st.priced ? 'unknown' : (hitAlert ? 'hit' : (ind.activated ? 'watch' : 'wait'));
+      if (statusKey === 'hit') hitN++; else if (statusKey === 'watch') watchN++; else if (statusKey === 'wait') waitN++;
+
+      var dirLabel = ind.dir > 0 ? '多' : '空';
+      var row = '<tr class="trail-row' + (statusKey === 'hit' ? ' is-hit' : '') + '" data-trail="' + esc(rec.id) + '">' +
+        '<td class="code mono">' + esc(rec.stock_id) + '</td>' +
+        '<td>' + esc(rec.stock_name || '') +
+          ' <span class="pill-dir ' + (ind.dir > 0 ? 'is-long' : 'is-short') + '">' + dirLabel + '</span></td>' +
+        '<td class="num mono">' + (st && st.priced ? st.close : '—') + '</td>' +
+        '<td class="num mono ' + plClass(st && st.priced ? st.pl : null) + '">' +
+          (st && st.priced ? signed(st.pl) : '—') + '</td>' +
+        '<td class="num mono">' + (ind.pullbackPct != null ? fmtPct(ind.pullbackPct, 1) : '—') + '</td>' +
+        '<td>' + trailStatusBadge(statusKey) + '</td>' +
+      '</tr>';
+      if (trailOpen === rec.id) row += trailDetailHtml(rec, st, ind, alerts);
+      return row;
+    }).join('');
+
+    tbody.innerHTML = rows;
+    var metaBits = [];
+    if (quotes) metaBits.push(quotes.date + ' 收盤');
+    else if (quotesErr) metaBits.push('讀不到報價(' + quotesErr + ')');
+    else metaBits.push('載入報價中…');
+    metaBits.push('共 ' + recs.length + ' 檔設定移動停利');
+    if (hitN) metaBits.push('⚠ ' + hitN + ' 檔出現出場訊號');
+    if (watchN) metaBits.push('觀察中 ' + watchN + ' 檔');
+    if (waitN) metaBits.push('未啟動 ' + waitN + ' 檔');
+    meta.textContent = metaBits.join(' · ');
+  }
+
+  function loadTrailWatch() {
+    renderTrailWatch();
+    loadQuotes().then(function () {
+      renderTrailWatch();
+    }).catch(function () {
+      renderTrailWatch();
+    });
+  }
+
   // 每組(依觸發規則分)的詳細資料展開狀態,只存記憶體、不落地儲存——
   // 純粹是「這次瀏覽想不想看明細」的檢視偏好,重新整理就收合回去,
   // 跟持倉摘要的 posSummaryExpanded 同一個作法。
@@ -5477,6 +5613,16 @@
       }
       var row = e.target.closest('.exit-stat-detail-row');
       if (row) openDetail(row.getAttribute('data-exit-detail-id'));
+    });
+
+    el('trail-tbody').addEventListener('click', function (e) {
+      var manage = e.target.closest('[data-trail-manage]');
+      if (manage) { openDetail(manage.getAttribute('data-trail-manage')); return; }
+      var tr = e.target.closest('.trail-row');
+      if (!tr) return;
+      var id = tr.getAttribute('data-trail');
+      trailOpen = (trailOpen === id) ? null : id;
+      renderTrailWatch();
     });
 
     bindQuickAdd(el('scan-tbody'));

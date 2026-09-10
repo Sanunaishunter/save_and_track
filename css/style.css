@@ -550,6 +550,30 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .fomo-score-mid { color: #d4a24c; font-weight: 700; }
 .fomo-score-lo { color: var(--text-dim); }
 
+/* 移動停利觀察分頁(2026-09-10):狀態徽章 + 展開列,展開列裡的 .exit-alerts
+   直接沿用出場設定同一套樣式(見 exit-alerts / exit-alert.is-hit)。 */
+.trail-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.trail-badge-wait { color: var(--muted); }
+.trail-badge-watch { color: var(--accent); }
+.trail-badge-hit { color: var(--up); font-weight: 700; }
+
+.scan-table tr.trail-row { cursor: pointer; }
+.scan-table tr.trail-row:active td { background: var(--panel-2); }
+.trail-detail td {
+  white-space: normal;
+  background: var(--panel-2);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 /* ---------- 對話框 ---------- */
 
 .modal-backdrop {
