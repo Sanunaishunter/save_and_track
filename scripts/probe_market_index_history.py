@@ -66,6 +66,23 @@ def probe_date(ymd):
                 hints.append("可能是漲跌家數統計表")
             if hints:
                 print("      *** 疑似目標表: %s ***" % "、".join(hints))
+
+        # 第一輪已經確認 table[0]/[6]/[7] 大概是什麼,這輪把三張表的完整內容
+        # 印出來——要找到「發行量加權股價指數」在 table[0] 裡的確切列,
+        # 跟 table[6]/[7] 的完整數字(筆數不多,17/5 列,全印出來沒問題),
+        # 才能照這裡的真實欄位動手寫正式的計算腳本,不用再猜一次。
+        print()
+        print("---- 完整內容(第二輪細看用)----")
+        for i in (0, 6, 7):
+            if i >= len(tables):
+                continue
+            t = tables[i]
+            if not isinstance(t, dict):
+                continue
+            print("  == table[%d] title=%r ==" % (i, t.get("title")))
+            print("     fields=%r" % (t.get("fields") or [],))
+            for row in t.get("data") or []:
+                print("     %r" % (row,))
         return
     raise twse_api.TWSEError("MI_INDEX 兩條路徑都失敗:%s" % last_err)
 
