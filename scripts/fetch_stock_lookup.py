@@ -28,6 +28,12 @@ compute_fomo.py 驗證過,直接沿用同一個 fm.request() 呼叫方式。
 前端有兩個分頁在用這支腳本的輸出(FOMO個股查詢/爆量個股查詢),
 清單跟輸出檔各自獨立,靠 --list-file / --out-file 參數指定,
 預設值維持原本的 stock_lookup.json → stock-lookup-latest.json 不變。
+
+2026-09-10 加了 --only:只重抓清單裡的某幾檔(逗號分隔),其餘代號沿用
+舊的 out-file 內容,不用整份清單重打一次 FinMind。用途是使用者手動把
+新代號加進 stock_lookup*.json 之後,只想更新那一檔,不想連帶重抓清單
+裡其他二十幾檔(額度、時間都浪費)。不給 --only 時行為跟以前完全一樣
+(整份清單重抓、直接覆蓋 out-file)。
 """
 
 import argparse
@@ -151,12 +157,25 @@ def parse_args():
                     help="代號清單 JSON(預設 stock_lookup.json)")
     p.add_argument("--out-file", default=DEFAULT_LOOKUP_LATEST,
                     help="輸出檔路徑(預設 data/stock-lookup-latest.json)")
+    p.add_argument("--only", default="",
+                    help="只重抓這幾檔(逗號分隔,例如 2634 或 2634,2330),"
+                         "其餘代號沿用舊的 out-file 內容;留空 = 整份清單重抓(舊行為)")
     return p.parse_args()
 
 
 def main():
     args = parse_args()
     codes = load_codes(args.list_file)
+
+    only = [c.strip() for c in args.only.split(",") if c.strip()]
+    if only:
+        missing = [c for c in only if c not in codes]
+        if missing:
+            print("錯誤:--only 裡的 %s 不在 %s,先把代號加進清單再重抓"
+                  % ("、".join(missing), args.list_file), file=sys.stderr)
+            return 1
+    fetch_codes = [c for c in codes if c in only] if only else codes
+
     history_dates = common.history_dates()
     if not history_dates:
         print("錯誤:data/history 沒有任何資料,請先跑 fetch_prices.py", file=sys.stderr)
@@ -164,20 +183,31 @@ def main():
 
     names = common.read_json(common.NAMES_FILE, {}) or {}
 
+    # --only 時,沒被選到的代號沿用舊 out-file 的內容,不會因為只重抓一檔
+    # 就把其他二十幾檔的資料弄丟;沒給 --only 就是舊行為(整份清單重抓、
+    # base_data/base_failures 維持空,merge 之後等於直接覆蓋)。
+    base_data, base_failures = {}, []
+    if only:
+        prev = common.read_json(args.out_file, {}) or {}
+        base_data = prev.get("data") or {}
+        base_failures = [f for f in (prev.get("failures") or []) if f.get("stock_id") not in only]
+
     end = taipei_today()
     start = end - dt.timedelta(days=LOOKBACK_CALENDAR_DAYS)
     start_s, end_s = start.isoformat(), end.isoformat()
 
     print("== 個股查詢:抓取融資融券 + 三大法人 ==")
     print("  清單:%s" % "、".join(codes))
-    est = len(codes) * len(DATASETS)
+    if only:
+        print("  只重抓:%s(其餘 %d 檔沿用舊資料)" % ("、".join(fetch_codes), len(codes) - len(fetch_codes)))
+    est = len(fetch_codes) * len(DATASETS)
     cap = 600 if fm.has_token() else 300
     print("  預估 API 呼叫:%d 次(上限 %d 次/小時)" % (est, cap))
     print("  區間:%s ~ %s,data/history 涵蓋 %d 個交易日(%s ~ %s)"
           % (start_s, end_s, len(history_dates), history_dates[0], history_dates[-1]))
 
     print("\n== 檢查資料源可用性 ==")
-    report = fm.preflight(DATASETS, codes[0], start_s, end_s)
+    report = fm.preflight(DATASETS, fetch_codes[0], start_s, end_s)
     blocked = []
     for ds in DATASETS:
         r = report[ds]
@@ -201,18 +231,22 @@ def main():
 
     data = {}
     failures = []
-    for i, sid in enumerate(codes, 1):
+    for i, sid in enumerate(fetch_codes, 1):
         try:
             margin, inst = fetch_margin_and_inst(sid, start_s, end_s)
         except fm.FinMindError as e:
-            print("  [%d/%d] %s 抓取失敗:%s" % (i, len(codes), sid, e))
+            print("  [%d/%d] %s 抓取失敗:%s" % (i, len(fetch_codes), sid, e))
             failures.append({"stock_id": sid, "error": str(e)})
             continue
         rows = build_rows(sid, history_dates, margin, inst)
         data[sid] = {"stock_name": names.get(sid, ""), "rows": rows}
-        print("  [%d/%d] %s %-6s %d 列" % (i, len(codes), sid, names.get(sid, ""), len(rows)))
+        print("  [%d/%d] %s %-6s %d 列" % (i, len(fetch_codes), sid, names.get(sid, ""), len(rows)))
 
-    if not data:
+    merged_data = dict(base_data)
+    merged_data.update(data)
+    merged_failures = (base_failures + failures) if only else failures
+
+    if not merged_data:
         print("錯誤:一檔都沒算出來", file=sys.stderr)
         return 1
 
@@ -220,12 +254,12 @@ def main():
         "generated_at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "history_range": {"from": history_dates[0], "to": history_dates[-1]},
         "codes": codes,
-        "failures": failures,
-        "data": data,
+        "failures": merged_failures,
+        "data": merged_data,
     }
     common.write_json(args.out_file, result)
 
-    print("\n== 完成:%d 檔、失敗 %d ==" % (len(data), len(failures)))
+    print("\n== 完成:本次抓 %d 檔、失敗 %d(輸出檔總計 %d 檔) ==" % (len(data), len(failures), len(merged_data)))
     return 0
 
 

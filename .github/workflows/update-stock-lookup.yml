@@ -1,0 +1,80 @@
+name: 更新個股查詢資料(單檔或整份清單)
+
+# 只跑 fetch_stock_lookup.py 這一步,不牽動 daily-scan.yml 的其他步驟(爆量/
+# 暴跌/產業流向/FOMO/暴跌FOMO 那些今天大概率已經跑過,重跑只是白白重打
+# FinMind、浪費額度跟時間)。手動把新代號加進三份 stock_lookup*.json 其中
+# 一份之後,用這支立刻補資料,不用等明天排程,也不用整份清單重抓。
+
+on:
+  workflow_dispatch:
+    inputs:
+      list:
+        description: '要更新哪一份個股查詢清單'
+        required: true
+        default: 'fomo'
+        type: choice
+        options: [fomo, scan, crashfomo]
+      only:
+        description: '只重抓這幾檔(逗號分隔,例如 2634 或 2634,2330);留空 = 整份清單重抓'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 決定清單/輸出檔
+        id: files
+        run: |
+          case "${{ github.event.inputs.list }}" in
+            fomo)
+              echo "list_file=stock_lookup.json" >> "$GITHUB_OUTPUT"
+              echo "out_file=data/stock-lookup-latest.json" >> "$GITHUB_OUTPUT"
+              ;;
+            scan)
+              echo "list_file=stock_lookup_scan.json" >> "$GITHUB_OUTPUT"
+              echo "out_file=data/stock-lookup-scan-latest.json" >> "$GITHUB_OUTPUT"
+              ;;
+            crashfomo)
+              echo "list_file=stock_lookup_crashfomo.json" >> "$GITHUB_OUTPUT"
+              echo "out_file=data/stock-lookup-crashfomo-latest.json" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+      - name: 更新個股查詢資料
+        env:
+          FINMIND_TOKEN: ${{ secrets.FINMIND_TOKEN }}
+        run: |
+          python scripts/fetch_stock_lookup.py \
+            --list-file "${{ steps.files.outputs.list_file }}" \
+            --out-file "${{ steps.files.outputs.out_file }}" \
+            --only "${{ github.event.inputs.only }}"
+
+      - name: 提交結果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${{ steps.files.outputs.out_file }}"
+          if git diff --cached --quiet; then
+            echo "沒有新資料,不產生 commit。"
+            exit 0
+          fi
+          MSG="更新個股查詢(${{ github.event.inputs.list }})"
+          if [ -n "${{ github.event.inputs.only }}" ]; then
+            MSG="$MSG:只重抓 ${{ github.event.inputs.only }}"
+          fi
+          git commit -m "$MSG"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase origin main || true
+          done
+          exit 1

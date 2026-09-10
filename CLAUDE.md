@@ -270,6 +270,25 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
       損益方向要對,沒有要求改市值的呈現方式,合不合理由使用者之後決定要不要
       再談。手動新增(「+新增」表單)不會跳出多空對話框,新紀錄一律預設看多,
       要改方向請用「持倉紀錄」區塊的切換按鈕。
+17. **2026-09-10 `fetch_stock_lookup.py` 加 `--only`,可以只重抓清單裡的某幾檔。**
+    起因:使用者把 2634(漢翔)加進 `stock_lookup.json` 之後問「能不能只抓這一檔,
+    不要整個 daily-scan 流程重跑一次」——整份 daily-scan.yml 是單一 job、步驟寫死
+    照順序跑,沒辦法只挑一步執行;而且就算只挑 `fetch_stock_lookup.py` 這一步,
+    原本的寫法也是整份清單(目前 22 檔)重打一次 FinMind,不是只抓新加的那檔。
+    - `--only 代號1,代號2`:先驗證代號都在 `--list-file` 清單裡(不在就報錯,
+      避免手滑抓到清單外的代號),只對這幾檔打 FinMind;其餘代號的資料從舊的
+      `--out-file` 讀出來原封不動保留(`merged_data = dict(base_data); merged_data.update(data)`),
+      輸出的 `codes` 欄位還是完整清單,前端看不出差異。沒給 `--only` 就是舊行為
+      (整份清單重抓、直接覆蓋),完全不影響 `daily-scan.yml` 既有呼叫方式。
+    - 新增 `.github/workflows/update-stock-lookup.yml`(常駐,不是探測用的
+      probe、用完不用刪):`list` 選 fomo/scan/crashfomo 三選一(對應三份
+      `stock_lookup*.json`/`stock-lookup*-latest.json`),`only` 留空就是整份重抓。
+      以後清單裡加新代號都可以用這支,不用等明天排程或整份重跑。
+    - 離線測試(mock FinMind 呼叫,不用連網):`--only` 合併邏輯 12 項全過
+      (未重抓的代號原封不動、新代號正確合併、`margin_change` 第一天正確是
+      `None`、舊的失敗記錄被這次的成功結果蓋掉、`failures`/`codes` 欄位正確),
+      另外 2 項回歸測試確認不給 `--only` 時完全是舊行為(整份清單真的被重新
+      抓過,不是誤用了新的合併邏輯跳過重抓)。
 
 ---
 
