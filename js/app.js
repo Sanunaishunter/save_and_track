@@ -2490,6 +2490,48 @@
     return out;
   }
 
+  // ------------------------------------------- 個股查詢的融資維持率估計
+  // 2026-09-10 使用者提出的方法(2313 驗證過):假設「資料視窗裡成交量
+  // 最大那天的最高價」是大多數融資買盤追高的套牢價,套融資成數的標準
+  // 假設(六成,自備四成)反推維持率 = 現價 / 套牢價 / 融資成數 × 100%,
+  // 用來判斷現在的下跌是「主力/外資測試性甩轎」(維持率還在安全區)
+  // 還是「真的逼近融資斷頭」(維持率跌破警戒/斷頭線)。
+  //
+  // 不是真正的融資成本——融資買盤實際上分散在很多天很多價位,這裡只用
+  // 「量最大的那天」當代理指標;融資成數也是固定假設,沒有逐檔核對
+  // 實際融資資格(注意股/處置股融資成數會被調降甚至停用)。跟🔔量縮轉買
+  // 同一批,只驗證過 2313 一次樣本,沒有回測,純參考。
+  //
+  // 「套牢日」用整段資料視窗(不是只看選股後的區間)裡量最大的那天——
+  // 如果量最大的剛好就是最新一天,代表視窗內找不到明顯的過去套牢點,
+  // 回傳 null(不強行算一個沒有意義、比值接近 1 的維持率)。
+  var LOOKUP_MARGIN_RATIO_ASSUMED = 0.6;   // 融資成數(自備四成、融資六成)的標準假設
+  var LOOKUP_MARGIN_MAINT_WARN = 130;      // 警戒線(%,可能已收到追繳)
+  var LOOKUP_MARGIN_MAINT_DANGER = 120;    // 斷頭線(%,可能已斷頭/即將斷頭)
+
+  function computeLookupMarginMaintenance(rowsAsc) {
+    if (!rowsAsc || rowsAsc.length < 2) return null;
+    var bestIdx = null;
+    for (var i = 0; i < rowsAsc.length; i++) {
+      var r = rowsAsc[i];
+      if (r.volume == null || r.high == null) continue;
+      if (bestIdx == null || r.volume > rowsAsc[bestIdx].volume) bestIdx = i;
+    }
+    if (bestIdx == null || bestIdx === rowsAsc.length - 1) return null;
+
+    var trapped = rowsAsc[bestIdx];
+    var now = rowsAsc[rowsAsc.length - 1];
+    if (!(trapped.high > 0) || now.close == null) return null;
+
+    var maint = (now.close / trapped.high) / LOOKUP_MARGIN_RATIO_ASSUMED * 100;
+    var level = maint < LOOKUP_MARGIN_MAINT_DANGER ? 'danger'
+      : (maint < LOOKUP_MARGIN_MAINT_WARN ? 'warn' : 'safe');
+    return {
+      trappedDate: trapped.date, trappedPrice: trapped.high, trappedVol: trapped.volume,
+      nowDate: now.date, nowClose: now.close, maint: maint, level: level
+    };
+  }
+
   // 低活躍度過濾(2026-09-09 加入):跟量縮/轉買那套「參考標記」不一樣,
   // 這條是直接把日子從表格裡拿掉,不進 badge 判斷、不進「顯示已隱藏」
   // 那套使用者手動隱藏的機制——單純是資料太薄(當天外資幾乎沒動作、
@@ -2719,6 +2761,7 @@
       var selloffMap = computeLookupSelloffDays(rec.rows || []);
       var warmingMap = computeLookupWarmingDays(rec.rows || []);
       var shrinkZone = computeLookupShrinkZone(rec.rows || []);
+      var marginMaint = computeLookupMarginMaintenance(rec.rows || []);
 
       var zoneNote = '';
       if (shrinkZone && !shrinkZone.alreadyTriggered) {
@@ -2734,8 +2777,20 @@
         ? '  ·  已濾掉 ' + lowActivityCount + ' 天低活躍度(外資買賣超 < ' +
           LOOKUP_LOW_ACTIVITY_FOREIGN_LOTS + ' 張且成交量 < ' + LOOKUP_LOW_ACTIVITY_VOLUME_LOTS + ' 張)'
         : '';
-      meta.textContent = '資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
-        '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' + zoneNote + lowActivityNote;
+      var maintNote = '';
+      if (marginMaint) {
+        var maintCls = 'lookup-maint-' + marginMaint.level;
+        var maintLabel = marginMaint.level === 'danger' ? '危險,可能已斷頭/即將斷頭'
+          : (marginMaint.level === 'warn' ? '警戒,可能已收到追繳' : '安全');
+        maintNote = '  ·  <span class="' + maintCls + '" title="假設 ' + esc(marginMaint.trappedDate) +
+          '(視窗內量最大那天)最高價 ' + marginMaint.trappedPrice + ' 是多數融資買盤的套牢價,' +
+          '對照現價 ' + marginMaint.nowClose + ',套六成融資成數估計——不是真正的融資成本,' +
+          '只驗證過 2313 一次樣本,沒有回測,純參考">' +
+          '融資維持率估計 ' + marginMaint.maint.toFixed(1) + '%(' + maintLabel + ')</span>';
+      }
+      meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
+        '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
+        zoneNote + lowActivityNote) + maintNote;
 
       table.hidden = false;
       if (!allRows.length) {
