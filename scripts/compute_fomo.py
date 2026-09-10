@@ -103,6 +103,7 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
     m = {
         "close": None, "volume": None, "prev_volume": None,
         "margin_change_5d_pct": None, "short_margin_ratio": None,
+        "margin_consecutive_buy_days": None,
         "foreign_net": None, "foreign_consecutive_buy_days": None,
         "foreign_consecutive_sell_days": None, "pbr": None,
         "trust_net": None, "trust_amount": None,
@@ -134,6 +135,22 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
                 prev = _num(margins[-6].get("MarginPurchaseTodayBalance"))
                 if prev is not None and prev > 0:
                     m["margin_change_5d_pct"] = (mb - prev) / prev * 100.0
+
+        # 融資連續增加天數(散戶連續進場),跟外資連續買超同一種「連續」算法——
+        # 從最新一天往回比對前一天的餘額,只要餘額比前一天高就算連續,中斷就停。
+        # 「可能會漲」判斷要用(2026-09-10 新增,見 fomo_score.judge_real_rally)。
+        balances = [_num(r.get("MarginPurchaseTodayBalance")) for r in margins]
+        if len(balances) >= 2:
+            streak = 0
+            for i in range(len(balances) - 1, 0, -1):
+                cur, prev_bal = balances[i], balances[i - 1]
+                if cur is None or prev_bal is None:
+                    break
+                if cur > prev_bal:
+                    streak += 1
+                else:
+                    break
+            m["margin_consecutive_buy_days"] = streak
 
     # --- 法人買賣超 ---
     # 探測確認 FinMind 的 name 只有這五種:Foreign_Investor、Investment_Trust、
@@ -315,7 +332,7 @@ def main():
             m["vol_ratio"] = info["vol_ratio"]
         row = fomo_score.score_stock(sid, info.get("name") or names.get(sid, ""), m)
         rows.append(row)
-        print("  [%d/%d] %s %-6s FOMO=%3d 真漲=%-5s 虛漲=%-5s%s"
+        print("  [%d/%d] %s %-6s FOMO=%3d 可能會漲=%-5s 虛漲=%-5s%s"
               % (i, len(watchlist), sid, row["stock_name"], row["fomo_score"],
                  row["is_real_rally"], row["is_fake_rally"],
                  ("  缺:" + "/".join(row["missing"])) if row["missing"] else ""))
@@ -379,7 +396,7 @@ def main():
     elapsed = time.time() - started
     real = sum(1 for r in rows if r["is_real_rally"])
     fake = sum(1 for r in rows if r["is_fake_rally"])
-    print("\n== 完成:%d 檔、真漲 %d、虛漲 %d、失敗 %d、耗時 %.1f 秒 =="
+    print("\n== 完成:%d 檔、可能會漲 %d、虛漲 %d、失敗 %d、耗時 %.1f 秒 =="
           % (len(rows), real, fake, len(failures), elapsed))
     print("   資料日期:%s" % data_date)
     for r in rows[:5]:

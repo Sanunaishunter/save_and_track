@@ -15,8 +15,13 @@ PBR_MID = 1.5                # 股價淨值比中段
 SHORT_MARGIN_BULL = 5        # 券資比(%)低於此視為籌碼偏多
                              # 原本 15%,但實測大型股都在 1% 以下,等於恆真、沒有鑑別力
 FOREIGN_CONSECUTIVE = 3      # 外資連續買超天數門檻
+MARGIN_CONSECUTIVE = 3       # 融資連續買超(散戶連續進場)天數門檻——2026-09-10 使用者
+                             # 要求:「真漲」不能只看外資,散戶融資也要連續進場才算,
+                             # 顯示文字因此從「真漲」改成「可能會漲」(較保守的講法,
+                             # 沒有宣稱一定會漲)。程式內部欄位名稱維持 real_rally,
+                             # 避免牽動太多既有程式碼跟已經存出去的資料欄位。
 
-REAL_RALLY_PASS = 60         # 真漲成立分數
+REAL_RALLY_PASS = 60         # 真漲(顯示文字:可能會漲)成立分數
 FAKE_RALLY_PASS = 60         # 虛漲成立分數
 
 # --- 暴跌 FOMO(真跌/虛跌)專用門檻 ---
@@ -36,9 +41,11 @@ THRESHOLDS = {
     "PBR_MID": PBR_MID,
     "SHORT_MARGIN_BULL": SHORT_MARGIN_BULL,
     "FOREIGN_CONSECUTIVE": FOREIGN_CONSECUTIVE,
+    "MARGIN_CONSECUTIVE": MARGIN_CONSECUTIVE,
     "REAL_RALLY_PASS": REAL_RALLY_PASS,
     "FAKE_RALLY_PASS": FAKE_RALLY_PASS,
     "REAL_RALLY_REQUIRES_FOREIGN": True,
+    "REAL_RALLY_REQUIRES_MARGIN": True,
     "PBR_CRASH_CHEAP": PBR_CRASH_CHEAP,
     "MARGIN_DROP_PANIC": MARGIN_DROP_PANIC,
     "REAL_CRASH_PASS": REAL_CRASH_PASS,
@@ -57,8 +64,17 @@ def _clamp(v, lo=0, hi=100):
 
 def judge_real_rally(m):
     """
-    真漲判斷。m 是 metrics dict;缺的欄位一律不給分,並記錄在 missing。
+    「可能會漲」判斷(原本叫「真漲」,2026-09-10 使用者要求改掉判斷邏輯跟顯示
+    文字)。舊版邏輯是「外資買、且散戶沒有追價」;使用者認為這樣不夠——
+    真的要漲,散戶融資也要跟著連續進場,只有外資悄悄買、散戶沒感覺,撐不住,
+    所以把「融資5日增幅 <10%(散戶沒追價)」拿掉,改成「融資連續買超 ≥3天
+    (散戶也連續進場)」,跟外資連續買超一樣當成必要條件。顯示文字也從「真漲」
+    改成「可能會漲」,語氣上不再宣稱這是確定的事實,只是機率判斷。
+
+    m 是 metrics dict;缺的欄位一律不給分,並記錄在 missing。
     回傳 {score, is_real_rally, reasons, missing}
+    (欄位名稱維持 real_rally/is_real_rally,只有顯示文字改了,避免牽動太多
+    既有程式碼跟已經存出去的 JSON 欄位)。
     """
     score = 0
     reasons = []
@@ -71,13 +87,12 @@ def judge_real_rally(m):
         score += 40
         reasons.append("外資連續買超 %d 天(≥%d)" % (v, FOREIGN_CONSECUTIVE))
 
-    v = m.get("margin_change_5d_pct")
+    v = m.get("margin_consecutive_buy_days")
     if v is None:
-        missing.append("融資5日增幅")
-    elif v < MARGIN_CHANGE_NOTICE:
+        missing.append("融資連續買超天數")
+    elif v >= MARGIN_CONSECUTIVE:
         score += 20
-        reasons.append("融資5日增幅 %.1f%%(<%d%%,散戶未過度追價)"
-                       % (v, MARGIN_CHANGE_NOTICE))
+        reasons.append("融資連續買超 %d 天(≥%d,散戶跟著進場)" % (v, MARGIN_CONSECUTIVE))
 
     v = m.get("short_margin_ratio")
     if v is None:
@@ -93,18 +108,27 @@ def judge_real_rally(m):
         score += 20
         reasons.append("PBR %.2f(<%.1f,評價未偏高)" % (v, PBR_REAL_RALLY_MAX))
 
-    # 外資連買是「必要條件」而不只是加權:分數夠但外資沒進場,不算真漲。
-    # 否則融資、券資比、PBR 三項就能湊到 60,出現「外資在賣卻標成真漲」。
-    streak = m.get("foreign_consecutive_buy_days")
-    foreign_ok = streak is not None and streak >= FOREIGN_CONSECUTIVE
-    passed = score >= REAL_RALLY_PASS and foreign_ok
-    if score >= REAL_RALLY_PASS and not foreign_ok:
-        reasons.append("分數達標但外資未連續買超 %d 天,不列為真漲" % FOREIGN_CONSECUTIVE)
+    # 外資連買、融資連買都是「必要條件」而不只是加權:任一邊沒進場,分數
+    # 湊到 60 也不算「可能會漲」——外資連買代表法人認同,融資連買代表散戶
+    # 也跟上,單靠一邊撐不住,這是這次改動的核心。
+    foreign_streak = m.get("foreign_consecutive_buy_days")
+    foreign_ok = foreign_streak is not None and foreign_streak >= FOREIGN_CONSECUTIVE
+    margin_streak = m.get("margin_consecutive_buy_days")
+    margin_ok = margin_streak is not None and margin_streak >= MARGIN_CONSECUTIVE
+    passed = score >= REAL_RALLY_PASS and foreign_ok and margin_ok
+    if score >= REAL_RALLY_PASS and not (foreign_ok and margin_ok):
+        missing_gates = []
+        if not foreign_ok:
+            missing_gates.append("外資連續買超 %d 天" % FOREIGN_CONSECUTIVE)
+        if not margin_ok:
+            missing_gates.append("融資連續買超 %d 天" % MARGIN_CONSECUTIVE)
+        reasons.append("分數達標但未同時滿足%s,不列為可能會漲" % "、".join(missing_gates))
 
     return {
         "score": _clamp(score),
         "is_real_rally": passed,
         "foreign_gate_passed": foreign_ok,
+        "margin_gate_passed": margin_ok,
         "reasons": reasons,
         "missing": missing,
     }
@@ -430,6 +454,7 @@ def score_stock(stock_id, stock_name, m):
                                    else round(m["short_margin_ratio"], 2)),
             "foreign_net": m.get("foreign_net"),
             "foreign_consecutive_buy_days": m.get("foreign_consecutive_buy_days"),
+            "margin_consecutive_buy_days": m.get("margin_consecutive_buy_days"),
             "trust_net": m.get("trust_net"),
             "foreign_streak_days": m.get("foreign_streak_days"),
             "foreign_streak_direction": m.get("foreign_streak_direction"),

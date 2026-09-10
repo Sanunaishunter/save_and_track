@@ -126,6 +126,27 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
     純粹是使用者要求先試試看。`exit_result.rule` 因此多了 `trail_vol`/`trail_limit` 兩種值,
     改了 `normalizeExitResult` 的白名單和 `EXIT_RULE_LABELS`/`EXIT_RULE_ORDER`——這三處要一起
     改,不然用 trail 模式出場的舊資料重新載入時 `exit_result` 會被判定成不合法格式直接丟掉。
+11. **2026-09-10 FOMO 的「真漲」改名顯示成「可能會漲」,判斷邏輯也跟著改了。**
+    起因是拿已追蹤股票對照 `signalOutcomeFor()` 的訊號準度統計,發現「真漲」訊號
+    (N=28)後續真的漲的只有 11%,使用者認為問題出在舊邏輯只看外資連續買超、還把
+    融資增加當扣分項(散戶追價=警訊);使用者的看法是「真漲」還需要散戶融資也連續
+    進場撐盤,單靠外資撐不住。於是:
+    - `scripts/fomo_score.py` 的 `judge_real_rally()` 拿掉「融資5日增幅 <10%(散戶未過度
+      追價)」+20分那項,改成「融資連續買超 ≥3 天(`MARGIN_CONSECUTIVE`,散戶跟著進場)」
+      +20分,且跟外資連續買超一樣變成**必要條件**——兩個 gate(外資連買、融資連買)都要
+      過、總分也要 ≥60,才算「可能會漲」。
+    - `scripts/compute_fomo.py` 的 `extract_metrics()` 新增 `margin_consecutive_buy_days`
+      指標,算法跟外資連續買超同一套(從最新一天往回比對前一天餘額,中斷就停)。
+    - 顯示文字全面從「真漲」改成「可能會漲」:`js/app.js` 的 badge、FOMO 明細理由標題、
+      訊號準度統計文案、`quickAddTracking()` 帶入第 1 步的預設文字都改了,語氣上從斷言
+      改成機率判斷。**程式內部欄位名稱維持 `is_real_rally`/`real_rally_score`/`real_rally`
+      (reasons key、entry tag key)沒有跟著改**,只改使用者看得到的中文字,降低牽動範圍。
+    - `ENTRY_TAG_RULES` 的 `real_rally` 規則同時比對「真漲」跟「可能會漲」兩種文字——
+      舊的追蹤紀錄裡存的還是「真漲」這個舊字,拿掉舊字比對的話,分類、訊號準度統計都會
+      悄悄把舊紀錄歸類成「未分類」,所以兩種文字都留著比對(`exclude` 同理)。
+    - 這次改動**沒有回測驗證過新邏輯的命中率比舊的好**,跟移動停利那次一樣純粹是使用者
+      的假設,先試這組,樣本夠了再回頭驗證。虛漲(`fake_rally`)、真跌/虛跌(暴跌 FOMO
+      鏡射)邏輯沒有動。
 
 ---
 

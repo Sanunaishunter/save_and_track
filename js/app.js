@@ -44,18 +44,22 @@
 
   // 進場訊號分類:沒有獨立欄位記錄「為什麼加進來」,只能從第 1 步「觸發」
   // 的自由文字(notes[1])關鍵字比對回推 —— 有些是 quickAddTracking 自動帶入
-  // (例如 FOMO 的「FOMO(75 分):真漲」),有些是使用者自己手打(例如「爆量 /
+  // (例如 FOMO 的「FOMO(75 分):可能會漲」),有些是使用者自己手打(例如「爆量 /
   // 無量上漲來源,美股新聞背景...」)。一筆紀錄可能同時命中多個關鍵字(上面
   // 的例子就同時有「爆量」「無量上漲」),排序/分組時取優先順序中第一個命中
-  // 的當代表類別。「無明顯真漲/虛漲訊號」「無明顯真跌/虛跌訊號」這兩句
-  // FOMO 自動文字本身就包含「真漲」「虛漲」等字,要排除才不會誤判成有訊號;
-  // 「暴跌FOMO(⋯」開頭的文字本身也包含「暴跌」兩字,「暴跌」規則要排除
-  // 後面接「FOMO」的情況,才不會把暴跌FOMO 加入的紀錄全部誤判成暴跌掃描。
+  // 的當代表類別。「無明顯可能會漲/虛漲訊號」「無明顯真跌/虛跌訊號」這兩句
+  // FOMO 自動文字本身就包含「可能會漲」「虛漲」等字,要排除才不會誤判成有
+  // 訊號;「暴跌FOMO(⋯」開頭的文字本身也包含「暴跌」兩字,「暴跌」規則要
+  // 排除後面接「FOMO」的情況,才不會把暴跌FOMO 加入的紀錄全部誤判成暴跌掃描。
+  // real_rally 的 test 同時比對「真漲」跟「可能會漲」兩種文字——2026-09-10
+  // 把顯示文字從「真漲」改成「可能會漲」,但舊的追蹤紀錄裡還存著「真漲」
+  // 這個舊字,拿掉舊字會比對不到,分類、訊號準度統計都會悄悄把舊紀錄歸類
+  // 成「未分類」,所以兩種都留著比對。
   var ENTRY_TAG_RULES = [
     { key: 'surge', label: '爆量', test: /爆量/ },
     { key: 'thinrally', label: '無量上漲', test: /無量上漲/ },
-    { key: 'real_rally', label: '真漲', test: /真漲/, exclude: /無明顯真漲\/虛漲/ },
-    { key: 'fake_rally', label: '虛漲', test: /虛漲/, exclude: /無明顯真漲\/虛漲/ },
+    { key: 'real_rally', label: '可能會漲', test: /真漲|可能會漲/, exclude: /無明顯(真漲|可能會漲)\/虛漲/ },
+    { key: 'fake_rally', label: '虛漲', test: /虛漲/, exclude: /無明顯(真漲|可能會漲)\/虛漲/ },
     { key: 'real_crash', label: '真跌', test: /真跌/, exclude: /無明顯真跌\/虛跌/ },
     { key: 'fake_crash', label: '虛跌', test: /虛跌/, exclude: /無明顯真跌\/虛跌/ },
     { key: 'crash', label: '暴跌', test: /暴跌(?!FOMO)/ },
@@ -496,7 +500,7 @@
 
   /**
    * 產生一顆「+ 追蹤」按鈕,已經在追蹤中就顯示成灰色不可點。
-   * note 選填:加入追蹤時要預先帶進第 1 步「觸發」的預設內容(例如 FOMO 的真漲/虛漲判定)。
+   * note 選填:加入追蹤時要預先帶進第 1 步「觸發」的預設內容(例如 FOMO 的可能會漲/虛漲判定)。
    */
   function quickAddBtnHtml(code, name, note) {
     code = String(code || '').trim();
@@ -3029,20 +3033,22 @@
 
   function badges(r) {
     var out = '';
-    if (r.is_real_rally) out += '<span class="badge badge-real">真漲</span>';
+    if (r.is_real_rally) out += '<span class="badge badge-real">可能會漲</span>';
     if (r.is_fake_rally) out += '<span class="badge badge-fake">虛漲</span>';
     if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
     if (!out) out = '<span class="badge badge-none">—</span>';
     return out;
   }
 
-  /** 加入追蹤時,第 1 步「觸發」預設帶入 FOMO 的判定結果,不用再手動打一次。*/
+  /** 加入追蹤時,第 1 步「觸發」預設帶入 FOMO 的判定結果,不用再手動打一次。
+   * 「真漲」2026-09-10 改名顯示成「可能會漲」(判斷邏輯也改了,外資、融資
+   * 都要連續進場才算,見 scripts/fomo_score.py 的 judge_real_rally)。*/
   function fomoTriggerNote(r) {
     var tags = [];
-    if (r.is_real_rally) tags.push('真漲');
+    if (r.is_real_rally) tags.push('可能會漲');
     if (r.is_fake_rally) tags.push('虛漲');
     if (r.is_divergence) tags.push('背離');
-    return 'FOMO(' + r.fomo_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯真漲/虛漲訊號');
+    return 'FOMO(' + r.fomo_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯可能會漲/虛漲訊號');
   }
 
   function reasonList(title, arr) {
@@ -3061,6 +3067,7 @@
     if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
     if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
     if (m.foreign_consecutive_buy_days != null) facts.push('外資連買 ' + m.foreign_consecutive_buy_days + ' 天');
+    if (m.margin_consecutive_buy_days != null) facts.push('融資連買 ' + m.margin_consecutive_buy_days + ' 天');
 
     var notes = '';
     if (r.foreign_note) {
@@ -3077,7 +3084,7 @@
       notes +
       (facts.length ? '<div>' + esc(facts.join('　·　')) + '</div>' : '') +
       reasonList('FOMO 依據(' + r.fomo_score + ' 分)', r.reasons.fomo) +
-      reasonList('真漲依據(' + r.real_rally_score + ' 分)', r.reasons.real_rally) +
+      reasonList('可能會漲依據(' + r.real_rally_score + ' 分)', r.reasons.real_rally) +
       reasonList('虛漲依據(' + r.fake_rally_score + ' 分)', r.reasons.fake_rally) +
       (r.missing && r.missing.length
         ? '<h4>缺少資料</h4><div class="none">' + esc(r.missing.join('、')) + '</div>'
@@ -3104,7 +3111,7 @@
     });
     var src = res.source_list === 'watchlist' ? '手動名單' : '爆量前段班';
     meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
-      ' · 真漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
+      ' · 可能會漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
 
     if (!res.rows.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
@@ -3153,7 +3160,7 @@
   }
 
   // ---------------------------------------------------------- 暴跌 FOMO
-  // FOMO 掃描的鏡射:真跌/虛跌取代真漲/虛漲。顏色跟 FOMO 相反 ——
+  // FOMO 掃描的鏡射:真跌/虛跌取代可能會漲/虛漲。顏色跟 FOMO 相反 ——
   // 真跌(會續跌)用危險色(badge-crash-real),虛跌(可能是抄底機會)用安全色。
 
   var CRASH_FOMO_URL = 'data/crash-fomo-latest.json';
@@ -4421,7 +4428,7 @@
   //
   // 依進場訊號分類(entryGroupKey)驗證訊號可不可信:進場當天(created_at)
   // 收盤價 vs. 最新收盤價,漲了算「上漲」、跌了算「下跌」。有明確方向預期
-  // 的分類(真漲該漲、虛漲該回檔、真跌該跌、虛跌該反彈、爆量/暴跌沿用
+  // 的分類(可能會漲該漲、虛漲該回檔、真跌該跌、虛跌該反彈、爆量/暴跌沿用
   // 掃描本身 close>open/close<open 的多空定義)另外算「命中率」——命中的
   // 定義是我(Claude)推出來的,不是使用者明講,UI 上要講清楚怎麼算的,
   // 方便使用者一眼看出跟自己認知合不合。收盤價只吃 quotes-latest.json
@@ -4508,7 +4515,7 @@
     return '<div class="pos-block">' +
       '<div class="pos-head"><span>進場訊號準度統計</span></div>' +
       '<p class="dim">依「加入追蹤」當天收盤價 vs. 最新收盤價驗證訊號——' +
-        '例如訊號是真漲,後續真的漲了就算命中。命中率的方向預期(真漲該漲、' +
+        '例如訊號是可能會漲,後續真的漲了就算命中。命中率的方向預期(可能會漲該漲、' +
         '虛漲該回檔⋯)是程式推定的,不是統計驗證過的結論;收盤價只有近 30 天,' +
         '進場日超過這個範圍就不計入。樣本數少,當參考。</p>' +
       '<div class="exit-stats">' + rows + '</div>' +
