@@ -1,6 +1,6 @@
 {
   "date": "2026-09-10",
-  "generated_at": "2026-09-10T12:57:42Z",
+  "generated_at": "2026-09-10T15:01:18Z",
   "source": "finmind",
   "thresholds": {
     "MARGIN_CHANGE_HIGH": 20,
@@ -11,9 +11,11 @@
     "PBR_MID": 1.5,
     "SHORT_MARGIN_BULL": 5,
     "FOREIGN_CONSECUTIVE": 3,
+    "MARGIN_CONSECUTIVE": 3,
     "REAL_RALLY_PASS": 60,
     "FAKE_RALLY_PASS": 60,
     "REAL_RALLY_REQUIRES_FOREIGN": true,
+    "REAL_RALLY_REQUIRES_MARGIN": true,
     "PBR_CRASH_CHEAP": 1.2,
     "MARGIN_DROP_PANIC": -15,
     "REAL_CRASH_PASS": 60,
@@ -37,7 +39,7 @@
       "stock_name": "環科",
       "fomo_score": 80,
       "is_real_rally": false,
-      "real_rally_score": 10,
+      "real_rally_score": 30,
       "is_fake_rally": true,
       "fake_rally_score": 70,
       "is_divergence": false,
@@ -50,6 +52,7 @@
         "short_margin_ratio": 2.22,
         "foreign_net": -1167990.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 6,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "sell",
@@ -73,6 +76,7 @@
           "外資賣超(1,167,990 股)"
         ],
         "real_rally": [
+          "融資連續買超 6 天(≥3,散戶跟著進場)",
           "券資比 2.2%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -101,6 +105,7 @@
         "short_margin_ratio": 2.13,
         "foreign_net": -621053.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 2,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "sell",
@@ -153,6 +158,7 @@
         "short_margin_ratio": 3.47,
         "foreign_net": -1495974.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 8000.0,
         "foreign_streak_days": 3,
         "foreign_streak_direction": "sell",
@@ -191,7 +197,7 @@
       "stock_name": "禾榮科",
       "fomo_score": 70,
       "is_real_rally": false,
-      "real_rally_score": 10,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 50,
       "is_divergence": false,
@@ -204,6 +210,7 @@
         "short_margin_ratio": 0.23,
         "foreign_net": 57950.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 6,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -226,6 +233,7 @@
           "券資比 0.2%(<5%)"
         ],
         "real_rally": [
+          "融資連續買超 6 天(≥3,散戶跟著進場)",
           "券資比 0.2%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -239,8 +247,8 @@
       "stock_id": "6834",
       "stock_name": "天二科技",
       "fomo_score": 70,
-      "is_real_rally": false,
-      "real_rally_score": 50,
+      "is_real_rally": true,
+      "real_rally_score": 70,
       "is_fake_rally": false,
       "fake_rally_score": 50,
       "is_divergence": false,
@@ -253,6 +261,7 @@
         "short_margin_ratio": 3.84,
         "foreign_net": 335133.0,
         "foreign_consecutive_buy_days": 3,
+        "margin_consecutive_buy_days": 4,
         "trust_net": 0.0,
         "foreign_streak_days": 3,
         "foreign_streak_direction": "buy",
@@ -276,6 +285,7 @@
         ],
         "real_rally": [
           "外資連續買超 3 天(≥3)",
+          "融資連續買超 4 天(≥3,散戶跟著進場)",
           "券資比 3.8%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -303,6 +313,7 @@
         "short_margin_ratio": 3.42,
         "foreign_net": -351400.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "sell",
@@ -341,7 +352,7 @@
       "stock_name": "光罩",
       "fomo_score": 50,
       "is_real_rally": false,
-      "real_rally_score": 0,
+      "real_rally_score": 20,
       "is_fake_rally": false,
       "fake_rally_score": 50,
       "is_divergence": false,
@@ -354,6 +365,7 @@
         "short_margin_ratio": 6.63,
         "foreign_net": -304000.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 5,
         "trust_net": 0.0,
         "foreign_streak_days": 6,
         "foreign_streak_direction": "sell",
@@ -375,7 +387,9 @@
           "PBR 2.43(1.5~2.5)",
           "外資賣超(304,000 股)"
         ],
-        "real_rally": [],
+        "real_rally": [
+          "融資連續買超 5 天(≥3,散戶跟著進場)"
+        ],
         "fake_rally": [
           "融資5日增幅 15.8%(>15%,散戶追價明顯)",
           "外資賣超或中性(304,000 股)"
@@ -388,7 +402,7 @@
       "stock_name": "全友",
       "fomo_score": 50,
       "is_real_rally": false,
-      "real_rally_score": 0,
+      "real_rally_score": 20,
       "is_fake_rally": false,
       "fake_rally_score": 50,
       "is_divergence": false,
@@ -401,6 +415,7 @@
         "short_margin_ratio": 7.18,
         "foreign_net": 1585372.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 4,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -421,7 +436,9 @@
           "融資5日增幅 20.0%(15~20%)",
           "PBR 3.20(>2.5)"
         ],
-        "real_rally": [],
+        "real_rally": [
+          "融資連續買超 4 天(≥3,散戶跟著進場)"
+        ],
         "fake_rally": [
           "融資5日增幅 20.0%(>15%,散戶追價明顯)",
           "PBR 3.20(>2.5,評價偏高)"
@@ -447,6 +464,7 @@
         "short_margin_ratio": 4.45,
         "foreign_net": -1199425.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "sell",
@@ -484,7 +502,7 @@
       "stock_name": "國慶科技",
       "fomo_score": 40,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 50,
       "is_divergence": false,
@@ -497,6 +515,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": -30580.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 3,
         "foreign_streak_direction": "sell",
@@ -519,7 +538,6 @@
           "外資賣超(30,580 股)"
         ],
         "real_rally": [
-          "融資5日增幅 0.0%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -534,7 +552,7 @@
       "stock_id": "3437",
       "stock_name": "榮創",
       "fomo_score": 30,
-      "is_real_rally": true,
+      "is_real_rally": false,
       "real_rally_score": 70,
       "is_fake_rally": false,
       "fake_rally_score": 0,
@@ -548,6 +566,7 @@
         "short_margin_ratio": 2.44,
         "foreign_net": 231000.0,
         "foreign_consecutive_buy_days": 3,
+        "margin_consecutive_buy_days": 2,
         "trust_net": 0.0,
         "foreign_streak_days": 3,
         "foreign_streak_direction": "buy",
@@ -571,7 +590,8 @@
         "real_rally": [
           "外資連續買超 3 天(≥3)",
           "券資比 2.4%(<5%,空方壓力低)",
-          "PBR 1.28(<2.0,評價未偏高)"
+          "PBR 1.28(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
         ],
         "fake_rally": []
       },
@@ -582,7 +602,7 @@
       "stock_name": "睿生光電",
       "fomo_score": 30,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -595,6 +615,7 @@
         "short_margin_ratio": 0.53,
         "foreign_net": 170990.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -616,7 +637,6 @@
           "券資比 0.5%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 9.8%(<10%,散戶未過度追價)",
           "券資比 0.5%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -629,8 +649,8 @@
       "stock_id": "6937",
       "stock_name": "天虹",
       "fomo_score": 30,
-      "is_real_rally": true,
-      "real_rally_score": 70,
+      "is_real_rally": false,
+      "real_rally_score": 50,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -643,6 +663,7 @@
         "short_margin_ratio": 0.87,
         "foreign_net": 221211.0,
         "foreign_consecutive_buy_days": 3,
+        "margin_consecutive_buy_days": 2,
         "trust_net": 0.0,
         "foreign_streak_days": 3,
         "foreign_streak_direction": "buy",
@@ -665,7 +686,6 @@
         ],
         "real_rally": [
           "外資連續買超 3 天(≥3)",
-          "融資5日增幅 2.5%(<10%,散戶未過度追價)",
           "券資比 0.9%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -679,7 +699,7 @@
       "stock_name": "瑞祺電通",
       "fomo_score": 30,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -692,6 +712,7 @@
         "short_margin_ratio": 0.1,
         "foreign_net": -72483.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "sell",
@@ -714,7 +735,6 @@
           "外資賣超(72,483 股)"
         ],
         "real_rally": [
-          "融資5日增幅 -0.1%(<10%,散戶未過度追價)",
           "券資比 0.1%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -728,7 +748,7 @@
       "stock_name": "矽格",
       "fomo_score": 30,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -741,6 +761,7 @@
         "short_margin_ratio": 0.42,
         "foreign_net": 5844345.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 0,
         "trust_net": -4000.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -762,7 +783,6 @@
           "券資比 0.4%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 0.8%(<10%,散戶未過度追價)",
           "券資比 0.4%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -776,7 +796,7 @@
       "stock_name": "愛普*",
       "fomo_score": 30,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -789,6 +809,7 @@
         "short_margin_ratio": 1.76,
         "foreign_net": 65744.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 850000.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -810,7 +831,6 @@
           "券資比 1.8%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 -1.3%(<10%,散戶未過度追價)",
           "券資比 1.8%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -824,7 +844,7 @@
       "stock_name": "晶豪科",
       "fomo_score": 30,
       "is_real_rally": false,
-      "real_rally_score": 30,
+      "real_rally_score": 10,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -837,6 +857,7 @@
         "short_margin_ratio": 3.91,
         "foreign_net": 764053.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 25000.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -858,7 +879,6 @@
           "券資比 3.9%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 -1.6%(<10%,散戶未過度追價)",
           "券資比 3.9%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -885,6 +905,7 @@
         "short_margin_ratio": 0.04,
         "foreign_net": 75841.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 4,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -906,7 +927,7 @@
           "券資比 0.0%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 1.8%(<10%,散戶未過度追價)",
+          "融資連續買超 4 天(≥3,散戶跟著進場)",
           "券資比 0.0%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -919,8 +940,8 @@
       "stock_id": "1215",
       "stock_name": "卜蜂",
       "fomo_score": 30,
-      "is_real_rally": true,
-      "real_rally_score": 70,
+      "is_real_rally": false,
+      "real_rally_score": 50,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -933,6 +954,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": 146154.0,
         "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 205000.0,
         "foreign_streak_days": 5,
         "foreign_streak_direction": "buy",
@@ -955,7 +977,6 @@
         ],
         "real_rally": [
           "外資連續買超 5 天(≥3)",
-          "融資5日增幅 -9.7%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)"
         ],
         "fake_rally": [
@@ -969,7 +990,7 @@
       "stock_name": "訊映",
       "fomo_score": 20,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -982,6 +1003,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": -156000.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 4,
         "foreign_streak_direction": "sell",
@@ -1003,7 +1025,6 @@
           "外資賣超(156,000 股)"
         ],
         "real_rally": [
-          "融資5日增幅 -2.5%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)",
           "PBR 0.83(<2.0,評價未偏高)"
         ],
@@ -1031,6 +1052,7 @@
         "short_margin_ratio": null,
         "foreign_net": -728340.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "sell",
@@ -1059,8 +1081,8 @@
         ]
       },
       "missing": [
-        "融資5日增幅",
-        "券資比"
+        "券資比",
+        "融資5日增幅"
       ]
     },
     {
@@ -1081,6 +1103,7 @@
         "short_margin_ratio": null,
         "foreign_net": 104310.0,
         "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 5,
         "foreign_streak_direction": "buy",
@@ -1108,8 +1131,8 @@
         ]
       },
       "missing": [
-        "融資5日增幅",
-        "券資比"
+        "券資比",
+        "融資5日增幅"
       ]
     },
     {
@@ -1117,7 +1140,7 @@
       "stock_name": "嘉晶",
       "fomo_score": 20,
       "is_real_rally": false,
-      "real_rally_score": 20,
+      "real_rally_score": 0,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -1130,6 +1153,7 @@
         "short_margin_ratio": 7.26,
         "foreign_net": 4507474.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -1149,9 +1173,7 @@
         "fomo": [
           "PBR 6.13(>2.5)"
         ],
-        "real_rally": [
-          "融資5日增幅 3.6%(<10%,散戶未過度追價)"
-        ],
+        "real_rally": [],
         "fake_rally": [
           "PBR 6.13(>2.5,評價偏高)"
         ]
@@ -1163,7 +1185,7 @@
       "stock_name": "太設",
       "fomo_score": 20,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -1176,6 +1198,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": -137000.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "sell",
@@ -1197,7 +1220,6 @@
           "外資賣超(137,000 股)"
         ],
         "real_rally": [
-          "融資5日增幅 -0.9%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)",
           "PBR 0.40(<2.0,評價未偏高)"
         ],
@@ -1212,7 +1234,7 @@
       "stock_name": "致伸",
       "fomo_score": 20,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": true,
@@ -1225,6 +1247,7 @@
         "short_margin_ratio": 0.17,
         "foreign_net": -263314.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 195000.0,
         "foreign_streak_days": 4,
         "foreign_streak_direction": "sell",
@@ -1246,7 +1269,6 @@
           "外資賣超(263,314 股)"
         ],
         "real_rally": [
-          "融資5日增幅 0.8%(<10%,散戶未過度追價)",
           "券資比 0.2%(<5%,空方壓力低)",
           "PBR 1.44(<2.0,評價未偏高)"
         ],
@@ -1260,8 +1282,8 @@
       "stock_id": "2409",
       "stock_name": "友達",
       "fomo_score": 20,
-      "is_real_rally": true,
-      "real_rally_score": 90,
+      "is_real_rally": false,
+      "real_rally_score": 70,
       "is_fake_rally": false,
       "fake_rally_score": 10,
       "is_divergence": false,
@@ -1274,6 +1296,7 @@
         "short_margin_ratio": 3.7,
         "foreign_net": 18535003.0,
         "foreign_consecutive_buy_days": 4,
+        "margin_consecutive_buy_days": 2,
         "trust_net": -40451.0,
         "foreign_streak_days": 4,
         "foreign_streak_direction": "buy",
@@ -1296,9 +1319,9 @@
         ],
         "real_rally": [
           "外資連續買超 4 天(≥3)",
-          "融資5日增幅 2.1%(<10%,散戶未過度追價)",
           "券資比 3.7%(<5%,空方壓力低)",
-          "PBR 1.52(<2.0,評價未偏高)"
+          "PBR 1.52(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
         ],
         "fake_rally": [
           "今日量縮(590,064,949 → 497,017,089)"
@@ -1311,7 +1334,7 @@
       "stock_name": "富爾特",
       "fomo_score": 20,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 20,
       "is_divergence": false,
@@ -1324,6 +1347,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": -9000.0,
         "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "sell",
@@ -1345,7 +1369,6 @@
           "外資賣超(9,000 股)"
         ],
         "real_rally": [
-          "融資5日增幅 -30.9%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)",
           "PBR 0.63(<2.0,評價未偏高)"
         ],
@@ -1359,8 +1382,8 @@
       "stock_id": "4104",
       "stock_name": "佳醫",
       "fomo_score": 10,
-      "is_real_rally": true,
-      "real_rally_score": 90,
+      "is_real_rally": false,
+      "real_rally_score": 70,
       "is_fake_rally": false,
       "fake_rally_score": 0,
       "is_divergence": false,
@@ -1373,6 +1396,7 @@
         "short_margin_ratio": 1.43,
         "foreign_net": 358186.0,
         "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 5,
         "foreign_streak_direction": "buy",
@@ -1394,9 +1418,9 @@
         ],
         "real_rally": [
           "外資連續買超 5 天(≥3)",
-          "融資5日增幅 7.7%(<10%,散戶未過度追價)",
           "券資比 1.4%(<5%,空方壓力低)",
-          "PBR 1.40(<2.0,評價未偏高)"
+          "PBR 1.40(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
         ],
         "fake_rally": []
       },
@@ -1420,6 +1444,7 @@
         "short_margin_ratio": 0.14,
         "foreign_net": 6513.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 3,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -1440,7 +1465,7 @@
           "券資比 0.1%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 3.8%(<10%,散戶未過度追價)",
+          "融資連續買超 3 天(≥3,散戶跟著進場)",
           "券資比 0.1%(<5%,空方壓力低)",
           "PBR 0.68(<2.0,評價未偏高)"
         ],
@@ -1453,7 +1478,7 @@
       "stock_name": "嘉里大榮",
       "fomo_score": 10,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 0,
       "is_divergence": false,
@@ -1466,6 +1491,7 @@
         "short_margin_ratio": 0.09,
         "foreign_net": 127277.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -1486,7 +1512,6 @@
           "券資比 0.1%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 0.4%(<10%,散戶未過度追價)",
           "券資比 0.1%(<5%,空方壓力低)",
           "PBR 1.10(<2.0,評價未偏高)"
         ],
@@ -1499,7 +1524,7 @@
       "stock_name": "泰豐",
       "fomo_score": 10,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 0,
       "is_divergence": false,
@@ -1512,6 +1537,7 @@
         "short_margin_ratio": 0.72,
         "foreign_net": 414529.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -1532,7 +1558,6 @@
           "券資比 0.7%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 -7.4%(<10%,散戶未過度追價)",
           "券資比 0.7%(<5%,空方壓力低)",
           "PBR 0.86(<2.0,評價未偏高)"
         ],
@@ -1545,7 +1570,7 @@
       "stock_name": "全台",
       "fomo_score": 10,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 10,
       "is_divergence": false,
@@ -1558,6 +1583,7 @@
         "short_margin_ratio": 0.0,
         "foreign_net": 27539.0,
         "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 0,
         "trust_net": 0.0,
         "foreign_streak_days": 2,
         "foreign_streak_direction": "buy",
@@ -1578,7 +1604,6 @@
           "券資比 0.0%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 -13.4%(<10%,散戶未過度追價)",
           "券資比 0.0%(<5%,空方壓力低)",
           "PBR 1.13(<2.0,評價未偏高)"
         ],
@@ -1593,7 +1618,7 @@
       "stock_name": "矽統",
       "fomo_score": 10,
       "is_real_rally": false,
-      "real_rally_score": 50,
+      "real_rally_score": 30,
       "is_fake_rally": false,
       "fake_rally_score": 10,
       "is_divergence": false,
@@ -1606,6 +1631,7 @@
         "short_margin_ratio": 0.49,
         "foreign_net": 836915.0,
         "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 1,
         "trust_net": 0.0,
         "foreign_streak_days": 1,
         "foreign_streak_direction": "buy",
@@ -1626,7 +1652,6 @@
           "券資比 0.5%(<5%)"
         ],
         "real_rally": [
-          "融資5日增幅 2.4%(<10%,散戶未過度追價)",
           "券資比 0.5%(<5%,空方壓力低)",
           "PBR 0.55(<2.0,評價未偏高)"
         ],
