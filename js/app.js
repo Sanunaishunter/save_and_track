@@ -1056,6 +1056,37 @@
     });
   }
 
+  /**
+   * 「全出」:把所有「進行中」的紀錄一次標記成已出場,跟單筆「標記出場」
+   * (doExit)是同一個 rec.status 欄位、同樣不設 exit_result——這不是自動
+   * 出場,不該混進「自動出場統計」的勝率計算。每筆補一則追蹤紀錄留痕,
+   * 單筆想復原用 doReactivate()(「重新設為進行中」)個別救回來。
+   */
+  function doExitAll() {
+    var actives = data.filter(function (r) { return r.status === 'active'; });
+    if (!actives.length) { toast('目前沒有「進行中」的紀錄可以出場', 'err'); return; }
+    dialog({
+      title: '全部標記為已出場?',
+      message: '目前共有 ' + actives.length + ' 檔「進行中」的紀錄,會一次全部標記成「已出場」。' +
+        '七個步驟內容、持倉紀錄都會保留,不會刪除,每筆會補一則【全出】的追蹤紀錄。' +
+        '這不是真的下單,還是要自己去券商那邊確認實際成交。\n\n' +
+        '想復原單筆的話,之後可以打開那筆紀錄按「重新設為進行中」。',
+      actions: [{ label: '確認全部出場', value: 'exitAll', cls: 'btn-danger' }]
+    }).then(function (res) {
+      if (res.action !== 'exitAll') return;
+      actives.forEach(function (rec) {
+        rec.tracking.unshift({ date: todayStr(), note: '【全出】手動批次標記出場' });
+        rec.status = 'exited';
+        rec.current_step = 7;
+        touch(rec);
+      });
+      if (saveAll()) toast('已全部標記為出場(' + actives.length + ' 檔)', 'ok');
+      renderDetail();
+      renderList();
+      renderPosSummary();
+    });
+  }
+
   function doReactivate() {
     var rec = findById(currentId);
     if (!rec) return;
@@ -5313,6 +5344,7 @@
     });
 
     el('btn-new').addEventListener('click', function () { openForm(null); });
+    el('btn-exit-all').addEventListener('click', doExitAll);
     el('btn-delete-all').addEventListener('click', doDeleteAll);
     el('version-continue').addEventListener('click', hideVersionPage);
     el('btn-export').addEventListener('click', exportBackup);
