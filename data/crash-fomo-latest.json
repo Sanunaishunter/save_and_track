@@ -1,6 +1,6 @@
 {
   "date": "2026-09-11",
-  "generated_at": "2026-09-11T09:03:45Z",
+  "generated_at": "2026-09-11T12:55:12Z",
   "source": "finmind",
   "thresholds": {
     "MARGIN_CHANGE_HIGH": 20,
@@ -27,8 +27,8 @@
   "market_totals": {
     "foreign_buy": 291794907,
     "foreign_sell": 513166041,
-    "trust_buy": 72844544,
-    "trust_sell": 11867982
+    "trust_buy": 73644532,
+    "trust_sell": 11978576
   },
   "watchlist_count": 53,
   "scored_count": 53,
@@ -47,7 +47,7 @@
       "foreign_note": "外資連買 2 天,總共 140 張,約 $196 萬,佔該股成交量 14.8%、佔全市場外資買超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.83,
+        "pbr": 0.8,
         "margin_change_5d_pct": -0.33,
         "short_margin_ratio": 0.0,
         "foreign_net": 119000.0,
@@ -74,8 +74,52 @@
         ],
         "fake_crash": [
           "外資買超或中性(119,000 股),趁機承接",
-          "PBR 0.83(<1.2,評價已明顯偏低)",
+          "PBR 0.80(<1.2,評價已明顯偏低)",
           "今日量縮(863,977 → 803,329,賣壓漸緩)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3038",
+      "stock_name": "全台",
+      "crash_score": 50,
+      "is_real_crash": false,
+      "real_crash_score": 10,
+      "is_fake_crash": false,
+      "fake_crash_score": 50,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 1 張,約 $2 萬,佔該股成交量 0.3%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.13,
+        "margin_change_5d_pct": -22.54,
+        "short_margin_ratio": 0.0,
+        "foreign_net": -1000.0,
+        "foreign_consecutive_sell_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -1000.0,
+        "foreign_streak_amount": -20000.0,
+        "foreign_pct_of_volume": 0.29,
+        "foreign_pct_of_market": 0.0,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.12,
+        "close": 20.0,
+        "volume": 350721.0,
+        "prev_volume": 307040.0
+      },
+      "reasons": {
+        "real_crash": [
+          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+        ],
+        "fake_crash": [
+          "融資5日增幅 -22.5%(<-15%,疑似斷頭/恐慌認賠殺出)",
+          "PBR 1.13(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -93,9 +137,9 @@
       "foreign_note": "外資連買 1 天,總共 213 張,約 $300 萬,佔該股成交量 4.4%、佔全市場外資買超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.03,
-        "margin_change_5d_pct": 5.77,
-        "short_margin_ratio": 0.7,
+        "pbr": 1.04,
+        "margin_change_5d_pct": 6.94,
+        "short_margin_ratio": 0.47,
         "foreign_net": 213179.0,
         "foreign_consecutive_sell_days": 0,
         "trust_net": 0.0,
@@ -115,12 +159,12 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 5.8%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.7%(<5%,空方還沒大量進場對敲)"
+          "融資5日增幅 6.9%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.5%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
           "外資買超或中性(213,179 股),趁機承接",
-          "PBR 1.03(<1.2,評價已明顯偏低)"
+          "PBR 1.04(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -138,7 +182,7 @@
       "foreign_note": "外資連賣 1 天,總共 264 張,約 $522 萬,佔該股成交量 20.1%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.68,
+        "pbr": 0.67,
         "margin_change_5d_pct": 3.8,
         "short_margin_ratio": 0.14,
         "foreign_net": -263816.0,
@@ -164,7 +208,7 @@
           "券資比 0.1%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.68(<1.2,評價已明顯偏低)",
+          "PBR 0.67(<1.2,評價已明顯偏低)",
           "今日量縮(1,427,350 → 1,314,908,賣壓漸緩)"
         ]
       },
@@ -183,7 +227,7 @@
       "foreign_note": "外資連賣 2 天,總共 1,098 張,約 $1105 萬,佔該股成交量 19.3%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.64,
+        "pbr": 0.63,
         "margin_change_5d_pct": 8.38,
         "short_margin_ratio": 0.07,
         "foreign_net": -424000.0,
@@ -209,7 +253,7 @@
           "券資比 0.1%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.64(<1.2,評價已明顯偏低)",
+          "PBR 0.63(<1.2,評價已明顯偏低)",
           "今日量縮(3,035,070 → 2,192,891,賣壓漸緩)"
         ]
       },
@@ -228,9 +272,9 @@
       "foreign_note": "外資連賣 7 天,總共 2,551 張,約 $1.8 億,佔該股成交量 22.9%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.97,
-        "margin_change_5d_pct": -0.15,
-        "short_margin_ratio": 0.3,
+        "pbr": 0.96,
+        "margin_change_5d_pct": 0.45,
+        "short_margin_ratio": 1.3,
         "foreign_net": -245750.0,
         "foreign_consecutive_sell_days": 7,
         "trust_net": 0.0,
@@ -251,11 +295,11 @@
       "reasons": {
         "real_crash": [
           "外資連續賣超 7 天(≥3)",
-          "融資5日增幅 -0.2%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.3%(<5%,空方還沒大量進場對敲)"
+          "融資5日增幅 0.5%(>-10%,散戶還沒認賠減倉)",
+          "券資比 1.3%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.97(<1.2,評價已明顯偏低)",
+          "PBR 0.96(<1.2,評價已明顯偏低)",
           "今日量縮(1,994,740 → 1,074,213,賣壓漸緩)"
         ]
       },
@@ -274,7 +318,7 @@
       "foreign_note": "外資連賣 12 天,總共 597 張,約 $685 萬,佔該股成交量 35.6%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.84,
+        "pbr": 0.83,
         "margin_change_5d_pct": 6.45,
         "short_margin_ratio": 10.26,
         "foreign_net": -167000.0,
@@ -300,7 +344,7 @@
           "融資5日增幅 6.5%(>-10%,散戶還沒認賠減倉)"
         ],
         "fake_crash": [
-          "PBR 0.84(<1.2,評價已明顯偏低)",
+          "PBR 0.83(<1.2,評價已明顯偏低)",
           "今日量縮(638,338 → 468,557,賣壓漸緩)"
         ]
       },
@@ -319,8 +363,8 @@
       "foreign_note": "外資連賣 3 天,總共 1,420 張,約 $2365 萬,佔該股成交量 42.6%、佔全市場外資賣超 0.3%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.97,
-        "margin_change_5d_pct": -20.69,
+        "pbr": 1.95,
+        "margin_change_5d_pct": -24.44,
         "short_margin_ratio": 0.0,
         "foreign_net": -1380940.0,
         "foreign_consecutive_sell_days": 3,
@@ -343,10 +387,10 @@
         "real_crash": [
           "外資連續賣超 3 天(≥3)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.97(>1.5,還沒跌到便宜)"
+          "PBR 1.95(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
-          "融資5日增幅 -20.7%(<-15%,疑似斷頭/恐慌認賠殺出)"
+          "融資5日增幅 -24.4%(<-15%,疑似斷頭/恐慌認賠殺出)"
         ]
       },
       "missing": []
@@ -364,9 +408,9 @@
       "foreign_note": "外資連賣 3 天,總共 5,774 張,約 $2.5 億,佔該股成交量 34.4%、佔全市場外資賣超 0.3%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.81,
-        "margin_change_5d_pct": 9.46,
-        "short_margin_ratio": 0.0,
+        "pbr": 0.8,
+        "margin_change_5d_pct": 9.02,
+        "short_margin_ratio": 0.09,
         "foreign_net": -1742543.0,
         "foreign_consecutive_sell_days": 3,
         "trust_net": 0.0,
@@ -387,11 +431,11 @@
       "reasons": {
         "real_crash": [
           "外資連續賣超 3 天(≥3)",
-          "融資5日增幅 9.5%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+          "融資5日增幅 9.0%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.1%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.81(<1.2,評價已明顯偏低)",
+          "PBR 0.80(<1.2,評價已明顯偏低)",
           "今日量縮(5,272,241 → 5,066,091,賣壓漸緩)"
         ]
       },
@@ -410,7 +454,7 @@
       "foreign_note": "外資連買 1 天,總共 91 張,約 $273 萬,佔該股成交量 17.9%、佔全市場外資買超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 3.21,
+        "pbr": 3.12,
         "margin_change_5d_pct": -0.49,
         "short_margin_ratio": 0.0,
         "foreign_net": 90993.0,
@@ -434,11 +478,56 @@
         "real_crash": [
           "融資5日增幅 -0.5%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 3.21(>1.5,還沒跌到便宜)"
+          "PBR 3.12(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
           "外資買超或中性(90,993 股),趁機承接",
           "今日量縮(1,178,586 → 507,623,賣壓漸緩)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "9935",
+      "stock_name": "慶豐富",
+      "crash_score": 20,
+      "is_real_crash": true,
+      "real_crash_score": 70,
+      "is_fake_crash": false,
+      "fake_crash_score": 20,
+      "is_divergence": true,
+      "divergence_reason": "外資賣超 522,000 股、投信買進 6,466 股,方向背離,可能是投信短打",
+      "foreign_note": "外資連賣 3 天,總共 627 張,約 $1149 萬,佔該股成交量 28.6%、佔全市場外資賣超 0.1%,注意長線變化",
+      "trust_note": "此股投信買進 6 張,約 $12 萬,佔該股成交量 0.4%、佔全市場投信買超 0.0%,注意可能是短打",
+      "metrics": {
+        "pbr": 1.19,
+        "margin_change_5d_pct": 0.0,
+        "short_margin_ratio": 0.0,
+        "foreign_net": -522000.0,
+        "foreign_consecutive_sell_days": 3,
+        "trust_net": 6466.0,
+        "foreign_streak_days": 3,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -627051.0,
+        "foreign_streak_amount": -11486211.25,
+        "foreign_pct_of_volume": 28.61,
+        "foreign_pct_of_market": 0.1,
+        "trust_amount": 117034.6,
+        "trust_pct_of_volume": 0.35,
+        "trust_pct_of_market": 0.01,
+        "vol_ratio": 6.11,
+        "close": 18.1,
+        "volume": 1824504.0,
+        "prev_volume": 193702.0
+      },
+      "reasons": {
+        "real_crash": [
+          "外資連續賣超 3 天(≥3)",
+          "融資5日增幅 0.0%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+        ],
+        "fake_crash": [
+          "PBR 1.19(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -457,7 +546,7 @@
       "trust_note": null,
       "metrics": {
         "pbr": null,
-        "margin_change_5d_pct": 0.03,
+        "margin_change_5d_pct": -0.49,
         "short_margin_ratio": 0.0,
         "foreign_net": 98000.0,
         "foreign_consecutive_sell_days": 0,
@@ -478,7 +567,7 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 0.0%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 -0.5%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
@@ -502,7 +591,7 @@
       "foreign_note": "外資連賣 1 天,總共 337 張,約 $989 萬,佔該股成交量 15.1%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.01,
+        "pbr": 0.91,
         "margin_change_5d_pct": 4.79,
         "short_margin_ratio": 0.39,
         "foreign_net": -336875.0,
@@ -528,7 +617,95 @@
           "券資比 0.4%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.01(<1.2,評價已明顯偏低)"
+          "PBR 0.91(<1.2,評價已明顯偏低)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "5306",
+      "stock_name": "桂盟",
+      "crash_score": 20,
+      "is_real_crash": false,
+      "real_crash_score": 30,
+      "is_fake_crash": false,
+      "fake_crash_score": 20,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 2 天,總共 153 張,約 $1356 萬,佔該股成交量 36.2%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.17,
+        "margin_change_5d_pct": -0.17,
+        "short_margin_ratio": 0.0,
+        "foreign_net": -148000.0,
+        "foreign_consecutive_sell_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 2,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -152953.0,
+        "foreign_streak_amount": -13558629.0,
+        "foreign_pct_of_volume": 36.2,
+        "foreign_pct_of_market": 0.03,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 4.43,
+        "close": 88.5,
+        "volume": 408857.0,
+        "prev_volume": 71616.0
+      },
+      "reasons": {
+        "real_crash": [
+          "融資5日增幅 -0.2%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+        ],
+        "fake_crash": [
+          "PBR 1.17(<1.2,評價已明顯偏低)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3437",
+      "stock_name": "榮創",
+      "crash_score": 20,
+      "is_real_crash": false,
+      "real_crash_score": 30,
+      "is_fake_crash": false,
+      "fake_crash_score": 20,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 859 張,約 $1559 萬,佔該股成交量 35.6%、佔全市場外資賣超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.18,
+        "margin_change_5d_pct": 13.79,
+        "short_margin_ratio": 2.44,
+        "foreign_net": -859000.0,
+        "foreign_consecutive_sell_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -859000.0,
+        "foreign_streak_amount": -15590849.999999998,
+        "foreign_pct_of_volume": 35.56,
+        "foreign_pct_of_market": 0.17,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.93,
+        "close": 18.15,
+        "volume": 2415950.0,
+        "prev_volume": 2294782.0
+      },
+      "reasons": {
+        "real_crash": [
+          "融資5日增幅 13.8%(>-10%,散戶還沒認賠減倉)",
+          "券資比 2.4%(<5%,空方還沒大量進場對敲)"
+        ],
+        "fake_crash": [
+          "PBR 1.18(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -546,7 +723,7 @@
       "foreign_note": "外資連買 1 天,總共 17 張,約 $58 萬,佔該股成交量 3.9%、佔全市場外資買超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.56,
+        "pbr": 1.55,
         "margin_change_5d_pct": -1.51,
         "short_margin_ratio": 0.06,
         "foreign_net": 17000.0,
@@ -570,7 +747,7 @@
         "real_crash": [
           "融資5日增幅 -1.5%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.56(>1.5,還沒跌到便宜)"
+          "PBR 1.55(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
           "外資買超或中性(17,000 股),趁機承接"
@@ -591,9 +768,9 @@
       "foreign_note": "外資連賣 5 天,總共 263 張,約 $2463 萬,佔該股成交量 56.8%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.19,
-        "margin_change_5d_pct": -0.55,
-        "short_margin_ratio": 0.0,
+        "pbr": 1.1,
+        "margin_change_5d_pct": -0.47,
+        "short_margin_ratio": 0.16,
         "foreign_net": -189000.0,
         "foreign_consecutive_sell_days": 5,
         "trust_net": 0.0,
@@ -615,10 +792,10 @@
         "real_crash": [
           "外資連續賣超 5 天(≥3)",
           "融資5日增幅 -0.5%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+          "券資比 0.2%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.19(<1.2,評價已明顯偏低)"
+          "PBR 1.10(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -636,7 +813,7 @@
       "foreign_note": "外資連賣 4 天,總共 1,880 張,約 $7454 萬,佔該股成交量 7.6%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": "此股投信買進 19 張,約 $74 萬,佔該股成交量 0.8%、佔全市場投信買超 0.0%,注意可能是短打",
       "metrics": {
-        "pbr": 0.89,
+        "pbr": 0.87,
         "margin_change_5d_pct": 8.56,
         "short_margin_ratio": 0.09,
         "foreign_net": -191000.0,
@@ -663,7 +840,7 @@
           "券資比 0.1%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.89(<1.2,評價已明顯偏低)"
+          "PBR 0.87(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -673,7 +850,7 @@
       "stock_name": "美利達",
       "crash_score": 20,
       "is_real_crash": true,
-      "real_crash_score": 70,
+      "real_crash_score": 60,
       "is_fake_crash": false,
       "fake_crash_score": 20,
       "is_divergence": false,
@@ -681,9 +858,9 @@
       "foreign_note": "外資連賣 11 天,總共 5,714 張,約 $4.4 億,佔該股成交量 35.7%、佔全市場外資賣超 0.4%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.19,
-        "margin_change_5d_pct": 7.22,
-        "short_margin_ratio": 0.56,
+        "pbr": 1.07,
+        "margin_change_5d_pct": 8.81,
+        "short_margin_ratio": 11.69,
         "foreign_net": -2105692.0,
         "foreign_consecutive_sell_days": 11,
         "trust_net": 0.0,
@@ -704,11 +881,10 @@
       "reasons": {
         "real_crash": [
           "外資連續賣超 11 天(≥3)",
-          "融資5日增幅 7.2%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.6%(<5%,空方還沒大量進場對敲)"
+          "融資5日增幅 8.8%(>-10%,散戶還沒認賠減倉)"
         ],
         "fake_crash": [
-          "PBR 1.19(<1.2,評價已明顯偏低)"
+          "PBR 1.07(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -726,7 +902,7 @@
       "foreign_note": "外資連賣 2 天,總共 973 張,約 $959 萬,佔該股成交量 26.5%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": "此股投信買進 39 張,約 $38 萬,佔該股成交量 1.4%、佔全市場投信買超 0.1%,注意可能是短打",
       "metrics": {
-        "pbr": 0.77,
+        "pbr": 0.75,
         "margin_change_5d_pct": -0.4,
         "short_margin_ratio": 0.0,
         "foreign_net": -738000.0,
@@ -752,7 +928,7 @@
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.77(<1.2,評價已明顯偏低)"
+          "PBR 0.75(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -770,7 +946,7 @@
       "foreign_note": "外資連賣 1 天,總共 2,715 張,約 $2.4 億,佔該股成交量 50.2%、佔全市場外資賣超 0.5%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.11,
+        "pbr": 1.0,
         "margin_change_5d_pct": 5.92,
         "short_margin_ratio": 1.56,
         "foreign_net": -2714741.0,
@@ -796,7 +972,7 @@
           "券資比 1.6%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.11(<1.2,評價已明顯偏低)"
+          "PBR 1.00(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -814,7 +990,7 @@
       "foreign_note": "外資連賣 1 天,總共 379 張,約 $1605 萬,佔該股成交量 49.3%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.1,
+        "pbr": 1.04,
         "margin_change_5d_pct": 5.19,
         "short_margin_ratio": 0.0,
         "foreign_net": -379000.0,
@@ -840,50 +1016,7 @@
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.10(<1.2,評價已明顯偏低)"
-        ]
-      },
-      "missing": []
-    },
-    {
-      "stock_id": "3038",
-      "stock_name": "全台",
-      "crash_score": 20,
-      "is_real_crash": false,
-      "real_crash_score": 10,
-      "is_fake_crash": false,
-      "fake_crash_score": 20,
-      "is_divergence": false,
-      "divergence_reason": "",
-      "foreign_note": "外資連賣 1 天,總共 1 張,約 $2 萬,佔該股成交量 0.3%、佔全市場外資賣超 0.0%,注意長線變化",
-      "trust_note": null,
-      "metrics": {
-        "pbr": 1.13,
-        "margin_change_5d_pct": -13.36,
-        "short_margin_ratio": 0.0,
-        "foreign_net": -1000.0,
-        "foreign_consecutive_sell_days": 1,
-        "trust_net": 0.0,
-        "foreign_streak_days": 1,
-        "foreign_streak_direction": "sell",
-        "foreign_streak_shares": -1000.0,
-        "foreign_streak_amount": -20000.0,
-        "foreign_pct_of_volume": 0.29,
-        "foreign_pct_of_market": 0.0,
-        "trust_amount": 0.0,
-        "trust_pct_of_volume": 0.0,
-        "trust_pct_of_market": 0.0,
-        "vol_ratio": 2.12,
-        "close": 20.0,
-        "volume": 350721.0,
-        "prev_volume": 307040.0
-      },
-      "reasons": {
-        "real_crash": [
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
-        ],
-        "fake_crash": [
-          "PBR 1.13(<1.2,評價已明顯偏低)"
+          "PBR 1.04(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -901,8 +1034,8 @@
       "foreign_note": "外資連賣 1 天,總共 52 張,約 $41 萬,佔該股成交量 12.6%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.67,
-        "margin_change_5d_pct": 0.13,
+        "pbr": 0.65,
+        "margin_change_5d_pct": 0.06,
         "short_margin_ratio": 0.01,
         "foreign_net": -52000.0,
         "foreign_consecutive_sell_days": 1,
@@ -927,7 +1060,7 @@
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.67(<1.2,評價已明顯偏低)"
+          "PBR 0.65(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -989,7 +1122,7 @@
       "foreign_note": "外資連賣 3 天,總共 684 張,約 $1785 萬,佔該股成交量 37.1%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.95,
+        "pbr": 0.91,
         "margin_change_5d_pct": -3.45,
         "short_margin_ratio": 0.86,
         "foreign_net": -283000.0,
@@ -1016,7 +1149,7 @@
           "券資比 0.9%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.95(<1.2,評價已明顯偏低)"
+          "PBR 0.91(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -1034,7 +1167,7 @@
       "foreign_note": "外資連賣 2 天,總共 336 張,約 $876 萬,佔該股成交量 38.7%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.02,
+        "pbr": 1.0,
         "margin_change_5d_pct": 5.84,
         "short_margin_ratio": 0.0,
         "foreign_net": -167000.0,
@@ -1060,7 +1193,7 @@
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.02(<1.2,評價已明顯偏低)"
+          "PBR 1.00(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -1078,7 +1211,7 @@
       "foreign_note": "外資連賣 1 天,總共 984 張,約 $4006 萬,佔該股成交量 36.2%、佔全市場外資賣超 0.2%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.19,
+        "pbr": 1.16,
         "margin_change_5d_pct": 0.43,
         "short_margin_ratio": 0.57,
         "foreign_net": -984340.0,
@@ -1104,7 +1237,7 @@
           "券資比 0.6%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 1.19(<1.2,評價已明顯偏低)"
+          "PBR 1.16(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -1122,8 +1255,8 @@
       "foreign_note": "外資連賣 1 天,總共 186 張,約 $420 萬,佔該股成交量 37.7%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.63,
-        "margin_change_5d_pct": 0.61,
+        "pbr": 0.62,
+        "margin_change_5d_pct": 1.73,
         "short_margin_ratio": 0.11,
         "foreign_net": -186000.0,
         "foreign_consecutive_sell_days": 1,
@@ -1144,11 +1277,11 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 0.6%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 1.7%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.63(<1.2,評價已明顯偏低)"
+          "PBR 0.62(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -1166,7 +1299,7 @@
       "foreign_note": "外資連買 3 天,總共 198 張,約 $1142 萬,佔該股成交量 5.3%、佔全市場外資買超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.3,
+        "pbr": 1.31,
         "margin_change_5d_pct": 5.8,
         "short_margin_ratio": 0.0,
         "foreign_net": 18614.0,
@@ -1210,8 +1343,8 @@
       "foreign_note": "外資連賣 2 天,總共 282 張,約 $295 萬,佔該股成交量 57.1%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 0.71,
-        "margin_change_5d_pct": 0.87,
+        "pbr": 0.69,
+        "margin_change_5d_pct": 2.2,
         "short_margin_ratio": 0.0,
         "foreign_net": -266563.0,
         "foreign_consecutive_sell_days": 2,
@@ -1232,11 +1365,11 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 0.9%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 2.2%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": [
-          "PBR 0.71(<1.2,評價已明顯偏低)"
+          "PBR 0.69(<1.2,評價已明顯偏低)"
         ]
       },
       "missing": []
@@ -1254,7 +1387,7 @@
       "foreign_note": "外資連買 1 天,總共 71 張,約 $3614 萬,佔該股成交量 3.4%、佔全市場外資買超 0.0%,注意長線變化",
       "trust_note": "此股投信買進 26 張,約 $1329 萬,佔該股成交量 1.2%、佔全市場投信買超 0.0%,注意可能是短打",
       "metrics": {
-        "pbr": 6.6,
+        "pbr": 6.3,
         "margin_change_5d_pct": 9.43,
         "short_margin_ratio": 1.04,
         "foreign_net": 70729.0,
@@ -1278,7 +1411,7 @@
         "real_crash": [
           "融資5日增幅 9.4%(>-10%,散戶還沒認賠減倉)",
           "券資比 1.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 6.60(>1.5,還沒跌到便宜)"
+          "PBR 6.30(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
           "外資買超或中性(70,729 股),趁機承接"
@@ -1299,7 +1432,7 @@
       "foreign_note": "外資連賣 2 天,總共 848 張,約 $1287 萬,佔該股成交量 5.1%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.92,
+        "pbr": 1.89,
         "margin_change_5d_pct": null,
         "short_margin_ratio": null,
         "foreign_net": -119773.0,
@@ -1321,7 +1454,7 @@
       },
       "reasons": {
         "real_crash": [
-          "PBR 1.92(>1.5,還沒跌到便宜)"
+          "PBR 1.89(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
           "今日量縮(4,618,370 → 2,340,189,賣壓漸緩)"
@@ -1345,7 +1478,7 @@
       "foreign_note": "外資連賣 3 天,總共 690 張,約 $2539 萬,佔該股成交量 7.7%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 4.6,
+        "pbr": 4.39,
         "margin_change_5d_pct": -0.94,
         "short_margin_ratio": 0.0,
         "foreign_net": -29000.0,
@@ -1370,96 +1503,11 @@
           "外資連續賣超 3 天(≥3)",
           "融資5日增幅 -0.9%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 4.60(>1.5,還沒跌到便宜)"
+          "PBR 4.39(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": [
           "今日量縮(864,075 → 377,232,賣壓漸緩)"
         ]
-      },
-      "missing": []
-    },
-    {
-      "stock_id": "9935",
-      "stock_name": "慶豐富",
-      "crash_score": 0,
-      "is_real_crash": true,
-      "real_crash_score": 70,
-      "is_fake_crash": false,
-      "fake_crash_score": 0,
-      "is_divergence": true,
-      "divergence_reason": "外資賣超 522,000 股、投信買進 6,466 股,方向背離,可能是投信短打",
-      "foreign_note": "外資連賣 3 天,總共 627 張,約 $1149 萬,佔該股成交量 28.6%、佔全市場外資賣超 0.1%,注意長線變化",
-      "trust_note": "此股投信買進 6 張,約 $12 萬,佔該股成交量 0.4%、佔全市場投信買超 0.0%,注意可能是短打",
-      "metrics": {
-        "pbr": 1.26,
-        "margin_change_5d_pct": 0.0,
-        "short_margin_ratio": 0.0,
-        "foreign_net": -522000.0,
-        "foreign_consecutive_sell_days": 3,
-        "trust_net": 6466.0,
-        "foreign_streak_days": 3,
-        "foreign_streak_direction": "sell",
-        "foreign_streak_shares": -627051.0,
-        "foreign_streak_amount": -11486211.25,
-        "foreign_pct_of_volume": 28.61,
-        "foreign_pct_of_market": 0.1,
-        "trust_amount": 117034.6,
-        "trust_pct_of_volume": 0.35,
-        "trust_pct_of_market": 0.01,
-        "vol_ratio": 6.11,
-        "close": 18.1,
-        "volume": 1824504.0,
-        "prev_volume": 193702.0
-      },
-      "reasons": {
-        "real_crash": [
-          "外資連續賣超 3 天(≥3)",
-          "融資5日增幅 0.0%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
-        ],
-        "fake_crash": []
-      },
-      "missing": []
-    },
-    {
-      "stock_id": "5306",
-      "stock_name": "桂盟",
-      "crash_score": 0,
-      "is_real_crash": false,
-      "real_crash_score": 30,
-      "is_fake_crash": false,
-      "fake_crash_score": 0,
-      "is_divergence": false,
-      "divergence_reason": "",
-      "foreign_note": "外資連賣 2 天,總共 153 張,約 $1356 萬,佔該股成交量 36.2%、佔全市場外資賣超 0.0%,注意長線變化",
-      "trust_note": null,
-      "metrics": {
-        "pbr": 1.23,
-        "margin_change_5d_pct": -0.17,
-        "short_margin_ratio": 0.0,
-        "foreign_net": -148000.0,
-        "foreign_consecutive_sell_days": 2,
-        "trust_net": 0.0,
-        "foreign_streak_days": 2,
-        "foreign_streak_direction": "sell",
-        "foreign_streak_shares": -152953.0,
-        "foreign_streak_amount": -13558629.0,
-        "foreign_pct_of_volume": 36.2,
-        "foreign_pct_of_market": 0.03,
-        "trust_amount": 0.0,
-        "trust_pct_of_volume": 0.0,
-        "trust_pct_of_market": 0.0,
-        "vol_ratio": 4.43,
-        "close": 88.5,
-        "volume": 408857.0,
-        "prev_volume": 71616.0
-      },
-      "reasons": {
-        "real_crash": [
-          "融資5日增幅 -0.2%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
-        ],
-        "fake_crash": []
       },
       "missing": []
     },
@@ -1476,8 +1524,8 @@
       "foreign_note": "外資連賣 4 天,總共 120 張,約 $230 萬,佔該股成交量 26.4%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.77,
-        "margin_change_5d_pct": 1.08,
+        "pbr": 1.7,
+        "margin_change_5d_pct": 1.81,
         "short_margin_ratio": 0.04,
         "foreign_net": -90000.0,
         "foreign_consecutive_sell_days": 4,
@@ -1499,51 +1547,9 @@
       "reasons": {
         "real_crash": [
           "外資連續賣超 4 天(≥3)",
-          "融資5日增幅 1.1%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 1.8%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.77(>1.5,還沒跌到便宜)"
-        ],
-        "fake_crash": []
-      },
-      "missing": []
-    },
-    {
-      "stock_id": "3437",
-      "stock_name": "榮創",
-      "crash_score": 0,
-      "is_real_crash": false,
-      "real_crash_score": 30,
-      "is_fake_crash": false,
-      "fake_crash_score": 0,
-      "is_divergence": false,
-      "divergence_reason": "",
-      "foreign_note": "外資連賣 1 天,總共 859 張,約 $1559 萬,佔該股成交量 35.6%、佔全市場外資賣超 0.2%,注意長線變化",
-      "trust_note": null,
-      "metrics": {
-        "pbr": 1.28,
-        "margin_change_5d_pct": 13.79,
-        "short_margin_ratio": 2.44,
-        "foreign_net": -859000.0,
-        "foreign_consecutive_sell_days": 1,
-        "trust_net": 0.0,
-        "foreign_streak_days": 1,
-        "foreign_streak_direction": "sell",
-        "foreign_streak_shares": -859000.0,
-        "foreign_streak_amount": -15590849.999999998,
-        "foreign_pct_of_volume": 35.56,
-        "foreign_pct_of_market": 0.17,
-        "trust_amount": 0.0,
-        "trust_pct_of_volume": 0.0,
-        "trust_pct_of_market": 0.0,
-        "vol_ratio": 3.93,
-        "close": 18.15,
-        "volume": 2415950.0,
-        "prev_volume": 2294782.0
-      },
-      "reasons": {
-        "real_crash": [
-          "融資5日增幅 13.8%(>-10%,散戶還沒認賠減倉)",
-          "券資比 2.4%(<5%,空方還沒大量進場對敲)"
+          "PBR 1.70(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1562,7 +1568,7 @@
       "foreign_note": "外資連賣 1 天,總共 173 張,約 $7167 萬,佔該股成交量 13.2%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 6.02,
+        "pbr": 5.88,
         "margin_change_5d_pct": 35.0,
         "short_margin_ratio": 0.23,
         "foreign_net": -172915.0,
@@ -1586,7 +1592,7 @@
         "real_crash": [
           "融資5日增幅 35.0%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.2%(<5%,空方還沒大量進場對敲)",
-          "PBR 6.02(>1.5,還沒跌到便宜)"
+          "PBR 5.88(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1605,7 +1611,7 @@
       "foreign_note": "外資連賣 2 天,總共 1,036 張,約 $2.2 億,佔該股成交量 55.5%、佔全市場外資賣超 0.2%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 2.35,
+        "pbr": 2.2,
         "margin_change_5d_pct": 0.36,
         "short_margin_ratio": 0.0,
         "foreign_net": -991490.0,
@@ -1629,7 +1635,7 @@
         "real_crash": [
           "融資5日增幅 0.4%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 2.35(>1.5,還沒跌到便宜)"
+          "PBR 2.20(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1648,7 +1654,7 @@
       "foreign_note": "外資連賣 3 天,總共 1,825 張,約 $2.8 億,佔該股成交量 5.5%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 11.12,
+        "pbr": 10.74,
         "margin_change_5d_pct": 13.55,
         "short_margin_ratio": 3.42,
         "foreign_net": -641136.0,
@@ -1673,7 +1679,7 @@
           "外資連續賣超 3 天(≥3)",
           "融資5日增幅 13.5%(>-10%,散戶還沒認賠減倉)",
           "券資比 3.4%(<5%,空方還沒大量進場對敲)",
-          "PBR 11.12(>1.5,還沒跌到便宜)"
+          "PBR 10.74(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1692,7 +1698,7 @@
       "foreign_note": "外資連賣 2 天,總共 220 張,約 $1630 萬,佔該股成交量 15.8%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 3.01,
+        "pbr": 2.83,
         "margin_change_5d_pct": -2.39,
         "short_margin_ratio": 0.06,
         "foreign_net": -167992.0,
@@ -1716,7 +1722,7 @@
         "real_crash": [
           "融資5日增幅 -2.4%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)",
-          "PBR 3.01(>1.5,還沒跌到便宜)"
+          "PBR 2.83(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1735,9 +1741,9 @@
       "foreign_note": "外資連賣 1 天,總共 293 張,約 $827 萬,佔該股成交量 57.6%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.61,
-        "margin_change_5d_pct": -0.89,
-        "short_margin_ratio": 0.05,
+        "pbr": 1.53,
+        "margin_change_5d_pct": 1.04,
+        "short_margin_ratio": 0.1,
         "foreign_net": -293160.0,
         "foreign_consecutive_sell_days": 1,
         "trust_net": 0.0,
@@ -1757,9 +1763,9 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 -0.9%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.61(>1.5,還沒跌到便宜)"
+          "融資5日增幅 1.0%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.1%(<5%,空方還沒大量進場對敲)",
+          "PBR 1.53(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1778,7 +1784,7 @@
       "foreign_note": "外資連賣 1 天,總共 2,000 張,約 $73.0 億,佔該股成交量 35.8%、佔全市場外資賣超 0.4%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 5.79,
+        "pbr": 5.22,
         "margin_change_5d_pct": -0.78,
         "short_margin_ratio": 0.58,
         "foreign_net": -2000286.0,
@@ -1802,7 +1808,7 @@
         "real_crash": [
           "融資5日增幅 -0.8%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.6%(<5%,空方還沒大量進場對敲)",
-          "PBR 5.79(>1.5,還沒跌到便宜)"
+          "PBR 5.22(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1813,7 +1819,7 @@
       "stock_name": "友達",
       "crash_score": 0,
       "is_real_crash": false,
-      "real_crash_score": 50,
+      "real_crash_score": 30,
       "is_fake_crash": false,
       "fake_crash_score": 0,
       "is_divergence": false,
@@ -1821,7 +1827,7 @@
       "foreign_note": "外資連賣 1 天,總共 101,829 張,約 $30.8 億,佔該股成交量 19.6%、佔全市場外資賣超 19.8%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.52,
+        "pbr": 1.48,
         "margin_change_5d_pct": 2.15,
         "short_margin_ratio": 3.7,
         "foreign_net": -101829368.0,
@@ -1835,7 +1841,7 @@
         "foreign_pct_of_market": 19.84,
         "trust_amount": -990650.6,
         "trust_pct_of_volume": 0.01,
-        "trust_pct_of_market": 0.28,
+        "trust_pct_of_market": 0.27,
         "vol_ratio": 2.3,
         "close": 30.2,
         "volume": 519203137.0,
@@ -1844,8 +1850,7 @@
       "reasons": {
         "real_crash": [
           "融資5日增幅 2.1%(>-10%,散戶還沒認賠減倉)",
-          "券資比 3.7%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.52(>1.5,還沒跌到便宜)"
+          "券資比 3.7%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": []
       },
@@ -1864,7 +1869,7 @@
       "foreign_note": "外資連賣 2 天,總共 20,082 張,約 $17.0 億,佔該股成交量 24.6%、佔全市場外資賣超 2.6%,注意長線變化",
       "trust_note": "此股投信買進 5,199 張,約 $4.3 億,佔該股成交量 9.5%、佔全市場投信買超 7.1%,注意可能是短打",
       "metrics": {
-        "pbr": 1.69,
+        "pbr": 1.64,
         "margin_change_5d_pct": 2.12,
         "short_margin_ratio": 3.88,
         "foreign_net": -13533826.0,
@@ -1878,7 +1883,7 @@
         "foreign_pct_of_market": 2.64,
         "trust_amount": 434636400.0,
         "trust_pct_of_volume": 9.46,
-        "trust_pct_of_market": 7.14,
+        "trust_pct_of_market": 7.06,
         "vol_ratio": 2.28,
         "close": 83.6,
         "volume": 54971557.0,
@@ -1888,7 +1893,7 @@
         "real_crash": [
           "融資5日增幅 2.1%(>-10%,散戶還沒認賠減倉)",
           "券資比 3.9%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.69(>1.5,還沒跌到便宜)"
+          "PBR 1.64(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1907,7 +1912,7 @@
       "foreign_note": "外資連賣 1 天,總共 5,681 張,約 $1.7 億,佔該股成交量 13.6%、佔全市場外資賣超 1.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 3.0,
+        "pbr": 2.76,
         "margin_change_5d_pct": 29.42,
         "short_margin_ratio": 19.21,
         "foreign_net": -5681091.0,
@@ -1930,7 +1935,7 @@
       "reasons": {
         "real_crash": [
           "融資5日增幅 29.4%(>-10%,散戶還沒認賠減倉)",
-          "PBR 3.00(>1.5,還沒跌到便宜)"
+          "PBR 2.76(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -1949,7 +1954,7 @@
       "foreign_note": "外資連賣 2 天,總共 710 張,約 $1308 萬,佔該股成交量 51.5%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.41,
+        "pbr": 1.38,
         "margin_change_5d_pct": -4.56,
         "short_margin_ratio": 0.42,
         "foreign_net": -437000.0,
@@ -1991,7 +1996,7 @@
       "foreign_note": "外資連賣 2 天,總共 627 張,約 $2379 萬,佔該股成交量 45.7%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 2.15,
+        "pbr": 2.08,
         "margin_change_5d_pct": -2.61,
         "short_margin_ratio": 0.11,
         "foreign_net": -615064.0,
@@ -2015,7 +2020,7 @@
         "real_crash": [
           "融資5日增幅 -2.6%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)",
-          "PBR 2.15(>1.5,還沒跌到便宜)"
+          "PBR 2.08(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2034,8 +2039,8 @@
       "foreign_note": "外資連賣 2 天,總共 451 張,約 $2053 萬,佔該股成交量 42.3%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.84,
-        "margin_change_5d_pct": 1.75,
+        "pbr": 1.74,
+        "margin_change_5d_pct": 5.24,
         "short_margin_ratio": 0.07,
         "foreign_net": -411900.0,
         "foreign_consecutive_sell_days": 2,
@@ -2056,9 +2061,9 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 1.7%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 5.2%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.84(>1.5,還沒跌到便宜)"
+          "PBR 1.74(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2077,7 +2082,7 @@
       "foreign_note": "外資連賣 4 天,總共 12,655 張,約 $40.2 億,佔該股成交量 11.8%、佔全市場外資賣超 1.3%,注意長線變化",
       "trust_note": "此股投信買進 75 張,約 $2336 萬,佔該股成交量 0.1%、佔全市場投信買超 0.1%,注意可能是短打",
       "metrics": {
-        "pbr": 2.44,
+        "pbr": 2.27,
         "margin_change_5d_pct": 13.7,
         "short_margin_ratio": 2.85,
         "foreign_net": -6755248.0,
@@ -2102,7 +2107,7 @@
           "外資連續賣超 4 天(≥3)",
           "融資5日增幅 13.7%(>-10%,散戶還沒認賠減倉)",
           "券資比 2.8%(<5%,空方還沒大量進場對敲)",
-          "PBR 2.44(>1.5,還沒跌到便宜)"
+          "PBR 2.27(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2121,9 +2126,9 @@
       "foreign_note": "外資連賣 4 天,總共 4,042 張,約 $31.1 億,佔該股成交量 6.0%、佔全市場外資賣超 0.2%,注意長線變化",
       "trust_note": "此股投信買進 758 張,約 $5.6 億,佔該股成交量 5.1%、佔全市場投信買超 1.0%,注意可能是短打",
       "metrics": {
-        "pbr": 12.89,
-        "margin_change_5d_pct": 20.04,
-        "short_margin_ratio": 3.47,
+        "pbr": 11.95,
+        "margin_change_5d_pct": 6.94,
+        "short_margin_ratio": 3.33,
         "foreign_net": -897088.0,
         "foreign_consecutive_sell_days": 4,
         "trust_net": 757500.0,
@@ -2135,7 +2140,7 @@
         "foreign_pct_of_market": 0.17,
         "trust_amount": 563580000.0,
         "trust_pct_of_volume": 5.08,
-        "trust_pct_of_market": 1.04,
+        "trust_pct_of_market": 1.03,
         "vol_ratio": 1.8,
         "close": 744.0,
         "volume": 14914692.0,
@@ -2144,9 +2149,9 @@
       "reasons": {
         "real_crash": [
           "外資連續賣超 4 天(≥3)",
-          "融資5日增幅 20.0%(>-10%,散戶還沒認賠減倉)",
-          "券資比 3.5%(<5%,空方還沒大量進場對敲)",
-          "PBR 12.89(>1.5,還沒跌到便宜)"
+          "融資5日增幅 6.9%(>-10%,散戶還沒認賠減倉)",
+          "券資比 3.3%(<5%,空方還沒大量進場對敲)",
+          "PBR 11.95(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2165,8 +2170,8 @@
       "foreign_note": "外資連賣 1 天,總共 403 張,約 $2544 萬,佔該股成交量 44.3%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.88,
-        "margin_change_5d_pct": -0.25,
+        "pbr": 1.85,
+        "margin_change_5d_pct": -0.95,
         "short_margin_ratio": 0.03,
         "foreign_net": -403239.0,
         "foreign_consecutive_sell_days": 1,
@@ -2187,9 +2192,9 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 -0.3%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 -1.0%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.0%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.88(>1.5,還沒跌到便宜)"
+          "PBR 1.85(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2208,9 +2213,9 @@
       "foreign_note": "外資連賣 2 天,總共 98 張,約 $6845 萬,佔該股成交量 15.9%、佔全市場外資賣超 0.0%,注意長線變化",
       "trust_note": "此股投信買進 1 張,約 $63 萬,佔該股成交量 0.2%、佔全市場投信買超 0.0%,注意可能是短打",
       "metrics": {
-        "pbr": 6.42,
-        "margin_change_5d_pct": 2.25,
-        "short_margin_ratio": 1.7,
+        "pbr": 6.25,
+        "margin_change_5d_pct": 1.9,
+        "short_margin_ratio": 1.67,
         "foreign_net": -67571.0,
         "foreign_consecutive_sell_days": 2,
         "trust_net": 919.0,
@@ -2230,9 +2235,9 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 2.3%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 1.9%(>-10%,散戶還沒認賠減倉)",
           "券資比 1.7%(<5%,空方還沒大量進場對敲)",
-          "PBR 6.42(>1.5,還沒跌到便宜)"
+          "PBR 6.25(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
@@ -2251,9 +2256,9 @@
       "foreign_note": "外資連賣 1 天,總共 464 張,約 $4130 萬,佔該股成交量 54.5%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": null,
       "metrics": {
-        "pbr": 1.32,
-        "margin_change_5d_pct": 18.02,
-        "short_margin_ratio": 0.0,
+        "pbr": 1.29,
+        "margin_change_5d_pct": 18.16,
+        "short_margin_ratio": 0.24,
         "foreign_net": -464096.0,
         "foreign_consecutive_sell_days": 1,
         "trust_net": 0.0,
@@ -2273,8 +2278,8 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 18.0%(>-10%,散戶還沒認賠減倉)",
-          "券資比 0.0%(<5%,空方還沒大量進場對敲)"
+          "融資5日增幅 18.2%(>-10%,散戶還沒認賠減倉)",
+          "券資比 0.2%(<5%,空方還沒大量進場對敲)"
         ],
         "fake_crash": []
       },
@@ -2335,9 +2340,9 @@
       "foreign_note": "外資連賣 1 天,總共 622 張,約 $1.7 億,佔該股成交量 45.5%、佔全市場外資賣超 0.1%,注意長線變化",
       "trust_note": "此股投信買進 122 張,約 $3410 萬,佔該股成交量 8.9%、佔全市場投信買超 0.2%,注意可能是短打",
       "metrics": {
-        "pbr": 1.9,
-        "margin_change_5d_pct": -0.21,
-        "short_margin_ratio": 0.05,
+        "pbr": 1.87,
+        "margin_change_5d_pct": -1.44,
+        "short_margin_ratio": 0.08,
         "foreign_net": -621822.0,
         "foreign_consecutive_sell_days": 1,
         "trust_net": 122000.0,
@@ -2357,9 +2362,9 @@
       },
       "reasons": {
         "real_crash": [
-          "融資5日增幅 -0.2%(>-10%,散戶還沒認賠減倉)",
+          "融資5日增幅 -1.4%(>-10%,散戶還沒認賠減倉)",
           "券資比 0.1%(<5%,空方還沒大量進場對敲)",
-          "PBR 1.90(>1.5,還沒跌到便宜)"
+          "PBR 1.87(>1.5,還沒跌到便宜)"
         ],
         "fake_crash": []
       },
