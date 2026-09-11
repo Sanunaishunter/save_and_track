@@ -34,6 +34,16 @@ compute_fomo.py 驗證過,直接沿用同一個 fm.request() 呼叫方式。
 新代號加進 stock_lookup*.json 之後,只想更新那一檔,不想連帶重抓清單
 裡其他二十幾檔(額度、時間都浪費)。不給 --only 時行為跟以前完全一樣
 (整份清單重抓、直接覆蓋 out-file)。
+
+2026-09-11 --only 遇到清單裡沒有的代號,從「報錯要求先手動加清單」改成
+「自動加進 --list-file 再抓」——原本的報錯只是防手滑打錯代號,但使用者
+的預期是「這支工具就是打代號想抓誰就抓誰」,兩步驟(先編輯 JSON、再觸發
+抓取)對這個用途來說是多餘的摩擦。技術上本來就沒有回補限制:開高低收量
+來自 data/history(每天存全市場,不看清單),融資融券/外資投信抓的是
+FinMind 過去 60 天區間(不是只抓「今天」),新代號一樣能拿到完整歷史,
+不會缺一截。防手滑改成用 common.LISTED_CODE(上市普通股 4 碼)格式檢查
+取代「必須先在清單裡」——格式明顯不對(例如 TPEx/ETF 常見的 0 開頭代號)
+還是會擋下來,只是不再要求代號已經被加過。
 """
 
 import argparse
@@ -159,7 +169,8 @@ def parse_args():
                     help="輸出檔路徑(預設 data/stock-lookup-latest.json)")
     p.add_argument("--only", default="",
                     help="只重抓這幾檔(逗號分隔,例如 2634 或 2634,2330),"
-                         "其餘代號沿用舊的 out-file 內容;留空 = 整份清單重抓(舊行為)")
+                         "其餘代號沿用舊的 out-file 內容;不在清單裡的代號會自動加進"
+                         "--list-file 再抓;留空 = 整份清單重抓(舊行為)")
     return p.parse_args()
 
 
@@ -169,11 +180,16 @@ def main():
 
     only = [c.strip() for c in args.only.split(",") if c.strip()]
     if only:
-        missing = [c for c in only if c not in codes]
-        if missing:
-            print("錯誤:--only 裡的 %s 不在 %s,先把代號加進清單再重抓"
-                  % ("、".join(missing), args.list_file), file=sys.stderr)
+        bad = [c for c in only if not common.LISTED_CODE.match(c)]
+        if bad:
+            print("錯誤:--only 裡的 %s 不是合法的上市普通股代號(4 碼、開頭非 0)"
+                  % "、".join(bad), file=sys.stderr)
             return 1
+        added = [c for c in only if c not in codes]
+        if added:
+            codes = codes + added
+            common.write_json(args.list_file, codes)
+            print("  清單裡沒有 %s,已自動加進 %s" % ("、".join(added), args.list_file))
     fetch_codes = [c for c in codes if c in only] if only else codes
 
     history_dates = common.history_dates()

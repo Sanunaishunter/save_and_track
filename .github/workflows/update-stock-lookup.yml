@@ -2,8 +2,9 @@ name: 更新個股查詢資料(單檔或整份清單)
 
 # 只跑 fetch_stock_lookup.py 這一步,不牽動 daily-scan.yml 的其他步驟(爆量/
 # 暴跌/產業流向/FOMO/暴跌FOMO 那些今天大概率已經跑過,重跑只是白白重打
-# FinMind、浪費額度跟時間)。手動把新代號加進三份 stock_lookup*.json 其中
-# 一份之後,用這支立刻補資料,不用等明天排程,也不用整份清單重抓。
+# FinMind、浪費額度跟時間)。only 填清單裡已經有的代號就只重抓那幾檔;
+# 填清單裡沒有的代號,fetch_stock_lookup.py 會自動幫你加進對應的
+# stock_lookup*.json 再抓,不用先手動編輯清單檔——打代號就能抓一檔新的。
 
 on:
   workflow_dispatch:
@@ -15,7 +16,7 @@ on:
         type: choice
         options: [fomo, scan, crashfomo]
       only:
-        description: '只重抓這幾檔(逗號分隔,例如 2634 或 2634,2330);留空 = 整份清單重抓'
+        description: '只重抓這幾檔(逗號分隔,例如 2634 或 2634,2330);清單裡沒有的代號會自動加進去;留空 = 整份清單重抓'
         required: false
         default: ''
 
