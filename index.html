@@ -59,6 +59,7 @@
   </div>
   <nav class="views" id="views">
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
+    <button type="button" class="viewbtn" data-view="trail">移動停利</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
@@ -93,6 +94,29 @@
   <div id="empty" class="empty" hidden>
     <p class="empty-title">這裡還沒有股票</p>
     <p class="empty-sub">按右上角「＋ 新增」開始走第一步。</p>
+  </div>
+</main>
+
+<!-- 移動停利觀察:彙總所有「進行中」且出場設定為移動停利模式的紀錄,
+     方便一次掃過去判斷該不該清倉,不用逐檔點開追蹤詳情頁看。純觀察,
+     不會自動下單,點列可以展開細節,細節裡的「在追蹤分頁管理」會開
+     既有的個股詳情面板(#detail),沿用裡面的標記出場/切換方向按鈕。 -->
+<main class="list-wrap" id="trail-wrap" hidden>
+  <div class="scan-meta" id="trail-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="trail-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">現價</th>
+          <th class="num">損益</th>
+          <th class="num">距峰回落</th>
+          <th>狀態</th>
+        </tr>
+      </thead>
+      <tbody id="trail-tbody"></tbody>
+    </table>
   </div>
 </main>
 
