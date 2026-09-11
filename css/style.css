@@ -90,7 +90,9 @@ body {
 .tabs::-webkit-scrollbar { display: none; }
 
 .tab {
-  flex: 1 0 auto;
+  /* flex:0 而不是 1 —— 跟下面 .viewbtn 同一種「自然寬度 + 橫向捲動」處理,
+     不要撐滿整排寬度,才滑得動,跟「追蹤／移動停利」那排視圖切換一致。 */
+  flex: 0 0 auto;
   border: 1px solid transparent;
   background: var(--panel);
   color: var(--text-dim);
@@ -654,6 +656,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
   gap: 6px;
   flex-wrap: wrap;
 }
+
+.stats-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.stats-toolbar .dim { font-size: 12px; }
 
 .ctrl-label { color: var(--muted); font-size: 12px; }
 

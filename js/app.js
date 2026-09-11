@@ -7,6 +7,7 @@
 
   var STORAGE_KEY = 'stock_pipeline_v1';
   var IMPORT_BACKUP_KEY = 'stock_pipeline_v1__before_import';
+  var STATS_RESET_KEY = 'stock_pipeline_v1__stats_reset_at';
 
   var STEPS = [
     { n: 1, title: '觸發', type: 'text',
@@ -83,6 +84,7 @@
   // ---------------------------------------------------------------- 狀態
 
   var data = [];            // 全部紀錄
+  var statsResetAt = null;  // 'YYYY-MM-DD',見 resetAllStats() —— 只是統計的起算基準,不影響 data 本身
   var currentTab = 'active';
   var currentId = null;     // 詳情頁正在看的 id
   var openStep = 1;         // 詳情頁展開中的步驟
@@ -1200,6 +1202,65 @@
       data = [];
       if (saveAll()) toast('已刪除全部追蹤紀錄', 'ok');
       closeDetail();
+      renderPosSummary();
+    });
+  }
+
+  function loadStatsResetAt() {
+    try {
+      return window.localStorage.getItem(STATS_RESET_KEY) || null;
+    } catch (e) { return null; }
+  }
+
+  function saveStatsResetAt(v) {
+    try {
+      if (v) window.localStorage.setItem(STATS_RESET_KEY, v);
+      else window.localStorage.removeItem(STATS_RESET_KEY);
+      return true;
+    } catch (e) {
+      toast('儲存統計基準失敗:' + (e.message || e), 'err');
+      return false;
+    }
+  }
+
+  /** dateStr(YYYY-MM-DD)是不是在目前的統計基準之後——沒設基準(null)就是
+   * 全部歷史都算,跟改這個功能之前的行為一樣。 */
+  function afterStatsReset(dateStr) {
+    return !statsResetAt || (!!dateStr && dateStr >= statsResetAt);
+  }
+
+  function statsResetNoteText() {
+    return statsResetAt ? ('統計基準:只算 ' + statsResetAt + ' (含)之後') : '統計基準:全部歷史都算';
+  }
+
+  /**
+   * 「重設統計」:不刪除任何 exit_result / manual_exit_result / 追蹤紀錄,
+   * 只是把「自動出場統計」「全出統計」「進場訊號準度統計」這三塊的起算
+   * 時間點設成今天——今天以前發生的出場/進場不會再計入這三個統計數字,
+   * 但列表裡的紀錄跟持倉損益完全不受影響,想恢復的話同一顆按鈕可以清除
+   * 基準。用 afterStatsReset() 統一比對,見 exitStatsHtml() / manualExitStatsHtml() /
+   * signalAccuracyHtml()。
+   */
+  function resetAllStats() {
+    var actions = statsResetAt
+      ? [
+          { label: '重設為今天(' + todayStr() + ')', value: 'set', cls: 'btn-danger' },
+          { label: '清除基準,恢復完整統計', value: 'clear', cls: 'btn-outline' }
+        ]
+      : [{ label: '確認重設', value: 'set', cls: 'btn-danger' }];
+    dialog({
+      title: '重設統計基準?',
+      message: (statsResetAt ? '目前基準:只算 ' + statsResetAt + ' (含)之後的紀錄。\n\n' : '') +
+        '不會刪除任何持倉、出場快照或追蹤紀錄——只是「自動出場統計」「全出統計」' +
+        '「進場訊號準度統計」這三塊,之後只算今天(' + todayStr() + ')以後新發生的出場/進場,' +
+        '今天以前的不會再計入統計數字,但原始紀錄跟損益還是看得到、想重新統計回去隨時可以清除基準。',
+      actions: actions
+    }).then(function (res) {
+      if (res.action !== 'set' && res.action !== 'clear') return;
+      var next = res.action === 'set' ? todayStr() : null;
+      if (!saveStatsResetAt(next)) return;
+      statsResetAt = next;
+      toast(next ? '已重設統計基準為 ' + next : '已恢復完整統計', 'ok');
       renderPosSummary();
     });
   }
@@ -4709,7 +4770,7 @@
    * 展開狀態。
    */
   function exitStatsHtml() {
-    var exited = data.filter(function (r) { return r.exit_result; });
+    var exited = data.filter(function (r) { return r.exit_result && afterStatsReset(r.exit_result.date); });
     if (!exited.length) return '';
 
     var dirGroups = [
@@ -4822,7 +4883,7 @@
    * 用 manual_exit_result 這份「按下全出當下」的快照算。
    */
   function manualExitStatsHtml() {
-    var exited = data.filter(function (r) { return r.manual_exit_result; });
+    var exited = data.filter(function (r) { return r.manual_exit_result && afterStatsReset(r.manual_exit_result.date); });
     if (!exited.length) return '';
 
     var longRecs = exited.filter(function (r) { return r.direction !== 'short'; });
@@ -4968,8 +5029,9 @@
 
   function signalAccuracyHtml() {
     if (!quotes) return '';
-    var longs = data.filter(function (r) { return r.direction !== 'short'; });
-    var shorts = data.filter(function (r) { return r.direction === 'short'; });
+    var counted = data.filter(function (r) { return afterStatsReset(String(r.created_at || '').slice(0, 10)); });
+    var longs = counted.filter(function (r) { return r.direction !== 'short'; });
+    var shorts = counted.filter(function (r) { return r.direction === 'short'; });
     var sections = signalAccuracyGroupHtml(longs, '看多') + signalAccuracyGroupHtml(shorts, '看空');
     if (!sections) return '';
 
@@ -5074,6 +5136,9 @@
   }
 
   function renderPosSummary() {
+    var resetNoteBox = el('stats-reset-note');
+    if (resetNoteBox) resetNoteBox.textContent = statsResetNoteText();
+
     // 訊號準度統計跟有沒有持倉無關(還沒買也可能有進場訊號分類),獨立更新,
     // 不要放進下面「沒有持倉就整塊隱藏」的 early return 之後。
     var sigBox = el('signal-stats');
@@ -5768,6 +5833,7 @@
     el('btn-new').addEventListener('click', function () { openForm(null); });
     el('btn-exit-all').addEventListener('click', doExitAll);
     el('btn-delete-all').addEventListener('click', doDeleteAll);
+    el('btn-reset-stats').addEventListener('click', resetAllStats);
     el('version-continue').addEventListener('click', hideVersionPage);
     el('btn-export').addEventListener('click', exportBackup);
     el('btn-import').addEventListener('click', function () { el('import-file').click(); });
@@ -5913,6 +5979,7 @@
         ' 現在填的內容關掉頁面就會不見,請先解決儲存權限,或至少隨時「匯出」保存。');
     }
     data = loadAll();
+    statsResetAt = loadStatsResetAt();
     bind();
     renderList();
     renderPosSummary();
