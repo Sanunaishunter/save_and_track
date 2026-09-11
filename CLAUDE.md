@@ -355,6 +355,29 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
       且清單/輸出檔都沒被動到、代號本來就在清單裡時行為跟舊版一樣(不寫
       清單,也不印「已自動加進」)、一次給多個代號時只有真的缺的那個被
       加進清單。
+20. **2026-09-11 清掉三支已經用完的一次性 workflow(使用者要求)。** 刪了
+    `.github/workflows/init-lookup-crashfomo.yml`(初始化暴跌FOMO個股查詢,
+    `daily-scan.yml` 早就接手每天更新)、`probe-signal-batch.yml`(量縮系列
+    標記批次測試)、`probe-stock-history.yml`(探測 TWSE STOCK_DAY 能不能查
+    到比 `data/history` 更早的價格)——三支的 workflow 檔名/標題都自己寫
+    「一次性,用完即刪/可刪」,而且刪之前逐一 grep 過整個 repo,除了自己
+    的 workflow 檔案沒有任何地方引用,刪掉不影響任何現有功能。
+    - `probe-stock-history.yml` 對應的腳本 `scripts/probe_stock_history.py`
+      一起刪了(自成一支、沒被其他程式 import)。**但沒找到這支 probe 的
+      結論被寫進 `data/README.md`**——照理說 probe 用完要把結論記下來,
+      這支好像沒記到(或者根本沒被跑過)。git 歷史還在,想找回來用
+      `git log --all --full-history -- scripts/probe_stock_history.py`。
+    - `probe-signal-batch.yml` 只刪了 workflow,**腳本 `scripts/probe_signal_batch.py`
+      沒有刪**——`scripts/analyze_signal_outcomes.py` 直接 `import
+      probe_signal_batch as p` 拿裡面的判斷函式,不是真的用完即丟的
+      probe,只是命名跟著 probe-*.yml 系列取的。
+    - **沒有刪 `scan-full-candidates.yml`**,雖然它的標題也寫「一次性」、
+      `data/README.md` 也說它跟 `probe-*.yml` 系列同一個慣例——但
+      grep 出來發現 `index.html` 的「9/8全掃」分頁使用說明裡**直接教
+      使用者「想補新的一天要再手動觸發一次 `scan-full-candidates.yml`」**,
+      `scripts/append_fullscan_price.py` 的錯誤訊息也是同一句話。這支
+      實際上是「隨時可以重新觸發拿新快照」的常駐工具,不是真的一次性,
+      刪掉會讓 app 內建的操作說明變成空話,所以留著。
 
 ---
 
