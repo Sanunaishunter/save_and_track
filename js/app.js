@@ -1526,6 +1526,42 @@
     return text;
   }
 
+  /**
+   * 進出場計算機:填進場價/停損價/目標價算風險報酬比,選填預算金額順便算
+   * 建議股數跟潛在虧損/獲利金額。預設是做多情境(停損在下方、目標在
+   * 上方),不特別處理放空方向——跟估值試算一樣純前端算,不接任何資料源。
+   * 股數用簡單整除,**不算手續費**(手續費精算是「部位」分頁零股試算
+   * 自己的工作,兩邊故意不共用邏輯,避免使用者搞不清楚該用哪個工具算
+   * 實際下單金額)。三個價位缺一個或不是正數就回傳 null。
+   */
+  function thinkingRiskRewardText() {
+    var entry = parseFloat(el('tp-rr-entry').value);
+    var stop = parseFloat(el('tp-rr-stop').value);
+    var target = parseFloat(el('tp-rr-target').value);
+    if (!(entry > 0) || !(stop > 0) || !(target > 0)) return null;
+    var stopPct = (stop - entry) / entry;
+    var targetPct = (target - entry) / entry;
+    var text = '進出場計算:進場 ' + entry + ',停損 ' + stop + '(' + (stopPct >= 0 ? '+' : '') +
+      (stopPct * 100).toFixed(1) + '%),目標 ' + target + '(' + (targetPct >= 0 ? '+' : '') +
+      (targetPct * 100).toFixed(1) + '%)';
+    var lossAbsPct = Math.abs(stopPct), gainAbsPct = Math.abs(targetPct);
+    if (lossAbsPct > 0) text += ',風險報酬比 1:' + (gainAbsPct / lossAbsPct).toFixed(1);
+
+    var budget = parseFloat(el('tp-rr-budget').value);
+    if (budget > 0) {
+      var shares = Math.floor(budget / entry);
+      if (shares > 0) {
+        var lots = Math.floor(shares / 1000), odd = shares % 1000;
+        var sharesTxt = fmtInt(shares) + ' 股' +
+          (lots ? '(' + lots + ' 張' + (odd ? ' ' + fmtInt(odd) + ' 股' : '') + ')' : '');
+        var lossAmt = shares * (entry - stop), gainAmt = shares * (target - entry);
+        text += ';預算 ' + fmtMoney(budget) + ' → 可買 ' + sharesTxt +
+          ',潛在虧損 ' + fmtMoney(lossAmt) + '、潛在獲利 ' + fmtMoney(gainAmt);
+      }
+    }
+    return text;
+  }
+
   /** 新增/編輯方塊。opts: {mode:'new', parents:[父格 id...]} 或
    * {mode:'edit', nodeId:...}。parents.length > 1 就是合併,parents.length
    * 剛好 1 就是單純接續,parents 是空陣列就是新起點——分岔不是特別的模式,
@@ -1559,22 +1595,39 @@
       '<p class="tp-hint">' + hint + '</p>' +
       '<div class="tp-field-label">常用詞</div>' +
       '<div class="tp-chip-grid">' + chips + '</div>' +
-      '<button type="button" class="tp-valuation-toggle" id="tp-val-toggle">展開估值試算 ▼</button>' +
-      '<div class="tp-valuation-calc" id="tp-val-calc" hidden>' +
+      '<button type="button" class="tp-calc-toggle" id="tp-val-toggle" style="--tp-calc-color:var(--tp-valuation)">展開估值試算 ▼</button>' +
+      '<div class="tp-calc-panel" id="tp-val-calc" hidden>' +
         '<p class="tp-hint">EPS 口徑(近四季 TTM 或預估值)你自己決定,這裡不幫你判斷對錯,' +
           '填之前先想清楚這次用哪種,免得以後忘記。</p>' +
-        '<div class="tp-val-row">' +
-          '<label>EPS<input class="tp-text-input tp-val-input" id="tp-val-eps" type="number" inputmode="decimal" step="0.01" placeholder="例如 15"></label>' +
+        '<div class="tp-calc-row">' +
+          '<label>EPS<input class="tp-text-input tp-calc-input" id="tp-val-eps" type="number" inputmode="decimal" step="0.01" placeholder="例如 15"></label>' +
         '</div>' +
-        '<div class="tp-val-row">' +
-          '<label>本益比下界<input class="tp-text-input tp-val-input" id="tp-val-pe-lo" type="number" inputmode="decimal" step="0.1" placeholder="例如 15"></label>' +
-          '<label>本益比上界<input class="tp-text-input tp-val-input" id="tp-val-pe-hi" type="number" inputmode="decimal" step="0.1" placeholder="例如 25"></label>' +
+        '<div class="tp-calc-row">' +
+          '<label>本益比下界<input class="tp-text-input tp-calc-input" id="tp-val-pe-lo" type="number" inputmode="decimal" step="0.1" placeholder="例如 15"></label>' +
+          '<label>本益比上界<input class="tp-text-input tp-calc-input" id="tp-val-pe-hi" type="number" inputmode="decimal" step="0.1" placeholder="例如 25"></label>' +
         '</div>' +
-        '<div class="tp-val-row">' +
-          '<label>目前股價(選填)<input class="tp-text-input tp-val-input" id="tp-val-price" type="number" inputmode="decimal" step="0.01" placeholder="例如 350"></label>' +
+        '<div class="tp-calc-row">' +
+          '<label>目前股價(選填)<input class="tp-text-input tp-calc-input" id="tp-val-price" type="number" inputmode="decimal" step="0.01" placeholder="例如 350"></label>' +
         '</div>' +
-        '<div class="tp-val-preview" id="tp-val-preview">填 EPS 跟本益比上下界就會算出合理區間。</div>' +
-        '<button type="button" class="btn btn-outline tp-val-apply" id="tp-val-apply">帶入文字</button>' +
+        '<div class="tp-calc-preview" id="tp-val-preview">填 EPS 跟本益比上下界就會算出合理區間。</div>' +
+        '<button type="button" class="btn btn-outline tp-calc-apply" id="tp-val-apply">帶入文字</button>' +
+      '</div>' +
+      '<button type="button" class="tp-calc-toggle" id="tp-rr-toggle" style="--tp-calc-color:var(--text)">展開進出場計算 ▼</button>' +
+      '<div class="tp-calc-panel" id="tp-rr-calc" hidden>' +
+        '<p class="tp-hint">預設是做多的算法(進場買、停損在下方、目標在上方),放空的話數字' +
+          '自己倒過來填,風險報酬比還是算得出來,只是正負號要自己判讀。</p>' +
+        '<div class="tp-calc-row">' +
+          '<label>進場價<input class="tp-text-input tp-calc-input" id="tp-rr-entry" type="number" inputmode="decimal" step="0.01" placeholder="例如 250"></label>' +
+        '</div>' +
+        '<div class="tp-calc-row">' +
+          '<label>停損價<input class="tp-text-input tp-calc-input" id="tp-rr-stop" type="number" inputmode="decimal" step="0.01" placeholder="例如 235"></label>' +
+          '<label>目標價<input class="tp-text-input tp-calc-input" id="tp-rr-target" type="number" inputmode="decimal" step="0.01" placeholder="例如 300"></label>' +
+        '</div>' +
+        '<div class="tp-calc-row">' +
+          '<label>預算金額(選填)<input class="tp-text-input tp-calc-input" id="tp-rr-budget" type="number" inputmode="decimal" step="1" placeholder="例如 250000"></label>' +
+        '</div>' +
+        '<div class="tp-calc-preview" id="tp-rr-preview">填進場價、停損價、目標價就會算出風險報酬比。</div>' +
+        '<button type="button" class="btn btn-outline tp-calc-apply" id="tp-rr-apply">帶入文字</button>' +
       '</div>' +
       '<div class="tp-field-label">文字</div>' +
       '<input class="tp-text-input" id="tp-node-text" placeholder="輸入這一格的想法…" value="' + esc(text) + '">' +
@@ -1605,28 +1658,47 @@
       b.addEventListener('click', function () { pickedCat = b.getAttribute('data-tp-cat'); paintCatPick(); });
     });
 
-    el('tp-val-toggle').addEventListener('click', function () {
-      var calc = el('tp-val-calc');
-      calc.hidden = !calc.hidden;
-      el('tp-val-toggle').textContent = calc.hidden ? '展開估值試算 ▼' : '收合估值試算 ▲';
-    });
-    var valInputs = ['tp-val-eps', 'tp-val-pe-lo', 'tp-val-pe-hi', 'tp-val-price'];
-    valInputs.forEach(function (id) {
-      el(id).addEventListener('input', function () {
-        var t = thinkingValuationText();
-        var box = el('tp-val-preview');
-        box.textContent = t || '填 EPS 跟本益比上下界就會算出合理區間。';
-        box.classList.toggle('has-value', !!t);
+    /** 估值試算/進出場計算共用的接線邏輯:展開收合、即時預覽、帶入文字
+     * 時順便把分類切過去,三者都跟常用詞 chip 是同一種「輔助填字」操作,
+     * 不是獨立資料型態。 */
+    function bindCalcPanel(opts) {
+      el(opts.toggleId).addEventListener('click', function () {
+        var panel = el(opts.panelId);
+        panel.hidden = !panel.hidden;
+        el(opts.toggleId).textContent = (panel.hidden ? '展開' : '收合') + opts.label + (panel.hidden ? ' ▼' : ' ▲');
       });
+      opts.inputIds.forEach(function (id) {
+        el(id).addEventListener('input', function () {
+          var t = opts.computeFn();
+          var box = el(opts.previewId);
+          box.textContent = t || opts.placeholder;
+          box.classList.toggle('has-value', !!t);
+        });
+      });
+      el(opts.applyId).addEventListener('click', function () {
+        var t = opts.computeFn();
+        if (!t) { el(opts.inputIds[0]).focus(); return; }
+        var box = el('tp-node-text');
+        box.value = box.value.trim() ? (box.value.trim() + ';' + t) : t;
+        pickedCat = opts.cat;
+        paintCatPick();
+        Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+      });
+    }
+
+    bindCalcPanel({
+      toggleId: 'tp-val-toggle', panelId: 'tp-val-calc', label: '估值試算',
+      inputIds: ['tp-val-eps', 'tp-val-pe-lo', 'tp-val-pe-hi', 'tp-val-price'],
+      previewId: 'tp-val-preview', applyId: 'tp-val-apply', cat: 'valuation',
+      placeholder: '填 EPS 跟本益比上下界就會算出合理區間。',
+      computeFn: thinkingValuationText
     });
-    el('tp-val-apply').addEventListener('click', function () {
-      var t = thinkingValuationText();
-      if (!t) { el('tp-val-eps').focus(); return; }
-      var box = el('tp-node-text');
-      box.value = box.value.trim() ? (box.value.trim() + ';' + t) : t;
-      pickedCat = 'valuation';
-      paintCatPick();
-      Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+    bindCalcPanel({
+      toggleId: 'tp-rr-toggle', panelId: 'tp-rr-calc', label: '進出場計算',
+      inputIds: ['tp-rr-entry', 'tp-rr-stop', 'tp-rr-target', 'tp-rr-budget'],
+      previewId: 'tp-rr-preview', applyId: 'tp-rr-apply', cat: 'conclude',
+      placeholder: '填進場價、停損價、目標價就會算出風險報酬比。',
+      computeFn: thinkingRiskRewardText
     });
 
     el('tp-sheet-cancel').addEventListener('click', thinkingCloseSheet);
