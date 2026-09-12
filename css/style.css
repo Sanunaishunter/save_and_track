@@ -1557,7 +1557,9 @@ input[type="date"] {
 .tp-canvas { position: relative; min-width: 100%; width: max-content; padding: 22px 18px 30px; }
 .tp-canvas svg { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
 
-.tp-row { display: flex; justify-content: center; gap: 18px; margin-bottom: 46px; position: relative; }
+/* 絕對不要加 position:relative——會讓方塊的 offsetParent 變成這一列自己,
+   offsetTop 全部歸零重算,SVG 連線座標整個錯位(CLAUDE.md 記過這個坑)。 */
+.tp-row { display: flex; justify-content: center; gap: 18px; margin-bottom: 46px; }
 .tp-row:last-child { margin-bottom: 4px; }
 
 .tp-block {
