@@ -86,12 +86,24 @@
   // css/style.css 裡的 --tp-* 系列顏色,結論/出場不佔用另一個顏色,改用
   // 虛線框 + --text 圓點區別「這是終點」。獨立於七個步驟跟持倉之外,
   // 2026-09-12 使用者決定先不跟追蹤分頁互相牽動。
+  // 2026-09-12 第一批 10 詞之後,使用者要求再加一批——有幾個是直接借用
+  // App 其他分頁既有的用語(大盤狀況九宮格的「系統性賣壓」、法人+融資
+  // 交叉分析的「法人同步進場」/「散戶FOMO獨撐」,獵人理論步驟5「力量
+  // 不明」對應這裡的「觀望不確定」),維持全站語彙一致;「外資倒貨」是
+  // 使用者自己在思考路徑裡手打過的自訂文字,收進固定選單。
   var TP_TAGS = [
     { t: '大牛市', cat: 'macro' }, { t: '盤整', cat: 'macro' }, { t: '拉積盤', cat: 'macro' },
+    { t: '空頭', cat: 'macro' }, { t: '系統性賣壓', cat: 'macro' }, { t: '變盤前兆', cat: 'macro' },
     { t: '要看多', cat: 'bull' }, { t: '要看空', cat: 'bear' },
     { t: '外資進場', cat: 'flow' }, { t: '投信進場', cat: 'flow' },
+    { t: '外資倒貨', cat: 'flow' }, { t: '投信倒貨', cat: 'flow' }, { t: '融資暴增', cat: 'flow' },
+    { t: '法人同步進場', cat: 'flow' }, { t: '散戶FOMO獨撐', cat: 'flow' },
     { t: '新技術', cat: 'catalyst' }, { t: '新聞看到的', cat: 'catalyst' },
-    { t: '預計出場', cat: 'conclude' }
+    { t: '法說會', cat: 'catalyst' }, { t: '財報', cat: 'catalyst' },
+    { t: '爆量突破', cat: 'catalyst' }, { t: '跌破月線', cat: 'catalyst' },
+    { t: '觀望不確定', cat: 'note' },
+    { t: '預計出場', cat: 'conclude' }, { t: '分批進場', cat: 'conclude' },
+    { t: '停損', cat: 'conclude' }, { t: '續抱觀察', cat: 'conclude' }
   ];
   var TP_CATS = [
     { k: 'macro', label: '大盤總經', color: 'var(--tp-macro)' },
