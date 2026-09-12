@@ -104,7 +104,10 @@
     { t: '政策風險', cat: 'catalyst' },
     { t: '觀望不確定', cat: 'note' }, { t: '本益比過高', cat: 'note' },
     { t: '預計出場', cat: 'conclude' }, { t: '分批進場', cat: 'conclude' },
-    { t: '停損', cat: 'conclude' }, { t: '續抱觀察', cat: 'conclude' }
+    { t: '停損', cat: 'conclude' }, { t: '續抱觀察', cat: 'conclude' },
+    { t: '拉回進場', cat: 'conclude' }, { t: '突破進場', cat: 'conclude' },
+    { t: '量縮進場', cat: 'conclude' }, { t: '假跌破進場', cat: 'conclude' },
+    { t: '左側佈局', cat: 'conclude' }, { t: '右側確認', cat: 'conclude' }
   ];
   var TP_CATS = [
     { k: 'macro', label: '大盤總經', color: 'var(--tp-macro)' },
@@ -113,7 +116,7 @@
     { k: 'valuation', label: '估值試算', color: 'var(--tp-valuation)' },
     { k: 'bull', label: '看多', color: 'var(--up)' },
     { k: 'bear', label: '看空', color: 'var(--down)' },
-    { k: 'conclude', label: '結論 / 出場', color: 'var(--text)' },
+    { k: 'conclude', label: '決策 / 進出場', color: 'var(--text)' },
     { k: 'note', label: '其他筆記', color: 'var(--tp-note)' }
   ];
   var TP_CAT_MAP = {};
