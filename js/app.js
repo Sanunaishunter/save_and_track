@@ -5208,12 +5208,16 @@
     var sigBox = el('signal-stats');
     if (sigBox) sigBox.innerHTML = signalAccuracyHtml();
 
+    // 這個區塊代表「現在手上還有什麼」,只算「進行中」——已出場/已放棄的
+    // 部位已經不是真的持倉,損益去看下面的自動出場統計/全出統計,不要在
+    // 這裡重複算一次,不然「進行中 0」的時候這裡還顯示一大筆成本跟市值,
+    // 使用者會誤以為還有部位沒出清。
     var box = el('pos-summary');
     var cost = 0, value = 0, plSum = 0, today = 0, n = 0, unpriced = 0, hasToday = false;
     var bestSum = 0, worstSum = 0, hasRange = false, noRange = 0;
     var rows = [];
     for (var i = 0; i < data.length; i++) {
-      if (data[i].status === 'rejected') continue;
+      if (data[i].status !== 'active') continue;
       var st = positionStats(data[i]);
       if (!st) continue;
       n++;
