@@ -101,7 +101,8 @@
     { t: '新技術', cat: 'catalyst' }, { t: '新聞看到的', cat: 'catalyst' },
     { t: '法說會', cat: 'catalyst' }, { t: '財報', cat: 'catalyst' },
     { t: '爆量突破', cat: 'catalyst' }, { t: '跌破月線', cat: 'catalyst' },
-    { t: '觀望不確定', cat: 'note' },
+    { t: '政策風險', cat: 'catalyst' },
+    { t: '觀望不確定', cat: 'note' }, { t: '本益比過高', cat: 'note' },
     { t: '預計出場', cat: 'conclude' }, { t: '分批進場', cat: 'conclude' },
     { t: '停損', cat: 'conclude' }, { t: '續抱觀察', cat: 'conclude' }
   ];
