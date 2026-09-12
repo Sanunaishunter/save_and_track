@@ -81,10 +81,38 @@
   })();
   var ENTRY_TAG_ORDER = ENTRY_TAG_RULES.map(function (r) { return r.key; }).concat(['none']);
 
+  // 思考路徑的方塊分類:看多/看空直接沿用 --up/--down(跟七步驟其他地方
+  // 紅漲綠跌一致),另外四類(大盤總經/籌碼流向/消息技術/其他筆記)用
+  // css/style.css 裡的 --tp-* 系列顏色,結論/出場不佔用另一個顏色,改用
+  // 虛線框 + --text 圓點區別「這是終點」。獨立於七個步驟跟持倉之外,
+  // 2026-09-12 使用者決定先不跟追蹤分頁互相牽動。
+  var TP_TAGS = [
+    { t: '大牛市', cat: 'macro' }, { t: '盤整', cat: 'macro' }, { t: '拉積盤', cat: 'macro' },
+    { t: '要看多', cat: 'bull' }, { t: '要看空', cat: 'bear' },
+    { t: '外資進場', cat: 'flow' }, { t: '投信進場', cat: 'flow' },
+    { t: '新技術', cat: 'catalyst' }, { t: '新聞看到的', cat: 'catalyst' },
+    { t: '預計出場', cat: 'conclude' }
+  ];
+  var TP_CATS = [
+    { k: 'macro', label: '大盤總經', color: 'var(--tp-macro)' },
+    { k: 'flow', label: '籌碼流向', color: 'var(--tp-flow)' },
+    { k: 'catalyst', label: '消息 / 技術', color: 'var(--tp-catalyst)' },
+    { k: 'bull', label: '看多', color: 'var(--up)' },
+    { k: 'bear', label: '看空', color: 'var(--down)' },
+    { k: 'conclude', label: '結論 / 出場', color: 'var(--text)' },
+    { k: 'note', label: '其他筆記', color: 'var(--tp-note)' }
+  ];
+  var TP_CAT_MAP = {};
+  TP_CATS.forEach(function (c) { TP_CAT_MAP[c.k] = c; });
+  var TP_TAG_CAT = {};
+  TP_TAGS.forEach(function (t) { TP_TAG_CAT[t.t] = t.cat; });
+
   // ---------------------------------------------------------------- 狀態
 
   var data = [];            // 全部紀錄
   var statsResetAt = null;  // 'YYYY-MM-DD',見 resetAllStats() —— 只是統計的起算基準,不影響 data 本身
+  var thinkingPaths = null; // { currentPathId, paths:[{id,name,stock_id,stock_name,created_at,nodes,edges}] },思考路徑,見 loadThinkingPaths()
+  var thinkingSelected = []; // 思考路徑目前選取的方塊 id,純記憶體狀態,切換路徑/離開分頁會清空,不落地儲存
   var currentTab = 'active';
   var currentId = null;     // 詳情頁正在看的 id
   var openStep = 1;         // 詳情頁展開中的步驟
@@ -1265,6 +1293,335 @@
     });
   }
 
+  // ---------------------------------------------------------- 思考路徑
+  //
+  // 用分岔/合併的鐵軌圖記錄一檔股票的推理過程,每個方塊是一步判斷。獨立於
+  // 七個步驟跟持倉之外,不影響任何既有邏輯,2026-09-12 使用者決定先不跟
+  // 追蹤分頁互相牽動。每條路徑一定要綁一檔股票(新增路徑時強制填代號)。
+
+  var THINKING_PATH_KEY = 'stock_pipeline_v1__thinking_paths';
+
+  function defaultThinkingPaths() { return { currentPathId: null, paths: [] }; }
+
+  function loadThinkingPaths() {
+    try {
+      var raw = window.localStorage.getItem(THINKING_PATH_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.paths)) return parsed;
+      }
+    } catch (e) { /* 壞掉就當作空的,不擋住其他功能 */ }
+    return defaultThinkingPaths();
+  }
+
+  function saveThinkingPaths() {
+    try {
+      window.localStorage.setItem(THINKING_PATH_KEY, JSON.stringify(thinkingPaths));
+      return true;
+    } catch (e) {
+      toast('儲存思考路徑失敗:' + (e.message || e), 'err');
+      return false;
+    }
+  }
+
+  function thinkingCurrentPath() {
+    if (!thinkingPaths || !thinkingPaths.paths.length) return null;
+    for (var i = 0; i < thinkingPaths.paths.length; i++) {
+      if (thinkingPaths.paths[i].id === thinkingPaths.currentPathId) return thinkingPaths.paths[i];
+    }
+    return thinkingPaths.paths[0];
+  }
+
+  function thinkingNodeById(path, id) {
+    if (!path) return null;
+    for (var i = 0; i < path.nodes.length; i++) { if (path.nodes[i].id === id) return path.nodes[i]; }
+    return null;
+  }
+
+  /** 分層:從沒有父節點的方塊開始,沿著 edges 算每個方塊的深度(最長路徑),
+   * 同深度的方塊分在同一列——格數隨思考路徑長多少而長多少,不是固定格子。 */
+  function thinkingComputeRows(path) {
+    var parentsOf = {}, depth = {};
+    path.nodes.forEach(function (n) { parentsOf[n.id] = []; });
+    path.edges.forEach(function (e) { if (parentsOf[e.to]) parentsOf[e.to].push(e.from); });
+    function depthOf(id) {
+      if (depth[id] != null) return depth[id];
+      var ps = parentsOf[id] || [];
+      if (!ps.length) { depth[id] = 0; return 0; }
+      var d = 0;
+      ps.forEach(function (p) { d = Math.max(d, depthOf(p) + 1); });
+      depth[id] = d;
+      return d;
+    }
+    path.nodes.forEach(function (n) { depthOf(n.id); });
+    var rows = [];
+    path.nodes.forEach(function (n) { var d = depth[n.id]; (rows[d] = rows[d] || []).push(n); });
+    return rows;
+  }
+
+  /** 刪除一個方塊會連同它後面整條子樹一起刪(2026-09-12 使用者決定),
+   * 遞迴收集所有下游 id,呼叫前用 [] 當 acc。 */
+  function thinkingCollectDescendants(path, id, acc) {
+    path.edges.forEach(function (e) {
+      if (e.from === id && acc.indexOf(e.to) < 0) {
+        acc.push(e.to);
+        thinkingCollectDescendants(path, e.to, acc);
+      }
+    });
+    return acc;
+  }
+
+  function renderThinkingPathRail() {
+    var box = el('tp-path-rail');
+    if (!box) return;
+    var html = (thinkingPaths ? thinkingPaths.paths : []).map(function (p) {
+      var active = thinkingPaths.currentPathId === p.id ? ' is-active' : '';
+      return '<button type="button" class="tp-path-chip' + active + '" data-tp-path="' + esc(p.id) + '">' +
+        esc(p.name) + ' <span class="tp-pc-sym mono">' + esc(p.stock_id) + '</span></button>';
+    }).join('') + '<button type="button" class="tp-path-chip tp-pc-add" id="tp-btn-new-path">+ 新路徑</button>';
+    box.innerHTML = html;
+  }
+
+  function thinkingRenderCanvas() {
+    var canvas = el('tp-canvas');
+    var path = thinkingCurrentPath();
+    el('tp-no-path').hidden = !!(thinkingPaths && thinkingPaths.paths.length);
+    el('tp-empty').hidden = !path || !!path.nodes.length;
+    if (!path || !path.nodes.length) { canvas.innerHTML = '<svg id="tp-tracks"></svg>'; return; }
+
+    var rows = thinkingComputeRows(path);
+    var rowsHtml = rows.map(function (rowNodes) {
+      if (!rowNodes) return '';
+      var cells = rowNodes.map(function (n) {
+        var cat = TP_CAT_MAP[n.cat] || TP_CAT_MAP.note;
+        var isSel = thinkingSelected.indexOf(n.id) >= 0 ? ' is-selected' : '';
+        return '<div class="tp-block tp-cat-' + n.cat + isSel + '" data-tp-id="' + esc(n.id) + '" style="--tp-cat-color:' + cat.color + '">' +
+          '<span class="tp-block-text">' + esc(n.text) + '</span>' +
+          '<span class="tp-block-tag">' + esc(cat.label) + '</span>' +
+        '</div>';
+      }).join('');
+      return '<div class="tp-row">' + cells + '</div>';
+    }).join('');
+
+    // svg 放最前面(DOM 順序最早),後面的方塊自然疊在軌道線上面,連線在
+    // 方塊邊緣被蓋住,像是從方塊「長出來」而不是穿過方塊——這裡故意不用
+    // z-index,因為 .tp-row 一旦變成 position 的定位祖先,方塊的
+    // offsetTop/offsetLeft 就會變成相對那一列算,不是相對整個畫布,連線
+    // 座標會整個算錯(設計原型階段踩過這個坑)。
+    canvas.innerHTML = '<svg id="tp-tracks"></svg>' + rowsHtml;
+    requestAnimationFrame(function () { thinkingDrawTracks(path); });
+  }
+
+  function thinkingDrawTracks(path) {
+    var canvas = el('tp-canvas');
+    var svg = el('tp-tracks');
+    if (!canvas || !svg) return;
+    var w = canvas.scrollWidth, h = canvas.scrollHeight;
+    svg.setAttribute('width', w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+
+    function anchor(id, side) {
+      var elm = canvas.querySelector('[data-tp-id="' + id + '"]');
+      if (!elm) return null;
+      var x = elm.offsetLeft + elm.offsetWidth / 2;
+      var y = side === 'top' ? elm.offsetTop : elm.offsetTop + elm.offsetHeight;
+      return { x: x, y: y };
+    }
+
+    var parts = path.edges.map(function (e) {
+      var a = anchor(e.from, 'bottom'), b = anchor(e.to, 'top');
+      if (!a || !b) return '';
+      var midY = (a.y + b.y) / 2;
+      var childNode = thinkingNodeById(path, e.to);
+      var cat = TP_CAT_MAP[(childNode && childNode.cat) || 'note'];
+      var d = 'M ' + a.x + ' ' + a.y + ' C ' + a.x + ' ' + midY + ', ' + b.x + ' ' + midY + ', ' + b.x + ' ' + b.y;
+      return '<path d="' + d + '" fill="none" stroke="' + cat.color + '" stroke-opacity="0.55" stroke-width="2.5"/>';
+    }).join('');
+    svg.innerHTML = parts;
+  }
+
+  function thinkingRenderToolbar() {
+    var infoBox = el('tp-toolbar-info'), actionsBox = el('tp-toolbar-actions');
+    var path = thinkingCurrentPath();
+    if (!path) {
+      infoBox.innerHTML = '先建一條路徑,一條路徑對應一檔股票。';
+      actionsBox.innerHTML = '';
+      return;
+    }
+    if (!thinkingSelected.length) {
+      infoBox.innerHTML = '點一個方塊接著往下推演,或多選幾個一起合併。';
+      actionsBox.innerHTML = '<button type="button" class="btn btn-primary" id="tp-act-new-root">+ 新起點</button>';
+    } else if (thinkingSelected.length === 1) {
+      var n = thinkingNodeById(path, thinkingSelected[0]);
+      infoBox.innerHTML = '已選:<b>' + esc(n ? n.text : '') + '</b>';
+      actionsBox.innerHTML =
+        '<button type="button" class="btn btn-primary" id="tp-act-add-child">+ 接續</button>' +
+        '<button type="button" class="btn" id="tp-act-edit">編輯</button>' +
+        '<button type="button" class="btn btn-danger" id="tp-act-delete">刪除</button>' +
+        '<button type="button" class="btn btn-ghost" id="tp-act-clear">取消選取</button>';
+    } else {
+      infoBox.innerHTML = '已選 <b>' + thinkingSelected.length + '</b> 格,可以合併成一個結論。';
+      actionsBox.innerHTML =
+        '<button type="button" class="btn btn-primary" id="tp-act-merge">合併成新方塊</button>' +
+        '<button type="button" class="btn btn-ghost" id="tp-act-clear">取消選取</button>';
+    }
+  }
+
+  function renderThinking() {
+    renderThinkingPathRail();
+    thinkingRenderCanvas();
+    thinkingRenderToolbar();
+  }
+
+  function loadThinkingView() {
+    if (!thinkingPaths) thinkingPaths = loadThinkingPaths();
+    renderThinking();
+  }
+
+  function thinkingCloseSheet() { el('tp-sheet-backdrop').hidden = true; }
+
+  /** 新增/編輯方塊。opts: {mode:'new', parents:[父格 id...]} 或
+   * {mode:'edit', nodeId:...}。parents.length > 1 就是合併,parents.length
+   * 剛好 1 就是單純接續,parents 是空陣列就是新起點——分岔不是特別的模式,
+   * 對同一個父格連續呼叫兩次「接續」自然就長出兩條岔路。 */
+  function thinkingOpenNodeSheet(opts) {
+    var path = thinkingCurrentPath();
+    if (!path) return;
+    var editingId = opts.mode === 'edit' ? opts.nodeId : null;
+    var parents = opts.mode === 'new' ? opts.parents : null;
+    var existing = editingId ? thinkingNodeById(path, editingId) : null;
+    var text = existing ? existing.text : '';
+    var pickedCat = existing ? existing.cat : null;
+
+    var title = opts.mode === 'edit' ? '編輯方塊'
+      : (parents.length > 1 ? '合併成新方塊' : (parents.length ? '接續下一格' : '新增起點'));
+    var hint = opts.mode === 'edit' ? '修改文字或分類,不會動到跟其他方塊的連線。'
+      : (parents.length > 1
+          ? '這格會同時接住上面選的 ' + parents.length + ' 條線,合併成一個結論。'
+          : '選一個常用詞,或直接輸入自己的想法。');
+
+    var chips = TP_TAGS.map(function (t) {
+      return '<button type="button" class="tp-tag-chip" data-tp-tag="' + esc(t.t) + '" data-tp-cat="' + t.cat + '">' + esc(t.t) + '</button>';
+    }).join('');
+    var swatches = TP_CATS.map(function (c) {
+      return '<button type="button" class="tp-cat-swatch" data-tp-cat="' + c.k + '">' +
+        '<span class="tp-dot" style="background:' + c.color + '"></span>' + c.label + '</button>';
+    }).join('');
+
+    el('tp-sheet').innerHTML =
+      '<h2>' + title + '</h2>' +
+      '<p class="tp-hint">' + hint + '</p>' +
+      '<div class="tp-field-label">常用詞</div>' +
+      '<div class="tp-chip-grid">' + chips + '</div>' +
+      '<div class="tp-field-label">文字</div>' +
+      '<input class="tp-text-input" id="tp-node-text" placeholder="輸入這一格的想法…" value="' + esc(text) + '">' +
+      '<div class="tp-field-label">分類</div>' +
+      '<div class="tp-cat-grid">' + swatches + '</div>' +
+      '<div class="tp-sheet-actions">' +
+        '<button type="button" class="btn" id="tp-sheet-cancel">取消</button>' +
+        '<button type="button" class="btn btn-primary" id="tp-sheet-confirm">' + (editingId ? '儲存' : '新增') + '</button>' +
+      '</div>';
+
+    function paintCatPick() {
+      Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-cat-swatch'), function (b) {
+        b.classList.toggle('is-picked', b.getAttribute('data-tp-cat') === pickedCat);
+      });
+    }
+    paintCatPick();
+
+    Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (b) {
+      b.addEventListener('click', function () {
+        el('tp-node-text').value = b.getAttribute('data-tp-tag');
+        pickedCat = b.getAttribute('data-tp-cat');
+        paintCatPick();
+        Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+        b.classList.add('is-picked');
+      });
+    });
+    Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-cat-swatch'), function (b) {
+      b.addEventListener('click', function () { pickedCat = b.getAttribute('data-tp-cat'); paintCatPick(); });
+    });
+    el('tp-sheet-cancel').addEventListener('click', thinkingCloseSheet);
+    el('tp-sheet-confirm').addEventListener('click', function () {
+      var val = el('tp-node-text').value.trim();
+      if (!val) { el('tp-node-text').focus(); return; }
+      var useCat = pickedCat || TP_TAG_CAT[val] || 'note';
+      if (editingId) {
+        var n = thinkingNodeById(path, editingId);
+        n.text = val; n.cat = useCat;
+      } else {
+        var newId = uid();
+        path.nodes.push({ id: newId, text: val, cat: useCat });
+        parents.forEach(function (pid) { path.edges.push({ from: pid, to: newId }); });
+      }
+      if (!saveThinkingPaths()) return;
+      thinkingSelected = [];
+      thinkingCloseSheet();
+      renderThinking();
+    });
+
+    el('tp-sheet-backdrop').hidden = false;
+  }
+
+  /** 新路徑一定要綁股票代號(2026-09-12 使用者決定),名稱選填,顯示成
+   * 「代號 名稱」放進路徑列的 chip。 */
+  function thinkingOpenPathSheet() {
+    el('tp-sheet').innerHTML =
+      '<h2>新路徑</h2>' +
+      '<p class="tp-hint">每條思考路徑一定要對應一檔股票。</p>' +
+      '<div class="tp-field-label">股票代號</div>' +
+      '<input class="tp-text-input" id="tp-path-stock-id" inputmode="numeric" placeholder="例如 2330">' +
+      '<div class="tp-field-label">股票名稱(選填)</div>' +
+      '<input class="tp-text-input" id="tp-path-stock-name" placeholder="例如 台積電">' +
+      '<div class="tp-sheet-actions">' +
+        '<button type="button" class="btn" id="tp-sheet-cancel">取消</button>' +
+        '<button type="button" class="btn btn-primary" id="tp-sheet-confirm">建立</button>' +
+      '</div>';
+    el('tp-sheet-cancel').addEventListener('click', thinkingCloseSheet);
+    el('tp-sheet-confirm').addEventListener('click', function () {
+      var stockId = el('tp-path-stock-id').value.trim();
+      if (!stockId) { toast('股票代號一定要填', 'err'); el('tp-path-stock-id').focus(); return; }
+      var stockName = el('tp-path-stock-name').value.trim();
+      var id = uid();
+      if (!thinkingPaths) thinkingPaths = defaultThinkingPaths();
+      thinkingPaths.paths.push({
+        id: id, name: stockName ? (stockId + ' ' + stockName) : stockId,
+        stock_id: stockId, stock_name: stockName,
+        created_at: todayStr(), nodes: [], edges: []
+      });
+      thinkingPaths.currentPathId = id;
+      thinkingSelected = [];
+      if (!saveThinkingPaths()) return;
+      thinkingCloseSheet();
+      renderThinking();
+    });
+    el('tp-sheet-backdrop').hidden = false;
+  }
+
+  /** 刪除連同下游整條子樹一起刪(2026-09-12 使用者決定,跟追蹤分頁單筆
+   * 刪除不同,那邊子代不受影響——這裡因為方塊沒有獨立意義,留著沒接住
+   * 上游的孤兒方塊沒有用)。用既有的 dialog() 二次確認,樣式跟全刪/全出
+   * 一致。 */
+  function thinkingDoDelete(id) {
+    var path = thinkingCurrentPath();
+    if (!path) return;
+    var n = thinkingNodeById(path, id);
+    var toRemove = [id].concat(thinkingCollectDescendants(path, id, []));
+    dialog({
+      title: '刪除這一格?',
+      message: '「' + (n ? n.text : '') + '」跟它後面接的整條路徑(共 ' + toRemove.length + ' 格)都會一起刪除,無法復原。',
+      actions: [{ label: '確定刪除', value: 'del', cls: 'btn-danger' }]
+    }).then(function (res) {
+      if (res.action !== 'del') return;
+      path.nodes = path.nodes.filter(function (x) { return toRemove.indexOf(x.id) < 0; });
+      path.edges = path.edges.filter(function (e) { return toRemove.indexOf(e.from) < 0 && toRemove.indexOf(e.to) < 0; });
+      thinkingSelected = [];
+      if (saveThinkingPaths()) toast('已刪除', 'ok');
+      renderThinking();
+    });
+  }
+
   // ---------------------------------------------------------- 匯出 / 匯入
 
   function exportBackup() {
@@ -1275,7 +1632,7 @@
     var filename = 'stock-pipeline-backup-' + stampStr() + '.json';
     var text;
     try {
-      text = JSON.stringify({ data: data, lookup_notes: loadLookupNotesMap() }, null, 2);
+      text = JSON.stringify({ data: data, lookup_notes: loadLookupNotesMap(), thinking_paths: loadThinkingPaths() }, null, 2);
     } catch (e) {
       toast('匯出失敗:' + (e.message || e), 'err');
       return;
@@ -1309,12 +1666,14 @@
         toast('這個檔案不是有效的 JSON:' + (e.message || e), 'err');
         return;
       }
-      // 容許直接的陣列,或 { data: [...], lookup_notes: {...} } 這種包一層的格式。
-      // lookup_notes 是個股查詢的螢光筆標色/筆記,舊版備份檔沒有這個欄位,
-      // importedNotes 保持 null 代表「這份檔案沒提到」,匯入時不去動現有筆記。
-      var importedNotes = null;
+      // 容許直接的陣列,或 { data: [...], lookup_notes: {...}, thinking_paths: {...} }
+      // 這種包一層的格式。lookup_notes/thinking_paths 是舊版備份檔沒有的欄位,
+      // 保持 null 代表「這份檔案沒提到」,匯入時不去動現有資料。
+      var importedNotes = null, importedThinking = null;
       if (!Array.isArray(incoming) && incoming && Array.isArray(incoming.data)) {
         importedNotes = incoming.lookup_notes || null;
+        importedThinking = (incoming.thinking_paths && Array.isArray(incoming.thinking_paths.paths))
+          ? incoming.thinking_paths : null;
         incoming = incoming.data;
       }
       if (!Array.isArray(incoming)) {
@@ -1322,12 +1681,12 @@
         return;
       }
       var records = incoming.map(normalize);
-      confirmImport(records, file.name, importedNotes);
+      confirmImport(records, file.name, importedNotes, importedThinking);
     };
     reader.readAsText(file);
   }
 
-  function confirmImport(records, filename, importedNotes) {
+  function confirmImport(records, filename, importedNotes, importedThinking) {
     dialog({
       title: '匯入備份',
       message: '檔案:' + filename + '\n' +
@@ -1364,6 +1723,22 @@
           Object.keys(importedNotes).forEach(function (k) { mergedNotes[k] = importedNotes[k]; });
           saveLookupNotesMap(mergedNotes);
         }
+      }
+
+      if (importedThinking) {
+        if (res.action === 'replace') {
+          thinkingPaths = importedThinking;
+        } else {
+          var curTp = loadThinkingPaths();
+          var tpById = {};
+          curTp.paths.forEach(function (p) { tpById[p.id] = p; });
+          importedThinking.paths.forEach(function (p) { tpById[p.id] = p; });
+          thinkingPaths = {
+            currentPathId: importedThinking.currentPathId || curTp.currentPathId,
+            paths: Object.keys(tpById).map(function (k) { return tpById[k]; })
+          };
+        }
+        saveThinkingPaths();
       }
 
       if (saveAll()) {
@@ -3172,6 +3547,7 @@
   function switchView(v) {
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
+    el('thinking-wrap').hidden = v !== 'thinking';
     el('trail-wrap').hidden = v !== 'trail';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
@@ -3189,6 +3565,7 @@
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
+    if (v === 'thinking') loadThinkingView();
     if (v === 'trail') loadTrailWatch();
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
@@ -3209,7 +3586,7 @@
 
   // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
   // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
-  var VIEWS_ORDER = ['risk', 'track', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -5902,6 +6279,44 @@
     el('btn-exit-all').addEventListener('click', doExitAll);
     el('btn-delete-all').addEventListener('click', doDeleteAll);
     el('btn-reset-stats').addEventListener('click', resetAllStats);
+
+    el('tp-path-rail').addEventListener('click', function (e) {
+      var chip = e.target.closest('.tp-path-chip[data-tp-path]');
+      if (chip) {
+        thinkingPaths.currentPathId = chip.getAttribute('data-tp-path');
+        thinkingSelected = [];
+        saveThinkingPaths();
+        renderThinking();
+        return;
+      }
+      if (e.target.closest('#tp-btn-new-path')) thinkingOpenPathSheet();
+    });
+    el('tp-canvas').addEventListener('click', function (e) {
+      var block = e.target.closest('.tp-block');
+      if (!block) return;
+      var id = block.getAttribute('data-tp-id');
+      var idx = thinkingSelected.indexOf(id);
+      if (idx >= 0) thinkingSelected.splice(idx, 1); else thinkingSelected.push(id);
+      thinkingRenderCanvas();
+      thinkingRenderToolbar();
+    });
+    el('tp-toolbar-actions').addEventListener('click', function (e) {
+      if (e.target.closest('#tp-act-new-root')) thinkingOpenNodeSheet({ mode: 'new', parents: [] });
+      else if (e.target.closest('#tp-act-add-child')) thinkingOpenNodeSheet({ mode: 'new', parents: [thinkingSelected[0]] });
+      else if (e.target.closest('#tp-act-merge')) thinkingOpenNodeSheet({ mode: 'new', parents: thinkingSelected.slice() });
+      else if (e.target.closest('#tp-act-edit')) thinkingOpenNodeSheet({ mode: 'edit', nodeId: thinkingSelected[0] });
+      else if (e.target.closest('#tp-act-delete')) thinkingDoDelete(thinkingSelected[0]);
+      else if (e.target.closest('#tp-act-clear')) { thinkingSelected = []; thinkingRenderCanvas(); thinkingRenderToolbar(); }
+    });
+    el('tp-sheet-backdrop').addEventListener('click', function (e) {
+      if (e.target === el('tp-sheet-backdrop')) thinkingCloseSheet();
+    });
+    // 轉橫豎屏或縮放視窗,方塊位置會變,連線要重畫——只在思考路徑分頁
+    // 打開時做,不用每次 resize 都白工。
+    window.addEventListener('resize', function () {
+      if (!el('thinking-wrap').hidden) thinkingRenderCanvas();
+    });
+
     el('version-continue').addEventListener('click', hideVersionPage);
     el('btn-export').addEventListener('click', exportBackup);
     el('btn-import').addEventListener('click', function () { el('import-file').click(); });

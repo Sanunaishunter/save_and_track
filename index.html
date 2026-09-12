@@ -60,6 +60,7 @@
   <nav class="views" id="views">
     <button type="button" class="viewbtn" data-view="risk">大盤狀況</button>
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
+    <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
     <button type="button" class="viewbtn" data-view="trail">移動停利</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
@@ -101,6 +102,42 @@
     <p class="empty-sub">按右上角「＋ 新增」開始走第一步。</p>
   </div>
 </main>
+
+<!-- 思考路徑:用分岔/合併的鐵軌圖記錄一檔股票的推理過程,每個方塊是一步
+     判斷(大盤/籌碼/消息/方向/結論),純觀察型,獨立於七個步驟跟持倉之外,
+     不影響任何既有邏輯,也不跟追蹤分頁互相牽動(2026-09-12 使用者決定
+     先獨立)。每條路徑一定要綁一檔股票(代號必填)。 -->
+<main class="list-wrap" id="thinking-wrap" hidden>
+  <div class="tp-path-rail" id="tp-path-rail"></div>
+  <div class="tp-legend">
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--tp-macro)"></span>大盤總經</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--tp-flow)"></span>籌碼流向</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--tp-catalyst)"></span>消息 / 技術</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--up)"></span>看多</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--down)"></span>看空</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--text)"></span>結論 / 出場</span>
+    <span class="tp-legend-item"><span class="tp-legend-dot" style="background:var(--muted)"></span>其他筆記</span>
+  </div>
+  <div class="tp-canvas-wrap" id="tp-canvas-wrap">
+    <div class="tp-canvas" id="tp-canvas"></div>
+    <div class="tp-empty" id="tp-empty" hidden>
+      <p>這條路徑還沒有任何方塊。</p>
+      <p>按下面「+ 新起點」放第一格。</p>
+    </div>
+    <div class="tp-empty" id="tp-no-path" hidden>
+      <p>還沒有任何思考路徑。</p>
+      <p>按上面「+ 新路徑」開始,一條路徑對應一檔股票。</p>
+    </div>
+  </div>
+  <div class="tp-toolbar">
+    <div class="tp-toolbar-info" id="tp-toolbar-info"></div>
+    <div class="tp-toolbar-actions" id="tp-toolbar-actions"></div>
+  </div>
+</main>
+
+<div class="tp-sheet-backdrop" id="tp-sheet-backdrop" hidden>
+  <div class="tp-sheet" id="tp-sheet"></div>
+</div>
 
 <!-- 移動停利觀察:彙總所有「進行中」且出場設定為移動停利模式的紀錄,
      方便一次掃過去判斷該不該清倉,不用逐檔點開追蹤詳情頁看。純觀察,
