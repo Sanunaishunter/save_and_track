@@ -58,6 +58,7 @@
     </div>
   </div>
   <nav class="views" id="views">
+    <button type="button" class="viewbtn" data-view="risk">大盤狀況</button>
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="trail">移動停利</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
@@ -67,7 +68,6 @@
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
     <button type="button" class="viewbtn" data-view="themes">題材分類</button>
-    <button type="button" class="viewbtn" data-view="risk">籌碼</button>
     <button type="button" class="viewbtn" data-view="signals">量價訊號</button>
     <button type="button" class="viewbtn" data-view="lookup">FOMO個股查詢</button>
     <button type="button" class="viewbtn" data-view="lookup-scan">爆量個股查詢</button>
@@ -88,6 +88,7 @@
     <span class="dim" id="stats-reset-note"></span>
     <button type="button" class="btn btn-ghost btn-sm" id="btn-reset-stats" title="不會刪除任何持倉/出場資料,只是讓下面三個統計只算今天之後的紀錄">重設統計</button>
   </div>
+  <div class="dim stats-market-note" id="stats-market-note"></div>
   <div id="exit-stats"></div>
   <div id="manual-exit-stats"></div>
   <div id="signal-stats"></div>

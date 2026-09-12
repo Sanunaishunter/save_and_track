@@ -2288,7 +2288,7 @@
     loadRiskData()
       .then(function (data) { renderRisk(data); })
       .catch(function (e) {
-        renderRisk({ error: '讀不到籌碼/風險資料(' + (e.message || e) + ')。' +
+        renderRisk({ error: '讀不到大盤狀況資料(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
       });
   }
@@ -3207,7 +3207,9 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  var VIEWS_ORDER = ['track', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'risk', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
+  // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
+  var VIEWS_ORDER = ['risk', 'track', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -5135,9 +5137,71 @@
     '</div>';
   }
 
+  /**
+   * 目前三個統計區塊(自動出場/全出/進場訊號準度,都已經套用 afterStatsReset())
+   * 實際涵蓋到的日期範圍——取最早跟最晚那天,純粹拿來對照「同期大盤」用,
+   * 不影響任何統計數字本身。沒有任何一筆算進統計就回傳 null。
+   */
+  function statsCoveredDateRange() {
+    var dates = [];
+    data.forEach(function (r) {
+      if (r.exit_result && afterStatsReset(r.exit_result.date)) dates.push(r.exit_result.date);
+      if (r.manual_exit_result && afterStatsReset(r.manual_exit_result.date)) dates.push(r.manual_exit_result.date);
+      var created = String(r.created_at || '').slice(0, 10);
+      if (created && afterStatsReset(created)) dates.push(created);
+    });
+    if (!dates.length) return null;
+    dates.sort();
+    return { from: dates[0], to: dates[dates.length - 1] };
+  }
+
+  /** market-grid-latest.json 的 history 是新到舊,找 <= dateStr 最近的一天
+   * (非交易日、或超出 30 天視窗就找不到,回傳 null)。*/
+  function marketIdxAt(dateStr) {
+    if (!marketGridData || !marketGridData.history) return null;
+    for (var i = 0; i < marketGridData.history.length; i++) {
+      if (marketGridData.history[i].date <= dateStr) return marketGridData.history[i];
+    }
+    return null;
+  }
+
+  /**
+   * 「同期大盤漲跌」——純參考資訊,不是拿個股報酬扣掉大盤算超額報酬,只是
+   * 讓使用者一眼看出這段統計期間大盤本身是漲是跌,避免把「大盤系統性漲跌」
+   * 誤判成「訊號本身準不準」。用大盤狀況分頁本來就在用的 market-grid-latest.json
+   * history(30 天內的加權指數收盤)。
+   */
+  function statsMarketNoteText() {
+    var range = statsCoveredDateRange();
+    if (!range || !marketGridData) return '';
+    var fromEntry = marketIdxAt(range.from);
+    var toEntry = marketIdxAt(range.to);
+    if (!fromEntry || !toEntry || fromEntry.idx_close == null || toEntry.idx_close == null) {
+      return '同期大盤:資料不足(超出大盤狀況的 30 天視窗)';
+    }
+    var chg = (toEntry.idx_close - fromEntry.idx_close) / fromEntry.idx_close;
+    return '同期大盤(' + range.from + ' → ' + range.to + '):加權指數 ' +
+      fmtInt(Math.round(fromEntry.idx_close)) + ' → ' + fmtInt(Math.round(toEntry.idx_close)) +
+      '(' + fmtPct(chg, 1) + ')';
+  }
+
+  function renderStatsMarketNote() {
+    var box = el('stats-market-note');
+    if (!box) return;
+    if (!statsCoveredDateRange()) { box.textContent = ''; return; }
+    if (!marketGridData) {
+      box.textContent = '同期大盤:載入中…';
+      loadMarketGrid().then(function () { renderPosSummary(); })
+        .catch(function () { box.textContent = '同期大盤:讀不到大盤狀況資料'; });
+      return;
+    }
+    box.textContent = statsMarketNoteText();
+  }
+
   function renderPosSummary() {
     var resetNoteBox = el('stats-reset-note');
     if (resetNoteBox) resetNoteBox.textContent = statsResetNoteText();
+    renderStatsMarketNote();
 
     // 訊號準度統計跟有沒有持倉無關(還沒買也可能有進場訊號分類),獨立更新,
     // 不要放進下面「沒有持倉就整塊隱藏」的 early return 之後。
