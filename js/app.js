@@ -110,6 +110,7 @@
     { k: 'macro', label: '大盤總經', color: 'var(--tp-macro)' },
     { k: 'flow', label: '籌碼流向', color: 'var(--tp-flow)' },
     { k: 'catalyst', label: '消息 / 技術', color: 'var(--tp-catalyst)' },
+    { k: 'valuation', label: '估值試算', color: 'var(--tp-valuation)' },
     { k: 'bull', label: '看多', color: 'var(--up)' },
     { k: 'bear', label: '看空', color: 'var(--down)' },
     { k: 'conclude', label: '結論 / 出場', color: 'var(--text)' },
@@ -1494,6 +1495,34 @@
 
   function thinkingCloseSheet() { el('tp-sheet-backdrop').hidden = true; }
 
+  /**
+   * 估值試算:EPS × 本益比上下界 → 合理價格區間,純前端算,完全手動輸入,
+   * 不抓任何歷史本益比資料(這個 App 目前沒有 PE 歷史資料源,見 CLAUDE.md
+   * 已知限制第 8 點——要接真的河流圖資料是完全不同量級的工程,2026-09-12
+   * 使用者決定這次先做手動版)。EPS 口徑(TTM 還是預估)不幫使用者判斷,
+   * sheet 裡的提示文字只提醒「自己想清楚用哪種」。三個必填欄位缺一個或
+   * 不是正數就回傳 null,呼叫端據此判斷要不要顯示預設提示文字。
+   */
+  function thinkingValuationText() {
+    var eps = parseFloat(el('tp-val-eps').value);
+    var lo = parseFloat(el('tp-val-pe-lo').value);
+    var hi = parseFloat(el('tp-val-pe-hi').value);
+    if (!(eps > 0) || !(lo > 0) || !(hi > 0)) return null;
+    if (lo > hi) { var tmp = lo; lo = hi; hi = tmp; } // 兩個欄位填反了自動對調,不擋使用者
+    var cheap = eps * lo, expensive = eps * hi, mid = eps * (lo + hi) / 2;
+    var text = '估值試算:EPS ' + eps + ',本益比 ' + lo + '~' + hi + ' 倍 → 合理區間 ' +
+      cheap.toFixed(0) + '~' + expensive.toFixed(0) + ' 元(中界 ' + mid.toFixed(0) + ' 元)';
+    var price = parseFloat(el('tp-val-price').value);
+    if (price > 0) {
+      var posText;
+      if (price < cheap) posText = '低於便宜價 ' + (((cheap - price) / cheap) * 100).toFixed(0) + '%';
+      else if (price > expensive) posText = '高於昂貴價 ' + (((price - expensive) / expensive) * 100).toFixed(0) + '%';
+      else posText = '落在合理區間內';
+      text += ';目前 ' + price + ' 元,' + posText;
+    }
+    return text;
+  }
+
   /** 新增/編輯方塊。opts: {mode:'new', parents:[父格 id...]} 或
    * {mode:'edit', nodeId:...}。parents.length > 1 就是合併,parents.length
    * 剛好 1 就是單純接續,parents 是空陣列就是新起點——分岔不是特別的模式,
@@ -1527,6 +1556,23 @@
       '<p class="tp-hint">' + hint + '</p>' +
       '<div class="tp-field-label">常用詞</div>' +
       '<div class="tp-chip-grid">' + chips + '</div>' +
+      '<button type="button" class="tp-valuation-toggle" id="tp-val-toggle">展開估值試算 ▼</button>' +
+      '<div class="tp-valuation-calc" id="tp-val-calc" hidden>' +
+        '<p class="tp-hint">EPS 口徑(近四季 TTM 或預估值)你自己決定,這裡不幫你判斷對錯,' +
+          '填之前先想清楚這次用哪種,免得以後忘記。</p>' +
+        '<div class="tp-val-row">' +
+          '<label>EPS<input class="tp-text-input tp-val-input" id="tp-val-eps" type="number" inputmode="decimal" step="0.01" placeholder="例如 15"></label>' +
+        '</div>' +
+        '<div class="tp-val-row">' +
+          '<label>本益比下界<input class="tp-text-input tp-val-input" id="tp-val-pe-lo" type="number" inputmode="decimal" step="0.1" placeholder="例如 15"></label>' +
+          '<label>本益比上界<input class="tp-text-input tp-val-input" id="tp-val-pe-hi" type="number" inputmode="decimal" step="0.1" placeholder="例如 25"></label>' +
+        '</div>' +
+        '<div class="tp-val-row">' +
+          '<label>目前股價(選填)<input class="tp-text-input tp-val-input" id="tp-val-price" type="number" inputmode="decimal" step="0.01" placeholder="例如 350"></label>' +
+        '</div>' +
+        '<div class="tp-val-preview" id="tp-val-preview">填 EPS 跟本益比上下界就會算出合理區間。</div>' +
+        '<button type="button" class="btn btn-outline tp-val-apply" id="tp-val-apply">帶入文字</button>' +
+      '</div>' +
       '<div class="tp-field-label">文字</div>' +
       '<input class="tp-text-input" id="tp-node-text" placeholder="輸入這一格的想法…" value="' + esc(text) + '">' +
       '<div class="tp-field-label">分類</div>' +
@@ -1555,6 +1601,31 @@
     Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-cat-swatch'), function (b) {
       b.addEventListener('click', function () { pickedCat = b.getAttribute('data-tp-cat'); paintCatPick(); });
     });
+
+    el('tp-val-toggle').addEventListener('click', function () {
+      var calc = el('tp-val-calc');
+      calc.hidden = !calc.hidden;
+      el('tp-val-toggle').textContent = calc.hidden ? '展開估值試算 ▼' : '收合估值試算 ▲';
+    });
+    var valInputs = ['tp-val-eps', 'tp-val-pe-lo', 'tp-val-pe-hi', 'tp-val-price'];
+    valInputs.forEach(function (id) {
+      el(id).addEventListener('input', function () {
+        var t = thinkingValuationText();
+        var box = el('tp-val-preview');
+        box.textContent = t || '填 EPS 跟本益比上下界就會算出合理區間。';
+        box.classList.toggle('has-value', !!t);
+      });
+    });
+    el('tp-val-apply').addEventListener('click', function () {
+      var t = thinkingValuationText();
+      if (!t) { el('tp-val-eps').focus(); return; }
+      var box = el('tp-node-text');
+      box.value = box.value.trim() ? (box.value.trim() + ';' + t) : t;
+      pickedCat = 'valuation';
+      paintCatPick();
+      Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+    });
+
     el('tp-sheet-cancel').addEventListener('click', thinkingCloseSheet);
     el('tp-sheet-confirm').addEventListener('click', function () {
       var val = el('tp-node-text').value.trim();
