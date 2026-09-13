@@ -21,6 +21,12 @@
    (不是 `window.storage`),所有存取都要 try/catch 且失敗要有畫面提示。
 5. 上櫃(TPEx)明確排除,只做上市普通股。
 6. 新檔案先看現有慣例再決定放哪,不要假設空 repo 從零建。
+7. **2026-09-13 使用者明講:改完測完直接 push 到 main,不用每次都問「要不要推
+   main」。** 這個 repo 就使用者自己在用,push 到 main 之後 GitHub Pages 自動
+   build——在 `claude/analysis-hj9n4c` 這個工作分支上驗證過(語法檢查 + Playwright
+   對照手算值)就可以直接 fast-forward 推兩邊,不用等使用者每次確認。仍然要先
+   把當次改動在本地/工作分支測過,不是「跳過測試直接推」;只是拿掉「要不要推
+   main」這個確認步驟。
 
 ## 我(前一個 Claude)自己養成的做法
 
