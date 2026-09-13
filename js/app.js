@@ -39,15 +39,18 @@
   // 用這份 label/順序 —— 這是「出場」原因,跟下面的「進場訊號」分類是兩回事。
   var EXIT_RULE_LABELS = {
     target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損',
-    trail_vol: '移動停利(量縮出場)', trail_limit: '移動停利(漲停出場)'
+    trail_vol: '移動停利(量縮出場)', trail_limit: '移動停利(漲停出場)',
+    trail_stop: '移動停損(ATR回落出場)'
   };
-  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit'];
+  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop'];
 
-  /** exitStatsHtml() 分組標題用的規則文字。trail_limit 固定寫「漲停出場」,
-   * 但看空的移動停利用的是跌停(見 evalExitPlan),這裡依分組方向(dirKey:
-   * 'long'/'short')換字,其餘規則跟方向無關,直接用 EXIT_RULE_LABELS。*/
+  /** exitStatsHtml() 分組標題用的規則文字。trail_limit/trail_stop 固定寫多方
+   * 那組文字(漲停/回落),但看空的移動停利/停損是跌停/反彈(見 evalExitPlan),
+   * 這裡依分組方向(dirKey:'long'/'short')換字,其餘規則跟方向無關,直接用
+   * EXIT_RULE_LABELS。*/
   function exitRuleLabelFor(key, dirKey) {
     if (key === 'trail_limit') return dirKey === 'short' ? '移動停利(跌停出場)' : '移動停利(漲停出場)';
+    if (key === 'trail_stop') return dirKey === 'short' ? '移動停損(ATR反彈出場)' : '移動停損(ATR回落出場)';
     return EXIT_RULE_LABELS[key] || key;
   }
 
@@ -4863,6 +4866,13 @@
   // 不開放 UI 調整 —— 要調整就是改這兩個常數,不是動資料結構。
   var TRAIL_VOL_SHRINK_RATIO = 0.7;  // 今日成交量 / MA5(前5日,不含當日) < 0.7 → 量縮出場
   var TRAIL_LIMITUP_PCT = 0.09;      // 單日漲幅 >= 9% 視為漲停,直接出場鎖住獲利
+  // 移動停損(2026-09-13 新增,使用者要求用 ATR/波動度算距離,不要固定
+  // 百分比——跟上面兩個門檻一樣是「先試這組固定值」,不開放 UI 調整。
+  // ATR 用簡單移動平均(不是 Wilder 平滑),窗口 14 天,跟其他門檻同一種
+  // 「簡單好驗證」的寫法一致;倍數 2.5 是常見的 Chandelier Exit 慣用值
+  // (常見範圍 2~3 倍),沒有回測驗證過比固定百分比的最大回撤好用。
+  var TRAIL_ATR_WINDOW = 14;
+  var TRAIL_ATR_MULT = 2.5;
 
   function normalizeExitPlan(v) {
     v = (v && typeof v === 'object') ? v : {};
@@ -4878,7 +4888,7 @@
   /** 自動出場當下的快照(觸發規則/假設成交價/當時損益),事後算勝率要用這份,不能用「現在」的報價回推。*/
   function normalizeExitResult(v) {
     if (!v || typeof v !== 'object') return null;
-    var rule = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit'].indexOf(v.rule) >= 0 ? v.rule : null;
+    var rule = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop'].indexOf(v.rule) >= 0 ? v.rule : null;
     if (!rule) return null;
     return {
       date: String(v.date || ''),
@@ -4980,6 +4990,33 @@
     var ma5 = sum / 5;
     if (!(ma5 > 0)) return null;
     return { ratio: vols[0] / ma5, today: vols[0], ma5: ma5 };
+  }
+
+  /**
+   * 移動停損(ATR 版)用:過去 TRAIL_ATR_WINDOW(14)天的真實區間(True Range)
+   * 簡單移動平均。單日 TR = max(當日高-低, |當日高-前一日收|, |當日低-前一日收|),
+   * 不是只看當日高低,才能算進跳空的波動。quotes.daily_high/low/close 都是
+   * 新到舊(index 0 = 今日),算第 k 天(0-based)的 TR 要用 closes[k+1] 當
+   * 前一日收盤,所以陣列長度至少要 TRAIL_ATR_WINDOW + 1 天收盤價才夠。
+   * 缺任何一天的高/低/前收就直接回傳 null,不用有缺值的資料湊平均。
+   */
+  function atrValue(stockId) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(stockId || '').trim()];
+    if (i == null) return null;
+    var highs = quotes.daily_high && quotes.daily_high[i];
+    var lows = quotes.daily_low && quotes.daily_low[i];
+    var closes = quotes.daily_close && quotes.daily_close[i];
+    if (!highs || !lows || !closes) return null;
+    if (highs.length < TRAIL_ATR_WINDOW || lows.length < TRAIL_ATR_WINDOW || closes.length < TRAIL_ATR_WINDOW + 1) return null;
+    var sum = 0, k;
+    for (k = 0; k < TRAIL_ATR_WINDOW; k++) {
+      var h = highs[k], l = lows[k], prevClose = closes[k + 1];
+      if (h == null || l == null || prevClose == null) return null;
+      var tr = Math.max(h - l, Math.abs(h - prevClose), Math.abs(l - prevClose));
+      sum += tr;
+    }
+    return sum / TRAIL_ATR_WINDOW;
   }
 
   /**
@@ -5093,6 +5130,22 @@
               detail: '今日漲幅 ' + (tChg * 100).toFixed(1) + '%'
             });
           }
+          // 移動停損(ATR 版):跟量縮/漲停一樣只在啟動後才檢查,停損價是
+          // 「期間峰值(tPeak,跟移動停利共用同一個峰值)往回拉 TRAIL_ATR_MULT
+          // 倍 ATR」,不是固定百分比——這是使用者要的「兵棋推演」第二條路徑:
+          // 續漲看移動停利(量縮/漲停),拉回看這個。
+          var atr = atrValue(rec.stock_id);
+          if (atr != null) {
+            var atrStop = tPeak - dir * atr * TRAIL_ATR_MULT;
+            alerts.push({
+              key: 'trail_stop',
+              hit: dir > 0 ? st.close <= atrStop : st.close >= atrStop,
+              price: atrStop,
+              label: '移動停損:ATR' + (dir > 0 ? '回落' : '反彈') + '出場(' + TRAIL_ATR_MULT + '×ATR)',
+              detail: 'ATR(' + TRAIL_ATR_WINDOW + ') ' + atr.toFixed(2) + '、停損價 ' + atrStop.toFixed(2) +
+                '(現價 ' + st.close + ')'
+            });
+          }
         }
       }
     }
@@ -5185,7 +5238,10 @@
   function trailIndicators(rec, st) {
     var dir = rec.direction === 'short' ? -1 : 1;
     var tPct = Number(rec.exit_plan.target_pct);
-    var out = { dir: dir, tPct: tPct, targetPrice: null, peakPrice: null, peakDate: null, activated: false, pullbackPct: null };
+    var out = {
+      dir: dir, tPct: tPct, targetPrice: null, peakPrice: null, peakDate: null, activated: false,
+      pullbackPct: null, atr: null, atrStopPrice: null, atrBufferPct: null
+    };
     if (!(st && st.avg > 0 && st.range)) return out;
     out.targetPrice = st.avg * (1 + dir * tPct / 100);
     out.peakPrice = dir > 0 ? st.range.high.price : st.range.low.price;
@@ -5195,6 +5251,17 @@
       out.pullbackPct = dir > 0
         ? (out.peakPrice - st.close) / out.peakPrice
         : (st.close - out.peakPrice) / out.peakPrice;
+      // 兵棋推演的第二條路徑:離 ATR 移動停損價還有多少緩衝——正值代表
+      // 現價還在停損價「安全側」,越接近 0 越快觸發,跟 pullbackPct(移動
+      // 停利那條路徑的距峰回落)並列,分別對應續漲/拉回兩種劇本。
+      var atr = atrValue(rec.stock_id);
+      if (atr != null) {
+        out.atr = atr;
+        out.atrStopPrice = out.peakPrice - dir * atr * TRAIL_ATR_MULT;
+        out.atrBufferPct = dir > 0
+          ? (st.close - out.atrStopPrice) / st.close
+          : (out.atrStopPrice - st.close) / st.close;
+      }
     }
     return out;
   }
@@ -5215,6 +5282,11 @@
       facts.push('期間' + (ind.dir > 0 ? '最高' : '最低') + ' ' + ind.peakPrice + '(' + esc(ind.peakDate) + ')');
     }
     if (ind.pullbackPct != null) facts.push('距峰回落 ' + fmtPct(ind.pullbackPct, 1));
+    if (ind.atr != null) {
+      facts.push('ATR(' + TRAIL_ATR_WINDOW + ') ' + ind.atr.toFixed(2) +
+        '、ATR停損價 ' + ind.atrStopPrice.toFixed(2) +
+        (ind.atrBufferPct != null ? '(距停損 ' + fmtPct(ind.atrBufferPct, 1) + ')' : ''));
+    }
     var vr = st && st.priced ? volRatioMa5(rec.stock_id) : null;
     if (vr) {
       facts.push('量/MA5 ' + vr.ratio.toFixed(2) + '(今量 ' + fmtInt(vr.today) + '、MA5 ' + fmtInt(Math.round(vr.ma5)) + ')');
@@ -5231,7 +5303,7 @@
         }).join('') + '</div>'
       : '<p class="dim">還沒有足夠資料判斷(缺報價或近5日均量)。</p>';
 
-    return '<tr class="trail-detail"><td colspan="6">' +
+    return '<tr class="trail-detail"><td colspan="7">' +
       '<div>' + esc(facts.join('　·　')) + '</div>' +
       alertsHtml +
       '<button type="button" class="link-btn" data-trail-manage="' + esc(rec.id) + '">在追蹤分頁管理這筆 →</button>' +
@@ -5244,7 +5316,7 @@
     if (!meta || !tbody) return;
     var recs = trailWatchRecords();
     if (!recs.length) {
-      meta.textContent = '目前沒有設定「移動停利」出場模式的進行中紀錄。到追蹤分頁個股的出場設定,把模式改成「移動停利」就會出現在這裡。';
+      meta.textContent = '目前沒有設定「移動停利」出場模式的進行中紀錄。到追蹤分頁個股的出場設定,把模式改成「移動停利」就會出現在這裡(兵棋推演會同時列出移動停利與 ATR 移動停損兩條計算)。';
       tbody.innerHTML = '';
       return;
     }
@@ -5267,6 +5339,7 @@
         '<td class="num mono ' + plClass(st && st.priced ? st.pl : null) + '">' +
           (st && st.priced ? signed(st.pl) : '—') + '</td>' +
         '<td class="num mono">' + (ind.pullbackPct != null ? fmtPct(ind.pullbackPct, 1) : '—') + '</td>' +
+        '<td class="num mono">' + (ind.atrBufferPct != null ? fmtPct(ind.atrBufferPct, 1) : '—') + '</td>' +
         '<td>' + trailStatusBadge(statusKey) + '</td>' +
       '</tr>';
       if (trailOpen === rec.id) row += trailDetailHtml(rec, st, ind, alerts);

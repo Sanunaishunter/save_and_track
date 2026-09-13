@@ -61,7 +61,7 @@
     <button type="button" class="viewbtn" data-view="risk">大盤狀況</button>
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
-    <button type="button" class="viewbtn" data-view="trail">移動停利</button>
+    <button type="button" class="viewbtn" data-view="trail">兵棋推演</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
@@ -140,10 +140,11 @@
   <div class="tp-sheet" id="tp-sheet"></div>
 </div>
 
-<!-- 移動停利觀察:彙總所有「進行中」且出場設定為移動停利模式的紀錄,
-     方便一次掃過去判斷該不該清倉,不用逐檔點開追蹤詳情頁看。純觀察,
-     不會自動下單,點列可以展開細節,細節裡的「在追蹤分頁管理」會開
-     既有的個股詳情面板(#detail),沿用裡面的標記出場/切換方向按鈕。 -->
+<!-- 兵棋推演:彙總所有「進行中」且出場設定為移動停利模式的紀錄,同時推演
+     「續漲會怎麼出場(移動停利)」跟「拉回會怎麼出場(移動停損,ATR 版)」
+     兩條路徑,方便一次掃過去判斷該不該手動清倉。純觀察,不會自動下單,
+     點列可以展開細節,細節裡的「在追蹤分頁管理」會開既有的個股詳情面板
+     (#detail),沿用裡面的標記出場/切換方向按鈕。 -->
 <main class="list-wrap" id="trail-wrap" hidden>
   <div class="scan-meta" id="trail-meta">載入中…</div>
   <div class="table-scroll">
@@ -155,6 +156,7 @@
           <th class="num">現價</th>
           <th class="num">損益</th>
           <th class="num">距峰回落</th>
+          <th class="num">距ATR停損</th>
           <th>狀態</th>
         </tr>
       </thead>
