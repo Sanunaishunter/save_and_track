@@ -3863,6 +3863,7 @@
     var m = r.metrics || {};
     var facts = [];
     if (m.vol_ratio != null) facts.push('量比 ' + m.vol_ratio);
+    if (m.per != null) facts.push('PE ' + m.per);
     if (m.pbr != null) facts.push('PBR ' + m.pbr);
     if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
     if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');
@@ -3990,6 +3991,7 @@
     var m = r.metrics || {};
     var facts = [];
     if (m.vol_ratio != null) facts.push('量比 ' + m.vol_ratio);
+    if (m.per != null) facts.push('PE ' + m.per);
     if (m.pbr != null) facts.push('PBR ' + m.pbr);
     if (m.margin_change_5d_pct != null) facts.push('融資5日 ' + m.margin_change_5d_pct + '%');
     if (m.short_margin_ratio != null) facts.push('券資比 ' + m.short_margin_ratio + '%');

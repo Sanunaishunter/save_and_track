@@ -646,6 +646,42 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
       的分類文字正確帶日期後綴、編輯既有方塊時 `tp-hint` 正確顯示「建立於」
       + 今天日期。另外截圖驗證(3376 假資料、6 格 3 層)視覺上底色帶跟標籤
       清楚可辨,連線跨層繪製正常沒有錯位。
+27. **2026-09-13 FOMO/暴跌FOMO 補抓 PER(本益比),之前只有 PBR。** 起因:
+    使用者問「我們的全套分析所需要的資料是不是都有了」,逐項核對每個分析
+    階段對應哪個資料源時發現:`compute_fomo.py` 早就在呼叫 FinMind
+    `TaiwanStockPER` 這支 API(給 `extract_metrics()` 的 `per_rows` 參數),
+    但只從回應裡抓了 `PBR` 欄位,同一筆資料裡的 `PER` 欄位完全沒抓——不是
+    「沒接這個資料源」那麼籠統(那是已知限制第 8 點講的 `BWIBBU_ALL` replace
+    `TaiwanStockPER` 的另一件事),是已經在打這支 API、卻漏掉一個欄位,幾乎
+    零成本就能補上。使用者確認要加(3376 加進 `stock_lookup.json` 清單的
+    提案則使用者選不要,只做這個)。
+    - `extract_metrics()` 的「--- PBR ---」區塊改成「--- 本益比(PER)/
+      股價淨值比(PBR) ---」,`PER`/`PBR` 兩個欄位各自獨立找「最近一筆有值
+      的」(不假設同一天兩者一定都有值,分開找互不卡住),新增
+      `m["per"]`,`m["pbr"]` 邏輯不變。
+    - `fomo_score.py` 的 `score_stock()`/`score_stock_crash()` 組出場
+      `metrics` dict 時原本是白名單(逐一列欄位名,不是整包塞進去),補
+      `"per": m.get("per")` 兩處,不然 `extract_metrics()` 抓到了也會在
+      這裡被過濾掉,不會進最終輸出的 JSON。
+    - `js/app.js` 的 `fomoDetailHtml()`/`crashFomoDetailHtml()` 明細
+      facts 各加一行 `if (m.per != null) facts.push('PE ' + m.per);`,
+      放在量比後面、PBR 前面,跟後端 metrics 物件裡的欄位順序一致。
+    - `PER` 這個欄位名沒有另外 probe 驗證過——FinMind `TaiwanStockPER`
+      是穩定的公開文件化 API,回應裡本來就有 `date`/`PER`/`PBR`/
+      `dividend_yield` 這幾欄,跟這次改動同一支呼叫、同一批 rows,不是
+      猜新 API 的行為,失敗也是軟失敗(`_num(r.get("PER"))` 找不到欄位
+      就回 `None`,`m["per"]` 維持 `None`,不會讓整支腳本掛掉)——**沒有
+      實際拿一筆真實 FinMind 回應驗證過 `PER` 欄位確實存在**,下次排程
+      實際跑過、看 `data/fomo/*.json` 有沒有真的出現非 null 的 `per` 值,
+      才算真正驗證完成。
+    - 離線測試(mock `per_rows`,不用連網)5 項全過:`PER`/`PBR` 都在最新
+      一天有值時正確各自抓到最新值、`PER` 缺最新兩天但 `PBR` 有值時
+      `PER` 正確往回退到有值的那天(兩欄獨立、不互相卡住)、`per_rows`
+      整組是空陣列時兩欄都是 `None` 不會炸、`score_stock()`/
+      `score_stock_crash()` 輸出的 `metrics.per` 正確帶到值;另外 1 項
+      回歸測試確認舊資料格式(row 裡完全沒有 `PER` 這個 key,只有 `PBR`)
+      行為不變。前端用 Playwright 灌一筆假 `per=42.0` 的 FOMO 資料測過:
+      展開明細正確顯示「PE 42」,位置在「量比」跟「PBR」中間,無 JS 錯誤。
 
 ---
 

@@ -105,7 +105,7 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
         "margin_change_5d_pct": None, "short_margin_ratio": None,
         "margin_consecutive_buy_days": None,
         "foreign_net": None, "foreign_consecutive_buy_days": None,
-        "foreign_consecutive_sell_days": None, "pbr": None,
+        "foreign_consecutive_sell_days": None, "pbr": None, "per": None,
         "trust_net": None, "trust_amount": None,
         "foreign_streak_days": None, "foreign_streak_direction": None,
         "foreign_streak_shares": None, "foreign_streak_amount": None,
@@ -219,12 +219,22 @@ def extract_metrics(price_rows, margin_rows, inst_rows, per_rows):
         if c:
             m["trust_amount"] = trust[tdays[-1]] * c
 
-    # --- PBR ---
+    # --- 本益比(PER)/ 股價淨值比(PBR) ---
+    # 2026-09-13 發現之前只抓了 PBR,PER 同一筆資料裡其實也有,一直沒抓——
+    # 補上之後 FOMO/暴跌FOMO 候選股至少能同時看 PE、PB 兩個角度交叉驗證,
+    # 不用只押單一比例(見 CLAUDE.md「估值不要單押一種比例」那條)。兩個
+    # 欄位各自獨立找「最近一筆有值的」,不假設同一天兩者一定都有值。
     pers = _by_date(per_rows)
     for r in reversed(pers):
-        p = _num(r.get("PBR"))
-        if p is not None and p > 0:
-            m["pbr"] = p
+        if m["pbr"] is None:
+            p = _num(r.get("PBR"))
+            if p is not None and p > 0:
+                m["pbr"] = p
+        if m["per"] is None:
+            e = _num(r.get("PER"))
+            if e is not None and e > 0:
+                m["per"] = e
+        if m["pbr"] is not None and m["per"] is not None:
             break
 
     return m

@@ -448,6 +448,7 @@ def score_stock(stock_id, stock_name, m):
         "trust_note": trust_annotation(m),
         "metrics": {
             "pbr": m.get("pbr"),
+            "per": m.get("per"),
             "margin_change_5d_pct": (None if m.get("margin_change_5d_pct") is None
                                      else round(m["margin_change_5d_pct"], 2)),
             "short_margin_ratio": (None if m.get("short_margin_ratio") is None
@@ -512,6 +513,7 @@ def score_stock_crash(stock_id, stock_name, m):
         "trust_note": trust_annotation(m),
         "metrics": {
             "pbr": m.get("pbr"),
+            "per": m.get("per"),
             "margin_change_5d_pct": (None if m.get("margin_change_5d_pct") is None
                                      else round(m["margin_change_5d_pct"], 2)),
             "short_margin_ratio": (None if m.get("short_margin_ratio") is None
