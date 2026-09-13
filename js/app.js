@@ -751,6 +751,40 @@
       (st.plPct == null ? '' : ' (' + fmtPct(st.plPct, 1) + ')') + '</span></div>';
   }
 
+  /** 2026-09-14 使用者要求:股價接近前波高點時人性上容易被套牢賣壓卡住
+   * (上次爆量的高點附近本來就有一批人等著解套),所以「快到前高」本身
+   * 是值得示警的訊號,用 ‼️ 標在股票代號旁邊。門檻(前高 85%)是使用者
+   * 自己的經驗值,沒有回測驗證過,先照使用者要求的數字做,寫死不開放調整。
+   * closesDesc:收盤價陣列,index 0 是最新一天(quotes.daily_close 原本就是
+   * 這個方向)。「前高」用「最新那天以外」的最高收盤價,不含當天自己,
+   * 不然股價創新高那天 pct 會變成 1.0 反而不會顯示是「創新高」不是「接近前高」
+   * 的問題。 */
+  var NEAR_HIGH_RATIO = 0.85;
+  function nearHighFromCloses(closesDesc) {
+    if (!closesDesc || closesDesc.length < 2) return null;
+    var now = closesDesc[0];
+    if (now == null) return null;
+    var prevHigh = null;
+    for (var i = 1; i < closesDesc.length; i++) {
+      var c = closesDesc[i];
+      if (c == null) continue;
+      if (prevHigh == null || c > prevHigh) prevHigh = c;
+    }
+    if (!(prevHigh > 0)) return null;
+    var pct = now / prevHigh;
+    if (pct < NEAR_HIGH_RATIO) return null;
+    return { prevHigh: prevHigh, now: now, pct: pct };
+  }
+
+  /** 追蹤卡片用:吃 quotes.daily_close[i](已經是最新在前),沒報價或
+   * 查不到這檔就回傳 null,cardHtml() 不顯示警示,不擋畫面。 */
+  function cardNearHigh(stockId) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(stockId || '').trim()];
+    if (i == null) return null;
+    return nearHighFromCloses(quotes.daily_close[i]);
+  }
+
   function cardHtml(rec) {
     var stepTitle = STEPS[rec.current_step - 1].title;
     var sub;
@@ -762,10 +796,17 @@
     } else {
       sub = '最後更新 ' + fmtDateTime(rec.updated_at);
     }
+    // 只對進行中的部位示警,已出場/放棄的不用再提醒——快到前高才有意義。
+    var nh = rec.status === 'active' ? cardNearHigh(rec.stock_id) : null;
+    var nhBadge = nh
+      ? ' <span class="near-high-warn" title="現價 ' + nh.now + ' 已到近30天最高收盤價 ' +
+        nh.prevHigh + ' 的 ' + (nh.pct * 100).toFixed(1) +
+        '%——使用者經驗:接近前高時容易有解套賣壓,門檻(85%)沒有回測驗證過">‼️</span>'
+      : '';
     return '' +
       '<article class="card" data-id="' + esc(rec.id) + '">' +
         '<div class="card-head">' +
-          '<span class="card-code mono">' + esc(rec.stock_id || '—') + '</span>' +
+          '<span class="card-code mono">' + esc(rec.stock_id || '—') + nhBadge + '</span>' +
           '<span class="card-name">' + esc(rec.stock_name) + '</span>' +
           '<span class="pill-dir ' + (rec.direction === 'short' ? 'is-short' : 'is-long') + '">' +
             (rec.direction === 'short' ? '空' : '多') + '</span>' +
@@ -1543,6 +1584,12 @@
       else posText = '落在合理區間內';
       text += ';目前 ' + price + ' 元,' + posText;
     }
+    // 2026-09-14 使用者要求:EPS 資料不完整(只有單一來源、沒交叉驗證,或
+    // 用了估計值湊數)時,算出來的結果要用 ⚠️ 標記,不能看起來跟有完整
+    // 資料來源的估值一樣可信。checkbox 由使用者自己勾,程式沒辦法自動
+    // 判斷「這個 EPS 到底可不可信」。
+    var incompleteEl = el('tp-val-incomplete');
+    if (incompleteEl && incompleteEl.checked) text = '⚠️ 資料不完整/單一來源 — ' + text;
     return text;
   }
 
@@ -1662,6 +1709,8 @@
         '<div class="tp-calc-row">' +
           '<label>目前股價(選填)<input class="tp-text-input tp-calc-input" id="tp-val-price" type="number" inputmode="decimal" step="0.01" placeholder="例如 350"></label>' +
         '</div>' +
+        '<label class="tp-calc-checkbox"><input type="checkbox" class="tp-calc-input" id="tp-val-incomplete">' +
+          '資料不完整/只有單一來源(算出來的結果會標 ⚠️)</label>' +
         '<div class="tp-calc-preview" id="tp-val-preview">填 EPS 跟本益比上下界就會算出合理區間。</div>' +
         '<button type="button" class="btn btn-outline tp-calc-apply" id="tp-val-apply">帶入文字</button>' +
       '</div>' +
@@ -1728,12 +1777,17 @@
         el(opts.toggleId).textContent = (panel.hidden ? '展開' : '收合') + opts.label + (panel.hidden ? ' ▼' : ' ▲');
       });
       opts.inputIds.forEach(function (id) {
-        el(id).addEventListener('input', function () {
+        // 'change' 一起綁是為了 checkbox(資料不完整標記)——checkbox 在部分
+        // 瀏覽器上比較可靠的是 change 事件,文字輸入框兩個事件都綁不影響
+        // 結果(computeFn 是純函式,多算一次沒差)。
+        var handler = function () {
           var t = opts.computeFn();
           var box = el(opts.previewId);
           box.textContent = t || opts.placeholder;
           box.classList.toggle('has-value', !!t);
-        });
+        };
+        el(id).addEventListener('input', handler);
+        el(id).addEventListener('change', handler);
       });
       el(opts.applyId).addEventListener('click', function () {
         var t = opts.computeFn();
@@ -1750,7 +1804,7 @@
 
     bindCalcPanel({
       toggleId: 'tp-val-toggle', panelId: 'tp-val-calc', label: '估值試算',
-      inputIds: ['tp-val-eps', 'tp-val-pe-lo', 'tp-val-pe-hi', 'tp-val-price'],
+      inputIds: ['tp-val-eps', 'tp-val-pe-lo', 'tp-val-pe-hi', 'tp-val-price', 'tp-val-incomplete'],
       previewId: 'tp-val-preview', applyId: 'tp-val-apply', cat: 'valuation',
       placeholder: '填 EPS 跟本益比上下界就會算出合理區間。',
       computeFn: thinkingValuationText
@@ -3344,6 +3398,14 @@
   var LOOKUP_MARGIN_MAINT_WARN = 130;      // 警戒線(%,可能已收到追繳)
   var LOOKUP_MARGIN_MAINT_DANGER = 120;    // 斷頭線(%,可能已斷頭/即將斷頭)
 
+  /** 2026-09-14:個股查詢表格的 rows 是舊到新(跟 quotes.daily_close 相反),
+   * 反轉成新到舊後共用跟追蹤卡片同一顆 nearHighFromCloses()。 */
+  function computeLookupNearHigh(rowsAsc) {
+    if (!rowsAsc || rowsAsc.length < 2) return null;
+    var closesDesc = rowsAsc.map(function (r) { return r.close; }).reverse();
+    return nearHighFromCloses(closesDesc);
+  }
+
   function computeLookupMarginMaintenance(rowsAsc) {
     if (!rowsAsc || rowsAsc.length < 2) return null;
     var bestIdx = null;
@@ -3576,8 +3638,10 @@
         var rec2 = data.data[c];
         var name = rec2.stock_name || '';
         var badges = lookupSignalBadgeSummary(rec2);
+        var nh2 = computeLookupNearHigh(rec2.rows || []);
+        var nhTag = nh2 ? ' ‼️' : '';
         return '<option value="' + esc(c) + '"' + (c === code ? ' selected' : '') + '>' +
-          esc(c) + ' ' + esc(name) + (badges ? '  ' + badges : '') + '</option>';
+          esc(c) + ' ' + esc(name) + nhTag + (badges ? '  ' + badges : '') + '</option>';
       }).join('');
 
       var range = data.history_range || {};
@@ -3597,6 +3661,7 @@
       var warmingMap = computeLookupWarmingDays(rec.rows || []);
       var shrinkZone = computeLookupShrinkZone(rec.rows || []);
       var marginMaint = computeLookupMarginMaintenance(rec.rows || []);
+      var nearHigh = computeLookupNearHigh(rec.rows || []);
 
       var zoneNote = '';
       if (shrinkZone && !shrinkZone.alreadyTriggered) {
@@ -3623,9 +3688,15 @@
           '只驗證過 2313 一次樣本,沒有回測,純參考">' +
           '融資維持率估計 ' + marginMaint.maint.toFixed(1) + '%(' + maintLabel + ')</span>';
       }
+      var nearHighNote = '';
+      if (nearHigh) {
+        nearHighNote = '  ·  <span class="near-high-warn">‼️ 現價 ' + nearHigh.now +
+          ' 已到近30天最高收盤價 ' + nearHigh.prevHigh + ' 的 ' + (nearHigh.pct * 100).toFixed(1) +
+          '%(接近前高,使用者經驗:容易有解套賣壓,門檻 85% 沒有回測驗證過)</span>';
+      }
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
-        zoneNote + lowActivityNote) + maintNote;
+        zoneNote + lowActivityNote) + maintNote + nearHighNote;
 
       table.hidden = false;
       if (!allRows.length) {
@@ -4339,6 +4410,28 @@
     return { checked: checked, bad: bad };
   }
 
+  /** 2026-09-14 使用者要求:產業流向要跟量能搭配看,箭頭方向用 d0_d1
+   * (今天原始成交筆數 - 昨天,repo 後端本來就算好的欄位)判斷——正的畫紅色
+   * 向上箭頭、負的畫綠色向下箭頭,跟本站「紅漲綠跌」一致;日增減幅度
+   * (今天原始值相對昨天原始值的變動百分比)達 20% 以上時再從紅/綠升級成
+   * 紫/墨綠,強調「不只是方向對,力道也明顯放大/縮小」。門檻(20%)是
+   * 使用者自己的經驗值,沒有驗證過。 */
+  function tickArrowHtml(row) {
+    if (!row || row.d0_d1 == null || row.avg_tick_count_raw == null) return '';
+    var d = row.d0_d1;
+    if (d === 0) return '';
+    var yesterday = row.avg_tick_count_raw - d;
+    var pct = yesterday > 0 ? (d / yesterday) * 100 : null;
+    var big = pct != null && Math.abs(pct) >= 20;
+    var up = d > 0;
+    var cls = up ? (big ? 'tick-arrow-up-big' : 'tick-arrow-up') : (big ? 'tick-arrow-down-big' : 'tick-arrow-down');
+    var pctTxt = pct != null ? '(' + (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%)' : '';
+    var title = '今日成交筆數 ' + fmtInt(Math.round(row.avg_tick_count_raw)) +
+      ',較昨日 ' + fmtInt(Math.round(yesterday)) + ' ' + (up ? '增加' : '減少') +
+      ' ' + fmtInt(Math.round(Math.abs(d))) + ' 筆 ' + pctTxt;
+    return '<span class="tick-arrow ' + cls + '" title="' + esc(title) + '">' + (up ? '▲' : '▼') + '</span>';
+  }
+
   function tickCellHtml(row, key) {
     if (!row) return '<td class="num tick-cell tick-none">—</td>';
     var v = row[tickMetricKey()];
@@ -4346,7 +4439,7 @@
     var under = row.reporting_count < row.sample_count;
     var html = '<td class="num tick-cell' + (row.low_n_flag ? ' low-n' : '') +
       '" data-group="' + esc(key) + '">' +
-      '<span class="tick-val ' + cls + '">' + esc(tickFmt(v)) + '</span>' +
+      '<span class="tick-val ' + cls + '">' + esc(tickFmt(v)) + tickArrowHtml(row) + '</span>' +
       '<span class="tick-n' + (under ? ' n-under' : '') + '">n=' + row.sample_count +
       (under ? '(實報' + row.reporting_count + ')' : '') + '</span>';
     if (tickShowRaw) {

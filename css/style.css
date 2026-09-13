@@ -24,6 +24,11 @@
   --tp-valuation: #5a8dee;
   --tp-note: #7d8996;
 
+  /* 產業流向箭頭(2026-09-14):紅漲綠跌是基本方向,日增減幅度 20% 以上時
+     升級成紫色/墨綠,表示力道明顯放大,不只是方向對。 */
+  --tick-up-big: #9b59d0;
+  --tick-down-big: #1a6b3f;
+
   --radius: 12px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -727,6 +732,15 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
 .tick-val.up { color: var(--up); }
 .tick-val.down { color: var(--down); }
 
+/* 2026-09-14:產業流向今日筆數比昨天增減的箭頭,跟 .tick-val 同一行、
+   緊接在後面,不是獨立一行(跟 .tick-n/.tick-raw 那種逐行資訊不同,這個
+   是對 .tick-val 的即時補充)。 */
+.tick-arrow { display: inline-block; margin-left: 4px; font-size: 12px; cursor: help; }
+.tick-arrow-up { color: var(--up); }
+.tick-arrow-down { color: var(--down); }
+.tick-arrow-up-big { color: var(--tick-up-big); }
+.tick-arrow-down-big { color: var(--tick-down-big); }
+
 .tick-n {
   display: block;
   font-size: 11px;
@@ -1322,6 +1336,10 @@ input[type="date"] {
 .lookup-maint-warn { color: #d8a02a; font-weight: 600; }
 .lookup-maint-danger { color: var(--up); font-weight: 600; }
 
+/* 2026-09-14 使用者要求:股價接近前波高點(近30天最高收盤價的 85%)示警,
+   跟融資維持率警戒共用同一個琥珀色,語意上都是「還沒出事但要注意」。 */
+.near-high-warn { color: #d8a02a; font-weight: 600; cursor: help; }
+
 .lookup-hide-btn {
   border: none;
   background: transparent;
@@ -1677,6 +1695,16 @@ input[type="date"] {
 .tp-calc-row:first-of-type { margin-top: 0; }
 .tp-calc-row label { flex: 1; font-size: 12px; color: var(--muted); display: block; min-width: 0; }
 .tp-calc-input { margin-top: 4px; }
+
+/* 2026-09-14「資料不完整」checkbox,估值試算專用——跟數字輸入框(.tp-calc-row)
+   分開一行,checkbox 本身不用 margin-top:4px(那是給 <input type=number> 的
+   label 換行用的,checkbox 是單行 inline 排列)。 */
+.tp-calc-checkbox {
+  display: flex; align-items: center; gap: 7px; margin-top: 8px;
+  font-size: 12.5px; color: var(--muted); cursor: pointer;
+}
+.tp-calc-checkbox input { margin: 0; }
+
 .tp-calc-preview { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 18px; line-height: 1.5; }
 .tp-calc-preview.has-value { color: var(--tp-calc-color, var(--tp-valuation)); }
 .tp-calc-apply { margin-top: 10px; width: 100%; }
