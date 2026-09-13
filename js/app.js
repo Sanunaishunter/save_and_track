@@ -3321,12 +3321,25 @@
     var avgRange = lookupAvgRangePct(rowsAsc, lo, i);
     if (avgRange == null || avgRange < LOOKUP_MIN_RANGE_PCT) return null;
 
+    // 2026-09-14 修:分析 2069 時發現的坑——它整段歷史 trust_net 都是 0
+    // (這檔沒有投信參與,或 FinMind 沒收錄),「外資+投信同步買超」這個
+    // 條件因此永遠不會成立,alreadyTriggered 永遠是 false,即使已經噴出
+    // 好幾天,還是會一直被當成候選。這種股票只看外資買超,不要求投信
+    // 也買超——只調整 alreadyTriggered(候選要不要繼續列),🔔量縮轉買
+    // (computeLookupBreakouts)的判斷條件沒有動,那是不同的用途(標記
+    // 哪一天觸發轉買),這次沒有一併改。
+    var trustAllZero = rowsAsc.every(function (r) { return !r.trust_net; });
+    var todayRow = rowsAsc[i];
+    var alreadyTriggered = trustAllZero
+      ? !!(todayRow.foreign_net > 0)
+      : !!(todayRow.foreign_net > 0 && todayRow.trust_net > 0);
+
     return {
       date: rowsAsc[i].date,
       shrinkCount: shrinkCount,
       lookback: LOOKUP_BREAKOUT_LOOKBACK,
       avgRangePct: avgRange,
-      alreadyTriggered: !!(rowsAsc[i].foreign_net > 0 && rowsAsc[i].trust_net > 0)
+      alreadyTriggered: alreadyTriggered
     };
   }
 
