@@ -1556,14 +1556,20 @@ input[type="date"] {
   min-height: 240px;
   max-height: calc(100vh - 340px);
 }
-.tp-canvas { position: relative; min-width: 100%; width: max-content; padding: 22px 18px 30px; }
+.tp-canvas { position: relative; width: 100%; padding: 22px 18px 30px; }
 .tp-canvas svg { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
 
 /* 絕對不要加 position:relative——會讓方塊的 offsetParent 變成這一列(或包住
    這一列的任何祖先元素)自己,offsetTop 全部歸零重算,SVG 連線座標整個錯位
    (CLAUDE.md 記過這個坑)。.tp-row-group 同理,純背景色不影響 offsetParent
    所以是安全的,但絕對不要在這裡或 .tp-row-group 加 position。 */
-.tp-row { display: flex; justify-content: center; gap: 18px; }
+/* 2026-09-14 使用者要求改寬版面(閱讀習慣是橫向長行,原本同一層並排的窄方塊
+   一行只能塞 7~8 個字,讀起來很痛苦)——原本同深度的方塊是左右並排
+   (justify-content:center 置中),現在改直向堆疊,方塊寬度吃滿整個畫布,
+   犧牲掉「分岔在同一列左右展開」的鐵軌圖既視感,換取每個方塊本身能寬到
+   正常閱讀的行寬。連線邏輯(thinkingDrawTracks)完全是照 offsetTop/offsetLeft
+   算的,不假設左右排列,改直向堆疊不用動 JS。 */
+.tp-row { display: flex; flex-direction: column; gap: 10px; }
 
 /* 同一層(同深度)的底色帶 + 「第 N 層」標籤,2026-09-13 使用者提議——原本
    同一層方塊只靠連線才看得出來是同一組,不夠明顯。 */
@@ -1574,7 +1580,7 @@ input[type="date"] {
 .tp-row-label { font-size: 10.5px; font-weight: 700; color: var(--muted); letter-spacing: .02em; padding: 0 2px 6px; }
 
 .tp-block {
-  width: 122px;
+  width: 100%;
   flex: 0 0 auto;
   background: var(--panel-2);
   border: 1.5px solid var(--line);
@@ -1706,7 +1712,3 @@ input[type="date"] {
 .tp-cat-swatch.is-picked { border-color: var(--text); color: var(--text); background: var(--panel-3); }
 .tp-sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
 .tp-sheet-actions .btn { flex: 1; text-align: center; padding: 11px; }
-
-@media (max-width: 480px) {
-  .tp-block { width: 110px; }
-}
