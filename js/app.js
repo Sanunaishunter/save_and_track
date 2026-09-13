@@ -1410,17 +1410,23 @@
     if (!path || !path.nodes.length) { canvas.innerHTML = '<svg id="tp-tracks"></svg>'; return; }
 
     var rows = thinkingComputeRows(path);
-    var rowsHtml = rows.map(function (rowNodes) {
+    // 每一列(同深度)包一個 .tp-row-group 給底色帶 + 「第 N 層」標籤,讓同一層
+    // 的方塊一眼就看得出來是同一組,不用靠連線自己追(2026-09-13 使用者提議)。
+    // .tp-row-group 一樣絕對不能加 position——見上面 .tp-row 那條踩過的坑,
+    // 規則對任何包住 .tp-block 的祖先元素都成立,純背景色不影響 offsetParent。
+    var rowsHtml = rows.map(function (rowNodes, idx) {
       if (!rowNodes) return '';
       var cells = rowNodes.map(function (n) {
         var cat = TP_CAT_MAP[n.cat] || TP_CAT_MAP.note;
         var isSel = thinkingSelected.indexOf(n.id) >= 0 ? ' is-selected' : '';
+        var dateTag = n.created_at ? ' · ' + esc(n.created_at) : '';
         return '<div class="tp-block tp-cat-' + n.cat + isSel + '" data-tp-id="' + esc(n.id) + '" style="--tp-cat-color:' + cat.color + '">' +
           '<span class="tp-block-text">' + esc(n.text) + '</span>' +
-          '<span class="tp-block-tag">' + esc(cat.label) + '</span>' +
+          '<span class="tp-block-tag">' + esc(cat.label) + dateTag + '</span>' +
         '</div>';
       }).join('');
-      return '<div class="tp-row">' + cells + '</div>';
+      return '<div class="tp-row-group"><div class="tp-row-label">第 ' + (idx + 1) + ' 層</div>' +
+        '<div class="tp-row">' + cells + '</div></div>';
     }).join('');
 
     // svg 放最前面(DOM 順序最早),後面的方塊自然疊在軌道線上面,連線在
@@ -1580,7 +1586,8 @@
 
     var title = opts.mode === 'edit' ? '編輯方塊'
       : (parents.length > 1 ? '合併成新方塊' : (parents.length ? '接續下一格' : '新增起點'));
-    var hint = opts.mode === 'edit' ? '修改文字或分類,不會動到跟其他方塊的連線。'
+    var hint = opts.mode === 'edit'
+      ? '修改文字或分類,不會動到跟其他方塊的連線。' + (existing && existing.created_at ? '(建立於 ' + esc(existing.created_at) + ')' : '')
       : (parents.length > 1
           ? '這格會同時接住上面選的 ' + parents.length + ' 條線,合併成一個結論。'
           : '選一個常用詞,或直接輸入自己的想法。');
@@ -1714,7 +1721,10 @@
         n.text = val; n.cat = useCat;
       } else {
         var newId = uid();
-        path.nodes.push({ id: newId, text: val, cat: useCat });
+        // 方塊自己的建立日期(2026-09-13 使用者要求),跟路徑層級的 created_at
+        // 同一種 todayStr() 日期格式——事後檢討要能回頭查「這格是哪天寫的」,
+        // 之前只有整條路徑有時間戳,單一方塊沒有。
+        path.nodes.push({ id: newId, text: val, cat: useCat, created_at: todayStr() });
         parents.forEach(function (pid) { path.edges.push({ from: pid, to: newId }); });
       }
       if (!saveThinkingPaths()) return;
