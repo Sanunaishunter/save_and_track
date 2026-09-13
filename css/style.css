@@ -590,6 +590,41 @@ textarea:focus, input:focus { outline: none; border-color: var(--accent); }
   line-height: 1.6;
 }
 
+/* 法人軌跡分頁(2026-09-14):方向徽章跟來源 chip,展開列樣式跟兵棋推演
+   共用同一套(.insttrack-detail 對應 .trail-detail)。紅漲綠跌:偏多用
+   --up(紅)、偏空用 --down(綠),跟全站慣例一致,不是另外發明配色。 */
+.insttrack-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.insttrack-bull { color: var(--up); font-weight: 700; }
+.insttrack-bear { color: var(--down); font-weight: 700; }
+.insttrack-unknown { color: var(--muted); }
+
+.scan-table tr.insttrack-row { cursor: pointer; }
+.scan-table tr.insttrack-row:active td { background: var(--panel-2); }
+.insttrack-detail td {
+  white-space: normal;
+  background: var(--panel-2);
+  font-size: 12.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.src-chip {
+  display: inline-block;
+  font-size: 10.5px;
+  padding: 1px 6px;
+  margin: 1px 3px 1px 0;
+  border-radius: 999px;
+  background: var(--panel-3);
+  color: var(--text-dim);
+}
+
 /* ---------- 對話框 ---------- */
 
 .modal-backdrop {

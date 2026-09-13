@@ -62,6 +62,7 @@
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
     <button type="button" class="viewbtn" data-view="trail">兵棋推演</button>
+    <button type="button" class="viewbtn" data-view="insttrack">法人軌跡</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
@@ -161,6 +162,33 @@
         </tr>
       </thead>
       <tbody id="trail-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- 法人軌跡(2026-09-14):只掃現有三份個股查詢清單(FOMO/爆量/暴跌FOMO)裡
+     正在量縮蓄勢、還沒等到轉買訊號的股票,用融資餘額趨勢/外資投信合計/
+     平均收盤位置三個指標投票判斷偏多還是偏空——量縮本身是中性的,方向要
+     靠這三個籌碼面指標消歧義。純觀察,不接「+ 追蹤」,點列展開明細看
+     三個指標的原始數字。時間點(什麼時候真的會爆量)這個工具算不出來,
+     要另外查有沒有已知的催化劑。 -->
+<main class="list-wrap" id="insttrack-wrap" hidden>
+  <div class="scan-meta" id="insttrack-meta">載入中…</div>
+  <div class="table-scroll">
+    <table class="scan-table" id="insttrack-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th>來源</th>
+          <th class="num">量縮天數</th>
+          <th class="num">融資趨勢</th>
+          <th class="num">外資+投信</th>
+          <th class="num">收盤位置</th>
+          <th>方向</th>
+        </tr>
+      </thead>
+      <tbody id="insttrack-tbody"></tbody>
     </table>
   </div>
 </main>

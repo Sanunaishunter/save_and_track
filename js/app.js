@@ -3330,6 +3330,89 @@
     };
   }
 
+  // ------------------------------------------- 法人軌跡(2026-09-14)
+  // 起因:使用者觀察「量縮數十天後迎來的不是出貨就是爆量,而且都是短時間、
+  // 量很大」,問量縮期間能不能先判斷方向。量縮本身是中性的(買方籌碼收乾
+  // 跟賣方籌碼收乾看起來都是量縮),所以疊加三個籌碼面指標,各投一票,
+  // 多數決定「偏多/偏空/不明」——只是簡單計票,不是加權模型,跟本站其他
+  // 「先試這組固定值」的功能同一種態度,三個門檻都沒有回測驗證過:
+  //   1. 融資餘額窗口內變動:持續增加(散戶跟進)= 偏空(籌碼不安定,最後
+  //      那隻腳是散戶);持續減少(浮額洗清)= 偏多(籌碼安定)。
+  //   2. 外資+投信窗口內合計買賣超:安靜吸籌(合計買超)= 偏多。
+  //   3. 平均收盤位置(當日高低區間內的百分位):收在區間高檔 = 偏多
+  //      (買方每天都在守),收在區間低檔 = 偏空(賣方還在,量縮只是沒人
+  //      願意賣更便宜)。
+  // 用跟 computeLookupShrinkZone 完全同一個視窗([lo, i),不含當天),不是
+  // 另外定義一個新窗口;只對「還沒等到轉買訊號」(!alreadyTriggered)的
+  // 股票判斷方向,已經觸發的表示量縮階段已經結束,不需要再猜方向。
+  var INST_MARGIN_FLAT_PCT = 5;   // 融資餘額變動 ±5% 內算持平,不投票
+  var INST_CLOSE_POS_HIGH = 60;   // 平均收盤位置 >=60% 算收在高檔(偏多那一票)
+  var INST_CLOSE_POS_LOW = 40;    // 平均收盤位置 <=40% 算收在低檔(偏空那一票)
+
+  function computeLookupInstTrajectory(rowsAsc) {
+    var zone = computeLookupShrinkZone(rowsAsc);
+    if (!zone || zone.alreadyTriggered) return null;
+
+    var i = rowsAsc.length - 1;
+    var lo = i - zone.lookback;
+    var win = rowsAsc.slice(lo, i);
+
+    var marginTrend = null;
+    var firstMargin = null, lastMargin = null;
+    for (var a = 0; a < win.length; a++) {
+      if (win[a].margin_balance != null) { firstMargin = win[a].margin_balance; break; }
+    }
+    for (var b = win.length - 1; b >= 0; b--) {
+      if (win[b].margin_balance != null) { lastMargin = win[b].margin_balance; break; }
+    }
+    if (firstMargin != null && lastMargin != null && firstMargin !== 0) {
+      marginTrend = (lastMargin - firstMargin) / Math.abs(firstMargin) * 100;
+    }
+
+    var instNet = 0, instNetOk = false;
+    win.forEach(function (r) {
+      if (r.foreign_net != null) { instNet += r.foreign_net; instNetOk = true; }
+      if (r.trust_net != null) { instNet += r.trust_net; instNetOk = true; }
+    });
+
+    var posSum = 0, posCount = 0;
+    win.forEach(function (r) {
+      if (r.high == null || r.low == null || r.close == null || r.high === r.low) return;
+      posSum += (r.close - r.low) / (r.high - r.low);
+      posCount++;
+    });
+    var avgClosePos = posCount > 0 ? posSum / posCount * 100 : null;
+
+    var bullVotes = 0, bearVotes = 0, votes = 0;
+    if (marginTrend != null) {
+      votes++;
+      if (marginTrend <= -INST_MARGIN_FLAT_PCT) bullVotes++;
+      else if (marginTrend >= INST_MARGIN_FLAT_PCT) bearVotes++;
+    }
+    if (instNetOk) {
+      votes++;
+      if (instNet > 0) bullVotes++;
+      else if (instNet < 0) bearVotes++;
+    }
+    if (avgClosePos != null) {
+      votes++;
+      if (avgClosePos >= INST_CLOSE_POS_HIGH) bullVotes++;
+      else if (avgClosePos <= INST_CLOSE_POS_LOW) bearVotes++;
+    }
+
+    var label, cls;
+    if (votes === 0) { label = '資料不足'; cls = 'unknown'; }
+    else if (bullVotes >= 2 && bullVotes > bearVotes) { label = '偏多蓄勢'; cls = 'bull'; }
+    else if (bearVotes >= 2 && bearVotes > bullVotes) { label = '偏空蓄勢(出貨風險)'; cls = 'bear'; }
+    else { label = '方向不明'; cls = 'unknown'; }
+
+    return {
+      zone: zone, marginTrend: marginTrend, instNet: instNet, instNetOk: instNetOk,
+      avgClosePos: avgClosePos, bullVotes: bullVotes, bearVotes: bearVotes, votes: votes,
+      label: label, cls: cls
+    };
+  }
+
   // 外資出貨下殺標記(2026-09-08 加入,跟量縮/量縮轉買同一批,純前端)。
   // 討論脈絡:2313 7/30 當天跌 6.95%、外資賣超。跟 7/29 對照才看得出重點
   // 不是「賣超金額大小」——7/29 也跌得很重(-6.30%)但外資是買超(接刀),
@@ -3888,6 +3971,7 @@
     el('tabs').hidden = v !== 'track';
     el('thinking-wrap').hidden = v !== 'thinking';
     el('trail-wrap').hidden = v !== 'trail';
+    el('insttrack-wrap').hidden = v !== 'insttrack';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
     el('fomo-wrap').hidden = v !== 'fomo';
@@ -3906,6 +3990,7 @@
     });
     if (v === 'thinking') loadThinkingView();
     if (v === 'trail') loadTrailWatch();
+    if (v === 'insttrack') loadInstTrack(false);
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
     if (v === 'fomo') loadFomo(false);
@@ -3925,7 +4010,7 @@
 
   // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
   // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -5568,6 +5653,144 @@
     });
   }
 
+  // ------------------------------------------- 法人軌跡分頁(2026-09-14)
+  // 範圍問過使用者:先只掃現有三份個股查詢清單(FOMO/爆量/暴跌FOMO)裡的
+  // 股票,不是全市場——這三份清單本來就有融資融券/外資投信逐日資料,
+  // 純前端算,不用等 daily-scan.yml 或吃 FinMind 額度。三份清單各自抓,
+  // 同一檔出現在多份清單就合併成一筆、標記所有來源。
+  var instTrackData = null;         // [{code,name,sources:[],traj}],依訊號強度排序
+  var instTrackLoaded = false;
+  var instTrackErr = null;
+  var instTrackFailedSources = [];  // 三份清單裡讀取失敗的那幾份(不擋住其他份正常顯示)
+  var instTrackOpen = null;         // 展開明細的股票代號
+
+  function instTrackBadge(cls, label) {
+    return '<span class="insttrack-badge insttrack-' + cls + '">' + esc(label) + '</span>';
+  }
+
+  /** 展開明細:三個指標各自的原始數字,方便判斷投票結果合不合理,不是
+   * 只信任那個「偏多/偏空」標籤。 */
+  function instTrackDetailHtml(item) {
+    var t = item.traj, z = t.zone;
+    var facts = [];
+    facts.push('量縮 ' + z.shrinkCount + '/' + z.lookback + ' 天,平均日振幅 ' + z.avgRangePct.toFixed(1) + '%');
+    facts.push('① 融資餘額窗口內變動 ' + (t.marginTrend != null ? fmtPct(t.marginTrend / 100, 1) : '缺資料'));
+    facts.push('② 外資+投信窗口內合計 ' + (t.instNetOk ? signed(Math.round(t.instNet)) + ' 張' : '缺資料'));
+    facts.push('③ 平均收盤位置(當日高低區間內) ' + (t.avgClosePos != null ? t.avgClosePos.toFixed(0) + '%' : '缺資料'));
+    facts.push('投票:偏多 ' + t.bullVotes + '、偏空 ' + t.bearVotes + '(' + t.votes + ' 項指標有值)');
+    facts.push('來源清單:' + item.sources.join('、'));
+    return '<tr class="insttrack-detail"><td colspan="8">' +
+      '<div>' + esc(facts.join('　·　')) + '</div>' +
+      '<p class="panel-note">三個門檻(融資 ±5%、收盤位置 60%/40%)都是使用者的經驗值,' +
+        '沒有回測驗證過;量縮/振幅門檻沿用既有的🕐蓄勢中判斷,同一套標準。這是機率性的' +
+        '方向參考,不是進場訊號,時間點(什麼時候真的會爆量)這個工具算不出來,要另外查' +
+        '有沒有已知的催化劑(法說會、標案結果、財報預告⋯)。</p>' +
+    '</td></tr>';
+  }
+
+  function renderInstTrack() {
+    var meta = el('insttrack-meta');
+    var tbody = el('insttrack-tbody');
+    if (!meta || !tbody) return;
+    if (instTrackErr) {
+      meta.innerHTML = '<span class="warn">' + esc(instTrackErr) + '</span>';
+      tbody.innerHTML = '';
+      return;
+    }
+    if (!instTrackLoaded) {
+      meta.textContent = '載入中…';
+      tbody.innerHTML = '';
+      return;
+    }
+    if (!instTrackData.length) {
+      meta.textContent = '目前個股查詢清單(FOMO/爆量/暴跌FOMO 三份)裡,沒有正在量縮蓄勢' +
+        '、還沒等到轉買訊號的股票。' +
+        (instTrackFailedSources.length ? '(讀取失敗:' + instTrackFailedSources.join('、') + ')' : '');
+      tbody.innerHTML = '';
+      return;
+    }
+
+    var bullN = 0, bearN = 0, unkN = 0;
+    var rows = instTrackData.map(function (item) {
+      var t = item.traj;
+      if (t.cls === 'bull') bullN++; else if (t.cls === 'bear') bearN++; else unkN++;
+      var marginTxt = t.marginTrend != null ? fmtPct(t.marginTrend / 100, 1) : '—';
+      var instTxt = t.instNetOk ? signed(Math.round(t.instNet)) : '—';
+      var posTxt = t.avgClosePos != null ? t.avgClosePos.toFixed(0) + '%' : '—';
+      var srcChips = item.sources.map(function (s) { return '<span class="src-chip">' + esc(s) + '</span>'; }).join('');
+      var row = '<tr class="insttrack-row" data-insttrack="' + esc(item.code) + '">' +
+        '<td class="code mono">' + esc(item.code) + '</td>' +
+        '<td>' + esc(item.name) + '</td>' +
+        '<td>' + srcChips + '</td>' +
+        '<td class="num mono">' + t.zone.shrinkCount + '/' + t.zone.lookback + '</td>' +
+        '<td class="num mono">' + marginTxt + '</td>' +
+        '<td class="num mono">' + instTxt + '</td>' +
+        '<td class="num mono">' + posTxt + '</td>' +
+        '<td>' + instTrackBadge(t.cls, t.label) + '</td>' +
+      '</tr>';
+      if (instTrackOpen === item.code) row += instTrackDetailHtml(item);
+      return row;
+    }).join('');
+    tbody.innerHTML = rows;
+
+    var bits = ['共 ' + instTrackData.length + ' 檔量縮蓄勢中'];
+    if (bullN) bits.push('偏多 ' + bullN + ' 檔');
+    if (bearN) bits.push('偏空 ' + bearN + ' 檔');
+    if (unkN) bits.push('不明 ' + unkN + ' 檔');
+    if (instTrackFailedSources.length) bits.push('讀取失敗:' + instTrackFailedSources.join('、'));
+    meta.textContent = bits.join(' · ');
+  }
+
+  function loadInstTrack(force) {
+    if (instTrackLoaded && !force) { renderInstTrack(); return; }
+    var sources = [
+      { url: 'data/stock-lookup-latest.json', tag: 'FOMO' },
+      { url: 'data/stock-lookup-scan-latest.json', tag: '爆量' },
+      { url: 'data/stock-lookup-crashfomo-latest.json', tag: '暴跌FOMO' }
+    ];
+    instTrackLoaded = false;
+    instTrackErr = null;
+    renderInstTrack();
+    Promise.all(sources.map(function (s) {
+      return fetch(s.url).then(function (r) {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      }).then(function (d) { return { tag: s.tag, ok: true, data: d }; })
+        .catch(function (e) { return { tag: s.tag, ok: false, error: e.message || String(e) }; });
+    })).then(function (results) {
+      var byCode = {};
+      var failed = [];
+      results.forEach(function (res) {
+        if (!res.ok || !res.data || !res.data.data) { failed.push(res.tag); return; }
+        (res.data.codes || []).forEach(function (c) {
+          var rec = res.data.data[c];
+          if (!rec) return;
+          if (!byCode[c]) byCode[c] = { code: c, name: rec.stock_name || '', rows: rec.rows || [], sources: [] };
+          if (byCode[c].sources.indexOf(res.tag) < 0) byCode[c].sources.push(res.tag);
+        });
+      });
+      var list = [];
+      Object.keys(byCode).forEach(function (c) {
+        var item = byCode[c];
+        var traj = computeLookupInstTrajectory(item.rows);
+        if (!traj) return;
+        list.push({ code: item.code, name: item.name, sources: item.sources, traj: traj });
+      });
+      list.sort(function (a, b) {
+        var da = Math.abs(a.traj.bullVotes - a.traj.bearVotes), db = Math.abs(b.traj.bullVotes - b.traj.bearVotes);
+        if (db !== da) return db - da;
+        return b.traj.zone.shrinkCount - a.traj.zone.shrinkCount;
+      });
+      instTrackData = list;
+      instTrackFailedSources = failed;
+      instTrackLoaded = true;
+      renderInstTrack();
+    }).catch(function (e) {
+      instTrackErr = e.message || String(e);
+      renderInstTrack();
+    });
+  }
+
   // 每組(依觸發規則分)的詳細資料展開狀態,只存記憶體、不落地儲存——
   // 純粹是「這次瀏覽想不想看明細」的檢視偏好,重新整理就收合回去,
   // 跟持倉摘要的 posSummaryExpanded 同一個作法。
@@ -6566,6 +6789,14 @@
       var id = tr.getAttribute('data-trail');
       trailOpen = (trailOpen === id) ? null : id;
       renderTrailWatch();
+    });
+
+    el('insttrack-tbody').addEventListener('click', function (e) {
+      var tr = e.target.closest('.insttrack-row');
+      if (!tr) return;
+      var code = tr.getAttribute('data-insttrack');
+      instTrackOpen = (instTrackOpen === code) ? null : code;
+      renderInstTrack();
     });
 
     bindQuickAdd(el('scan-tbody'));
