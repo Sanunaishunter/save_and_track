@@ -1533,6 +1533,7 @@ input[type="date"] {
 .tp-path-chip .tp-pc-sym { font-size: 11px; color: var(--muted); }
 .tp-path-chip.is-active { background: var(--panel-3); color: var(--text); font-weight: 600; }
 .tp-path-chip.tp-pc-add { border-style: dashed; color: var(--muted); }
+.tp-path-chip.tp-pc-del { border-color: rgba(232, 69, 60, 0.4); color: var(--up); margin-left: auto; }
 
 .tp-legend {
   display: flex;
@@ -1603,6 +1604,18 @@ input[type="date"] {
 .tp-block.tp-cat-conclude { border-style: dashed; background: var(--panel); }
 .tp-block.tp-cat-conclude .tp-block-text { font-weight: 600; }
 
+/* 最新一則「想法更新」摘要,直接顯示在方塊上(2026-09-13)——跟原始文字
+   (.tp-block-text)、分類/日期(.tp-block-tag)用不同的視覺層次區分,
+   斜體 + 分隔線,最多兩行,再長就截斷(完整內容要點開編輯視窗看)。 */
+.tp-block-update {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-size: 11px; font-style: italic; color: var(--text-dim);
+  margin-top: 5px; padding-top: 5px; padding-left: 7px;
+  border-top: 1px dashed var(--line);
+  word-break: break-word;
+}
+
 .tp-empty {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -1667,6 +1680,22 @@ input[type="date"] {
   border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; margin-top: 2px;
 }
 .tp-text-input:focus { outline: none; border-color: var(--text-dim); }
+
+/* 編輯既有方塊:原始文字唯讀顯示(鎖定,2026-09-13)+ 想法更新清單,
+   外觀比照 .tp-text-input 但不是可編輯的輸入框。 */
+.tp-node-locked {
+  width: 100%; font-size: 14.5px; color: var(--text-dim); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 9px; padding: 10px 12px; margin-top: 2px;
+  word-break: break-word;
+}
+.tp-update-list { display: flex; flex-direction: column; gap: 8px; }
+.tp-update-item {
+  border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; background: var(--panel-2);
+}
+.tp-update-date { display: block; font-size: 11px; color: var(--muted); }
+.tp-update-text { display: block; font-size: 13.5px; color: var(--text); margin-top: 3px; word-break: break-word; }
+#tp-node-update-input { margin-bottom: 8px; }
+
 .tp-cat-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 .tp-cat-swatch {
   display: flex; align-items: center; gap: 6px; border: 1.5px solid var(--line); border-radius: 999px;

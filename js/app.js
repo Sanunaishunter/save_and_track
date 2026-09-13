@@ -1394,11 +1394,15 @@
   function renderThinkingPathRail() {
     var box = el('tp-path-rail');
     if (!box) return;
+    var hasPaths = !!(thinkingPaths && thinkingPaths.paths.length);
     var html = (thinkingPaths ? thinkingPaths.paths : []).map(function (p) {
       var active = thinkingPaths.currentPathId === p.id ? ' is-active' : '';
       return '<button type="button" class="tp-path-chip' + active + '" data-tp-path="' + esc(p.id) + '">' +
         esc(p.name) + ' <span class="tp-pc-sym mono">' + esc(p.stock_id) + '</span></button>';
-    }).join('') + '<button type="button" class="tp-path-chip tp-pc-add" id="tp-btn-new-path">+ 新路徑</button>';
+    }).join('') + '<button type="button" class="tp-path-chip tp-pc-add" id="tp-btn-new-path">+ 新路徑</button>' +
+      // 刪除的是「目前這條路徑」,不是逐一點某張 chip 刪——原本完全沒有刪路徑的
+      // 功能,只能刪單一方塊,2026-09-13 使用者要求補上。
+      (hasPaths ? '<button type="button" class="tp-path-chip tp-pc-del" id="tp-btn-del-path">🗑 刪除路徑</button>' : '');
     box.innerHTML = html;
   }
 
@@ -1420,9 +1424,16 @@
         var cat = TP_CAT_MAP[n.cat] || TP_CAT_MAP.note;
         var isSel = thinkingSelected.indexOf(n.id) >= 0 ? ' is-selected' : '';
         var dateTag = n.created_at ? ' · ' + esc(n.created_at) : '';
+        // 有更新(commit)就在方塊上直接顯示最新一則摘要,不用點開才看得到
+        // (2026-09-13 使用者要求,選項是「顯示摘要」而不是只顯示徽章)。
+        var latestUpdate = n.updates && n.updates.length ? n.updates[0] : null;
+        var updateHtml = latestUpdate
+          ? '<span class="tp-block-update">🔄 ' + esc(latestUpdate.text) + ' · ' + esc(latestUpdate.created_at) + '</span>'
+          : '';
         return '<div class="tp-block tp-cat-' + n.cat + isSel + '" data-tp-id="' + esc(n.id) + '" style="--tp-cat-color:' + cat.color + '">' +
           '<span class="tp-block-text">' + esc(n.text) + '</span>' +
           '<span class="tp-block-tag">' + esc(cat.label) + dateTag + '</span>' +
+          updateHtml +
         '</div>';
       }).join('');
       return '<div class="tp-row-group"><div class="tp-row-label">第 ' + (idx + 1) + ' 層</div>' +
@@ -1571,23 +1582,43 @@
     return text;
   }
 
+  /** 想法更新(commit)清單的 HTML,新到舊——2026-09-13 使用者要求方塊要能
+   * 「像便利貼一樣貼上更新後的意見」,不是直接覆蓋原始文字。 */
+  function thinkingUpdateListHtml(updates) {
+    if (!updates || !updates.length) return '<p class="tp-hint">還沒有任何更新。</p>';
+    return '<div class="tp-update-list">' + updates.map(function (u) {
+      return '<div class="tp-update-item">' +
+        '<span class="tp-update-date mono">' + esc(u.created_at) + '</span>' +
+        '<span class="tp-update-text">' + esc(u.text) + '</span>' +
+      '</div>';
+    }).join('') + '</div>';
+  }
+
   /** 新增/編輯方塊。opts: {mode:'new', parents:[父格 id...]} 或
    * {mode:'edit', nodeId:...}。parents.length > 1 就是合併,parents.length
    * 剛好 1 就是單純接續,parents 是空陣列就是新起點——分岔不是特別的模式,
-   * 對同一個父格連續呼叫兩次「接續」自然就長出兩條岔路。 */
+   * 對同一個父格連續呼叫兩次「接續」自然就長出兩條岔路。
+   *
+   * 編輯既有方塊時,原始文字(text)建立後鎖住不能再改(2026-09-13 使用者
+   * 決定,像便利貼一樣「疊加」而不是覆蓋)——想修正或補充想法要透過下面
+   * 的「新增更新」,存進 node.updates 陣列(新到舊),按下就立刻存檔,不用
+   * 等整個 sheet 的「儲存」。分類(cat)不受影響,仍然可以直接改,跟儲存
+   * 走同一顆按鈕。 */
   function thinkingOpenNodeSheet(opts) {
     var path = thinkingCurrentPath();
     if (!path) return;
     var editingId = opts.mode === 'edit' ? opts.nodeId : null;
     var parents = opts.mode === 'new' ? opts.parents : null;
     var existing = editingId ? thinkingNodeById(path, editingId) : null;
+    var isEdit = !!existing;
     var text = existing ? existing.text : '';
     var pickedCat = existing ? existing.cat : null;
 
-    var title = opts.mode === 'edit' ? '編輯方塊'
+    var title = isEdit ? '編輯方塊'
       : (parents.length > 1 ? '合併成新方塊' : (parents.length ? '接續下一格' : '新增起點'));
-    var hint = opts.mode === 'edit'
-      ? '修改文字或分類,不會動到跟其他方塊的連線。' + (existing && existing.created_at ? '(建立於 ' + esc(existing.created_at) + ')' : '')
+    var hint = isEdit
+      ? '原始想法建立後鎖住不能再改,想修正或補充請用下面「新增更新」疊加;分類仍可以改。' +
+        (existing.created_at ? '(建立於 ' + esc(existing.created_at) + ')' : '')
       : (parents.length > 1
           ? '這格會同時接住上面選的 ' + parents.length + ' 條線,合併成一個結論。'
           : '選一個常用詞,或直接輸入自己的想法。');
@@ -1599,6 +1630,18 @@
       return '<button type="button" class="tp-cat-swatch" data-tp-cat="' + c.k + '">' +
         '<span class="tp-dot" style="background:' + c.color + '"></span>' + c.label + '</button>';
     }).join('');
+
+    // 編輯模式:原始文字改成唯讀區塊 + 更新清單 + 「新增更新」輸入框,
+    // 取代原本可直接改寫的 <input>。新增模式維持原樣不動。
+    var textSectionHtml = isEdit
+      ? '<div class="tp-field-label">原始想法(鎖定)</div>' +
+        '<div class="tp-node-locked">' + esc(text) + '</div>' +
+        '<div class="tp-field-label">想法更新</div>' +
+        '<div id="tp-update-list">' + thinkingUpdateListHtml(existing.updates) + '</div>' +
+        '<input class="tp-text-input" id="tp-node-update-input" placeholder="貼上更新後的想法…">' +
+        '<button type="button" class="btn btn-outline" id="tp-node-update-add">+ 新增更新(按下立即儲存)</button>'
+      : '<div class="tp-field-label">文字</div>' +
+        '<input class="tp-text-input" id="tp-node-text" placeholder="輸入這一格的想法…" value="' + esc(text) + '">';
 
     el('tp-sheet').innerHTML =
       '<h2>' + title + '</h2>' +
@@ -1639,13 +1682,12 @@
         '<div class="tp-calc-preview" id="tp-rr-preview">填進場價、停損價、目標價就會算出風險報酬比。</div>' +
         '<button type="button" class="btn btn-outline tp-calc-apply" id="tp-rr-apply">帶入文字</button>' +
       '</div>' +
-      '<div class="tp-field-label">文字</div>' +
-      '<input class="tp-text-input" id="tp-node-text" placeholder="輸入這一格的想法…" value="' + esc(text) + '">' +
+      textSectionHtml +
       '<div class="tp-field-label">分類</div>' +
       '<div class="tp-cat-grid">' + swatches + '</div>' +
       '<div class="tp-sheet-actions">' +
         '<button type="button" class="btn" id="tp-sheet-cancel">取消</button>' +
-        '<button type="button" class="btn btn-primary" id="tp-sheet-confirm">' + (editingId ? '儲存' : '新增') + '</button>' +
+        '<button type="button" class="btn btn-primary" id="tp-sheet-confirm">' + (isEdit ? '儲存分類' : '新增') + '</button>' +
       '</div>';
 
     function paintCatPick() {
@@ -1655,11 +1697,18 @@
     }
     paintCatPick();
 
+    // 常用詞 chip:新增模式寫進原始文字欄位(跟以前一樣);編輯模式改寫進
+    // 「新增更新」草稿欄位,不去動已經鎖住的原始文字,也不連動改分類
+    // (分類改動是獨立動作,避免點個常用詞就悄悄把方塊分類換掉)。
     Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (b) {
       b.addEventListener('click', function () {
-        el('tp-node-text').value = b.getAttribute('data-tp-tag');
-        pickedCat = b.getAttribute('data-tp-cat');
-        paintCatPick();
+        if (isEdit) {
+          el('tp-node-update-input').value = b.getAttribute('data-tp-tag');
+        } else {
+          el('tp-node-text').value = b.getAttribute('data-tp-tag');
+          pickedCat = b.getAttribute('data-tp-cat');
+          paintCatPick();
+        }
         Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
         b.classList.add('is-picked');
       });
@@ -1668,9 +1717,10 @@
       b.addEventListener('click', function () { pickedCat = b.getAttribute('data-tp-cat'); paintCatPick(); });
     });
 
-    /** 估值試算/進出場計算共用的接線邏輯:展開收合、即時預覽、帶入文字
-     * 時順便把分類切過去,三者都跟常用詞 chip 是同一種「輔助填字」操作,
-     * 不是獨立資料型態。 */
+    /** 估值試算/進出場計算共用的接線邏輯:展開收合、即時預覽、帶入文字。
+     * 新增模式寫進原始文字欄位並連動切分類(跟常用詞 chip 同一套邏輯);
+     * 編輯模式寫進「新增更新」草稿欄位,不碰分類——理由同上面 chip 的
+     * 註解:更新不該悄悄改動方塊本身的分類。 */
     function bindCalcPanel(opts) {
       el(opts.toggleId).addEventListener('click', function () {
         var panel = el(opts.panelId);
@@ -1688,11 +1738,13 @@
       el(opts.applyId).addEventListener('click', function () {
         var t = opts.computeFn();
         if (!t) { el(opts.inputIds[0]).focus(); return; }
-        var box = el('tp-node-text');
+        var box = el(isEdit ? 'tp-node-update-input' : 'tp-node-text');
         box.value = box.value.trim() ? (box.value.trim() + ';' + t) : t;
-        pickedCat = opts.cat;
-        paintCatPick();
-        Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+        if (!isEdit) {
+          pickedCat = opts.cat;
+          paintCatPick();
+          Array.prototype.forEach.call(el('tp-sheet').querySelectorAll('.tp-tag-chip'), function (x) { x.classList.remove('is-picked'); });
+        }
       });
     }
 
@@ -1711,22 +1763,46 @@
       computeFn: thinkingRiskRewardText
     });
 
+    // 「新增更新」:按下立即寫進 node.updates(新到舊)並存檔,不用等 sheet
+    // 的「儲存」——跟計算機的「帶入文字」不一樣,那個只是填草稿,這個是
+    // 真的 commit。清單就地刷新,sheet 不關閉,方便一次補好幾則。
+    if (isEdit) {
+      el('tp-node-update-add').addEventListener('click', function () {
+        var input = el('tp-node-update-input');
+        var val = input.value.trim();
+        if (!val) { input.focus(); return; }
+        if (!existing.updates) existing.updates = [];
+        existing.updates.unshift({ id: uid(), text: val, created_at: todayStr() });
+        if (!saveThinkingPaths()) return;
+        input.value = '';
+        el('tp-update-list').innerHTML = thinkingUpdateListHtml(existing.updates);
+        thinkingRenderCanvas();   // 方塊上要即時顯示最新一則更新摘要
+        toast('已新增更新', 'ok');
+      });
+    }
+
     el('tp-sheet-cancel').addEventListener('click', thinkingCloseSheet);
     el('tp-sheet-confirm').addEventListener('click', function () {
+      if (isEdit) {
+        // 編輯模式:文字已經鎖住(靠上面「新增更新」單獨存檔),這顆按鈕
+        // 只負責存分類。
+        existing.cat = pickedCat || existing.cat;
+        if (!saveThinkingPaths()) return;
+        thinkingSelected = [];
+        thinkingCloseSheet();
+        renderThinking();
+        return;
+      }
       var val = el('tp-node-text').value.trim();
       if (!val) { el('tp-node-text').focus(); return; }
       var useCat = pickedCat || TP_TAG_CAT[val] || 'note';
-      if (editingId) {
-        var n = thinkingNodeById(path, editingId);
-        n.text = val; n.cat = useCat;
-      } else {
-        var newId = uid();
-        // 方塊自己的建立日期(2026-09-13 使用者要求),跟路徑層級的 created_at
-        // 同一種 todayStr() 日期格式——事後檢討要能回頭查「這格是哪天寫的」,
-        // 之前只有整條路徑有時間戳,單一方塊沒有。
-        path.nodes.push({ id: newId, text: val, cat: useCat, created_at: todayStr() });
-        parents.forEach(function (pid) { path.edges.push({ from: pid, to: newId }); });
-      }
+      var newId = uid();
+      // 方塊自己的建立日期(2026-09-13 使用者要求),跟路徑層級的 created_at
+      // 同一種 todayStr() 日期格式——事後檢討要能回頭查「這格是哪天寫的」,
+      // 之前只有整條路徑有時間戳,單一方塊沒有。updates 從空陣列開始,
+      // 之後只能靠編輯模式的「新增更新」疊加,原始文字不能再覆蓋。
+      path.nodes.push({ id: newId, text: val, cat: useCat, created_at: todayStr(), updates: [] });
+      parents.forEach(function (pid) { path.edges.push({ from: pid, to: newId }); });
       if (!saveThinkingPaths()) return;
       thinkingSelected = [];
       thinkingCloseSheet();
@@ -1790,6 +1866,26 @@
       path.edges = path.edges.filter(function (e) { return toRemove.indexOf(e.from) < 0 && toRemove.indexOf(e.to) < 0; });
       thinkingSelected = [];
       if (saveThinkingPaths()) toast('已刪除', 'ok');
+      renderThinking();
+    });
+  }
+
+  /** 刪除「目前這條路徑」整條(2026-09-13 使用者要求)——之前只有單一方塊
+   * 的刪除,沒有刪整條路徑的功能。刪除後切到清單裡剩下的第一條,都刪光
+   * 就回到「還沒有任何思考路徑」的空狀態,跟建路徑同一套二次確認樣式。 */
+  function thinkingDoDeletePath() {
+    var path = thinkingCurrentPath();
+    if (!path) return;
+    dialog({
+      title: '刪除整條路徑?',
+      message: '「' + path.name + '」裡的 ' + path.nodes.length + ' 個方塊會全部一起刪除,無法復原。',
+      actions: [{ label: '確定刪除', value: 'del', cls: 'btn-danger' }]
+    }).then(function (res) {
+      if (res.action !== 'del') return;
+      thinkingPaths.paths = thinkingPaths.paths.filter(function (p) { return p.id !== path.id; });
+      thinkingPaths.currentPathId = thinkingPaths.paths.length ? thinkingPaths.paths[0].id : null;
+      thinkingSelected = [];
+      if (saveThinkingPaths()) toast('已刪除路徑', 'ok');
       renderThinking();
     });
   }
@@ -6534,6 +6630,7 @@
         return;
       }
       if (e.target.closest('#tp-btn-new-path')) thinkingOpenPathSheet();
+      else if (e.target.closest('#tp-btn-del-path')) thinkingDoDeletePath();
     });
     el('tp-canvas').addEventListener('click', function (e) {
       var block = e.target.closest('.tp-block');
