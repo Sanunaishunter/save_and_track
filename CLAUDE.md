@@ -80,6 +80,80 @@
   不是驗證過的規則,只是這次示範剛好巧合命中,下次遇到類似情境還是要重新判斷,
   不要當成鐵律套用。
 
+
+---
+
+## 個股「全套分析」操作手冊(給任何模型用,2026-09-14 定稿)
+
+上面那些原則散在各處,2026-09-14 拿兩份 Sonnet 5 做的 2634 路徑對照時發現原則
+讀到了還是會漏(沒算籌碼、用舊 EPS、日期沒對 repo 價量),所以收成一份可以照做的
+清單。**交付物是一個可匯入的 JSON**:`data/thinking-paths/<代號>-<拼音>-<日期>.json`,
+格式 `{ "data": [], "thinking_paths": { "currentPathId": "<path id>", "paths": [ {...} ] } }`,
+path 結構照 `js/app.js` 的 `thinkingPaths`(`id/name/stock_id/stock_name/created_at/nodes/edges`,
+node 是 `{id, text, cat, created_at, updates: []}`,cat 只能是 `macro/flow/catalyst/valuation/
+bull/bear/conclude/note`,edges 是 `{from, to}`)。範例:`data/thinking-paths/2634-hanxiang-2026-09-14.json`。
+寫完用 Playwright 走真實匯入流程(`#import-file` → 「合併」)確認方塊數/連線數/無 JS 錯誤,
+再 commit 到 `data/thinking-paths/`,push 分支跟 main。
+
+### 步驟(每一步先讀 repo,後面才准上網)
+1. **大盤**:`data/market-grid-latest.json` 頂層今日快照 + `history`(30 天),
+   `data/archive/index.json`(更久)。要寫:九宮格 `grid_label`、漲跌家數、法人淨額、
+   最近有沒有「系統性賣壓」/拉積盤。
+2. **產業流向**:`data/stock_meta.json` 查這檔的 `industry`(注意 `industry_override`),
+   `data/tick-latest.json` 找對應 `industry|cap_tier` 那列的 `rolling_5/fixed_20/d0_d1`,
+   `data/tick-members-latest.json` 找這檔自己的 `ticks` 序列。分組不合理就明講不採用。
+3. **個股量價**:`data/quotes-latest.json`(`daily_close/high/low/volume` 新到舊 30 天)或
+   `data/archive/prices/`。要算:MA5/10/20(**用 `common.ma_state()` 的定義**:含當日簡單
+   平均)、30 日高低、量 vs MA20(shift 1)、ATR14(`TRAIL_ATR_WINDOW`,簡單平均)、
+   ‼️前高比(`nearHighFromCloses`,85%)。**引用系統訊號時照系統公式重算**,例如量縮
+   蓄勢是 `computeLookupShrinkZone()`:量 / 前 10 日峰量 < 0.6、振幅 (高−低)/收盤 ≥ 3.5%,
+   不要用自己順手的 MA20 近似。
+4. **籌碼**(只有在個股查詢清單裡才有):`data/stock-lookup-latest.json` /
+   `-scan-` / `-crashfomo-` 的 `data[代號].rows`(融資餘額、券、外資/投信淨買賣)。要算:
+   外資連續買/賣天數、自某日起累計、投信是否缺席、融資 10 日變動 %、融資維持率估計
+   (`computeLookupMarginMaintenance`:量最大日最高價 × 0.6)、10 日平均收盤位置、
+   法人軌跡三票(`computeLookupInstTrajectory`)。不在清單就寫「無籌碼資料」,不要猜。
+5. **系統對這檔的既有判定**:`data/scan-latest.json`/`crash-latest.json`(含 `ma_state`)、
+   `fomo-latest.json`/`crash-fomo-latest.json`(有 `per/pbr`、外資/融資連續天數)、
+   `risk-latest.json`(注意股、除權息)、`data/events.json`(事件)、
+   `data/valuation-latest.json`(PE/PB/殖利率,有的話)、`data/scorecard-latest.json`
+   (這種訊號歷史命中率,N<60 只能當方向感)。
+6. **WebSearch 只補 repo 沒有的**:財報 EPS/營收、催化劑新聞、券商觀點。規矩:
+   - 數字類至少兩個獨立來源一致才寫「可信度高」,否則標「單一來源」。
+   - **每一條有日期的新聞都要對 repo 價量**:那天的 `daily_close`/量有沒有對應反應。
+     對不上就停下來查,不能兩個都信。WebSearch 的 AI 摘要會把查詢字串裡的日期回填
+     進結果(2026-09-14 實測),摘要文字不算證據,看來源網址/內文日期。
+   - 券商目標價要看它用的 EPS 是哪一年;過期就標明參考價值低。
+   - WebFetch 對 udn/ltn/cmoney/statementdog/fugle 全被 proxy 擋,只能靠 WebSearch。
+7. **估值三方法交叉**:TTM PE(來源與推算過程寫清楚)、Forward PE(假設寫清楚)、
+   券商/同業;PB 沒淨值就留空。有 `valuation-latest.json` 時用 TWSE PE 反推 TTM EPS
+   當第一個錨。只有多方法同向才下結論。
+8. **看多 / 看空分岔**:各自列 4~6 條,每條要能對到前面某一步的數字。
+9. **決策要可執行**:分「已持有(含入手價)」跟「未進場」兩條;進場條件、停損價
+   (優先用系統有的:固定停損 % / ATR 停損 / 最大回撤)、目標價、風險報酬比
+   (`thinkingRiskRewardText` 的公式,`floor(預算/進場價)` 股)。停損紀律 > 訊號強度
+   (2357 教訓)。
+10. **資料缺口 + 檢討 checkpoint**:老實列出沒有的資料(不硬填),寫 3~5 個之後要回頭
+    驗證的日期/事件。方塊 `created_at` 用當天日期。
+
+### 交件前自查(每一條答不出來就回去補)
+- 每個數字能指出來自哪個檔案或哪個來源?WebSearch 數字有標單一/多來源?
+- 有沒有任何新聞日期跟 repo 價量對不上而沒解釋的?
+- 籌碼那格有算,還是只寫「不合格候選」就跳過?
+- 估值用的 EPS 是最新一季之後的口徑,不是去年全年?
+- 決策有進場價/停損價/目標價三個數字?入手價(如果使用者給了)有出現在決策裡?
+- 用系統公式重算過的指標,數字跟前端會顯示的一致?
+- 匯入測試跑過、無 JS 錯誤、檔案 commit 進 `data/thinking-paths/`?
+
+### 可以直接貼給模型的 prompt
+```
+讀 CLAUDE.md,照「個股全套分析操作手冊」那節,對 <代號 名稱> 做一次思考路徑
+全套分析,<預設入手價 X 元 / 未持有>。先讀 repo 官方資料再上網,每一條新聞日期都
+要對 repo 價量,估值三方法交叉,決策要有進場/停損/目標三個價,交件前跑完自查清單。
+產出 data/thinking-paths/<代號>-<拼音>-<日期>.json,用 Playwright 匯入驗證後 push
+分支跟 main,回覆裡附:結論一句話、關鍵讀數表、資料缺口、來源清單。
+```
+
 ---
 
 ## 五個分頁
