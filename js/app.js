@@ -859,7 +859,7 @@
     return '' +
       '<article class="card" data-id="' + esc(rec.id) + '">' +
         '<div class="card-head">' +
-          '<span class="card-code mono">' + esc(rec.stock_id || '—') + nhBadge + '</span>' +
+          '<span class="card-code mono">' + esc(rec.stock_id || '—') + nhBadge + cardEventBadge(rec) + '</span>' +
           '<span class="card-name">' + esc(rec.stock_name) + '</span>' +
           '<span class="pill-dir ' + (rec.direction === 'short' ? 'is-short' : 'is-long') + '">' +
             (rec.direction === 'short' ? '空' : '多') + '</span>' +
@@ -1765,6 +1765,7 @@
         '</div>' +
         '<label class="tp-calc-checkbox"><input type="checkbox" class="tp-calc-input" id="tp-val-incomplete">' +
           '資料不完整/只有單一來源(算出來的結果會標 ⚠️)</label>' +
+        '<p class="tp-hint" id="tp-val-source" hidden></p>' +
         '<div class="tp-calc-preview" id="tp-val-preview">填 EPS 跟本益比上下界就會算出合理區間。</div>' +
         '<button type="button" class="btn btn-outline tp-calc-apply" id="tp-val-apply">帶入文字</button>' +
       '</div>' +
@@ -1863,6 +1864,7 @@
       placeholder: '填 EPS 跟本益比上下界就會算出合理區間。',
       computeFn: thinkingValuationText
     });
+    thinkingPrefillValuation((thinkingCurrentPath() || {}).stock_id);
     bindCalcPanel({
       toggleId: 'tp-rr-toggle', panelId: 'tp-rr-calc', label: '進出場計算',
       inputIds: ['tp-rr-entry', 'tp-rr-stop', 'tp-rr-target', 'tp-rr-budget'],
@@ -2008,7 +2010,7 @@
     var filename = 'stock-pipeline-backup-' + stampStr() + '.json';
     var text;
     try {
-      text = JSON.stringify({ data: data, lookup_notes: loadLookupNotesMap(), thinking_paths: loadThinkingPaths() }, null, 2);
+      text = JSON.stringify({ data: data, lookup_notes: loadLookupNotesMap(), thinking_paths: loadThinkingPaths(), events: loadUserEvents() }, null, 2);
     } catch (e) {
       toast('匯出失敗:' + (e.message || e), 'err');
       return;
@@ -2045,11 +2047,12 @@
       // 容許直接的陣列,或 { data: [...], lookup_notes: {...}, thinking_paths: {...} }
       // 這種包一層的格式。lookup_notes/thinking_paths 是舊版備份檔沒有的欄位,
       // 保持 null 代表「這份檔案沒提到」,匯入時不去動現有資料。
-      var importedNotes = null, importedThinking = null;
+      var importedNotes = null, importedThinking = null, importedEvents = null;
       if (!Array.isArray(incoming) && incoming && Array.isArray(incoming.data)) {
         importedNotes = incoming.lookup_notes || null;
         importedThinking = (incoming.thinking_paths && Array.isArray(incoming.thinking_paths.paths))
           ? incoming.thinking_paths : null;
+        importedEvents = Array.isArray(incoming.events) ? incoming.events : null;
         incoming = incoming.data;
       }
       if (!Array.isArray(incoming)) {
@@ -2057,12 +2060,12 @@
         return;
       }
       var records = incoming.map(normalize);
-      confirmImport(records, file.name, importedNotes, importedThinking);
+      confirmImport(records, file.name, importedNotes, importedThinking, importedEvents);
     };
     reader.readAsText(file);
   }
 
-  function confirmImport(records, filename, importedNotes, importedThinking) {
+  function confirmImport(records, filename, importedNotes, importedThinking, importedEvents) {
     dialog({
       title: '匯入備份',
       message: '檔案:' + filename + '\n' +
@@ -2117,6 +2120,18 @@
         saveThinkingPaths();
       }
 
+      if (importedEvents) {
+        if (res.action === 'replace') {
+          saveUserEvents(importedEvents);
+        } else {
+          var curEv = loadUserEvents();
+          var evById = {};
+          curEv.forEach(function (e) { evById[e.id] = e; });
+          importedEvents.forEach(function (e) { if (e && e.id) evById[e.id] = e; });
+          saveUserEvents(Object.keys(evById).map(function (k) { return evById[k]; }));
+        }
+      }
+
       if (saveAll()) {
         toast('匯入成功,目前共 ' + data.length + ' 筆', 'ok', 4000);
       }
@@ -2156,12 +2171,13 @@
     }
 
     el('scan-table').hidden = false;
+    renderGateBanner('scan-gate', 'long', 'scan');
     var p = res.params || {};
     meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
       '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
 
     if (!res.rows || !res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="scan-empty">當日沒有符合條件的股票</td></tr>';
       return;
     }
 
@@ -2179,6 +2195,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        maStateCellHtml(r.ma_state) +
         '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +
         '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
         '<td class="num mono ' + plClass(marginDelta) + '">' +
@@ -2252,12 +2269,13 @@
     }
 
     el('crash-table').hidden = false;
+    renderGateBanner('crash-gate', 'short', 'crash');
     var p = res.params || {};
     meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
       '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
 
     if (!res.rows || !res.rows.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" class="scan-empty">當日沒有符合條件的股票</td></tr>';
       return;
     }
 
@@ -2275,6 +2293,7 @@
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        maStateCellHtml(r.ma_state) +
         '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +
         '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
         '<td class="num mono ' + plClass(marginDelta) + '">' +
@@ -3026,6 +3045,8 @@
         el('market-history-panel').hidden = true;
       });
 
+    loadRepoEvents().then(function () { renderEventsPanel(); });
+
     if (force) fxFuturesData = null;
     loadFxFutures()
       .then(function (data) { renderFxFutures(data); })
@@ -3037,7 +3058,7 @@
     meta.textContent = '載入中…';
 
     loadRiskData()
-      .then(function (data) { renderRisk(data); })
+      .then(function (data) { renderRisk(data); renderEventsPanel(); })
       .catch(function (e) {
         renderRisk({ error: '讀不到大盤狀況資料(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
@@ -3859,6 +3880,7 @@
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
         zoneNote + lowActivityNote) + maintNote + nearHighNote + maNote;
+      appendLookupExtras(meta, code);
 
       table.hidden = false;
       if (!allRows.length) {
@@ -4051,6 +4073,7 @@
     el('thinking-wrap').hidden = v !== 'thinking';
     el('trail-wrap').hidden = v !== 'trail';
     el('insttrack-wrap').hidden = v !== 'insttrack';
+    el('scorecard-wrap').hidden = v !== 'scorecard';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
     el('fomo-wrap').hidden = v !== 'fomo';
@@ -4070,6 +4093,7 @@
     if (v === 'thinking') loadThinkingView();
     if (v === 'trail') loadTrailWatch();
     if (v === 'insttrack') loadInstTrack(false);
+    if (v === 'scorecard') loadScorecardView(false);
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
     if (v === 'fomo') loadFomo(false);
@@ -4089,7 +4113,7 @@
 
   // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
   // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -4225,6 +4249,7 @@
   }
 
   function renderFomo(res) {
+    renderGateBanner('fomo-gate', 'long', 'fomo_real');
     var meta = el('fomo-meta');
     var tbody = el('fomo-tbody');
 
@@ -4351,6 +4376,7 @@
   }
 
   function renderCrashFomo(res) {
+    renderGateBanner('crashfomo-gate', 'short', 'crashfomo_real');
     var meta = el('crashfomo-meta');
     var tbody = el('crashfomo-tbody');
 
@@ -7320,6 +7346,372 @@
 
   // ---------------------------------------------------------- 啟動
 
+  // ============================================================ 2026-09-14 大改
+  // 以下五塊是同一天加的:事件日曆 / 全市場估值 / 訊號記分板 / 大盤閘門橫幅 /
+  // 均線欄。全部純前端讀 data/*.json,ES5,不動 STEPS。
+
+  // ---------------------------------------------------------- 事件日曆
+  // repo 檔 data/events.json(手動維護、進記分板)+ localStorage 個人事件(只在
+  // 這台瀏覽器,不進記分板)+ data/risk-latest.json 的除權息預告(自動,不用重填)。
+  var EVENTS_URL = 'data/events.json';
+  var EVENTS_KEY = 'stock_pipeline_v1__events';
+  var EVENT_TYPES = ['財報', '法說', '除息', '政策', '總經', '其他'];
+  var repoEvents = null;
+  var repoEventsPending = null;
+
+  function loadRepoEvents() {
+    if (repoEvents) return Promise.resolve(repoEvents);
+    if (repoEventsPending) return repoEventsPending;
+    if (location.protocol === 'file:') { repoEvents = []; return Promise.resolve(repoEvents); }
+    repoEventsPending = fetch(EVENTS_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        repoEvents = (d && d.events ? d.events : []).map(function (e, i) {
+          return { id: 'repo_' + i, date: e.date, stock_id: e.stock_id || null, type: e.type || '其他',
+                   note: e.note || '', source: 'repo' };
+        });
+        repoEventsPending = null;
+        return repoEvents;
+      })
+      .catch(function () { repoEvents = []; repoEventsPending = null; return repoEvents; });
+    return repoEventsPending;
+  }
+
+  function loadUserEvents() {
+    try {
+      var raw = window.localStorage.getItem(EVENTS_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+
+  function saveUserEvents(arr) {
+    try { window.localStorage.setItem(EVENTS_KEY, JSON.stringify(arr)); return true; }
+    catch (e) { toast('儲存事件失敗:' + (e.message || e), 'err'); return false; }
+  }
+
+  /** 三種來源合併(repo 已載入的話)。除權息預告要 riskData 已載入才有。 */
+  function allEvents() {
+    var out = [];
+    (repoEvents || []).forEach(function (e) { out.push(e); });
+    loadUserEvents().forEach(function (e) {
+      var c = { source: 'user' };
+      for (var k in e) { if (Object.prototype.hasOwnProperty.call(e, k)) c[k] = e[k]; }
+      out.push(c);
+    });
+    if (riskData && riskData.exdividend) {
+      riskData.exdividend.forEach(function (x, i) {
+        if (!x.date) return;
+        out.push({ id: 'exdiv_' + i, date: x.date, stock_id: x.code, type: '除息',
+                   note: (x.name || '') + ' 除' + (x.kind || '息') +
+                         (x.cash_dividend != null ? ' 現金 ' + x.cash_dividend : ''), source: 'exdiv' });
+      });
+    }
+    out.sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+    return out;
+  }
+
+  function dateOffsetStr(days) {
+    var d = new Date();
+    d.setDate(d.getDate() + days);
+    return todayStr(d);
+  }
+
+  /** 某檔股票在 [今天-1, 今天+ahead] 日曆天內的事件(個股事件 + 全市場事件)。 */
+  function eventsForStock(code, ahead) {
+    var lo = dateOffsetStr(-1), hi = dateOffsetStr(ahead == null ? 3 : ahead);
+    return allEvents().filter(function (e) {
+      return e.date >= lo && e.date <= hi && (!e.stock_id || e.stock_id === code);
+    });
+  }
+
+  function eventShortText(e) {
+    return (e.stock_id ? '' : '大盤') + e.type + ' ' + e.date.slice(5);
+  }
+
+  /** 追蹤卡片用:進行中且 3 天內有事件才顯示 📅,滑鼠停上去看內容。 */
+  function cardEventBadge(rec) {
+    if (rec.status !== 'active' || !rec.stock_id) return '';
+    var evs = eventsForStock(rec.stock_id, 3);
+    if (!evs.length) return '';
+    var title = evs.map(function (e) { return eventShortText(e) + (e.note ? ':' + e.note : ''); }).join('\n');
+    return ' <span class="event-badge" title="' + esc(title) + '">📅</span>';
+  }
+
+  function eventsNoteHtml(code) {
+    var evs = eventsForStock(code, 5);
+    if (!evs.length) return '';
+    return '  ·  <span class="event-note" title="' +
+      esc(evs.map(function (e) { return eventShortText(e) + (e.note ? ':' + e.note : ''); }).join('\n')) +
+      '">📅 5 天內有事件:' + esc(evs.map(eventShortText).join('、')) + '</span>';
+  }
+
+  function renderEventsPanel() {
+    var panel = el('events-panel');
+    if (!panel) return;
+    panel.hidden = false;
+    var lo = dateOffsetStr(-3), hi = dateOffsetStr(21);
+    var list = allEvents().filter(function (e) { return e.date >= lo && e.date <= hi; });
+    var box = el('events-list');
+    if (!list.length) {
+      box.innerHTML = '<p class="panel-note">最近 3 天到未來 21 天沒有事件。</p>';
+    } else {
+      box.innerHTML = '<table class="scan-table"><thead><tr><th>日期</th><th>股票</th><th>類型</th><th>內容</th><th>來源</th><th></th></tr></thead><tbody>' +
+        list.map(function (e) {
+          var src = e.source === 'repo' ? 'repo' : (e.source === 'exdiv' ? '除權息預告' : '我的');
+          var del = e.source === 'user'
+            ? '<button type="button" class="btn btn-outline btn-xs" data-del-event="' + esc(e.id) + '">刪</button>' : '';
+          var isPast = e.date < todayStr();
+          return '<tr class="' + (isPast ? 'is-past' : '') + '"><td class="mono">' + esc(e.date) + '</td>' +
+            '<td class="mono">' + esc(e.stock_id || '大盤') + '</td><td>' + esc(e.type) + '</td>' +
+            '<td>' + esc(e.note || '') + '</td><td>' + src + '</td><td>' + del + '</td></tr>';
+        }).join('') + '</tbody></table>';
+    }
+    var sel = el('event-type');
+    if (sel && !sel.options.length) {
+      sel.innerHTML = EVENT_TYPES.map(function (t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+    }
+  }
+
+  function bindEventsPanel() {
+    var panel = el('events-panel');
+    if (!panel) return;
+    el('event-add').addEventListener('click', function () {
+      var date = el('event-date').value.trim();
+      var stock = el('event-stock').value.trim();
+      var type = el('event-type').value;
+      var note = el('event-note').value.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { toast('日期要填 YYYY-MM-DD', 'err'); return; }
+      if (stock && !/^[1-9]\d{3}$/.test(stock)) { toast('股票代號要 4 碼上市普通股,留空代表全市場', 'err'); return; }
+      var arr = loadUserEvents();
+      arr.push({ id: uid(), date: date, stock_id: stock || null, type: type, note: note, created_at: todayStr() });
+      if (!saveUserEvents(arr)) return;
+      el('event-stock').value = ''; el('event-note').value = '';
+      toast('已新增事件(只存在這台瀏覽器;要進記分板請填 data/events.json)', 'ok', 4000);
+      renderEventsPanel();
+      renderList();
+    });
+    panel.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-del-event]');
+      if (!b) return;
+      var id = b.getAttribute('data-del-event');
+      var arr = loadUserEvents().filter(function (e) { return e.id !== id; });
+      if (saveUserEvents(arr)) { renderEventsPanel(); renderList(); }
+    });
+  }
+
+  // ---------------------------------------------------------- 全市場估值(TWSE BWIBBU_ALL)
+  var VALUATION_URL = 'data/valuation-latest.json';
+  var valuationData = null;
+  var valuationPending = null;
+
+  function loadValuation() {
+    if (valuationData) return Promise.resolve(valuationData);
+    if (valuationPending) return valuationPending;
+    if (location.protocol === 'file:') return Promise.reject(new Error('file://'));
+    valuationPending = fetch(VALUATION_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { valuationData = d; valuationPending = null; return d; })
+      .catch(function (e) { valuationPending = null; throw e; });
+    return valuationPending;
+  }
+
+  function valuationOf(code) {
+    if (!valuationData || !valuationData.data) return null;
+    return valuationData.data[String(code || '').trim()] || null;
+  }
+
+  function valuationText(v) {
+    var bits = [];
+    bits.push('PE ' + (v.pe == null ? '—(虧損/無)' : v.pe));
+    bits.push('PB ' + (v.pb == null ? '—' : v.pb));
+    bits.push('殖利率 ' + (v['yield'] == null ? '—' : v['yield'] + '%'));
+    return bits.join(' · ') + '(TWSE ' + (valuationData.date || '') + ')';
+  }
+
+  /** 個股查詢 meta 那行的非同步附加:估值 + 事件。兩份資料抓不到就什麼都不加。 */
+  function appendLookupExtras(metaEl, code) {
+    var token = metaEl.getAttribute('data-extras-token') || '';
+    token = String(Number(token || 0) + 1);
+    metaEl.setAttribute('data-extras-token', token);
+    var add = function (html) {
+      if (metaEl.getAttribute('data-extras-token') !== token || !html) return;
+      metaEl.innerHTML += html;
+    };
+    loadValuation().then(function () {
+      var v = valuationOf(code);
+      if (v) add('  ·  <span class="valuation-note">' + esc(valuationText(v)) + '</span>');
+    }).catch(function () {});
+    loadRepoEvents().then(function () { add(eventsNoteHtml(code)); });
+  }
+
+  /** 思考路徑「估值試算」自動帶入:收盤價 + 用 TWSE 本益比反推近四季 EPS。
+   * 只在欄位是空的時候填,使用者已經打的不覆蓋。 */
+  function thinkingPrefillValuation(stockId) {
+    if (!stockId) return;
+    var epsEl = el('tp-val-eps'), priceEl = el('tp-val-price'), hintEl = el('tp-val-source');
+    if (!epsEl || !priceEl) return;
+    Promise.all([
+      loadQuotes().catch(function () { return null; }),
+      loadValuation().catch(function () { return null; })
+    ]).then(function () {
+      if (!el('tp-val-eps')) return;                       // sheet 已經關掉
+      var bits = [];
+      var close = null;
+      if (quotes && quotesIdx[stockId] != null) {
+        close = quotes.close[quotesIdx[stockId]];
+        if (close != null && !priceEl.value) { priceEl.value = close; bits.push(quotes.date + ' 收盤 ' + close); }
+      }
+      var v = valuationOf(stockId);
+      if (v && v.pe && close) {
+        var eps = Math.round(close / v.pe * 100) / 100;
+        if (!epsEl.value) { epsEl.value = eps; }
+        bits.push('TWSE 本益比 ' + v.pe + ' → 反推近四季 EPS ≈ ' + eps + '(TTM 口徑,可改)');
+      } else if (v && v.pe == null) {
+        bits.push('TWSE 本益比無值(虧損股或未公布),EPS 請自己填');
+      }
+      if (hintEl) { hintEl.textContent = bits.length ? '自動帶入:' + bits.join(';') : ''; hintEl.hidden = !bits.length; }
+      if (bits.length) {
+        var evt = document.createEvent('Event'); evt.initEvent('input', true, true); epsEl.dispatchEvent(evt);
+      }
+    });
+  }
+
+  // ---------------------------------------------------------- 均線狀態(爆量/暴跌表格)
+  var MA_STATE_LABEL = { bull: '多頭排列', bear: '空頭排列', mixed: '糾結' };
+  function maStateCellHtml(state) {
+    if (!state) return '<td class="ma-cell">—</td>';
+    var cls = state === 'bull' ? 'price-ma-up' : (state === 'bear' ? 'price-ma-down' : '');
+    return '<td class="ma-cell"><span class="' + cls + '" title="MA5/MA10/MA20 含當日簡單平均,跟追蹤卡片同定義">' +
+      esc(MA_STATE_LABEL[state] || state) + '</span></td>';
+  }
+
+  // ---------------------------------------------------------- 訊號記分板
+  var SCORECARD_URL = 'data/scorecard-latest.json';
+  var scorecardData = null;
+  var scorecardPending = null;
+  var SC_SIGNAL_ORDER = ['scan', 'fomo_real', 'fomo_fake', 'crash', 'crashfomo_real', 'crashfomo_fake'];
+  var SC_BUCKET_LABEL = { regime: '訊號日大盤狀態(閘門)', ma: '訊號日均線狀態(合流)',
+                          confluence: '籌碼合流(外資/融資連續)', event: '事件日 ±1 日', vol_ratio: '量比級距' };
+
+  function loadScorecard() {
+    if (scorecardData) return Promise.resolve(scorecardData);
+    if (scorecardPending) return scorecardPending;
+    if (location.protocol === 'file:') return Promise.reject(new Error('用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。'));
+    scorecardPending = fetch(SCORECARD_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { scorecardData = d; scorecardPending = null; return d; })
+      .catch(function (e) { scorecardPending = null; throw e; });
+    return scorecardPending;
+  }
+
+  function scStatCells(st) {
+    if (!st || !st.n) return '<td class="num is-thin">0</td><td class="num is-thin">—</td><td class="num is-thin">—</td>';
+    var thin = st.enough ? '' : ' is-thin';
+    var hit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
+    var ex = st.avg_excess == null ? '—' : (st.avg_excess > 0 ? '+' : '') + st.avg_excess.toFixed(2) + '%';
+    var exCls = st.avg_excess == null ? '' : (st.avg_excess > 0 ? ' up' : ' down');
+    return '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
+      '<td class="num' + thin + '" title="命中 = 方向 × 超額報酬 > 0">' + hit + '</td>' +
+      '<td class="num' + thin + exCls + '" title="平均超額報酬(扣掉同期加權指數)">' + ex + '</td>';
+  }
+
+  function scBucketTable(buckets, kind, hs) {
+    var groups = buckets && buckets[kind];
+    if (!groups) return '';
+    var labels = Object.keys(groups).sort(function (a, b) {
+      var na = (groups[a][hs[0]] || {}).n || 0, nb = (groups[b][hs[0]] || {}).n || 0; return nb - na;
+    });
+    return '<details class="sc-details"><summary>' + esc(SC_BUCKET_LABEL[kind] || kind) + '</summary>' +
+      '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>分桶</th>' +
+      hs.map(function (h) { return '<th class="num">' + h + '日 n</th><th class="num">命中</th><th class="num">超額</th>'; }).join('') +
+      '</tr></thead><tbody>' +
+      labels.map(function (lab) {
+        return '<tr><td>' + esc(lab) + '</td>' + hs.map(function (h) { return scStatCells(groups[lab][h]); }).join('') + '</tr>';
+      }).join('') + '</tbody></table></div></details>';
+  }
+
+  function renderScorecard(res) {
+    var meta = el('scorecard-meta');
+    var body = el('scorecard-body');
+    if (res.error) { meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>'; body.innerHTML = ''; return; }
+    var cov = res.coverage || {};
+    var hs = (res.params && res.params.horizons ? res.params.horizons : [5, 10, 20]).map(String);
+    meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
+      ' 個交易日)· 訊號 ' + (cov.instances || 0) + ' 筆 · 事件 ' + (cov.events || 0) + ' 筆 · 樣本不到 ' +
+      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色,只能看方向感,不能下結論';
+    var sigs = res.signals || {};
+    var html = '';
+    SC_SIGNAL_ORDER.forEach(function (key) {
+      var s = sigs[key];
+      if (!s) return;
+      html += '<section class="panel sc-signal">' +
+        '<h2 class="panel-title">' + esc(s.label) + ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">' + esc(s.direction) + '</span>' +
+        '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
+        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
+        '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th><th class="num">命中率</th><th class="num">平均超額</th><th class="num">中位超額</th><th class="num">不扣指數命中</th></tr></thead><tbody>' +
+        hs.map(function (h) {
+          var st = s.horizons[h] || {};
+          var thin = st.enough ? '' : ' is-thin';
+          return '<tr><td>' + h + ' 日</td>' + scStatCells(st) +
+            '<td class="num' + thin + '">' + (st.median_excess == null ? '—' : st.median_excess.toFixed(2) + '%') + '</td>' +
+            '<td class="num' + thin + '">' + (st.hit_rate_raw == null ? '—' : st.hit_rate_raw.toFixed(1) + '%') + '</td></tr>';
+        }).join('') + '</tbody></table></div>' +
+        ['regime', 'ma', 'confluence', 'event', 'vol_ratio'].map(function (k) { return scBucketTable(s.buckets, k, hs); }).join('') +
+        '</section>';
+    });
+    if (!html) html = '<p class="panel-note">還沒有任何訊號樣本。</p>';
+    body.innerHTML = html;
+  }
+
+  function loadScorecardView(force) {
+    if (force) scorecardData = null;
+    if (scorecardData) { renderScorecard(scorecardData); return; }
+    el('scorecard-meta').textContent = '載入中…';
+    loadScorecard().then(renderScorecard).catch(function (e) { renderScorecard({ error: e.message || String(e) }); });
+  }
+
+  // ---------------------------------------------------------- 大盤閘門橫幅
+  // 看多分頁(爆量/FOMO)在「系統性賣壓」「指數跌」的日子、看空分頁(暴跌/暴跌FOMO)
+  // 在「指數漲」的日子,顯示今天的大盤狀態 + 記分板裡「同狀態下這種訊號的命中率」。
+  // 只是提醒,不擋任何功能;數字樣本不足時會明講。
+  function regimeOfToday(mg) {
+    if (!mg || mg.idx_close == null) return null;
+    var gl = mg.grid_label || '';
+    if (gl.indexOf('系統性賣壓') === 0) return '系統性賣壓';
+    if (mg.price_state === '漲' || mg.price_state === '平' || mg.price_state === '跌') return '指數' + mg.price_state;
+    return null;
+  }
+
+  function renderGateBanner(elId, side, signalKey) {
+    var box = el(elId);
+    if (!box) return;
+    Promise.all([
+      loadMarketGrid().catch(function () { return null; }),
+      loadScorecard().catch(function () { return null; })
+    ]).then(function (res) {
+      var mg = res[0], sc = res[1];
+      var regime = regimeOfToday(mg);
+      var adverse = side === 'long' ? (regime === '系統性賣壓' || regime === '指數跌') : (regime === '指數漲');
+      if (!regime || !adverse) { box.hidden = true; box.innerHTML = ''; return; }
+      var stat = null, h = null;
+      if (sc && sc.signals && sc.signals[signalKey] && sc.signals[signalKey].buckets && sc.signals[signalKey].buckets.regime) {
+        var g = sc.signals[signalKey].buckets.regime[regime];
+        if (g) { h = g['10'] && g['10'].n ? '10' : (g['5'] && g['5'].n ? '5' : null); stat = h ? g[h] : null; }
+      }
+      var evidence = stat && stat.n
+        ? '記分板:此狀態下的' + esc(sc.signals[signalKey].label) + '訊號 ' + h + ' 日命中率 ' +
+          (stat.hit_rate == null ? '—' : stat.hit_rate.toFixed(1) + '%') + '、平均超額 ' +
+          (stat.avg_excess == null ? '—' : stat.avg_excess.toFixed(2) + '%') + '(n=' + stat.n +
+          (stat.enough ? '' : ',樣本不足') + ')'
+        : '記分板還沒有此狀態下的到期樣本';
+      box.innerHTML = '⚠ ' + esc(mg.date || '') + ' 大盤:' + esc(mg.grid_label || regime) + '。' +
+        (side === 'long' ? '看多訊號在這種日子要降級看待。' : '看空訊號在這種日子要降級看待。') + evidence;
+      box.hidden = false;
+    });
+  }
+
+
   function init() {
     initSplash();
     var probe = storageProbe();
@@ -7333,6 +7725,8 @@
     bind();
     renderList();
     renderPosSummary();
+    bindEventsPanel();
+    loadRepoEvents().then(function () { if (data.some(function (r) { return r.status === 'active'; })) renderList(); });
 
     // 有持倉,或有紀錄標了進場訊號分類(需要報價驗證準度)才去抓報價——
     // 兩者都沒有的話,不用為了首頁多下載一份 130KB。

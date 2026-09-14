@@ -63,6 +63,7 @@
     <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
     <button type="button" class="viewbtn" data-view="trail">兵棋推演</button>
     <button type="button" class="viewbtn" data-view="insttrack">法人軌跡</button>
+    <button type="button" class="viewbtn" data-view="scorecard">訊號記分板</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo">FOMO</button>
@@ -193,9 +194,24 @@
   </div>
 </main>
 
+<main class="list-wrap" id="scorecard-wrap" hidden>
+  <div class="scan-meta" id="scorecard-meta">載入中…</div>
+  <p class="panel-note">
+    訊號記分板(2026-09-14 加入):系統每天發出的爆量/暴跌/可能會漲/虛漲/真跌/虛跌訊號,
+    訊號當天就 commit 進 repo(事前登記,不能事後改),這裡統計每一筆訊號之後 5/10/20 個
+    交易日的報酬,扣掉同期加權指數就是「超額報酬」,命中 = 訊號方向 × 超額報酬 > 0。
+    全樣本、不挑股票。每個訊號再依「訊號日大盤狀態」「個股均線狀態」「籌碼合流」
+    「事件日」「量比級距」分桶,回答「大盤當閘門有沒有用」「合流有沒有用」這類問題。
+    灰色的格子是樣本不到 60,只能看方向感,不能下結論。永久存檔剛開始只有 30 天,
+    20 日天期一開始幾乎沒有到期樣本,每天會多一天。
+  </p>
+  <div id="scorecard-body"></div>
+</main>
+
 <!-- 個股詳情（全螢幕面板） -->
 <main class="list-wrap" id="scan-wrap" hidden>
   <div class="scan-meta" id="scan-meta">載入中…</div>
+  <div class="gate-banner" id="scan-gate" hidden></div>
   <div class="table-scroll">
     <table class="scan-table" id="scan-table">
       <thead>
@@ -204,6 +220,7 @@
           <th>名稱</th>
           <th class="num">量比</th>
           <th class="num">漲跌幅</th>
+          <th>均線</th>
           <th>訊號</th>
           <th class="num">融資餘額</th>
           <th class="num">融資增減</th>
@@ -218,6 +235,7 @@
 
 <main class="list-wrap" id="crash-wrap" hidden>
   <div class="scan-meta" id="crash-meta">載入中…</div>
+  <div class="gate-banner" id="crash-gate" hidden></div>
   <div class="table-scroll">
     <table class="scan-table" id="crash-table">
       <thead>
@@ -226,6 +244,7 @@
           <th>名稱</th>
           <th class="num">量比</th>
           <th class="num">漲跌幅</th>
+          <th>均線</th>
           <th>訊號</th>
           <th class="num">融資餘額</th>
           <th class="num">融資增減</th>
@@ -240,6 +259,7 @@
 
 <main class="list-wrap" id="fomo-wrap" hidden>
   <div class="scan-meta" id="fomo-meta">載入中…</div>
+  <div class="gate-banner" id="fomo-gate" hidden></div>
   <div class="table-scroll">
     <table class="scan-table" id="fomo-table">
       <thead>
@@ -258,6 +278,7 @@
 
 <main class="list-wrap" id="crashfomo-wrap" hidden>
   <div class="scan-meta" id="crashfomo-meta">載入中…</div>
+  <div class="gate-banner" id="crashfomo-gate" hidden></div>
   <div class="table-scroll">
     <table class="scan-table" id="crashfomo-table">
       <thead>
@@ -423,6 +444,25 @@
         <tbody id="market-history-tbody"></tbody>
       </table>
     </div>
+  </section>
+
+  <section class="panel" id="events-panel" hidden>
+    <h2 class="panel-title">事件日曆</h2>
+    <p class="panel-note">
+      三種來源合併:repo 的 <code>data/events.json</code>(手動維護,會進訊號記分板的
+      「事件日 ±1 日」分桶)、TWSE 除權息預告(自動)、以及你在這裡新增的個人事件(只存
+      在這台瀏覽器的 localStorage,匯出/匯入會帶著走,但不會進記分板——要進統計就得填
+      到 repo 檔案裡)。進場前先看 3 天內有沒有財報/法說/政策這種二元事件,追蹤卡片跟
+      個股查詢也會用 📅 提醒。
+    </p>
+    <div class="events-form">
+      <input class="tp-text-input" id="event-date" type="date" aria-label="日期">
+      <input class="tp-text-input" id="event-stock" type="text" inputmode="numeric" maxlength="4" placeholder="代號(留空=大盤)" aria-label="股票代號">
+      <select class="tp-text-input" id="event-type" aria-label="類型"></select>
+      <input class="tp-text-input" id="event-note" type="text" placeholder="內容,例如 Q3 法說" aria-label="內容">
+      <button type="button" class="btn btn-primary" id="event-add">+ 新增事件</button>
+    </div>
+    <div class="table-scroll" id="events-list"></div>
   </section>
 
   <section class="panel" id="risk-market-panel" hidden>

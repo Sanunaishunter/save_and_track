@@ -50,6 +50,10 @@ on:
         description: '大盤30日追蹤表:額外回補幾個交易日(第一次想馬上填滿填 29,平常留 0)'
         required: false
         default: '0'
+      archive_backfill_days:
+        description: '永久存檔:從存檔最舊那天再往前回補幾個交易日(第一次填 250 約 15 分鐘,平常留 0)'
+        required: false
+        default: '0'
 
 permissions:
   contents: write
@@ -144,6 +148,20 @@ jobs:
           python scripts/compute_market_grid.py \
             --backfill-days "${{ github.event.inputs.market_backfill_days || '0' }}"
 
+      # 永久存檔(2026-09-14):把 data/history 跟九宮格 history 收進 data/archive,不裁掉。
+      # 排在九宮格之後,才拿得到今天的 grid_label。回補只在手動觸發時給天數。
+      - name: 永久存檔(價格 + 指數)
+        run: |
+          python scripts/archive_prices.py \
+            --backfill-days "${{ github.event.inputs.archive_backfill_days || '0' }}"
+
+      # 全市場本益比/淨值比/殖利率(TWSE BWIBBU_ALL,免費)。這支還沒 probe 過,
+      # 腳本本身是軟失敗(對不上欄位就印出來、exit 0),這裡再加一層 continue-on-error
+      # 保險,第一次跑完請看 log 的「欄位:」那行。
+      - name: 更新全市場估值(PE/PB/殖利率)
+        continue-on-error: true
+        run: python scripts/fetch_valuation.py
+
       # 匯率(央行)+ 台指期貨三大法人未平倉(FinMind)—— 獨立區塊,跟其他步驟無關
       - name: 更新匯率與期貨三大法人
         env:
@@ -173,6 +191,11 @@ jobs:
             --source "${{ github.event.inputs.crash_source || 'crash' }}" \
             --top "${{ github.event.inputs.crash_top || '60' }}" \
             --limit "${{ github.event.inputs.crash_limit || '0' }}"
+
+      # 訊號記分板(2026-09-14):讀上面剛寫好的 scans/crashes/fomo/crash-fomo 存查檔
+      # 跟永久存檔,算歷史訊號之後 5/10/20 日的超額報酬。純讀檔不打 API,放最後。
+      - name: 計算訊號記分板
+        run: python scripts/compute_scorecard.py
 
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。

@@ -120,3 +120,113 @@ def history_dates():
             out.append(name[:-5])
     out.sort()
     return out
+
+
+# ---------------------------------------------------------------- 2026-09-14 加入
+# 永久存檔(不裁掉):data/history 只留 KEEP_DAYS 天,是滾動視窗;回測/記分板
+# 需要的是「從有資料那天起全部留著」,所以另存一份按月分檔的壓縮版。
+ARCHIVE_DIR = os.path.join(DATA_DIR, "archive")
+ARCHIVE_PRICES_DIR = os.path.join(ARCHIVE_DIR, "prices")        # YYYY-MM.json
+ARCHIVE_INDEX_FILE = os.path.join(ARCHIVE_DIR, "index.json")     # 大盤指數逐日
+ARCHIVE_VALUATION_DIR = os.path.join(ARCHIVE_DIR, "valuation")  # YYYY-MM.json
+
+# 訊號記分板:歷史訊號 → 之後 5/10/20 日超額報酬
+SCORECARD_FILE = os.path.join(DATA_DIR, "scorecard-latest.json")
+SCORECARD_MIN_N = 60          # 跟 Gate 1 一樣,樣本不到 60 不下結論
+FOMO_DIR = os.path.join(DATA_DIR, "fomo")
+CRASH_FOMO_DIR = os.path.join(DATA_DIR, "crash-fomo")
+
+# 全市場本益比/淨值比/殖利率(TWSE BWIBBU_ALL,免費)
+VALUATION_FILE = os.path.join(DATA_DIR, "valuation-latest.json")
+
+# 事件日曆(手動維護,commit 進 repo;前端另有 localStorage 的個人事件)
+EVENTS_FILE = os.path.join(DATA_DIR, "events.json")
+
+# 產業別手動覆蓋(FinMind/TWSE 都把漢翔放在航運業,這種明顯不對的用這份修)
+INDUSTRY_OVERRIDES_FILE = os.path.join(DATA_DIR, "industry_overrides.json")
+
+
+def ma_state(closes_new_to_old):
+    """
+    價格均線狀態,跟 js/app.js 的 priceMaState() 同一個定義(2026-09-14
+    Sonnet 5 做的前端版):MA5/MA10/MA20 都是「含當日」的簡單平均,任一視窗
+    不足或有缺值就整組回 None;bull = close > MA5 > MA10 > MA20、bear = 相反、
+    其餘 mixed。回傳 {"ma5","ma10","ma20","state"} 或 None。
+    """
+    c = closes_new_to_old
+    if not c or len(c) < 20:
+        return None
+    win = c[:20]
+    if any(v is None for v in win):
+        return None
+    ma5 = sum(win[:5]) / 5.0
+    ma10 = sum(win[:10]) / 10.0
+    ma20 = sum(win) / 20.0
+    close = win[0]
+    if close > ma5 > ma10 > ma20:
+        state = "bull"
+    elif close < ma5 < ma10 < ma20:
+        state = "bear"
+    else:
+        state = "mixed"
+    return {"ma5": round(ma5, 2), "ma10": round(ma10, 2), "ma20": round(ma20, 2), "state": state}
+
+
+def archive_month_path(ym):
+    return os.path.join(ARCHIVE_PRICES_DIR, ym + ".json")
+
+
+def archive_months():
+    if not os.path.isdir(ARCHIVE_PRICES_DIR):
+        return []
+    out = [n[:-5] for n in os.listdir(ARCHIVE_PRICES_DIR)
+           if re.match(r"^\d{4}-\d{2}\.json$", n)]
+    out.sort()
+    return out
+
+
+def load_archive_prices(include_history=True):
+    """
+    回傳 ({date: {code: {open,high,low,close,volume,transaction}}}, dates_sorted)。
+    先讀永久存檔,再用 data/history 補存檔還沒收進去的日子(存檔腳本沒跑到
+    的情況),同一天以存檔為準。
+    """
+    days = {}
+    for ym in archive_months():
+        blob = read_json(archive_month_path(ym)) or {}
+        cols = blob.get("columns") or COLUMNS
+        idx = {name: i for i, name in enumerate(cols)}
+        for ds, rows in (blob.get("days") or {}).items():
+            day = {}
+            for row in rows:
+                try:
+                    day[row[idx["id"]]] = {
+                        "open": row[idx["open"]], "high": row[idx["high"]],
+                        "low": row[idx["low"]], "close": row[idx["close"]],
+                        "volume": row[idx["volume"]],
+                        "transaction": row[idx["transaction"]] if "transaction" in idx and len(row) > idx["transaction"] else None,
+                    }
+                except (IndexError, KeyError, TypeError):
+                    continue
+            days[ds] = day
+    if include_history:
+        for ds in history_dates():
+            if ds in days:
+                continue
+            blob = read_json(history_path(ds)) or {}
+            cols = blob.get("columns") or COLUMNS
+            idx = {name: i for i, name in enumerate(cols)}
+            day = {}
+            for row in blob.get("rows") or []:
+                try:
+                    day[row[idx["id"]]] = {
+                        "open": row[idx["open"]], "high": row[idx["high"]],
+                        "low": row[idx["low"]], "close": row[idx["close"]],
+                        "volume": row[idx["volume"]],
+                        "transaction": row[idx["transaction"]] if "transaction" in idx and len(row) > idx["transaction"] else None,
+                    }
+                except (IndexError, KeyError, TypeError):
+                    continue
+            if day:
+                days[ds] = day
+    return days, sorted(days.keys())

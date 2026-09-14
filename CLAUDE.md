@@ -94,6 +94,8 @@
 | 產業流向 | `data/tick-latest.json` | 移植自 SH2 8012:產業 × 市值級距的成交筆數聚合 |
 | 部位 | `data/quotes-latest.json` | Kelly 部位 + 零股試算 |
 | 個股查詢 | `data/stock-lookup-latest.json` | 手動維護清單(`stock_lookup.json`),開高低收量+融資融券+外資投信逐日大表格,沒有後端不能即時查任意一檔 |
+| 訊號記分板 | `data/scorecard-latest.json` | 2026-09-14 加入:歷史訊號之後 5/10/20 日超額報酬、命中率,依大盤狀態/均線/籌碼合流/事件/量比分桶,N<60 灰色 |
+| 大盤狀況→事件日曆 | `data/events.json` + localStorage + 除權息預告 | 2026-09-14 加入 |
 
 ## 每日流程(單一 workflow,順序由執行序保證)
 
@@ -110,11 +112,15 @@ compute_quotes.py      報價快照(收盤價 + 日報酬)
 compute_fomo.py        FOMO 計分(吃上一步的 scan-latest.json)
 compute_crash_fomo.py  暴跌FOMO 計分(吃上一步的 crash-latest.json)
 fetch_stock_lookup.py  個股查詢(讀 stock_lookup.json 手動清單,融資融券+外資投信)
+archive_prices.py      永久存檔(data/archive,不裁掉;手動 archive_backfill_days 回補)
+fetch_valuation.py     全市場 PE/PB/殖利率(TWSE BWIBBU_ALL,continue-on-error,尚未 probe)
+compute_scorecard.py   訊號記分板(讀 scans/crashes/fomo/crash-fomo 存查檔 + 存檔)
 git commit + push      if: always(),某步失敗也保存已算出的資料
 ```
 
 手動觸發參數:`backfill_days` / `source` / `top`(預設 60)/ `limit` / `refreeze_tick` /
-`crash_source` / `crash_top`(預設 60)/ `crash_limit` / `market_backfill_days`。
+`crash_source` / `crash_top`(預設 60)/ `crash_limit` / `market_backfill_days` /
+`archive_backfill_days`(第一次填 250)。
 
 ---
 
@@ -995,6 +1001,57 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
       查詢(FOMO)meta 兩處驗證過文字跟染色 class。全程無 JS console 錯誤
       (版本頁抓 GitHub API 的 cert 錯誤除外,那是 proxy)。
 
+34. **2026-09-14 「讓預測更準」大改,一次做完 8 項。** 起因:使用者問「有沒有怎樣改
+    可以讓系統更好(預測分析更好、準)」,我先講實話——所有門檻都是經驗值、唯一量過
+    的命中率(真漲 11%)是壞消息、30 天資料量不出準度——然後提了 8 項,使用者說
+    「趁還有 token 全做」。細節在 `data/README.md` 最後一節跟 `docs/使用教學.md`,
+    這裡只記決定跟坑:
+    - **永久存檔**(`scripts/archive_prices.py`,`data/archive/`):`data/history` 的
+      30 天裁切完全沒動,另存按月分檔的壓縮版(一個月約 1MB)+ 指數逐日檔。回補用
+      既有的 `by_date()`/`market_index_by_date()`,沒有新 API 所以沒 probe。
+      `daily-scan.yml` 新增 `archive_backfill_days`(第一次填 250)。
+    - **訊號記分板**(`scripts/compute_scorecard.py` → `data/scorecard-latest.json`,
+      前端新分頁 `#scorecard-wrap`):事前登記、全樣本、扣指數的超額報酬,5 種分桶。
+      `N<60` 一律 `enough=false` 灰色。**第一次跑的結果:爆量 5 日 n=362 命中 21.5%、
+      平均超額 −3.26%;可能會漲 5 日 n=47 命中 17%**——這是這個系統第一次有全樣本的
+      準度數字,方向跟之前「真漲 11%」一致:單因子爆量訊號在這段弱勢盤裡是反指標。
+      樣本只有 9~10 個交易日的訊號、大盤又剛好偏空,不能推廣,但要盯著。
+    - **均線合流**:`common.ma_state()`(Python 版,跟前端 `priceMaState()` 同定義,
+      測試用 2634 真實資料對過 65.02/65.48/67.58/bear)進 `compute_scan.py`/
+      `compute_crash.py` 每列 `ma_state`,前端爆量/暴跌表格多一欄「均線」;記分板
+      `ma` 分桶用它。**沒有拿它當過濾條件**,只是顯示 + 統計,等記分板說話。
+    - **大盤閘門橫幅**(`renderGateBanner()`):看多分頁在系統性賣壓/指數跌、看空
+      分頁在指數漲的日子顯示黃色橫幅,引用記分板同狀態下的命中率。只提醒不擋。
+    - **門檻掃描**(`scripts/tune_thresholds.py`):純 CLI,用存檔重掃,一次一個參數。
+      現在跑 vol_ratio 1.5/2/3 的 5 日命中率是 20.5/22.9/15.5%,都在 60 樣本以上但
+      只有 30 天存檔,不算數。
+    - **產業覆蓋**(`data/industry_overrides.json`):2634/2630/2645 → 航太軍工。
+      **踩到的坑**:第一版 `evict_mismatched()` 是「凍結成員產業跟現在不同就移出」,
+      結果一跑移了 47 檔——FinMind 的分類本身會漂(44 檔跟凍結時不一樣),那不是
+      使用者的決定,SH2 原則是凍結不動;改成只對覆蓋清單裡的代號生效,`top_up_groups()`
+      也改成只補被移出的那幾組(第一版把所有不足額的組都補了,動到幾十組)。最後
+      `tick-sample-members.json` 的 diff 只有航運業大/小組各少 1~2 檔、大組補 2646、
+      新增航太軍工三組(每組 1 檔,low_n)。TWSE 代碼 15 也是航運業,所以「換成 TWSE
+      分類」解決不了這個,只有手動覆蓋能解。
+    - **事件日曆**(`data/events.json` + localStorage `stock_pipeline_v1__events` +
+      除權息預告自動併入):repo 檔進記分板 `event` 分桶,個人事件不進。追蹤卡片 📅、
+      個股查詢 meta 📅、大盤狀況分頁的面板 + 表單,匯出/匯入多 `events` 欄位(跟
+      `thinking_paths` 同一種合併規則)。
+    - **全市場估值**(`scripts/fetch_valuation.py`,TWSE `BWIBBU_ALL`):**沒有 probe
+      過就上了**——違反「先探測再實作」,理由是容器連不到 TWSE、使用者要一次做完;
+      補償是腳本軟失敗 + 印欄位名 + workflow `continue-on-error`,第一次跑完要看 log。
+      前端:個股查詢 meta 顯示 PE/PB/殖利率;思考路徑估值試算自動帶入收盤價跟
+      `收盤/PE` 反推的 EPS(只填空欄位,不覆蓋使用者已打的)。
+    - 測試:Python 離線 40 項(記分板合成資料手算超額報酬/命中率/分桶、存檔回補
+      mock TWSE 含跨月與冪等、產業覆蓋套用/還原、evict 只動覆蓋清單、top-up 只補
+      被移出的組、ma_state 邊界);Playwright 28 項(匯入含 events、卡片 📅、記分板
+      section/數字對 JSON、均線欄、三個分頁的閘門橫幅顯示/隱藏邏輯、事件面板新增/
+      擋 0050/刪除/持久化、個股查詢 PE/PB、估值試算自動帶入 63.8 / 2.05、匯出含
+      events)。全程無 JS console 錯誤。
+    - **沒做的**:記分板沒有納入個股查詢的 🔔🕐🔻🔥 訊號(那些是前端算的,沒有每日
+      存查檔);`data/archive/prices` 一年約 12MB 進 git 歷史,之後要看 repo 大小;
+      個人事件不進記分板是刻意的(不想讓瀏覽器裡的資料影響統計)。
+
 ---
 
 ## 測試
@@ -1009,6 +1066,8 @@ Playwright 在 `/opt/node22/lib/node_modules`,要 `export NODE_PATH=/opt/node22/
 
 Python 側的離線測試散在 scratchpad,`tick_flow` 49 項、`fetch_stock_meta` 23 項、
 `compute_fomo` 額度 16 項。
+2026-09-14 大改的離線測試 40 項 + Playwright 28 項也在 scratchpad(`py_test.py` / `fe_test.js`),
+測法:記分板餵合成價格算手算值、存檔 mock `twse_api.by_date`。
 
 ## 環境限制
 

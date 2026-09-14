@@ -44,6 +44,15 @@ def _without_timestamp(blob):
     return out
 
 
+def _ma_state_of(sid, cur, prior_days):
+    closes = [cur["close"]]
+    for d in reversed(prior_days[-19:]):
+        c = d.get(sid, {}).get("close")
+        closes.append(c)
+    st = common.ma_state(closes)
+    return st["state"] if st else None
+
+
 def main():
     dates = common.history_dates()
     if not dates:
@@ -104,6 +113,9 @@ def main():
             "close": cur["close"],
             "volume": cur["volume"],
             "ma20_volume": int(ma20),
+            # 2026-09-14:價格均線狀態(bull/bear/mixed,跟前端 priceMaState 同定義),
+            # 給「合流」判讀跟記分板分桶用;基線不足 20 天是 None
+            "ma_state": _ma_state_of(sid, cur, prior_days),
         })
 
     rows.sort(key=lambda r: r["vol_ratio"], reverse=True)

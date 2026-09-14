@@ -886,3 +886,71 @@ Actions 上跑過,不是照文件猜的。
 最常看的期貨籌碼指標)。自營商/投信的原始未平倉口數也一併存進
 `data/fx-futures-latest.json` 的 `futures.history`,只是前端目前只顯示
 外資這條。
+
+## 永久存檔、訊號記分板、估值、事件日曆、產業覆蓋(2026-09-14 大改)
+
+### `data/archive/`(永久存檔,不裁掉)
+- `prices/YYYY-MM.json`:按月分檔的全市場 OHLCV,欄位同 `common.COLUMNS`
+  (`id, volume, open, high, low, close, transaction`),`days` 是 `{日期: [[...],...]}`。
+  一個月約 1MB。由 `scripts/archive_prices.py` 每天把 `data/history` 收進來(冪等),
+  `data/history` 的 `KEEP_DAYS=30` 裁切完全沒動。
+- `index.json`:大盤指數逐日,從 `market-grid-latest.json` 的 `history` 併入(有
+  `grid_label`/`price_state` 等九宮格衍生欄位);用 `--backfill-days` 從 `MI_INDEX`
+  回補的舊日子只有官方原始欄位(收盤/漲跌/成交金額/漲跌家數),記分板對那些日子用
+  漲跌幅 ±0.5% 粗分漲/平/跌。
+- `valuation/YYYY-MM.json`:逐日 PE/PB/殖利率,`days[date][code] = [pe, pb, yield]`。
+- 回補:`daily-scan.yml` 手動觸發時 `archive_backfill_days` 填 250,約 15 分鐘
+  (每次 `MI_INDEX` 呼叫間隔 3 秒)。資料源是既有在用的 `by_date()` /
+  `market_index_by_date()`,沒有新 API,所以沒有另外 probe。
+
+### `data/scorecard-latest.json`(訊號記分板)
+`scripts/compute_scorecard.py`,純讀檔。訊號來源與方向:
+
+| key | 來源 | 方向 |
+| --- | --- | --- |
+| `scan` 爆量 | `data/scans/*.json` | 看多 |
+| `crash` 暴跌 | `data/crashes/*.json` | 看空 |
+| `fomo_real` 可能會漲 / `fomo_fake` 虛漲 | `data/fomo/*.json` 的 `is_real_rally` / `is_fake_rally` | 看多 / 看空 |
+| `crashfomo_real` 真跌 / `crashfomo_fake` 虛跌 | `data/crash-fomo/*.json` | 看空 / 看多 |
+
+每筆訊號算訊號日收盤 → +5/+10/+20 個交易日的報酬,扣掉同期加權指數 = 超額報酬,
+`hit = dir × 超額 > 0`;`hit_rate_raw` 是不扣指數的版本。分桶 `buckets`:
+`regime`(訊號日大盤:系統性賣壓/指數漲/平/跌)、`ma`(訊號日均線:多頭排列/空頭
+排列/糾結,`common.ma_state()`,跟前端 `priceMaState()` 同定義)、`confluence`
+(爆量/暴跌當天 FOMO 裡的外資連續 ≥3、融資連續 ≥3;不在 FOMO 前 60 的標「無合流
+資料」)、`event`(`data/events.json` 個股事件/大盤事件 ±1 個交易日)、`vol_ratio`
+(1.5~2 / 2~3 / 3~5 / 5+)。每格 `enough = n >= 60`(`common.SCORECARD_MIN_N`),
+不足的前端顯示灰色。
+
+**第一次跑(2026-09-11 資料,30 天存檔)的結果,記下來當基準:** 爆量 5 日
+n=362、命中 21.5%、平均超額 −3.26%;可能會漲 5 日 n=47、命中 17.0%、超額 −3.83%;
+暴跌 5 日 n=38、命中 68.4%。10/20 日全部還沒到期。這段期間大盤是弱勢盤整偏空,
+不能推廣到其他盤勢,但「爆量後 5 天平均跑輸大盤 3 個百分點」這個方向值得盯著看
+之後樣本累積後會不會維持。
+
+### `scripts/tune_thresholds.py`(門檻掃描,純 CLI)
+`--signal scan|crash --values 1.5,2,2.5,3 --horizon 5|10|20`,用永久存檔重掃整段
+歷史(不是讀 `data/scans`,那份只有 ≥1.5 的),每個候選門檻算同一套命中率/超額。
+一次只動一個參數,N<60 印「樣本不足」,調完要用之後的新資料再驗。不寫任何檔案。
+
+### `data/valuation-latest.json`(全市場 PE/PB/殖利率)
+`scripts/fetch_valuation.py` 打 TWSE OpenAPI `BWIBBU_ALL`(免費、免 token、一次全
+市場)。**還沒 probe 過**:腳本會把回應第一筆的欄位名印在 log,欄位對不上就軟失敗
+(exit 0、不寫檔),workflow 那步也加了 `continue-on-error`。第一次跑完看 log 的
+「欄位:」那行,對不上就改 `parse_rows()` 的候選欄位名。虧損股 PE 是 null。前端在
+個股查詢 meta 顯示,思考路徑「估值試算」會用 `收盤 / PE` 反推近四季 EPS 自動帶入。
+
+### `data/events.json`(事件日曆)
+手動維護、commit 進 repo,`{"date","stock_id"(null=全市場),"type","note"}`。記分板
+用它分「事件日 ±1 日」桶。前端另有 localStorage 個人事件(`stock_pipeline_v1__events`,
+匯出/匯入會帶)跟 `risk-latest.json` 除權息預告自動併入顯示,但這兩種不進記分板。
+
+### `data/industry_overrides.json`(產業別手動覆蓋)
+FinMind 跟 TWSE 代碼 15 都把 2634/2630/2645 放「航運業」,這份把它們改成「航太軍工」。
+`fetch_stock_meta.py` 每次寫檔前套用(`industry_raw` 留原值、`industry_override: true`;
+`--apply-overrides-only` 可以不打 API 只套用)。`compute_tick_flow.py` 讀到凍結樣本裡
+**只有覆蓋清單裡的**成員產業跟現在不一致時,把它移出舊組、舊組從候選池補滿、新產業
+自動凍結成新組——不用整份 `--refreeze`。**特別注意**:實測 FinMind 的分類本身會漂
+(2026-09-14 檢查有 44 檔凍結成員的產業跟現在的 `stock_meta` 不一樣),那種漂移不是
+使用者的決定,照 SH2 原則凍結不動,所以移出邏輯限定覆蓋清單裡的代號。航太軍工只有
+3 檔上市股,分三層每層 1 檔,`low_n_flag` 全部是 1,誠實顯示。

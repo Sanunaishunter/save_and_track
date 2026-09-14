@@ -85,6 +85,73 @@ def freeze_samples(frozen, candidates, target=SAMPLE_TARGET_PER_GROUP):
     return out, added
 
 
+def evict_mismatched(frozen, meta_stocks, only_codes=None):
+    """
+    2026-09-14 加入(配合 data/industry_overrides.json):凍結樣本裡的成員,如果
+    stock_meta.json 現在的產業別跟它所在那組的產業不一樣(被手動覆蓋成別的產業),
+    就從那組移出,frozen_caps_yi 跟著對齊移除。回傳 (新的凍結表, [(group_key, code), ...])。
+    只處理「產業變了」這一種情況;市值級距變動照 SH2 原則不重算(凍結就是凍結)。
+
+    only_codes:只對這些代號檢查(給 data/industry_overrides.json 的清單)。實測發現
+    FinMind 的分類本身會漂(2026-09-14 檢查時有 44 檔凍結成員的產業跟現在的
+    stock_meta 不一樣),那種漂移不是使用者的決定,照 SH2 原則凍結不動;只有
+    使用者在覆蓋檔裡明講的股票才移。
+    """
+    out = {}
+    moved = []
+    for key, entry in frozen.items():
+        members = list(entry.get("members") or [])
+        caps = list(entry.get("frozen_caps_yi") or [])
+        keep_m, keep_c = [], []
+        for i, code in enumerate(members):
+            now_ind = (meta_stocks.get(code) or {}).get("industry")
+            eligible = only_codes is None or code in only_codes
+            if eligible and now_ind and now_ind != entry.get("industry"):
+                moved.append((key, code))
+                continue
+            keep_m.append(code)
+            keep_c.append(caps[i] if i < len(caps) else None)
+        e = dict(entry)
+        e["members"] = keep_m
+        e["frozen_caps_yi"] = keep_c
+        out[key] = e
+    return out, moved
+
+
+def top_up_groups(frozen, candidates, target=SAMPLE_TARGET_PER_GROUP, only_keys=None):
+    """
+    被 evict_mismatched 移走成員之後,組內人數低於目標且該層候選池還有沒被抽過的
+    股票,就依代號排序補到目標數(跟 freeze_samples 同一種挑法)。只補 only_keys
+    裡的組(被移出成員的那幾組)——本來就不足額的組不動,不然會動到幾十組的凍結
+    名單。回傳 (新的凍結表, [(group_key, code), ...])。
+    """
+    out = {}
+    added = []
+    tiers_by_industry = {ind: assign_relative_tiers(cands) for ind, cands in candidates.items()}
+    for key, entry in frozen.items():
+        e = dict(entry)
+        members = list(e.get("members") or [])
+        caps = list(e.get("frozen_caps_yi") or [])
+        eligible = only_keys is None or key in only_keys
+        if eligible and len(members) < target:
+            ind = e.get("industry")
+            tier = e.get("cap_tier")
+            pool = sorted((tiers_by_industry.get(ind) or {}).get(tier) or [])
+            cap_map = dict(candidates.get(ind) or [])
+            for code in pool:
+                if len(members) >= target:
+                    break
+                if code in members:
+                    continue
+                members.append(code)
+                caps.append(cap_map.get(code))
+                added.append((key, code))
+        e["members"] = members
+        e["frozen_caps_yi"] = caps
+        out[key] = e
+    return out, added
+
+
 def series_for_members(members, per_code_counts, dates):
     """
     組內每日算術平均。dates 由新到舊,回傳等長的 list。

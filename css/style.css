@@ -1783,3 +1783,33 @@ input[type="date"] {
 .tp-cat-swatch.is-picked { border-color: var(--text); color: var(--text); background: var(--panel-3); }
 .tp-sheet-actions { display: flex; gap: 10px; margin-top: 20px; }
 .tp-sheet-actions .btn { flex: 1; text-align: center; padding: 11px; }
+
+
+/* ---------------------------------------------------------- 2026-09-14 大改 */
+.event-badge { margin-left: 4px; font-size: 12px; cursor: help; }
+.event-note { color: #d8a02a; font-weight: 600; }
+.valuation-note { color: var(--tp-valuation, #5a8dee); font-weight: 600; }
+.gate-banner {
+  margin: 8px 0 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(216, 160, 42, 0.14);
+  border: 1px solid rgba(216, 160, 42, 0.5);
+  color: #e0b04a;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.ma-cell { white-space: nowrap; font-size: 12px; }
+.events-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.events-form .tp-text-input { flex: 1 1 120px; min-width: 0; }
+.events-form select.tp-text-input { flex: 0 1 100px; }
+.events-form .btn { flex: 0 0 auto; }
+#events-list tr.is-past td { color: var(--muted); }
+.btn-xs { padding: 2px 8px; font-size: 12px; }
+.sc-signal .panel-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.sc-dir { font-size: 12px; font-weight: 600; }
+.sc-count { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: auto; }
+.sc-table td.is-thin, .sc-table td.is-thin.up, .sc-table td.is-thin.down { color: var(--muted); font-weight: 400; }
+.sc-details { margin-top: 8px; }
+.sc-details summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 6px 0; }
+.sc-details[open] summary { color: var(--text); }

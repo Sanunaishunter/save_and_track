@@ -97,6 +97,15 @@ def main():
     frozen_blob = {} if args.refreeze else (common.read_json(common.TICK_SAMPLE_FILE) or {})
     frozen = dict(frozen_blob.get("groups") or {})
     before = len(frozen)
+    # 2026-09-14:產業別被 data/industry_overrides.json 改掉的股票,要從舊組移出、
+    # 舊組從候選池補滿,新產業由下面的 freeze_samples 自動凍結成新組——不用整份 refreeze。
+    override_codes = set(((common.read_json(common.INDUSTRY_OVERRIDES_FILE) or {}).get("overrides") or {}).keys())
+    frozen, moved = tick_flow.evict_mismatched(frozen, meta_stocks, override_codes)
+    if moved:
+        print("  產業別已變更、移出原凍結組:%s" % "、".join("%s←%s" % (k, c) for k, c in moved))
+        frozen, topped = tick_flow.top_up_groups(frozen, candidates, only_keys=set(k for k, _ in moved))
+        if topped:
+            print("  原組補滿:%s" % "、".join("%s→%s" % (k, c) for k, c in topped))
     frozen, added = tick_flow.freeze_samples(frozen, candidates)
     if added:
         print("  新凍結 %d 組(原有 %d 組,合計 %d 組)" % (added, before, len(frozen)))

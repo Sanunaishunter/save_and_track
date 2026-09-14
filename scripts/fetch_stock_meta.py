@@ -50,13 +50,50 @@ def fetch_industries():
     return out
 
 
+def apply_industry_overrides(stocks):
+    """
+    2026-09-14:把 data/industry_overrides.json 套到 stocks(就地修改)。被覆蓋的股票
+    留 industry_raw(原本的分類)跟 industry_override=True;之前被覆蓋、現在從覆蓋
+    清單拿掉的,還原成 industry_raw。回傳目前有幾檔被覆蓋。
+    """
+    blob = common.read_json(common.INDUSTRY_OVERRIDES_FILE) or {}
+    overrides = blob.get("overrides") or {}
+    n = 0
+    for code, rec in stocks.items():
+        if not isinstance(rec, dict):
+            continue
+        if code in overrides and overrides[code]:
+            if not rec.get("industry_override"):
+                rec["industry_raw"] = rec.get("industry")
+            rec["industry"] = overrides[code]
+            rec["industry_override"] = True
+            n += 1
+        elif rec.get("industry_override"):
+            if rec.get("industry_raw"):
+                rec["industry"] = rec["industry_raw"]
+            rec.pop("industry_override", None)
+            rec.pop("industry_raw", None)
+    return n
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="只印出結果,不寫檔")
+    ap.add_argument("--apply-overrides-only", action="store_true",
+                    help="不打任何 API,只把 data/industry_overrides.json 套到既有的 stock_meta.json 再寫回")
     args = ap.parse_args()
 
     prev = common.read_json(common.META_FILE) or {}
     stocks = dict(prev.get("stocks") or {})
+
+    if args.apply_overrides_only:
+        n = apply_industry_overrides(stocks)
+        out = dict(prev)
+        out["stocks"] = stocks
+        out["generated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+        common.write_json(common.META_FILE, out)
+        print("只套用產業覆蓋:%d 檔,已寫入 %s" % (n, common.META_FILE))
+        return 0
 
     errors = []
 
@@ -131,6 +168,10 @@ def main():
         print("最大的產業:%s(%d 檔,佔 %.0f%%);前三大 = %s"
               % (biggest, n, 100.0 * n / max(1, with_ind),
                  "、".join("%s %d" % t for t in top)))
+
+    n_over = apply_industry_overrides(stocks)
+    if n_over:
+        print("套用 data/industry_overrides.json:%d 檔改了產業別" % n_over)
 
     if args.dry_run:
         return 1 if errors else 0
