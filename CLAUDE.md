@@ -900,6 +900,38 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
       影響繼續留在候選名單(它們今天的外資買賣超是負值,即使套用新例外
       `alreadyTriggered` 依然是 false);有真實投信活動的 3167 完全沒受影響
       (`trustAllZero` 判定為 false,走原本邏輯)。
+31. **2026-09-14 出場設定的目標%欄位旁邊加「≈ 目標價」,雙向連動。** 起因:使用者
+    覺得只能輸入 % 不直覺,想直接打價錢。`exitPlanFormHtml()` 新增
+    `exitTargetPriceFromPct(pct, avgCost, dir)` 算價,新欄位 `#exit-target-price`
+    跟既有的 `#exit-target-pct` 都存 `data-avg`(持倉均價 `st.avg`)/`data-dir`
+    (`+1`多/`-1`空)兩個 data attribute,`bind()` 裡新增一個 `#detail-positions`
+    的 `input` 事件委派:打 % 就即時算價寫回價格欄位、打價就反推 % 寫回 % 欄位,
+    純前端算,不用等按「儲存」。
+    - **沒有新增資料欄位**——`saveExitPlan()` 還是只讀 `#exit-target-pct` 的值存進
+      `exit_plan.target_pct`,價格欄位純粹是「輸入輔助」,不落地存價格本身,跟
+      `STEPS`/`exit_plan` 的既有結構完全沒關係。
+    - **公式跟 `evalExitPlan()` 用同一套 `dir` 記法**,不是另外發明:
+      `目標價 = 均價 × (1 + dir × pct / 100)`,做多(`dir=1`)目標價在均價之上,
+      做空(`dir=-1`)目標價在均價之下(反推 `pct` 同理用 `dir` 乘回去)——這樣算
+      出來的 % 存回 `target_pct` 之後,`evalExitPlan()` 讀到的數字意義完全一致,
+      不用另外處理方向轉換。
+    - **沒有持倉(`st.avg` 是 `null`)時目標價欄位直接 `disabled`**,placeholder
+      顯示「需先有持倉均價」,不會讓使用者在算不出來的情況下打字看到誤導的
+      空值或錯誤換算。
+    - 事件直接改 DOM `value`,**不呼叫 `renderPositions()` 重繪**——CLAUDE.md
+      已經記過的坑(自動存檔重繪 DOM 會把使用者正在打的字吃掉),這次兩個欄位
+      互相連動、使用者可能會來回改好幾次,更不能每次都重繪。
+    - **這次只加在「目標%」欄位(`daytrade`/`profit`/`trail` 三種模式共用同一個
+      欄位)**,沒有動「最大回撤 %」——回撤的基準是「期間最高/最低點」,是會
+      每天變動的參考點,不像目標%的基準(持倉均價)是固定的,價格⇄%換算沒有
+      同樣乾淨,這次沒有一併做,使用者之後想要可以再談。
+    - 用 Playwright 端對端測過:做多倉位(均價100)輸入 pct=10 → 價格正確算出
+      110.00,再改價格=120 → pct 正確反推回 20.00,儲存後 `exit_plan.target_pct`
+      正確是字串"20.00"(不是價格);做空倉位(均價100)輸入 pct=10 → 價格正確是
+      90.00(目標在均價下方),改價格=85 → pct 正確是15.00;沒有持倉的紀錄切到
+      `profit`模式時目標價欄位正確 `disabled`、placeholder正確、打 pct 不會讓
+      它跑出錯誤的值;切換模式(hold/trail/days/hold)時兩個欄位的顯示/隱藏正確
+      同步切換。全程無 JS console 錯誤。
 
 ---
 

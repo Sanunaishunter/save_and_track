@@ -6342,13 +6342,22 @@
     }).join('') + '</div>';
   }
 
-  /** 出場設定表單,值從 rec.exit_plan 帶入。direction 決定門檻/漲跌方向的文字說明。*/
-  function exitPlanFormHtml(plan, direction) {
+  /** 目標%欄位對應的價格,拿現在的均價換算——沒有均價(還沒下單)就不算。 */
+  function exitTargetPriceFromPct(pct, avgCost, dir) {
+    if (!(avgCost > 0) || pct === '' || pct == null || isNaN(Number(pct))) return '';
+    return (avgCost * (1 + dir * Number(pct) / 100)).toFixed(2);
+  }
+
+  /** 出場設定表單,值從 rec.exit_plan 帶入。direction 決定門檻/漲跌方向的文字說明,
+   * avgCost(持倉均價,沒有持倉時是 null/undefined)拿來算「≈ 目標價」欄位的初始值。*/
+  function exitPlanFormHtml(plan, direction, avgCost) {
     var dir = direction === 'short' ? -1 : 1;
     var dirWord = dir > 0 ? '漲' : '跌';
     var showTarget = plan.mode === 'daytrade' || plan.mode === 'profit' || plan.mode === 'trail';
     var showDays = plan.mode === 'days';
     var isTrail = plan.mode === 'trail';
+    var hasAvg = avgCost > 0;
+    var targetPriceInit = exitTargetPriceFromPct(plan.target_pct, avgCost, dir);
     return '<div class="pos-exit">' +
       '<div class="pos-head"><span>出場設定</span>' +
         '<span class="dim">只是提醒,不會自動下單;資料一天更新一次,不是即時報價</span></div>' +
@@ -6363,7 +6372,14 @@
         '<label class="field" id="exit-target-field"' + (showTarget ? '' : ' hidden') + '>' +
           '<span class="field-label">' + (isTrail ? '啟動門檻 %(對均價,' + dirWord + ')' : '目標' + dirWord + '幅 %(對均價)') + '</span>' +
           '<input type="text" id="exit-target-pct" inputmode="decimal" placeholder="例如 5" value="' +
-            esc(plan.target_pct) + '"></label>' +
+            esc(plan.target_pct) + '" data-avg="' + (hasAvg ? avgCost : '') + '" data-dir="' + dir + '"></label>' +
+        '<label class="field" id="exit-target-price-field"' + (showTarget ? '' : ' hidden') + '>' +
+          '<span class="field-label">≈ 目標價(選填,跟左邊 % 雙向連動)</span>' +
+          '<input type="text" id="exit-target-price" inputmode="decimal"' +
+            (hasAvg ? '' : ' disabled') +
+            ' placeholder="' + (hasAvg ? '例如 ' + (avgCost * (1 + dir * 5 / 100)).toFixed(1) : '需先有持倉均價') + '"' +
+            ' value="' + esc(targetPriceInit) + '"' +
+            ' data-avg="' + (hasAvg ? avgCost : '') + '" data-dir="' + dir + '"></label>' +
         '<label class="field" id="exit-days-field"' + (showDays ? '' : ' hidden') + '>' +
           '<span class="field-label">持倉上限(交易日)</span>' +
           '<input type="text" id="exit-max-days" inputmode="numeric" placeholder="例如 10" value="' +
@@ -6451,7 +6467,7 @@
 
     var plan = rec.exit_plan || blankExitPlan();
     var alerts = positionAlertsHtml(rec, st, plan);
-    var exitForm = exitPlanFormHtml(plan, rec.direction);
+    var exitForm = exitPlanFormHtml(plan, rec.direction, st && st.avg);
 
     var todayQuote = quoteOf(rec.stock_id);
     var defaultPrice = (todayQuote && todayQuote.close > 0) ? String(todayQuote.close) : '';
@@ -6910,10 +6926,48 @@
     el('detail-positions').addEventListener('change', function (e) {
       if (!e.target.closest('#exit-mode')) return;
       var mode = e.target.value;
+      var showTarget = mode === 'daytrade' || mode === 'profit' || mode === 'trail';
       var targetField = el('exit-target-field');
+      var targetPriceField = el('exit-target-price-field');
       var daysField = el('exit-days-field');
-      if (targetField) targetField.hidden = !(mode === 'daytrade' || mode === 'profit' || mode === 'trail');
+      if (targetField) targetField.hidden = !showTarget;
+      if (targetPriceField) targetPriceField.hidden = !showTarget;
       if (daysField) daysField.hidden = (mode !== 'days');
+    });
+
+    // 2026-09-14 使用者要求:出場設定的目標%欄位旁邊加一個「≈ 目標價」,
+    // 兩個雙向連動——輸入%換算價、輸入價換算%,純前端算,不用等按「儲存」
+    // 就能即時看到。兩個欄位都存了 data-avg/data-dir,換算基準是「持倉均價」
+    // (st.avg),沒有均價(還沒下單)時目標價欄位是 disabled,不能算。只是
+    // 輔助輸入用的顯示欄位,實際存進 exit_plan 的還是 target_pct 這個
+    // 百分比(見 saveExitPlan()),沒有新增資料欄位。直接改 DOM value,
+    // 不呼叫 renderPositions() 重繪,避免使用者正在打字時被清掉
+    // (CLAUDE.md 記過的坑:自動存檔重繪 DOM 會吃字)。
+    el('detail-positions').addEventListener('input', function (e) {
+      var pctInput = e.target.closest('#exit-target-pct');
+      var priceInput = e.target.closest('#exit-target-price');
+      if (pctInput) {
+        var avg1 = parseFloat(pctInput.getAttribute('data-avg'));
+        var dir1 = pctInput.getAttribute('data-dir') === '-1' ? -1 : 1;
+        var priceField = el('exit-target-price');
+        if (priceField && avg1 > 0) {
+          priceField.value = exitTargetPriceFromPct(pctInput.value.trim(), avg1, dir1);
+        }
+        return;
+      }
+      if (priceInput) {
+        var avg2 = parseFloat(priceInput.getAttribute('data-avg'));
+        var dir2 = priceInput.getAttribute('data-dir') === '-1' ? -1 : 1;
+        var pctField = el('exit-target-pct');
+        var priceVal = priceInput.value.trim();
+        if (pctField && avg2 > 0) {
+          if (priceVal === '' || isNaN(Number(priceVal))) {
+            pctField.value = '';
+          } else {
+            pctField.value = (dir2 * (Number(priceVal) - avg2) / avg2 * 100).toFixed(2);
+          }
+        }
+      }
     });
 
     el('k-capital').addEventListener('input', recalcKelly);
