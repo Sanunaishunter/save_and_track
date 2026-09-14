@@ -1,1150 +1,261 @@
-# 給下一個 Claude 的交接
+# 給下一個模型的交接(2026-09-14 重整版)
 
 個人用的台股工具。**純靜態網頁 + GitHub Actions 排程 + commit 進 repo 的 JSON**,
-沒有後端、沒有資料庫、沒有登入。
+沒有後端、沒有資料庫、沒有登入。這份檔案是每次開 session 自動載入的,讀完就要能
+直接動手;更早的逐條變更史(34 條,含每次的測試細節)原封搬到
+`docs/CLAUDE-history-2026-09-14.md`,想知道「當初為什麼這樣做」再去翻。
 
-- Repo:`Sanunaishunter/save_and_track`(public),分支 `main`
-- 線上:GitHub Pages(push 到 main 之後自動 build)
+- Repo:`Sanunaishunter/save_and_track`(public),分支 `main`,GitHub Pages 自動 build
 - 資料每個交易日由 `.github/workflows/daily-scan.yml` 更新後 commit 回 repo
+- 使用教學(給人看的):`docs/使用教學.md`;資料格式與 API 探測結論:`data/README.md`
 
 ---
 
-## 使用者立過的規矩(沒有重新確認前不要違反)
+## 1. 使用者立過的規矩(沒有重新確認前不要違反)
 
-1. **不要接 SH2 的任何資料庫、API 或既有服務。** 這個 repo 完全獨立,
-   SH2 那邊的東西只能「移植公式」,不能連線。
-2. **不要更動七個步驟的欄位定義、標籤文字或資料結構**,除非先問過。
-   (持倉功能因此是獨立區塊,沒有動到 `STEPS`。)
-3. **FinMind token 只能存成 GitHub Secret `FINMIND_TOKEN`,只在 Actions runner 內讀取。**
-   絕對不能出現在任何前端 JS/HTML/靜態檔案裡 —— 那些會被打包進 Pages 公開。
-4. 沒有後端、沒有登入、不用框架、不要 build step。前端只用 `localStorage`
-   (不是 `window.storage`),所有存取都要 try/catch 且失敗要有畫面提示。
-5. 上櫃(TPEx)明確排除,只做上市普通股。
+1. **不接 SH2 的任何資料庫、API 或服務。** 只能「移植公式」,不能連線。
+2. **不動七個步驟(`STEPS`)的欄位定義、標籤文字、資料結構**,除非先問。新功能都做成
+   獨立欄位/獨立區塊(持倉、方向、出場設定、思考路徑都是這樣加的)。
+3. **FinMind token 只存 GitHub Secret `FINMIND_TOKEN`,只在 Actions runner 讀。** 絕不
+   出現在前端 JS/HTML/靜態檔(那些會被 Pages 公開)。
+4. 沒有後端、沒有登入、不用框架、沒有 build step。前端只用 `localStorage`,所有存取
+   都 try/catch,失敗要有畫面提示。前端是 **ES5**(沒有箭頭函式、樣板字串、
+   `Object.assign`、ES module),要能用 `file://` 直接開。
+5. 只做上市普通股(四位數、開頭非 0),上櫃(TPEx)、ETF、權證明確排除。
 6. 新檔案先看現有慣例再決定放哪,不要假設空 repo 從零建。
-7. **2026-09-13 使用者明講:改完測完直接 push 到 main,不用每次都問「要不要推
-   main」。** 這個 repo 就使用者自己在用,push 到 main 之後 GitHub Pages 自動
-   build——在 `claude/analysis-hj9n4c` 這個工作分支上驗證過(語法檢查 + Playwright
-   對照手算值)就可以直接 fast-forward 推兩邊,不用等使用者每次確認。仍然要先
-   把當次改動在本地/工作分支測過,不是「跳過測試直接推」;只是拿掉「要不要推
-   main」這個確認步驟。
+7. **改完、測完,直接 push 工作分支跟 main,不用問「要不要推 main」**(2026-09-13
+   使用者明講)。前提是真的測過:語法檢查 + Playwright/離線測試對照手算值。
 
-## 我(前一個 Claude)自己養成的做法
+## 2. 工作方式(前幾任養成、證明有用的)
 
-- **先探測再實作。** 容器的 proxy 擋掉對外 TLS(TWSE / FinMind / github.io 都連不到),
-  所以任何外部 API 的欄位與行為,一律先寫一支一次性 probe 腳本、請使用者在 Actions 上跑、
-  我讀 log 拿到真實回應之後才動手。曾經照文件猜結果猜錯(見下面 FinMind 那條),之後就不再這樣做。
-- probe 用完即刪,結論寫進 `data/README.md`。
-- 每個功能都要有測試,而且測試要對照**手算值**,不要只是「跑得動」。
-- **幫使用者做個股「全套分析」(思考路徑示範)前,先查這個 repo 自己的官方資料,
-  不要一開始就去 WebSearch。** 2026-09-13 分析 3376 時踩過一次坑:WebSearch 到的
-  「目前股價 252 元」其實是過期/錯誤資料,已經在 repo 裡的 `data/quotes-latest.json`
-  當下就有更新(而且是每天排程從 TWSE 官方抓的),兩者一比對就會發現差了快 70 元,
-  但我當下沒有先比對,直接把搜尋結果寫進分析,方向性結論(估值偏貴)還算站得住,
-  但價位/本益比這些精確數字全部是錯的。之後的流程改成:
-  1. 先查 `data/quotes-latest.json`(`codes`/`close`/`daily_close`,最新收盤 + 近期走勢)、
-     `data/history/`、`data/stock-lookup-latest.json`(如果那檔剛好在個股查詢清單裡,
-     還有融資融券/外資投信)——這些是官方資料,權威性高於任何網路摘要,而且反正就在
-     手邊,沒有先查沒道理。
-  2. WebSearch 只用來補這個 repo 沒有的東西:產業敘事、催化劑新聞、法人籌碼、EPS/
-     財報這類基本面數字(repo 目前沒接歷史 PE/EPS 資料源,見已知限制第 8 點)。
-  3. WebSearch 查到的**數字類**結論(價位、本益比、EPS)如果只有單一來源,分析裡要
-     明講「單一來源,沒有交叉驗證」,不要當成跟 repo 官方資料一樣可信;有跟 repo 資料
-     重疊的部分(例如股價)一定要交叉比對,對不上要停下來查為什麼,不能兩個都信。
-- **估值不要單押一種比例,要多方法交叉。** PE、PB、跟同業比較同時做,只有多個方法
-  都指向同一個結論才算數——3376 那次的問題之一就是只丟了一個 PE 比較,沒有第二個
-  角度去驗證,估值判斷的可信度因此偏弱。
-- **2026-09-13 用 2357(華碩)做了一次「分兩階段」的思考路徑示範,拿真實後續走勢
-  驗證了停損紀律的價值。** 使用者先要求只用 9/4 以前的 repo 官方資料(`data/history`、
-  `data/market-grid-latest.json`、`data/tick`)做一套完整思考路徑(大盤→產業流向→
-  個股量價→老實列出資料缺口→估值留空→分岔看多/看空→示範進出場計算),完全不碰
-  WebSearch;隔一輪使用者才說「開放 Google」,再回頭用 9/7~9/11 的 repo 資料 +
-  WebSearch 補全套。兩階段結果剛好可以互相驗證,學到 3 件事,已經寫進那條思考路徑
-  的 `n13` 方塊,這裡記給下一個 Claude 用同一套流程時參考:
-  1. **停損紀律比訊號強度重要。** 9/4 當下產業流向(電腦及週邊設備業‧大型股)
-     rolling_5 倍數高達 2.22,是看多論點的主要支撐,但 9/7~9/9 三個交易日內這個
-     數字(fixed_20)就從 2.27 崩到 0.27——短天期動能指標可以反轉得比直覺快很多倍。
-     示範性停損(9/4 收盤 1025、停損 986)如果真的執行,9/7 當天(低點 981)就會
-     出場,虧損停在 3.8%;沒有停損則會一路抱到 9/11 收 924,虧損擴大到 9.9%。
-  2. **沒資料的時候留白,比硬填一個猜測值安全。** 2357 不在個股查詢清單裡,9/4
-     當下沒有 EPS 來源,那格估值試算方塊就老實留空,沒有硬塞數字去湊「全套」的
-     形式。之後(9/13)WebSearch 到 8/12 法說會 EPS(三個獨立來源一致,可信度高)
-     才回頭補算,PE 概算落在 16~18 倍,估值其實還好——如果 9/4 當下為了湊齊全套
-     硬猜一個 EPS,湊出來的結論很可能反而誤導判斷方向。
-  3. **WebSearch 查到的解釋性敘事,要用 repo 自己的數字交叉驗證再採信,對不上的
-     直接不用。** 搜到好幾篇提到 852 元、892 元、964 元、700 元目標價的文章,
-     跟這次分析的 900~1025 元區間完全對不上,判斷是不同時間點的舊文章,直接捨棄
-     不引用;反而是「9/11 加權指數收 46184.85、跌 755.64 點」這篇有明確日期的
-     台股盤後報告,數字跟 `data/market-grid-latest.json` 完全吻合,才採信裡面
-     「賣壓集中電子股、美國 CPI+美債殖利率推升科技股評價壓力」的解釋。
-  這條「教訓」本身樣本數也只有 1 次(`data/history` 目前不到 30 個交易日),
-  不是驗證過的規則,只是這次示範剛好巧合命中,下次遇到類似情境還是要重新判斷,
-  不要當成鐵律套用。
-
+- **先探測再實作。** 容器 proxy 擋掉 TWSE / FinMind / github.io / 主流台媒,連不到。
+  任何新的外部 API,先寫一次性 probe 腳本、請使用者在 Actions 跑、讀 log 拿到真實
+  回應再動手。probe 用完即刪,結論寫進 `data/README.md`。曾經照文件猜、猜錯(FinMind
+  免費版不能查全市場)。唯一例外是 `fetch_valuation.py`(BWIBBU_ALL),使用者要一次做完
+  才先上,腳本軟失敗 + 印欄位名 + workflow `continue-on-error`,**第一次跑完要看 log**。
+- **每個功能都要有測試,測試要對照手算值**,不是「跑得動」。Playwright 走真實 UI 路徑
+  (例如自動出場要經過 `checkAutoExits()`,不要單獨呼叫函式)。
+- **寫程式碼時照抄驗證過的版本,不要憑印象重打。** 記在文件裡的坑一樣會再踩
+  (`.tp-row` 的 `position` 就踩過兩次)。
+- **改動要記在這裡,但記「決定與坑」,不記流水帳。** 測試細節寫在 commit 訊息或
+  `docs/CLAUDE-history-*.md`。
+- 容器是 ephemeral,沒 push 的東西會不見。GitHub token 不能觸發 workflow(403),
+  要請使用者自己按 Run workflow。
 
 ---
 
-## 個股「全套分析」操作手冊(給任何模型用,2026-09-14 定稿)
+## 3. 系統地圖
 
-上面那些原則散在各處,2026-09-14 拿兩份 Sonnet 5 做的 2634 路徑對照時發現原則
-讀到了還是會漏(沒算籌碼、用舊 EPS、日期沒對 repo 價量),所以收成一份可以照做的
-清單。**交付物是一個可匯入的 JSON**:`data/thinking-paths/<代號>-<拼音>-<日期>.json`,
-格式 `{ "data": [], "thinking_paths": { "currentPathId": "<path id>", "paths": [ {...} ] } }`,
-path 結構照 `js/app.js` 的 `thinkingPaths`(`id/name/stock_id/stock_name/created_at/nodes/edges`,
-node 是 `{id, text, cat, created_at, updates: []}`,cat 只能是 `macro/flow/catalyst/valuation/
-bull/bear/conclude/note`,edges 是 `{from, to}`)。範例:`data/thinking-paths/2634-hanxiang-2026-09-14.json`。
-寫完用 Playwright 走真實匯入流程(`#import-file` → 「合併」)確認方塊數/連線數/無 JS 錯誤,
-再 commit 到 `data/thinking-paths/`,push 分支跟 main。
+### 分頁(`index.html` 的 `#views`,順序 = `js/app.js` 的 `VIEWS_ORDER`)
 
-### 步驟(每一步先讀 repo,後面才准上網)
-1. **大盤**:`data/market-grid-latest.json` 頂層今日快照 + `history`(30 天),
-   `data/archive/index.json`(更久)。要寫:九宮格 `grid_label`、漲跌家數、法人淨額、
-   最近有沒有「系統性賣壓」/拉積盤。
-2. **產業流向**:`data/stock_meta.json` 查這檔的 `industry`(注意 `industry_override`),
-   `data/tick-latest.json` 找對應 `industry|cap_tier` 那列的 `rolling_5/fixed_20/d0_d1`,
-   `data/tick-members-latest.json` 找這檔自己的 `ticks` 序列。分組不合理就明講不採用。
-3. **個股量價**:`data/quotes-latest.json`(`daily_close/high/low/volume` 新到舊 30 天)或
-   `data/archive/prices/`。要算:MA5/10/20(**用 `common.ma_state()` 的定義**:含當日簡單
-   平均)、30 日高低、量 vs MA20(shift 1)、ATR14(`TRAIL_ATR_WINDOW`,簡單平均)、
-   ‼️前高比(`nearHighFromCloses`,85%)。**引用系統訊號時照系統公式重算**,例如量縮
-   蓄勢是 `computeLookupShrinkZone()`:量 / 前 10 日峰量 < 0.6、振幅 (高−低)/收盤 ≥ 3.5%,
-   不要用自己順手的 MA20 近似。
-4. **籌碼**(只有在個股查詢清單裡才有):`data/stock-lookup-latest.json` /
-   `-scan-` / `-crashfomo-` 的 `data[代號].rows`(融資餘額、券、外資/投信淨買賣)。要算:
-   外資連續買/賣天數、自某日起累計、投信是否缺席、融資 10 日變動 %、融資維持率估計
-   (`computeLookupMarginMaintenance`:量最大日最高價 × 0.6)、10 日平均收盤位置、
-   法人軌跡三票(`computeLookupInstTrajectory`)。不在清單就寫「無籌碼資料」,不要猜。
-5. **系統對這檔的既有判定**:`data/scan-latest.json`/`crash-latest.json`(含 `ma_state`)、
-   `fomo-latest.json`/`crash-fomo-latest.json`(有 `per/pbr`、外資/融資連續天數)、
-   `risk-latest.json`(注意股、除權息)、`data/events.json`(事件)、
-   `data/valuation-latest.json`(PE/PB/殖利率,有的話)、`data/scorecard-latest.json`
-   (這種訊號歷史命中率,N<60 只能當方向感)。
-6. **WebSearch 只補 repo 沒有的**:財報 EPS/營收、催化劑新聞、券商觀點。規矩:
-   - 數字類至少兩個獨立來源一致才寫「可信度高」,否則標「單一來源」。
-   - **每一條有日期的新聞都要對 repo 價量**:那天的 `daily_close`/量有沒有對應反應。
-     對不上就停下來查,不能兩個都信。WebSearch 的 AI 摘要會把查詢字串裡的日期回填
-     進結果(2026-09-14 實測),摘要文字不算證據,看來源網址/內文日期。
-   - 券商目標價要看它用的 EPS 是哪一年;過期就標明參考價值低。
-   - WebFetch 對 udn/ltn/cmoney/statementdog/fugle 全被 proxy 擋,只能靠 WebSearch。
-7. **估值三方法交叉**:TTM PE(來源與推算過程寫清楚)、Forward PE(假設寫清楚)、
-   券商/同業;PB 沒淨值就留空。有 `valuation-latest.json` 時用 TWSE PE 反推 TTM EPS
-   當第一個錨。只有多方法同向才下結論。
-8. **看多 / 看空分岔**:各自列 4~6 條,每條要能對到前面某一步的數字。
-9. **決策要可執行**:分「已持有(含入手價)」跟「未進場」兩條;進場條件、停損價
-   (優先用系統有的:固定停損 % / ATR 停損 / 最大回撤)、目標價、風險報酬比
-   (`thinkingRiskRewardText` 的公式,`floor(預算/進場價)` 股)。停損紀律 > 訊號強度
-   (2357 教訓)。
-10. **資料缺口 + 檢討 checkpoint**:老實列出沒有的資料(不硬填),寫 3~5 個之後要回頭
-    驗證的日期/事件。方塊 `created_at` 用當天日期。
-
-### 交件前自查(每一條答不出來就回去補)
-- 每個數字能指出來自哪個檔案或哪個來源?WebSearch 數字有標單一/多來源?
-- 有沒有任何新聞日期跟 repo 價量對不上而沒解釋的?
-- 籌碼那格有算,還是只寫「不合格候選」就跳過?
-- 估值用的 EPS 是最新一季之後的口徑,不是去年全年?
-- 決策有進場價/停損價/目標價三個數字?入手價(如果使用者給了)有出現在決策裡?
-- 用系統公式重算過的指標,數字跟前端會顯示的一致?
-- 匯入測試跑過、無 JS 錯誤、檔案 commit 進 `data/thinking-paths/`?
-
-### 可以直接貼給模型的 prompt
-```
-讀 CLAUDE.md,照「個股全套分析操作手冊」那節,對 <代號 名稱> 做一次思考路徑
-全套分析,<預設入手價 X 元 / 未持有>。先讀 repo 官方資料再上網,每一條新聞日期都
-要對 repo 價量,估值三方法交叉,決策要有進場/停損/目標三個價,交件前跑完自查清單。
-產出 data/thinking-paths/<代號>-<拼音>-<日期>.json,用 Playwright 匯入驗證後 push
-分支跟 main,回覆裡附:結論一句話、關鍵讀數表、資料缺口、來源清單。
-```
-
----
-
-## 五個分頁
-
-| 分頁 | 資料來源 | 說明 |
+| 分頁 | 資料 | 一句話 |
 | --- | --- | --- |
-| 追蹤 | localStorage | 七步驟紀錄 + 持倉損益 |
-| 爆量掃描 | `data/scan-latest.json` | `vol_ratio = 量 / MA20(shift 1) > 1.5` 且 `close > open` |
-| 暴跌掃描 | `data/crash-latest.json` | 跟爆量掃描對稱,`vol_ratio > 1.5` 且 `close < open` |
-| FOMO | `data/fomo-latest.json` | 對爆量前 60 名判斷真漲/虛漲 |
-| 暴跌FOMO | `data/crash-fomo-latest.json` | 對暴跌前 60 名判斷真跌/虛跌,是真漲/虛漲的鏡射(不是單純反號誌,見 `data/README.md`) |
-| 產業流向 | `data/tick-latest.json` | 移植自 SH2 8012:產業 × 市值級距的成交筆數聚合 |
-| 部位 | `data/quotes-latest.json` | Kelly 部位 + 零股試算 |
-| 個股查詢 | `data/stock-lookup-latest.json` | 手動維護清單(`stock_lookup.json`),開高低收量+融資融券+外資投信逐日大表格,沒有後端不能即時查任意一檔 |
-| 訊號記分板 | `data/scorecard-latest.json` | 2026-09-14 加入:歷史訊號之後 5/10/20 日超額報酬、命中率,依大盤狀態/均線/籌碼合流/事件/量比分桶,N<60 灰色 |
-| 大盤狀況→事件日曆 | `data/events.json` + localStorage + 除權息預告 | 2026-09-14 加入 |
+| 大盤狀況 | `market-grid-latest.json`、`risk-latest.json`、`fx-futures-latest.json`、`events.json` | 九宮格(ΔP_idx × 成交值 5/20 日比)、30 日追蹤表、法人融資交叉、拉積盤、注意股/除權息、**事件日曆** |
+| 追蹤 | localStorage | 七步驟紀錄 + 持倉損益 + 出場設定 + 自動出場/全出統計 + 進場訊號準度統計 |
+| 思考路徑 | localStorage `stock_pipeline_v1__thinking_paths` | 分岔/合併的鐵軌圖,一檔股票一條;估值試算/進出場計算兩個計算機 |
+| 兵棋推演 | 追蹤紀錄 + `quotes-latest.json` | 移動停利模式部位的總覽:啟動狀態、距峰回落、ATR 停損緩衝 |
+| 法人軌跡 | 三份 `stock-lookup*-latest.json` | 量縮蓄勢候選的方向三票(融資/外資投信/收盤位置) |
+| 訊號記分板 | `scorecard-latest.json` | 歷史訊號之後 5/10/20 日超額報酬、命中率,五種分桶,N<60 灰 |
+| 爆量掃描 / 暴跌掃描 | `scan-latest.json` / `crash-latest.json` | `量/MA20(shift 1) > 1.5` 且 `close > open`(暴跌對稱 `<`),≥300 張;每列有 `ma_state` |
+| FOMO / 暴跌FOMO | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數) |
+| 產業流向 | `tick-latest.json`、`tick-members-latest.json` | 移植 SH2 8012:產業 × 市值級距的成交筆數,凍結抽樣每組 10 檔 |
+| 部位 | `quotes-latest.json` | Kelly 部位 + 零股試算 |
+| 題材分類 | `themes.json` | 手動維護的靜態清單 |
+| 量價訊號 | `stock-lookup-fullscan-latest.json` | 獵人六訊號 |
+| 四個個股查詢 | `stock-lookup{,-scan,-crashfomo,-fullscan}-latest.json` | 手動清單的逐日大表格(OHLCV + 融資融券 + 外資投信),標記 🔔🔽🔻🔥🕐‼️、融資維持率、均線狀態、PE/PB、📅 |
 
-## 每日流程(單一 workflow,順序由執行序保證)
-
-台北 16:13(`cron: '13 8 * * 1-5'`,UTC)。合併成一個 job 是因為
-GitHub 排程會延遲(實測延遲過 5 小時 23 分),拆成兩支時 FOMO 會讀到前一天的爆量清單。
+### 每日流程(`daily-scan.yml`,台北 16:13,單一 job、順序由執行序保證)
 
 ```
-fetch_prices.py        TWSE 全市場收盤(含成交筆數)→ data/history/YYYY-MM-DD.json
-compute_scan.py        爆量清單
-compute_crash.py       暴跌清單(跟爆量對稱,共用 data/history)
-fetch_stock_meta.py    產業別(FinMind)+ 發行股數(TWSE)→ data/stock_meta.json
-compute_tick_flow.py   產業流向聚合
-compute_quotes.py      報價快照(收盤價 + 日報酬)
-compute_fomo.py        FOMO 計分(吃上一步的 scan-latest.json)
-compute_crash_fomo.py  暴跌FOMO 計分(吃上一步的 crash-latest.json)
-fetch_stock_lookup.py  個股查詢(讀 stock_lookup.json 手動清單,融資融券+外資投信)
-archive_prices.py      永久存檔(data/archive,不裁掉;手動 archive_backfill_days 回補)
-fetch_valuation.py     全市場 PE/PB/殖利率(TWSE BWIBBU_ALL,continue-on-error,尚未 probe)
+fetch_prices.py        TWSE 全市場 OHLCV+成交筆數 → data/history/(只留 30 天)
+compute_scan.py / compute_crash.py    爆量 / 暴跌(含 ma_state)→ *-latest + scans/ crashes/ 存查
+fetch_stock_meta.py    產業別(FinMind)+ 股數(TWSE)+ 套 industry_overrides.json
+fetch_stock_lookup.py ×3   三份個股查詢清單(FinMind 融資融券/法人,60 日曆天)
+compute_tick_flow.py   產業流向(凍結抽樣)
+compute_quotes.py      報價快照(30 天 OHLCV 序列)
+fetch_risk_flags.py / compute_market_grid.py / fetch_fx_futures.py
+archive_prices.py      永久存檔 data/archive/(價格按月、指數逐日,不裁掉)
+fetch_valuation.py     全市場 PE/PB/殖利率(BWIBBU_ALL,continue-on-error)
+compute_fomo.py / compute_crash_fomo.py   吃上面剛產的 scan/crash 清單
 compute_scorecard.py   訊號記分板(讀 scans/crashes/fomo/crash-fomo 存查檔 + 存檔)
-git commit + push      if: always(),某步失敗也保存已算出的資料
+git commit + push      if: always()
 ```
+手動參數:`backfill_days`(爆量基線)、`market_backfill_days`、`archive_backfill_days`
+(第一次填 250)、`refreeze_tick`(平常別動)、FOMO 的 `source/top/limit`、
+`crash_source/crash_top/crash_limit`。另有 `update-stock-lookup.yml`(打代號就抓,
+不在清單會自動加)、`scan-full-candidates.yml`(9/8 全掃快照,常駐可重跑)。
 
-手動觸發參數:`backfill_days` / `source` / `top`(預設 60)/ `limit` / `refreeze_tick` /
-`crash_source` / `crash_top`(預設 60)/ `crash_limit` / `market_backfill_days` /
-`archive_backfill_days`(第一次填 250)。
+### 資料檔速查(全部在 `data/`)
 
----
-
-## 踩過的坑(**別再踩一次**)
-
-- **FinMind 免費版不能查全市場。** 不帶 `data_id` 的查詢回 HTTP 400
-  「Your level is free」。我一開始以為可以,錯了,後來全面改用 TWSE。
-  現在只有 `TaiwanStockInfo`(全市場但免費可用)與 FOMO 的逐檔查詢在用 FinMind。
-- **TWSE `STOCK_DAY_ALL` 是開放資料快取,收盤後不會馬上更新**(實測台北 19:53 還是前一交易日)。
-  所以另外用按日期定址的 `MI_INDEX` 每天補最近 5 個交易日的缺口。
-- **`BFI82U` 的市場買賣差額可能是負數**(8/31 外資淨賣超 143 億),不能當佔比的分母。
-  改用 T86 的「買超個股加總」。
-- **`.btn-block { display: block }` 會蓋掉 `hidden` 屬性** → CSS 有一行全域
-  `[hidden] { display: none !important; }`,不要拿掉。
-- **自動存檔時重繪 DOM 會把使用者正在打的字吃掉。** `saveOpenStep` 有 `keepDom` 選項,
-  `autoSave()` 絕不重繪。Kelly 的輸入列也是同樣原則:只在「筆數」改變時重建。
-- 前端是 **ES5**(沒有箭頭函式、樣板字串、ES module),因為要能用 `file://` 直接開。
-
-## 已知限制 / 還沒決定的事
-
-1. **`FINMIND_TOKEN` 目前沒設。** 未註冊額度 300 次/小時,FOMO 60 檔要 244 次(81%),
-   同一小時內重跑會撞牆。設了 token 額度變 600,才有空間再往上加檔數。
-2. **FinMind 的產業分類對上市股太粗。** 1,089 檔裡有 247 檔掛在「電子工業」大類 ——
-   台積電、鴻海、聯發科、大立光、中華電全在同一格;半導體業只有 19 檔、化學工業只有 3 檔。
-   細分類幾乎只用在上櫃與新上市股。SH2 的 44 種清單也是大類與細分類並存,所以沒有自行合併。
-   `t187ap03_L` 的 TWSE 官方產業數字代碼已存進 `stock_meta.json` 的 `twse_industry_code`
-   **備用,目前不參與分組** —— 要不要換由使用者決定(換掉就不是 SH2 的分類了)。
-3. **產業流向 107 組裡有 70 組是「樣本數低」。** 只做上市 + 組內相對切三層的必然結果
-   (資訊服務業只有 2 檔上市股)。行為符合 SH2 規格。
-4. **抽樣要不要保留。** 目前照 SH2 原樣:每組取 10 檔(`SAMPLE_TARGET_PER_GROUP`)並凍結。
-   免費全市場資料其實讓抽樣沒必要,但改成全組聚合就跟 SH2 對不起來。**使用者還沒決定。**
-5. **產業流向的染色跟 SH2 相反。** SH2 8012 是綠正紅負,這裡沿用本站的紅漲綠跌;
-   而且 rebase 以 1.0 為基準、D0-D1 以 0 為基準(照字面「純看正負號」的話比值會全綠)。
-   MA21 與原始筆數是水準值,不染色。這是我的決定,已跟使用者說明。
-6. `data/history` 目前 25 天,`KEEP_DAYS` 已改成 30,每天加一天會自然長到 30。
-   想立刻補滿:手動觸發時 `backfill_days` 填 30。
-7. 相關係數只有 24 天樣本,標準誤約 ±0.20,畫面上有標。
-8. 可以考慮用免費的 TWSE `BWIBBU_ALL` 取代 FinMind `TaiwanStockPER` 拿 PBR,
-   每檔省一次呼叫 —— 還沒跟使用者提過。
-9. **持倉的「出場設定」(當沖/獲利出場/持倉天數到期/留倉不賣 + 最大回撤)觸發時會自動把
-   `rec.status` 轉成 `exited`(`checkAutoExits()`,在 `loadQuotes()` 之後跑一次),但這不是
-   真的下單** —— 這個 app 沒有接券商 API,沒辦法送出委託,只是把 app 自己的狀態欄位改掉,
-   使用者還是要自己去券商那邊實際成交。資料也是排程跑完才更新一次,不是即時報價,「當沖」
-   模式判斷用的還是當日收盤/現價快照。觸發當下的假設成交價存進 `rec.exit_result`(不是事後
-   用當時的報價回推,避免多久沒開網頁而讓勝率跟著亂跳),追蹤分頁的「自動出場統計」用這份
-   快照算勝率/平均報酬,依觸發規則(target/days/drawdown)分組。門檻數字(%多少清倉、回撤
-   壓多少)是使用者自己判斷,沒有經過統計驗證(`data/history` 目前不到 30 個交易日,連
-   Gate 1 的 N≥60 都不夠格),勝率統計本身也一樣,樣本數會很小,UI 上有提醒。持倉天數用
-   `quotes.days` 數,受 30 天視窗限制,超過這個天數的舊倉位天數會被低估。使用者用
-   `doReactivate()`(「重新設為進行中」)可以撤銷自動出場,這時 `exit_result` 會被清空,
-   不會算進統計。
-10. **2026-09-10 新增「移動停利」出場模式**(`exit_plan.mode = 'trail'`),使用者發現固定
-    4.5% 停利常常太早出場(把已出場的 7 檔拿現價回推,平均少賺快 5 個百分點),要求先試
-    這組固定值:沿用「目標漲幅 %」欄位當啟動門檻,**持有期間最高價(逐日高點,不是收盤價)
-    曾經到過門檻就算啟動**(之後拉回也不取消);啟動後只要「今日成交量 / MA5(前 5 個交易日,
-    shift 1、不含當日)< 0.7」或「單日漲幅 ≥ 9%(視為漲停)」任一命中就出場。兩個門檻
-    (`TRAIL_VOL_SHRINK_RATIO`、`TRAIL_LIMITUP_PCT`,寫死在 `js/app.js`)目前不開放 UI
-    調整,也完全沒有驗證過比固定 4.5% 好——現有資料量連比較兩種模式勝率的基本樣本數都不夠,
-    純粹是使用者要求先試試看。`exit_result.rule` 因此多了 `trail_vol`/`trail_limit` 兩種值,
-    改了 `normalizeExitResult` 的白名單和 `EXIT_RULE_LABELS`/`EXIT_RULE_ORDER`——這三處要一起
-    改,不然用 trail 模式出場的舊資料重新載入時 `exit_result` 會被判定成不合法格式直接丟掉。
-11. **2026-09-10 FOMO 的「真漲」改名顯示成「可能會漲」,判斷邏輯也跟著改了。**
-    起因是拿已追蹤股票對照 `signalOutcomeFor()` 的訊號準度統計,發現「真漲」訊號
-    (N=28)後續真的漲的只有 11%,使用者認為問題出在舊邏輯只看外資連續買超、還把
-    融資增加當扣分項(散戶追價=警訊);使用者的看法是「真漲」還需要散戶融資也連續
-    進場撐盤,單靠外資撐不住。於是:
-    - `scripts/fomo_score.py` 的 `judge_real_rally()` 拿掉「融資5日增幅 <10%(散戶未過度
-      追價)」+20分那項,改成「融資連續買超 ≥3 天(`MARGIN_CONSECUTIVE`,散戶跟著進場)」
-      +20分,且跟外資連續買超一樣變成**必要條件**——兩個 gate(外資連買、融資連買)都要
-      過、總分也要 ≥60,才算「可能會漲」。
-    - `scripts/compute_fomo.py` 的 `extract_metrics()` 新增 `margin_consecutive_buy_days`
-      指標,算法跟外資連續買超同一套(從最新一天往回比對前一天餘額,中斷就停)。
-    - 顯示文字全面從「真漲」改成「可能會漲」:`js/app.js` 的 badge、FOMO 明細理由標題、
-      訊號準度統計文案、`quickAddTracking()` 帶入第 1 步的預設文字都改了,語氣上從斷言
-      改成機率判斷。**程式內部欄位名稱維持 `is_real_rally`/`real_rally_score`/`real_rally`
-      (reasons key、entry tag key)沒有跟著改**,只改使用者看得到的中文字,降低牽動範圍。
-    - `ENTRY_TAG_RULES` 的 `real_rally` 規則同時比對「真漲」跟「可能會漲」兩種文字——
-      舊的追蹤紀錄裡存的還是「真漲」這個舊字,拿掉舊字比對的話,分類、訊號準度統計都會
-      悄悄把舊紀錄歸類成「未分類」,所以兩種文字都留著比對(`exclude` 同理)。
-    - 這次改動**沒有回測驗證過新邏輯的命中率比舊的好**,跟移動停利那次一樣純粹是使用者
-      的假設,先試這組,樣本夠了再回頭驗證。虛漲(`fake_rally`)、真跌/虛跌(暴跌 FOMO
-      鏡射)邏輯沒有動。
-12. **2026-09-10 個股查詢(FOMO個股查詢/爆量個股查詢/暴跌FOMO個股查詢/9-8全掃,四個
-    分頁共用 `createLookupPanel()`)加了「融資維持率估計」**,使用者自己看 2313 的方法:
-    假設「資料視窗裡成交量最大那天的最高價」是大多數融資買盤追高的套牢價,套融資成數
-    的標準假設(六成、自備四成)反推維持率 = 現價 / 套牢價 / 融資成數 × 100%,判斷現在
-    的下跌是「主力/外資測試性甩轎」(維持率還在安全區)還是「真的逼近融資斷頭」
-    (跌破警戒/斷頭線)。`computeLookupMarginMaintenance()`,純前端算,吃這個表格既有的
-    open/high/low/close/volume,不用新資料源,跟🔔量縮轉買那組是同一批(同樣只有 2313
-    驗證過,沒有回測)。門檻 `LOOKUP_MARGIN_MAINT_WARN`(130)、`LOOKUP_MARGIN_MAINT_DANGER`
-    (120)、融資成數假設 `LOOKUP_MARGIN_RATIO_ASSUMED`(0.6)都是固定值,不開放調整。
-    顯示位置是選到某檔股票後 `#lookup-meta` 那行的附加文字(跟🕐蓄勢中的 zoneNote 同一種
-    「目前狀態」呈現方式,不是逐日的表格欄位或下拉選單 badge);量最大的剛好是最新一天
-    (視窗內抓不到過去套牢點)或資料不足兩天,就不顯示。用 2313(2026-08-28 量最大、
-    最高 260,對照 2026-09-10 收 225.5)驗證過手算值(144.6%,安全),另外寫了 6 組邊界
-    案例(安全/警戒/危險/剛好卡在斷頭線 120%/找不到套牢點/資料不足)全部通過。
-13. **2026-09-10 追蹤分頁頂部加「全出」按鈕**(放在「匯入」跟「全刪」中間,`btn-exit-all`
-    / `doExitAll()`),把所有 `status === 'active'`(進行中)的紀錄一次批次標記成
-    `exited`,跟單筆「標記出場」(`doExit()`)是同一個欄位、同樣**不設 `exit_result`**
-    ——這是手動批次動作,不是 `checkAutoExits()` 的自動出場,不該混進「自動出場統計」
-    的勝率計算。每筆會補一則 `【全出】手動批次標記出場` 的追蹤紀錄留痕,已經是
-    `exited`/`rejected` 的紀錄不會被動到。要復原只能單筆用 `doReactivate()`
-    (「重新設為進行中」)個別救回來,沒有「全部復原」——跟「全刪」不一樣,這個沒有
-    要求輸入確認字串,只有一般確認對話框(七個步驟內容、持倉紀錄都保留,不是刪除)。
-    用 Playwright 驗證過:active 的兩筆正確轉成 exited 並補上追蹤紀錄,已經是
-    exited/rejected 的紀錄完全沒被動到,`exit_result` 維持 null。
-14. **2026-09-10 加「全出統計」,獨立於「自動出場統計」之外。** `doExitAll()` 按下
-    「全出」的當下,對每筆有報價的紀錄用 `positionStats()` 存一份快照到新欄位
-    `manual_exit_result`(date/price/pl/pl_pct,形狀跟 `exit_result`類似但**刻意獨立**,
-    `normalizeManualExitResult()` 沒有 `rule` 白名單問題)。`manualExitStatsHtml()` 用這份
-    快照算彙總勝率/平均報酬,畫面上是「自動出場統計」下面單獨一塊(`#manual-exit-stats`),
-    只有一組數字,不像自動出場統計依 target/days/drawdown/trail_vol/trail_limit 分組
-    ——「全出」永遠只有一種觸發來源,分組沒有意義。`doReactivate()`(「重新設為進行中」)
-    連 `exit_result` 一起把 `manual_exit_result` 也清空,兩邊統計都會跟著調整。沒有報價
-    或還沒入倉的紀錄按全出時拿不到快照,不會計入這份統計(只是照樣標記出場)。用
-    Playwright 灌了一組會贏、一組會賠的假資料驗證過:快照的 pl/pl_pct/price 對上手算值、
-    統計區塊 N/勝率/平均正確、展開明細正確、reactivate 後快照清空且統計數字跟著更新。
-15. **2026-09-10 新增「大盤 30 日追蹤表」,順便把大盤九宮格的資料來源換成官方數字。**
-    起因:使用者看到籌碼分頁的拉積盤提示後想要一張追蹤表,結果發現原本的大盤九宮格
-    (`compute_market_grid.py`)只算「今天」,不存歷史——ΔP_idx 靠 FMTQIK(只回兩個
-    交易日)、Turnover/漲跌家數是拿 `data/history` 自己加總近似出來的。先 probe
-    `MI_INDEX?date=&type=ALL`(結論寫進 `data/README.md`,probe 腳本已刪)確認除了
-    現有在用的個股報價表,還有大盤指數本身的收盤(`指數` 欄位等於「發行量加權股價
-    指數」那一列)、官方成交金額/股數/筆數、官方漲跌家數三張表沒被用過,而且這支
-    API 日期可定址,可以回補歷史。跟使用者確認兩件事:**指數開高低 TWSE 日報表沒
-    公布,只留收盤**;成交金額/漲跌家數**改用官方數字**,取代原本的近似值。
-    - `scripts/twse_api.py` 新增 `market_index_by_date()`,解析那三張表(TAIEX 收盤/
-      漲跌、官方 Turnover、官方漲跌家數),不影響 `by_date()` 原本在用的個股報價表。
-    - `scripts/compute_market_grid.py` 改成累積式:`data/market-grid-latest.json` 新增
-      `history` 陣列(新到舊,每天一筆),跟 `data/history` 一樣「逐日累積長到
-      `KEEP_DAYS`(30)天,同一天以新抓到的為準跟舊檔案合併,不用每次回補」。加了
-      `--backfill-days`(daily-scan.yml 對應 `market_backfill_days` 手動觸發參數),
-      第一次想馬上填滿 30 天可以用。法人買賣超(T86)一起逐日回補;**融資餘額/增減
-      只有「今天」有值**,沒有大盤融資總額的歷史資料源,`history` 裡舊日子這幾個
-      欄位是 null。`price_state`/`breadth_ratio`/`is_lajiban` 不需要歷史視窗,從第一天
-      就有值;`volume_state`/`grid_label`(完整九宮格分類)需要前 20 天 Turnover,天數
-      不夠時是 null,會隨每天排程補上。
-    - 頂層的「今日快照」欄位名稱維持不變(`idx_close`/`price_state`/`grid_label`/
-      `is_lajiban`/`advancing_count`⋯),前端既有的九宮格區塊不用改,只是數值來源
-      從自算近似值換成官方數字——9/10 那天官方漲跌家數(259/744/69)跟原本自算的
-      (259/753/69)差 9 家,不算大差但官方更準。
-    - `js/app.js` 新增「大盤 30 日追蹤表」(`#market-history-panel`,籌碼分頁裡九宮格
-      正下方):逐日收盤/漲跌%/成交金額(億)/漲跌家數/九宮格短標籤/拉積盤警告/
-      外資+投信約(億),純渲染 `history` 陣列,不現算。
-    - `twse_api.market_index_by_date()` 拿 probe 抓到的真實 9/10 資料手算過(10 項全過);
-      `compute_market_grid.py` 的 `avg_window`/`price_state`/`vol_state`/
-      `derive_grid_fields` 純邏輯測過(22 項),`main()` 的回補/合併/裁切邏輯用暫存
-      資料夾整合測過(15 項,含「第二次沒給 backfill 也不會弄丟舊天數」這個關鍵行為);
-      前端 `renderMarketHistory()` 用 Playwright 端對端測過(10 項)。過程中這份測試
-      抓到一個真的 bug——`instTxt` 一開始用 `signed()` 包小數金額,但 `signed()`
-      內部會 `Math.round` 成整數,小數會被吃掉,改成手動組字串才對。
-16. **2026-09-10 追蹤新增「看多/看空」方向,持倉損益、自動出場、進場訊號統計、
-    全出統計都依方向拆開算。** 起因:使用者發現暴跌掃描/暴跌FOMO 的訊號本質是
-    「預期會跌」,應該對應做空,但持倉損益(`positionStats()`)原本一律用做多公式
-    (`pl = 市值 − 成本`),暴跌訊號進場如果真的照這個公式記錄部位,股價跌了反而
-    顯示賠錢——方向完全反了。
-    - 每筆紀錄新增 `rec.direction`(`'long'`/`'short'`,預設 `'long'`),獨立欄位,
-      沒有動到 `STEPS`/七步驟(`newRecord()`/`normalize()` 補齊)。「+ 追蹤」按下時
-      跳出對話框問看多還是看空(`handleQuickAddClick()`,取代原本 `bindQuickAdd()`
-      跟 FOMO/暴跌FOMO tbody 各自重複一份的點擊邏輯),取消就不建立紀錄。對話框
-      哪個選項排前面(=預設)依來源分頁:爆量掃描/FOMO/題材分類→多、暴跌掃描/
-      暴跌FOMO→空、量價訊號(獵人)依訊號本身(`hunterSigDefaultDir()`:①⑤→多、
-      ③④⑥→空、②沒有明顯方向也預設多)——使用者當下仍可覆寫。加入後可以在
-      追蹤詳情頁「持倉紀錄」區塊用 `toggleDirection()`(`#pos-dir-toggle`)隨時切換,
-      不用重建紀錄。
-    - `positionStats()`/`positionRangeStats()`/`checkAutoExits()`/持倉逐筆明細
-      (`positionsHtml()`)全部乘上 `dir`(多 `+1`、空 `-1`)反轉損益:
-      `pl = dir × (市值 − 成本)`。`evalExitPlan()`(出場設定觸發判斷)也跟著方向
-      對稱改寫——看空的「獲利/當沖目標」是價格要跌到門檻(`close <= target`)、
-      移動停利(`trail`)的「期間最有利價」是期間最低不是最高、量縮/噴出出場條件
-      用「跌停(單日 ≤ −9%)」取代「漲停」、最大回撤(`max_drawdown_pct`)的基準
-      是「從期間最低點反彈」不是「從最高點拉回」——整段邏輯用 `dir` 乘出來,不是
-      複製一份空頭版本(跟 `compute_crash.py` 對稱 `compute_scan.py` 的精神一樣)。
-      `exitPlanFormHtml()` 的欄位文字(目標「漲」幅/「跌」幅⋯)也依方向換字。
-    - 發現並修掉一個既有 bug(不是這次新增的):`renderPosSummary()` 原本總損益
-      是 `value 總和 − cost 總和` 重算一次,而不是加總每筆已經算好的 `st.pl`——
-      混了看空的紀錄之後這個重算完全是錯的(看空的市值加總沒有意義),改成
-      累加 `st.pl`。
-    - 統計依方向拆開:`signalAccuracyHtml()`(進場訊號準度統計)、`exitStatsHtml()`
-      (自動出場統計)、`manualExitStatsHtml()`(全出統計)都先按 `rec.direction`
-      分兩組(看多/看空),組內邏輯不變(`exitStatsHtml()` 組內還是依觸發規則細分,
-      `manualExitStatsHtml()` 組內只有一組彙總數字)。展開明細的記憶體狀態
-      (`exitStatsExpanded`/`manualExitStatsExpanded`)key 從純規則名改成
-      `方向:規則`(例如 `'short:target'`),避免看多看空的同名規則組共用展開狀態。
-      注意:「命中率」的方向預期(`ENTRY_TAG_DIRECTION`,例如可能會漲該漲)講的是
-      **訊號本身**該漲該跌,跟這裡用來分組的 `rec.direction`(**使用者選的交易方向**)
-      是兩件事,沒有互相依賴——分組只是把兩種交易情境的樣本分開看。
-    - 順手修掉一個因為測試才發現的既有標籤 bug:`EXIT_RULE_LABELS.trail_limit`
-      固定寫死「移動停利(漲停出場)」,對看空的紀錄是錯的(看空觸發的是跌停),
-      新增 `exitRuleLabelFor(key, dirKey)` 依分組方向換字,只有 `trail_limit`
-      需要換,其餘規則文字跟方向無關。
-    - 追蹤卡片(`cardHtml()`)加一個小標籤(`.pill-dir`,「多」/「空」)方便一眼
-      看出每筆紀錄的方向,不影響原本的狀態 pill。
-    - 用 Playwright 端對端測過(41 項全過,用真實的 checkAutoExits() 觸發路徑,
-      不是單獨呼叫函式):看空的目標獲利/移動停利(跌停版)/最大回撤三種自動出場
-      各自對照手算損益(依序 3,000/10,000/2,800,配一筆看多的目標獲利當回歸測試
-      確認沒改壞原本邏輯)、持倉明細跟切換方向後的損益正負號、進場訊號統計/
-      自動出場統計/全出統計三個區塊都正確拆成看多看空兩組、「+ 追蹤」在爆量/
-      暴跌分頁預設選項正確、全出統計的兩筆快照金額正確。
-    - **沒有處理的範圍**:「市值」加總(`renderPosSummary()` 的「目前市值」)沒有
-      跟著方向反轉語意(看空部位的「市值」其實比較像是回補負債,不是資產),
-      維持原樣單純加總 `shares × close`,只有「損益」數字修正——使用者只要求
-      損益方向要對,沒有要求改市值的呈現方式,合不合理由使用者之後決定要不要
-      再談。手動新增(「+新增」表單)不會跳出多空對話框,新紀錄一律預設看多,
-      要改方向請用「持倉紀錄」區塊的切換按鈕。
-17. **2026-09-10 `fetch_stock_lookup.py` 加 `--only`,可以只重抓清單裡的某幾檔。**
-    起因:使用者把 2634(漢翔)加進 `stock_lookup.json` 之後問「能不能只抓這一檔,
-    不要整個 daily-scan 流程重跑一次」——整份 daily-scan.yml 是單一 job、步驟寫死
-    照順序跑,沒辦法只挑一步執行;而且就算只挑 `fetch_stock_lookup.py` 這一步,
-    原本的寫法也是整份清單(目前 22 檔)重打一次 FinMind,不是只抓新加的那檔。
-    - `--only 代號1,代號2`:先驗證代號都在 `--list-file` 清單裡(不在就報錯,
-      避免手滑抓到清單外的代號),只對這幾檔打 FinMind;其餘代號的資料從舊的
-      `--out-file` 讀出來原封不動保留(`merged_data = dict(base_data); merged_data.update(data)`),
-      輸出的 `codes` 欄位還是完整清單,前端看不出差異。沒給 `--only` 就是舊行為
-      (整份清單重抓、直接覆蓋),完全不影響 `daily-scan.yml` 既有呼叫方式。
-    - 新增 `.github/workflows/update-stock-lookup.yml`(常駐,不是探測用的
-      probe、用完不用刪):`list` 選 fomo/scan/crashfomo 三選一(對應三份
-      `stock_lookup*.json`/`stock-lookup*-latest.json`),`only` 留空就是整份重抓。
-      以後清單裡加新代號都可以用這支,不用等明天排程或整份重跑。
-    - 離線測試(mock FinMind 呼叫,不用連網):`--only` 合併邏輯 12 項全過
-      (未重抓的代號原封不動、新代號正確合併、`margin_change` 第一天正確是
-      `None`、舊的失敗記錄被這次的成功結果蓋掉、`failures`/`codes` 欄位正確),
-      另外 2 項回歸測試確認不給 `--only` 時完全是舊行為(整份清單真的被重新
-      抓過,不是誤用了新的合併邏輯跳過重抓)。
-18. **2026-09-10 新增獨立分頁「移動停利」(`js/app.js` 的 trailWatch* 系列函式,
-    `index.html` 的 `#trail-wrap`),彙總所有「進行中」且出場設定為移動停利模式
-    (`exit_plan.mode === 'trail'`)的紀錄,一次掃過去看每檔的啟動狀況,方便判斷
-    該不該手動清倉。** 起因:移動停利原本只能在追蹤詳情頁逐檔點開看
-    (`positionAlertsHtml()`),持有多檔移動停利部位時沒有總覽,得一檔一檔點。
-    - 純觀察,不新增任何出場判斷邏輯——命中/自動出場仍然只有既有的
-      `evalExitPlan()`/`checkAutoExits()` 這一套,`trailWatchRecords()` 收攏符合
-      條件的紀錄後,直接呼叫 `evalExitPlan(rec, st)` 重用結果,不重複算一次量縮
-      /漲跌停公式。新增的 `trailIndicators()` 只多算「是否已啟動」(期間峰值
-      是否到過啟動門檻)跟「距峰回落幅度」這個連續指標(dir 依看多/看空鏡射,
-      看多是從期間最高拉回、看空是從期間最低反彈)——這是既有 alert 只有
-      命中/未命中兩態不會顯示的,讓使用者在真的觸發量縮/漲跌停之前,能先看到
-      「已經從高點掉了多少」自己判斷要不要提早出場。
-    - 每列狀態分四種:`尚無報價`(還沒載入報價或缺報價)/`未啟動`(期間峰值還沒
-      到啟動門檻)/`觀察中`(已啟動,量縮/漲跌停都還沒命中)/`⚠ 出場訊號`
-      (`evalExitPlan()` 至少一項 alert.hit 為真,含移動停利本身的量縮/漲跌停,
-      也含獨立生效的最大回撤),命中的列額外加 `is-hit`(沿用 `.scan-table
-      tr.is-hit` 既有樣式標紅底)。點列展開明細沿用出場設定同一套 `.exit-alerts`
-      /`.exit-alert.is-hit` 樣式,列出啟動門檻價、期間峰值(價+日期)、距峰回落、
-      量/MA5、今日漲跌,展開列底部「在追蹤分頁管理這筆」直接呼叫既有的
-      `openDetail(rec.id)` 開個股詳情面板,沿用裡面的標記出場/切換方向/編輯
-      出場設定按鈕,沒有另外做一套操作 UI。
-    - 掛進 `VIEWS_ORDER`(追蹤後面、爆量掃描前面)吃到既有的左右滑動切換;
-      `switchView('trail')` 觸發 `loadTrailWatch()`,跟 Kelly/籌碼分頁同一種
-      「先用現有 `quotes` 渲染一次、`loadQuotes()` resolve/reject 後再渲染一次」
-      的作法,不用等報價回來才有畫面。
-    - 測試時發現一個既有機制的互動細節(不是 bug,行為符合預期,寫下來給
-      下一個 Claude 省事):`checkAutoExits()` 只在 `init()` 裡報價第一次載入成功
-      後跑一次,所以正常情況下,一旦某筆移動停利紀錄命中量縮/漲跌停,
-      幾乎不可能在這個分頁看到「⚠ 出場訊號」列還停留在「進行中」狀態太久
-      ——同一個 session 裡,init() 的自動報價請求通常搶先把它轉成
-      `exited`,這個分頁再渲染時那筆已經從「進行中」清單消失了。純觀察分頁
-      本來就不需要處理這個,「⚠ 出場訊號」主要是給罕見的競速窗口或未來報價
-      提早失敗又重試成功的情境用,不影響主要用途(啟動前/啟動後未命中的
-      「未啟動」「觀察中」兩態,以及距峰回落指標)。
-    - 用 Playwright 端對端測過(33 項全過,4 檔假紀錄涵蓋未啟動/觀察中/
-      量縮出場命中/空方跌停出場命中,損益、距峰回落、量/MA5 比值都對照手算值;
-      為了在同一個 session 驗證「命中但還沒被 checkAutoExits 轉掉」這個狀態,
-      測試用 route 攔截讓 init() 那次報價請求失敗、換這個分頁自己重試成功,
-      藉此繞過 `checkAutoExits()`,不是修改生產邏輯):非移動停利模式與已出場
-      的紀錄正確被排除、四種狀態徽章與列高亮正確、展開明細的量縮/跌停文字與
-      比值正確、只有預期的那一項 alert 帶 `is-hit`、「在追蹤分頁管理這筆」正確
-      開到對應股票的個股詳情面板。
-19. **2026-09-11 `--only` 遇到清單裡沒有的代號,從「報錯」改成「自動加進清單再抓」。**
-    起因:使用者想用「更新個股查詢資料」workflow 直接抓 6834,結果撞到
-    item 17 那個故意做的防呆(`--only` 的代號要先在 `stock_lookup*.json`
-    清單裡,不在就報錯)——使用者的預期是這支工具「打代號就能抓」,原本
-    「先手動編輯 JSON 加代號、再觸發抓取」的兩步驟對這個用途來說是多餘的
-    摩擦。跟使用者確認後,把行為改成打代號直接抓(選項:改成自動加清單、
-    維持現狀、只抓不留底三選一,使用者選第一個)。
-    - 技術上本來就沒有回補限制:開高低收量來自 `data/history`(每天存
-      **全市場**,不管清單裡有沒有那檔),融資融券/外資投信是抓 FinMind
-      過去 60 個日曆天的區間(`LOOKBACK_CALENDAR_DAYS`,不是只抓「今天」)
-      ——新代號一樣拿得到完整歷史,不會缺一截。卡住的純粹是那個人為的
-      「必須先在清單裡」檢查。
-    - 防手滑的方式從「代號必須已經在清單裡」改成「代號格式必須是合法的
-      上市普通股(`common.LISTED_CODE`,4 碼、開頭非 0)」——格式明顯不對
-      (常見情況是 TPEx 或 ETF 常用的 0 開頭代號)還是會擋下來並印出錯誤,
-      只是不再要求代號已經被加過。格式通過但清單裡沒有的代號,會先
-      `common.write_json` 寫回 `--list-file`(用清單原本的陣列格式,新代號
-      加在最後面),再照原本的流程抓取,之後每天排程也會繼續追這檔。
-    - 離線測試(mock FinMind 呼叫,不用連網)14 項全過:清單裡沒有的合法
-      代號正確被寫進清單並抓到資料、格式不合法的代號(用 `0050` 測)報錯
-      且清單/輸出檔都沒被動到、代號本來就在清單裡時行為跟舊版一樣(不寫
-      清單,也不印「已自動加進」)、一次給多個代號時只有真的缺的那個被
-      加進清單。
-20. **2026-09-11 清掉三支已經用完的一次性 workflow(使用者要求)。** 刪了
-    `.github/workflows/init-lookup-crashfomo.yml`(初始化暴跌FOMO個股查詢,
-    `daily-scan.yml` 早就接手每天更新)、`probe-signal-batch.yml`(量縮系列
-    標記批次測試)、`probe-stock-history.yml`(探測 TWSE STOCK_DAY 能不能查
-    到比 `data/history` 更早的價格)——三支的 workflow 檔名/標題都自己寫
-    「一次性,用完即刪/可刪」,而且刪之前逐一 grep 過整個 repo,除了自己
-    的 workflow 檔案沒有任何地方引用,刪掉不影響任何現有功能。
-    - `probe-stock-history.yml` 對應的腳本 `scripts/probe_stock_history.py`
-      一起刪了(自成一支、沒被其他程式 import)。**但沒找到這支 probe 的
-      結論被寫進 `data/README.md`**——照理說 probe 用完要把結論記下來,
-      這支好像沒記到(或者根本沒被跑過)。git 歷史還在,想找回來用
-      `git log --all --full-history -- scripts/probe_stock_history.py`。
-    - `probe-signal-batch.yml` 只刪了 workflow,**腳本 `scripts/probe_signal_batch.py`
-      沒有刪**——`scripts/analyze_signal_outcomes.py` 直接 `import
-      probe_signal_batch as p` 拿裡面的判斷函式,不是真的用完即丟的
-      probe,只是命名跟著 probe-*.yml 系列取的。
-    - **沒有刪 `scan-full-candidates.yml`**,雖然它的標題也寫「一次性」、
-      `data/README.md` 也說它跟 `probe-*.yml` 系列同一個慣例——但
-      grep 出來發現 `index.html` 的「9/8全掃」分頁使用說明裡**直接教
-      使用者「想補新的一天要再手動觸發一次 `scan-full-candidates.yml`」**,
-      `scripts/append_fullscan_price.py` 的錯誤訊息也是同一句話。這支
-      實際上是「隨時可以重新觸發拿新快照」的常駐工具,不是真的一次性,
-      刪掉會讓 app 內建的操作說明變成空話,所以留著。
-21. **2026-09-12 新增獨立分頁「思考路徑」**(`js/app.js` 的 thinking* 系列函式,
-    `index.html` 的 `#thinking-wrap`/`#tp-sheet-backdrop`,`css/style.css` 的
-    `.tp-*` 系列),用分岔/合併的鐵軌圖記錄一檔股票的推理過程——使用者的
-    原話是「思考會斷鏈,但思考又像大樓一樣需要一層一層疊加」,想要一個
-    方塊接方塊、可以分岔也可以合併的視覺化工具,不是文字紀錄。先用
-    Artifact 做了一個可以互動的設計原型讓使用者試玩(分岔/合併/刪除/
-    切換路徑),定案後才動手寫進正式 ES5 codebase,確認了 5 個決定:
-    - **每條路徑一定要綁一檔股票**(`thinkingOpenPathSheet()` 建立路徑時
-      股票代號為必填,沒填會被 `toast` 擋下來,名稱選填)。
-    - **方塊文字是固定選單**(`TP_TAGS` 十個詞:大牛市/盤整/拉積盤/要看多/
-      要看空/外資進場/投信進場/新技術/新聞看到的/預計出場)**+ 可以自訂
-      文字**——選單只是快捷,文字輸入框本來就能自由打字,選單詞會連動
-      帶出對應分類(`TP_TAG_CAT`),自訂文字沒對到任何詞就歸類「其他筆記」。
-    - **分岔/合併用按鈕 + 多選,不是拖曳畫線**——手機觸控做拖曳連接點準度
-      很差。分岔不是獨立操作:對同一個父方塊連續按兩次「+ 接續」自然長出
-      兩條岔路;合併是多選兩個以上的方塊後按「合併成新方塊」,新方塊會
-      同時接住所有選取方塊的線。
-    - **刪除連同下游整條子樹一起刪**(`thinkingCollectDescendants()` 遞迴收集
-      所有下游方塊 id 一起移除)——跟追蹤分頁單筆刪除不同(那邊子代不受
-      影響),因為思考路徑的方塊沒有獨立意義,留著沒接住上游的孤兒方塊
-      沒有用。刪除前用既有的 `dialog()` 二次確認,樣式跟全刪/全出一致,
-      訊息裡會先算出總共會刪幾格。
-    - **先不跟追蹤分頁互相牽動**——沒有從「預計出場」方塊跳去「+ 追蹤」
-      之類的整合,完全獨立,也沒有動到 `STEPS`/七步驟的任何欄位。
-    - 分類配色:看多/看空直接沿用 `--up`/`--down`(跟全站紅漲綠跌一致),
-      另外四類(大盤總經/籌碼流向/消息技術/其他筆記)新增
-      `--tp-macro`/`--tp-flow`/`--tp-catalyst`/`--tp-note` 四個 CSS 變數,
-      結論/出場不佔用另一個顏色,改用虛線框 + `--text` 圓點區別「這是
-      終點」,不是用顏色堆疊出第七種分類。
-    - 版面是**由上往下**(不是左右)的分層鐵軌圖:`thinkingComputeRows()`
-      沿 edges 算每個方塊的深度(最長路徑),同深度分一列,列數隨路徑長多
-      少而長多少,不是固定格子;分岔在同一列往左右展開。連線用
-      `thinkingDrawTracks()` 量測方塊實際的 `offsetTop/offsetLeft` 畫 SVG
-      三次貝茲曲線,不追求嚴格對齊的圖論排版,靠曲線本身的彈性呈現「分岔
-      /會合」的鐵軌感。手機寬度考量,畫布左右上下都能捲動(跟其他表格
-      `.table-scroll` 同一個 `overflow:auto` 慣例)。
-    - **踩過的坑,別再踩一次**:`.tp-row`(方塊那一列)絕對不能設
-      `position: relative`——一旦設了,方塊的 `offsetParent` 會變成那一列
-      自己,`offsetTop` 全部歸零重算,連線座標整個錯位(方塊疊在畫布最上緣
-      附近,不是接在正確位置)。SVG 疊在方塊下面純粹靠 DOM 順序(svg 插在
-      每次重繪最前面,方塊在後面自然蓋住線的尾端),沒有用 z-index。
-    - 儲存:獨立 localStorage key `stock_pipeline_v1__thinking_paths`
-      (`{ currentPathId, paths:[{id,name,stock_id,stock_name,created_at,
-      nodes,edges}] }`),選取狀態 `thinkingSelected` 只存記憶體、離開分頁
-      不落地。**已經接進「匯出/匯入」備份**(`exportBackup()`/
-      `confirmImport()`),多一個 `thinking_paths` 欄位,合併匯入時依路徑
-      id 覆蓋、覆蓋匯入時整份取代,行為跟既有的 `lookup_notes` 完全對稱,
-      舊版備份檔沒有這個欄位時保持現狀不動。
-    - 分頁位置排在「追蹤」後面、「移動停利」前面,`VIEWS_ORDER` 陣列跟
-      `index.html` 的 `#views` 按鈕順序同步改。
-    - Playwright 端對端測過:綁股票代號必填(空白擋下)、分岔長出兩列、
-      合併收斂成一列且 SVG 連線數正確、重整後資料還在、串聯刪除正確算出
-      並移除整條子樹(4 格)、匯出的 JSON 檔案裡 `thinking_paths` 內容正確。
-    - **同一天(2026-09-12)踩到一次自己記過的坑**:移植進正式版時手滑把
-      `position: relative` 留在 `.tp-row` 上,連線座標整個錯位——CLAUDE.md
-      明明已經記過這個坑,還是照樣踩了一次,說明「記在文件裡」不保證下次
-      不會犯,寫程式碼時最好直接照抄驗證過的版本,不要憑印象重打一次。
-      拿掉那行、用真實資料(拉積盤→要看空/外資倒貨)重新驗證過連線位置
-      才修好。
-    - **同一天加碼一批常用詞**(使用者要求「還有沒有方塊名稱可以內建」,
-      我提案分類清單、使用者選「全加」):`TP_TAGS` 從 10 個擴到 26 個。
-      新加的詞裡有幾個直接借用 App 其他分頁既有的用語,維持全站語彙
-      一致——「系統性賣壓」/「變盤前兆」借大盤狀況九宮格的格名,「法人
-      同步進場」/「散戶FOMO獨撐」直接借大盤狀況法人+融資交叉分析的判讀
-      文字,「觀望不確定」對應獵人理論步驟5的「力量不明」(歸類 `note`,
-      不是 `bull`/`bear`,因為沒有明確方向)。「外資倒貨」是使用者自己
-      在思考路徑裡手打過的自訂文字,收進固定選單裡。
-    - **同一天再補 2 個詞,`TP_TAGS` 變 28 個**——我自己挑股票用 Google 搜尋
-      實際分析 3443(創意)、2634(漢翔)兩檔當範例(結果包成 `thinking_paths`
-      JSON 檔案讓使用者匯入),兩次都卡到同一個空缺:「本益比過高」——
-      3443 那次我偷懶拿「拉積盤」硬套(語意其實不對,拉積盤講的是漲跌
-      家數背離,不是估值),2634 那次乾脆整句寫死丟進 `note`。兩次分析都
-      撞到同一個缺口,補「本益比過高」(`note`)。另外 2634 的關鍵劇情是
-      「國防部無人載具預算被立院刪掉,股價直接打到快跌停」,這種政策/
-      預算依賴型的風險跟一般「新聞看到的」性質不同,補「政策風險」
-      (`catalyst`,跟法說會/財報同一格)。
-22. **2026-09-12 思考路徑新增「估值試算」**:使用者想把「EPS 算合理價格
-    區間」這件事也收進思考鐵軌,提案後使用者選「先做手動版,EPS 口徑
-    加提醒」。
-    - 算法是本益比河流圖同一套邏輯,但**完全手動輸入,不抓任何歷史本益比
-      資料**——這個 App 目前沒有 PE 歷史資料源(見已知限制第 8 點,FinMind
-      `TaiwanStockPER` 目前完全沒接),真要做自動河流圖是完全不同量級的
-      工程(要串新資料源、每天排程),這次刻意不做。`thinkingValuationText()`
-      算便宜價/昂貴價/中界價(`EPS × 本益比上下界`),填了目前股價會多算
-      相對位置(低於便宜價/落在區間內/高於昂貴價,各自算百分比)。上下界
-      填反會自動對調,不擋使用者。
-    - **EPS 口徑不幫使用者判斷對錯**(TTM 還是預估值都行),只在算式區塊
-      最上面加一行提醒文字,叫使用者自己想清楚這次用哪種,免得以後回頭
-      看忘記當初的口徑。這行提醒是使用者自己要求加的。
-    - UI 不是額外的方塊型態,是**新增/編輯方塊視窗裡的一個可展開子面板**
-      (`#tp-val-calc`,預設收合,按「展開估值試算」才出現)——EPS、本益比
-      上界/下界、目前股價(選填)四個數字輸入,即時算即時顯示在
-      `#tp-val-preview`,按「帶入文字」才會把算好的句子接進方塊文字欄位
-      (如果欄位已經有字,用「;」接在後面,不會覆蓋掉),同時自動把分類
-      切成新增的 `valuation` 類——跟點常用詞 chip 是同一種「輔助填字」
-      的操作邏輯,不是獨立的資料型態,存檔後就是一個普通方塊,沒有另外
-      的欄位。
-    - **新增分類 `valuation`(估值試算)**,TP_CATS 裡排在 catalyst 後面、
-      bull 前面(基本面分析完直接接估值,再進到看多看空判斷,對應使用者
-      原話的分析順序)。顏色開新的 `--tp-valuation`(藍色系 `#5a8dee`),
-      跟既有 7 色(金/青/紫/紅/綠/白虛線/灰)都不撞,大盤狀況分頁的
-      `#thinking-wrap` legend 跟着補一個圖例。
-    - Playwright 端對端測過:計算結果對照手算值(EPS 15、本益比 15~25 →
-      225~375 元、中界 300;價格 350 落在區間內、400 高於昂貴價 7%、200
-      低於便宜價 11%,四捨五入都對);上下界填反自動對調後結果一致;
-      「帶入文字」正確接文字、正確切換分類到估值試算;最終存檔的方塊
-      `cat` 欄位正確是 `valuation`。
-23. **2026-09-12 思考路徑新增 6 個「進場邏輯」常用詞,`conclude` 分類改名。**
-    使用者接著問「推出價格區間後就是進場邏輯分析了」,先問清楚是要純文字
-    tag、算倉位的計算器、還是接「部位」分頁既有的 Kelly 公式——使用者選
-    最簡單那個(純文字 tag,跟現有 34 個同一種)。
-    - 新增:拉回進場、突破進場、量縮進場、假跌破進場、左側佈局、右側確認,
-      全部歸進既有的 `conclude` 分類——因為這類「進場條件」判斷,跟已經在
-      這一類裡的「分批進場」性質一樣,不是獨立開新分類。`TP_TAGS` 變 34 個。
-    - `conclude` 分類的 label 從「結論 / 出場」改成「**決策 / 進出場**」
-      (`TP_CATS` + `index.html` 的 `#thinking-wrap` legend 兩處一起改)——
-      這個分類裡本來就混了「分批進場」這種進場決策跟「預計出場」「停損」
-      這種出場決策,舊名稱「結論/出場」只講出場面,不準確,使用者確認
-      順便改掉。
-    - Playwright 測過:chip 總數 34 個、新詞點下去分類正確帶「決策 / 進
-      出場」、legend 跟分類選單兩處文字都同步改成新名稱。
-24. **2026-09-12 思考路徑新增第二個計算機「進出場計算」**,使用者這次
-    明確要「加上計算機(計算進出場用的)」,而且要「全套預算金額一起」
-    (前一輪問「進場邏輯」要不要做成計算器時,使用者選了最簡單的純文字
-    tag;這次是新的一輪需求,明確要計算機,兩次不衝突)。
-    - `thinkingRiskRewardText()`:填進場價/停損價/目標價算風險報酬比
-      (`潛在獲利% / 潛在虧損%`),選填預算金額順便算建議股數(用
-      `Math.floor(預算/進場價)` 簡單整除,**不算手續費**——手續費精算是
-      「部位」分頁零股試算自己的工作,`oddLotShares()` 那一整套刻意不
-      共用,兩個計算機定位不同:這裡是思考路徑上的粗抓,不是下單用的
-      精算)跟潛在虧損/獲利金額。預設做多情境(停損在下方、目標在上方),
-      沒有另外處理放空方向,說明文字裡有提醒「放空的話數字自己倒過來填」。
-    - **重構**:原本「估值試算」那組 CSS(`.tp-valuation-toggle`/
-      `.tp-valuation-calc`/`.tp-val-row`⋯)改成通用的
-      `.tp-calc-toggle`/`.tp-calc-panel`/`.tp-calc-row`⋯,強調色改用
-      inline `style="--tp-calc-color:..."` 個別指定(估值試算用
-      `--tp-valuation`,進出場計算用 `--text`),兩組計算機共用同一份
-      CSS,不是各寫一份。JS 那邊也把「展開收合 + 即時預覽 + 帶入文字時
-      切分類」這三件事收進 `bindCalcPanel(opts)` 這個 `thinkingOpenNodeSheet()`
-      內的巢狀函式,兩個計算機各自傳自己的 id/計算函式/目標分類進去呼叫,
-      不是複製兩份幾乎一樣的接線程式碼。之後要加第三個計算機,照這個
-      模式加就好。
-    - 新增方塊視窗現在常用詞下面依序是:估值試算(展開/收合)→ 進出場
-      計算(展開/收合)→ 文字輸入 → 分類——兩個計算機各自獨立展開/收合,
-      互不影響,都是「填數字 → 即時看預覽 → 按帶入文字才寫進方塊」,
-      不會自動覆蓋使用者已經打好的文字(有內容時用「;」接在後面)。
-    - Playwright 測過:兩個計算機分別展開/收合互不干擾(估值試算先前的
-      行為沒有因為重構而壞掉,算是順便回歸測試);風險報酬比算式對照
-      手算值(進場 250、停損 235、目標 300 → −6.0%/+20.0%/風險報酬比
-      1:3.3);預算 250,000 → 剛好 1,000 股/1 張/0 零股,潛在虧損 15,000、
-      潛在獲利 50,000,金額都對得上手算;「帶入文字」正確接文字、正確
-      把分類切到「決策 / 進出場」,存檔後方塊的 `cat` 正確是 `conclude`。
-25. **2026-09-13 「移動停利」分頁改名「兵棋推演」,新增第二條計算路徑
-    「移動停損(ATR 版)」,跟移動停利並列同一張表。** 起因:使用者提
-    「我想把移動停利改成兵棋推演(包含移動停利跟移動停損兩個計算,移動
-    停損是新的)」。先問清楚 3 件事再動手:
-    - **停損距離用 ATR(波動度)算,不用固定百分比**——問使用者「固定
-      百分比(簡單)」vs「ATR/波動度(常見的 Chandelier Exit 做法,距離
-      隨波動大小自動調整)」,使用者選 ATR,沒有採用我推薦的簡單版。
-    - **範圍維持只看 `exit_plan.mode === 'trail'` 的紀錄**,不擴大到所有
-      進行中部位——這條問題我推薦維持現狀,使用者同意。
-    - **要真的觸發自動出場**,比照移動停利(量縮/漲停)一樣接進
-      `checkAutoExits()`,不是純觀察指標。
-    - 算法:`atrValue(stockId)` 算過去 `TRAIL_ATR_WINDOW`(14)天的真實
-      區間(True Range = max(當日高低差, |當日高−前日收|, |當日低−前日收|))
-      簡單平均(不是 Wilder 平滑,跟其他兩個門檻一樣走「簡單好驗證」路線)。
-      停損價 = 跟移動停利共用同一個「期間峰值」(`tPeak`,多看最高、空看
-      最低)往回拉 `TRAIL_ATR_MULT`(2.5)倍 ATR——`atrStop = tPeak − dir ×
-      ATR × 2.5`,命中條件跟移動停利對稱(`dir` 記法整段複用,不是另外
-      複製一份空頭版本)。2.5 倍是常見的 Chandelier Exit 慣用值(常見範圍
-      2~3 倍),**沒有回測驗證過比固定百分比或現有的量縮/漲停出場更好**,
-      跟移動停利當初「先試這組固定值」是同一種態度,門檻寫死在
-      `js/app.js`,不開放 UI 調整。
-    - 三個必須同步的地方(`normalizeExitResult` 白名單 /
-      `EXIT_RULE_LABELS` / `EXIT_RULE_ORDER`,item 10 記過的坑)都加了新值
-      `trail_stop`:`exitRuleLabelFor()` 依方向換字(多:「移動停損(ATR
-      回落出場)」、空:「移動停損(ATR反彈出場)」),自動出場統計
-      (`exitStatsHtml()`)、`checkAutoExits()` 完全不用改——`evalExitPlan()`
-      多推一個 `trail_stop` alert 進陣列,`checkAutoExits()` 本來就是
-      「取第一個命中的 alert」,新規則自動吃得到。
-    - 分頁重新命名(`index.html` 的 nav 按鈕文字「移動停利」→「兵棋推演」,
-      `#trail-wrap` 上方註解一併更新說明兩條路徑),表格新增一欄
-      「距ATR停損」(`trailIndicators()` 新增 `atr`/`atrStopPrice`/
-      `atrBufferPct` 三個欄位,`atrBufferPct` 是「現價距 ATR 停損價還有多少
-      緩衝」,正值代表還在安全側,跟既有的「距峰回落」(移動停利那條路徑)
-      並列,分別對應續漲/拉回兩種劇本),展開明細(`trailDetailHtml()`)
-      多一行 ATR 數值/停損價/緩衝%,`colspan` 從 6 改成 7 對齊新欄位。
-      「沒有紀錄」的提示文字也一併補充兵棋推演的兩條路徑說明。
-    - **這次沒有改的**:`trailWatchRecords()` 篩選條件沒動(還是只看
-      `exit_plan.mode === 'trail'`),`evalExitPlan()` 既有的量縮/漲停
-      (移動停利)、最大回撤(獨立生效)完全沒改邏輯,只是新增一個並列的
-      alert;`checkAutoExits()` 本體一行都沒改。
-    - 用 Playwright 端對端測過(14 項全過,灌 3 檔假紀錄配假的
-      `data/quotes-latest.json`,繞過網路直接跑本機 http.server):多方
-      未觸發(ATR=15、期間峰值 110、停損價 72.5、現價 90 → 距峰回落
-      18.2%、距停損緩衝 19.4%,對照手算值)、空方未觸發(期間峰值 80、
-      停損價 130、現價 105 → 距峰回落 31.3%、距停損緩衝 23.8%)、多方
-      真的觸發 ATR 停損(現價 70 跌破停損價 72.5)後透過 `checkAutoExits()`
-      正確轉成 `exited`、`exit_result.rule` 正確是 `trail_stop`、假設成交價
-      正確是停損價 72.5、`pl` 正確是 −27,500(1000 股 × 72.5 − 成本
-      100,000,對照手算值),以及展開明細正確顯示 ATR 數值與移動停損
-      alert 文字。
-26. **2026-09-13 思考路徑新增「同一層底色帶 + 第N層標籤」跟「方塊建立日期」,
-    兩個都是使用者聊到「機構等級分析怎麼做」時自己發現的缺口。** 起因分兩段:
-    - 先聊到「事後檢討要留時間戳跟資料版本」,使用者確認這個可以做成真功能
-      (跟另外三點——多來源交叉驗證、系統化回測、可證偽失效條件——不一樣,
-      那三點純粹是我自己查資料/分析時的行為習慣,沒有東西好寫進程式碼,
-      只能記在 CLAUDE.md 提醒自己;這點不一樣,是真的缺一個欄位)。
-    - 接著使用者自己觀察到:`thinkingComputeRows()` 本來就是照深度(從根方塊
-      算最長路徑)把方塊分列,概念上就是分析的第幾個階段,但畫面上完全沒有
-      視覺提示「這是同一層」,只能靠連線自己追,不認真看看不出來。
-    - **方塊建立日期**:`path.nodes.push()` 新增方塊時補上 `created_at:
-      todayStr()`(跟路徑層級的 `created_at` 同一種日期格式,不是完整 ISO
-      時間戳——這個 app 的資料本來就是一天更新一次,日期粒度就夠)。顯示在
-      `.tp-block-tag` 分類文字後面(例如「大盤總經 · 2026-09-13」),編輯
-      既有方塊時 `tp-hint` 也會多顯示「(建立於 2026-09-13)」。**沒有
-      normalize/白名單機制**——思考路徑的 `nodes`/`edges` 本來就是原始
-      JSON 直接存取,不像 `STEPS`/`exit_plan` 有 normalize() 過濾欄位,所以
-      舊資料(沒有 `created_at`)load 進來不會被清掉,只是那個方塊不顯示
-      日期,`esc(existing.created_at)` 之類的地方都先判斷存在才顯示,不會
-      因為缺欄位而炸掉。
-    - **同層底色帶 + 標籤**:`thinkingRenderCanvas()` 把每一列(`.tp-row`)
-      包進新的 `.tp-row-group`,裡面放一個 `.tp-row-label`(「第 N 層」,
-      N = `rows.map()` 的 idx+1)在上面、`.tp-row` 在下面。底色用
-      `:nth-of-type(odd/even)` 交替兩種很淡的白色疊加(`rgba(255,255,255,
-      0.035)`/`0.07`),跟方塊本身的 8 種分類色(`.tp-block::before` 左側
-      3px 色條)不衝突——分類色是「這格是什麼性質」,底色帶是「這是分析的
-      第幾層」,兩個維度不一樣,所以沒有共用同一套顏色系統。
-    - **這次改動最容易出錯、事先特別確認過的點**:`.tp-row-group` 絕對不能
-      加 `position`(CLAUDE.md 已經記過一次 `.tp-row` 踩過這個坑——多包一層
-      div 一樣適用同一條規則,純背景色/padding 不影響 `offsetParent`,只有
-      `position:relative/absolute/fixed/sticky` 才會),動手前特地重新確認
-      了 `thinkingDrawTracks()` 用 `elm.offsetTop`/`offsetLeft` 算連線座標
-      的邏輯,`.tp-canvas` 仍是唯一的 `position:relative` 祖先,新加的
-      `.tp-row-group`/`.tp-row-label` 都沒有 `position`,連線座標不受影響。
-    - 使用者選擇的視覺方案是三選一問過的(底色帶+標籤 / 只有底色帶 / 只有
-      標籤),使用者選「底色帶 + 第N層標籤」(我推薦的選項)。
-    - 用 Playwright 端對端測過(13 項全過):舊資料(方塊沒有 `created_at`)
-      正常渲染不報錯、分類文字不多顯示日期後綴;新建的路徑跟方塊正確補上
-      今天日期、兩層分別渲染成 2 個 `.tp-row-group`、標籤文字正確是「第 1
-      層」「第 2 層」、兩個 row-group 的背景色確實不同(交替生效)、新方塊
-      的分類文字正確帶日期後綴、編輯既有方塊時 `tp-hint` 正確顯示「建立於」
-      + 今天日期。另外截圖驗證(3376 假資料、6 格 3 層)視覺上底色帶跟標籤
-      清楚可辨,連線跨層繪製正常沒有錯位。
-27. **2026-09-13 FOMO/暴跌FOMO 補抓 PER(本益比),之前只有 PBR。** 起因:
-    使用者問「我們的全套分析所需要的資料是不是都有了」,逐項核對每個分析
-    階段對應哪個資料源時發現:`compute_fomo.py` 早就在呼叫 FinMind
-    `TaiwanStockPER` 這支 API(給 `extract_metrics()` 的 `per_rows` 參數),
-    但只從回應裡抓了 `PBR` 欄位,同一筆資料裡的 `PER` 欄位完全沒抓——不是
-    「沒接這個資料源」那麼籠統(那是已知限制第 8 點講的 `BWIBBU_ALL` replace
-    `TaiwanStockPER` 的另一件事),是已經在打這支 API、卻漏掉一個欄位,幾乎
-    零成本就能補上。使用者確認要加(3376 加進 `stock_lookup.json` 清單的
-    提案則使用者選不要,只做這個)。
-    - `extract_metrics()` 的「--- PBR ---」區塊改成「--- 本益比(PER)/
-      股價淨值比(PBR) ---」,`PER`/`PBR` 兩個欄位各自獨立找「最近一筆有值
-      的」(不假設同一天兩者一定都有值,分開找互不卡住),新增
-      `m["per"]`,`m["pbr"]` 邏輯不變。
-    - `fomo_score.py` 的 `score_stock()`/`score_stock_crash()` 組出場
-      `metrics` dict 時原本是白名單(逐一列欄位名,不是整包塞進去),補
-      `"per": m.get("per")` 兩處,不然 `extract_metrics()` 抓到了也會在
-      這裡被過濾掉,不會進最終輸出的 JSON。
-    - `js/app.js` 的 `fomoDetailHtml()`/`crashFomoDetailHtml()` 明細
-      facts 各加一行 `if (m.per != null) facts.push('PE ' + m.per);`,
-      放在量比後面、PBR 前面,跟後端 metrics 物件裡的欄位順序一致。
-    - `PER` 這個欄位名沒有另外 probe 驗證過——FinMind `TaiwanStockPER`
-      是穩定的公開文件化 API,回應裡本來就有 `date`/`PER`/`PBR`/
-      `dividend_yield` 這幾欄,跟這次改動同一支呼叫、同一批 rows,不是
-      猜新 API 的行為,失敗也是軟失敗(`_num(r.get("PER"))` 找不到欄位
-      就回 `None`,`m["per"]` 維持 `None`,不會讓整支腳本掛掉)。**使用者
-      手動觸發 `daily-scan.yml` 驗證過了**(2026-09-11 資料):FOMO 51 檔裡
-      45 檔、暴跌FOMO 53 檔裡 36 檔都抓到非 null 的 `per`,數字跟 `pbr`
-      明顯不同(例如 6834 天二科技 PE 46.96 / PBR 6.19),不是誤把兩個
-      欄位搞混;剩下沒有值的檔(2338 光罩、1309 台達化、3346 麗清⋯)推測
-      是 FinMind 那天剛好沒有 PER 資料(常見於虧損股 PE 沒意義),不是
-      程式錯誤。
-    - 離線測試(mock `per_rows`,不用連網)5 項全過:`PER`/`PBR` 都在最新
-      一天有值時正確各自抓到最新值、`PER` 缺最新兩天但 `PBR` 有值時
-      `PER` 正確往回退到有值的那天(兩欄獨立、不互相卡住)、`per_rows`
-      整組是空陣列時兩欄都是 `None` 不會炸、`score_stock()`/
-      `score_stock_crash()` 輸出的 `metrics.per` 正確帶到值;另外 1 項
-      回歸測試確認舊資料格式(row 裡完全沒有 `PER` 這個 key,只有 `PBR`)
-      行為不變。前端用 Playwright 灌一筆假 `per=42.0` 的 FOMO 資料測過:
-      展開明細正確顯示「PE 42」,位置在「量比」跟「PBR」中間,無 JS 錯誤。
-28. **2026-09-13 思考路徑補「刪除整條路徑」,新增方塊「想法更新」(commit
-    式,像便利貼疊加)。** 起因:使用者發現思考路徑只能刪單一方塊
-    (`thinkingDoDelete()`),沒有刪整條路徑的功能;同一輪還要求方塊要能
-    「像便利貼一樣貼上更新後的意見或想法」,不是直接覆蓋。兩個都問過
-    設計選項才動手:
-    - **刪除路徑**:選項是「路徑列每張 chip 上都放 ✕」vs「只對目前這條
-      路徑放一顆刪除鈕」——沒有特別問使用者,直接選後者,理由跟這個 app
-      一貫的手機觸控判斷一致(item 21 的分岔/合併就因為「手機觸控做拖曳
-      連接點準度很差」才改成按鈕):小 chip 上擠一顆 ✕ 誤觸風險高。
-      `renderThinkingPathRail()` 在「+ 新路徑」後面加「🗑 刪除路徑」
-      (`.tp-pc-del`,`margin-left:auto` 讓它一定貼齊右側,不會跟著捲動
-      的 chip 一起被推走),`thinkingDoDeletePath()` 操作
-      `thinkingPaths.currentPathId` 指到的路徑,`dialog()` 二次確認(樣式
-      跟單一方塊刪除、全出、全刪一致),刪完切到清單裡剩下第一條,刪光
-      就回到「還沒有任何思考路徑」的空狀態。
-    - **想法更新(commit)**:先問過使用者兩個關鍵設計決定——
-      1. 方塊上要不要直接顯示更新內容:使用者選「顯示最新一則摘要」
-         (不是我推薦的其他兩個選項:只顯示徽章數字、或完全不顯示)。
-      2. 最初的方塊文字要不要能繼續編輯覆蓋:使用者選「建立後鎖住,只能
-         靠新增更新疊加」(不是我推薦的「維持可編輯,新增更新是另一個
-         獨立按鈕」)——這是這次設計裡影響最大的一個決定,直接把
-         `thinkingOpenNodeSheet()` 的編輯模式從「可以直接改文字」整個
-         改成「文字唯讀 + 疊加式更新清單」。
-    - 資料結構:`node.updates`(新到舊陣列,`{id, text, created_at}`),
-      `created_at` 跟其他地方一樣用 `todayStr()` 日期格式。新建方塊時
-      `updates: []`,跟 item 26 的方塊 `created_at` 一樣沒有
-      normalize/白名單機制,舊資料(沒有 `updates` 欄位)load 進來不會
-      被清掉,只是那個方塊沒有更新可顯示,`existing.updates || []` /
-      `n.updates && n.updates.length` 這類判斷都先檢查存在再用。
-    - **編輯模式(`isEdit`)整段行為都不一樣,新增模式完全不動**:
-      - 原始文字從 `<input id="tp-node-text">` 改成唯讀的
-        `<div class="tp-node-locked">`,不能再改。
-      - 新增一個「新增更新」輸入框 + 按鈕(`#tp-node-update-input`/
-        `#tp-node-update-add`)——**按下立即寫進 `node.updates` 並存檔**,
-        不用等 sheet 底部的「儲存」,跟計算機的「帶入文字」(只是填草稿)
-        不一樣,這個是真的 commit。清單就地刷新(`thinkingUpdateListHtml()`
-        重新產生 `#tp-update-list` 的 innerHTML),sheet 不關閉,方便一次
-        補好幾則更新;同時呼叫 `thinkingRenderCanvas()` 讓畫布上的方塊
-        立刻反映最新一則摘要,不用關掉 sheet 才看得到。
-      - 常用詞 chip、估值試算/進出場計算的「帶入文字」,編輯模式時全部
-        改寫進「新增更新」的草稿輸入框,不再寫進(已經不存在的)原始
-        文字欄位,**也刻意不連動切分類**——新增模式裡點常用詞/套用計算機
-        會順便把 `pickedCat` 換掉,但編輯模式故意不這樣做,因為「疊加一則
-        更新」不該悄悄把方塊本身的分類換掉,分類要改就直接點分類色塊。
-      - 底部「儲存分類」按鈕(編輯模式按鈕文字從「儲存」改這個,新增模式
-        還是「新增」)只負責 `existing.cat = pickedCat`,不再驗證/寫入
-        文字,因為文字已經鎖住、走另一條「新增更新」立即存檔的路徑。
-    - 方塊畫面:有更新就在 `.tp-block-tag`(分類/日期)下面多一行
-      `.tp-block-update`(🔄 開頭,斜體、虛線分隔、`-webkit-line-clamp:2`
-      最多兩行再長就截斷,完整內容要點開編輯視窗看),只顯示
-      `n.updates[0]`(最新一則)。
-    - 用 Playwright 端對端測過(28 項全過):舊資料(方塊沒有 `updates`
-      欄位)正常渲染、方塊上沒有更新行、編輯視窗顯示唯讀原文 + 「還沒有
-      任何更新」;新建方塊 `updates` 正確是空陣列;新增更新立即存檔、
-      原始文字不變、日期正確、輸入框清空;常用詞 chip 在編輯模式正確寫進
-      草稿欄位、不影響鎖住的原文;累加到 2 則後清單正確新到舊排序;透過
-      「儲存分類」改分類後文字跟 `updates` 都沒被動到;方塊上正確顯示最新
-      一則更新摘要。刪除路徑:刪除鈕存在、二次確認彈窗正確出現、取消不會
-      刪、確定後正確少一條且自動切到剩下的路徑、刪光最後一條後
-      `currentPathId` 變 `null` 且顯示空狀態、0 條路徑時刪除鈕不再渲染。
-      全程無 JS console 錯誤。另外截圖驗證(3376/外資連續買超範例)畫面
-      上「🗑 刪除路徑」按鈕貼齊右側、方塊更新摘要跟編輯視窗的鎖定文字
-      +更新清單版面正常。
-29. **2026-09-14 使用者分享自己盯盤的心得(9/1、9/2 該出場但沒出:量縮+漲不上去
-    +有賣壓,賣在上次爆量高點附近),提出 4 個具體需求,順便問「法人軌跡」有
-    沒有想法。法人軌跡那題純討論,沒有寫進程式碼(使用者當場決定「蓄勢名單」
-    先不做),前面四項確認範圍後動手,全部是純前端算、不接新資料源。**
-    - **‼️接近前高警示**(`js/app.js` 的 `nearHighFromCloses()`):股價來到
-      「近30天最高收盤價(不含當天自己)」的 85% 以上就示警,門檻是使用者
-      自己的經驗值,沒有回測驗證過,寫死不開放調整。問過使用者放哪裡,答案是
-      **個股查詢表格 + 追蹤分頁卡片**(沒有選爆量/暴跌掃描清單本身跟部位報價
-      列表)。兩處資料形狀不一樣、分開兩個小函式接:
-      - 追蹤卡片(`cardHtml()`)用 `cardNearHigh(stockId)` 吃
-        `quotes.daily_close[quotesIdx[code]]`(已經是新到舊),**只對
-        `status === 'active'` 的紀錄算**(已出場/放棄不用再提醒);`quotes`
-        還沒載入時直接回傳 `null`,不擋卡片渲染,等 `loadQuotes()` resolve
-        後 `renderList()` 重跑一次自然補上,跟其他報價相依的畫面同一套模式。
-      - 個股查詢(`createLookupPanel()`)用 `computeLookupNearHigh(rowsAsc)`,
-        rows 是舊到新(跟 `quotes.daily_close` 相反),先反轉再共用同一顆
-        `nearHighFromCloses()`,不是另外寫一份公式。顯示兩處:下拉選單每個
-        代號後面(跟既有的 🔔🔽🔻🔥 badge 同一行)、選到該股票時 `#lookup-meta`
-        那行(跟🔔量縮轉買、融資維持率估計同一種「目前狀態」呈現方式)。
-      - **「快到前高」不代表這檔股票一定會出現在下拉選單裡**——個股查詢表格
-        本來就有 `lookupHasAnySignal()` 這層過濾,整檔 30 天都沒觸發過
-        🔔/🔽/🔻/🔥 任何一個標記會直接從清單移除,‼️沒有加進這個過濾條件,
-        純粹是「有出現在清單裡才會多顯示 ‼️」,不會讓原本被濾掉的代號重新
-        出現。這是既有架構的限制,這次沒有動它。
-    - **產業流向箭頭**(`tickArrowHtml()`,`tickCellHtml()` 裡每個儲存格的
-      `.tick-val` 內緊接著顯示):方向用後端已經算好的 `d0_d1`(今天原始
-      成交筆數 - 昨天)判斷,正的紅色▲、負的綠色▼,跟本站「紅漲綠跌」一致;
-      日增減幅度(`d0_d1 / 昨天原始值`)達 20% 以上時再從紅/綠升級成紫色/
-      墨綠(新增 CSS 變數 `--tick-up-big`/`--tick-down-big`),強調「不只
-      方向對,力道也放大」。門檻(20%)一樣是使用者經驗值沒驗證過。箭頭是
-      巢狀放在 `.tick-val`(`display:block`)裡面,不是同層 sibling——一開始
-      寫成 sibling 會因為 `.tick-val` 是 block 元素被擠到下一行,不是使用者
-      要的「跟數值同一行」,測試時發現改成巢狀才對。
-    - **估值試算 ⚠️ 標記**(思考路徑,`thinkingValuationText()`):新增
-      「資料不完整/只有單一來源」checkbox(`#tp-val-incomplete`),勾了之後
-      算出來的文字前面自動加 `⚠️ 資料不完整/單一來源 — `。**沒有自動判斷
-      機制**——這是手動計算機,程式沒辦法知道使用者填的 EPS 到底可不可信,
-      只能讓使用者自己誠實勾。順便把 `bindCalcPanel()` 的事件監聽從只綁
-      `input` 改成 `input` + `change` 兩個都綁(checkbox 在部分瀏覽器上比較
-      可靠的是 `change`),文字輸入框兩個事件都綁不影響結果(`computeFn` 是
-      純函式)。
-    - **法人軌跡(第 5 點,量縮數十天後爆量/出貨的方向性判斷)**:回覆使用者
-      的方法論建議——量縮本身是中性的(買方籌碼收乾跟賣方籌碼收乾看起來都
-      是量縮),要疊加融資餘額走勢(量縮期間融資持續增加=散戶進場,籌碼不
-      安定;融資緩降或持平=籌碼安定)、外資/投信是否安靜吸籌、收盤位置在
-      當日區間的哪裡,才能消歧義出方向;時間點的部分承認純統計模型算不出來
-      (使用者自己舉的雷虎/軍工案、2313/蘋果發表會兩個例子都是外部時間表
-      驅動的),量縮只能告訴你 readiness,催化劑日曆要人工查或 WebSearch 補。
-      **這次沒有做成「量縮蓄勢名單」功能**(問過使用者,選擇先不用),純粹
-      記在這裡給下一個 Claude 參考,之後如果要做,大方向是:量縮 N 天+
-      融資/外資方向篩出候選名單,不是精算爆量日期。
-    - 用 Playwright 端對端測過(灌假的 `quotes-latest.json`/
-      `stock-lookup-scan-latest.json`/`tick-latest.json`,繞過網路直接跑
-      本機 http.server):追蹤卡片兩檔(87% 觸發/50% 不觸發)徽章正確;
-      個股查詢下拉選單跟 meta 區塊兩檔的 ‼️ 正確(順便發現一個既有機制的
-      互動細節:合成測試資料如果量太小或沒觸發任何既有標記,會被
-      `lookupIsLowActivity`/`lookupHasAnySignal` 濾掉,不是這次功能的
-      bug,調整測試資料量體跟塞一個 🔻selloff 訊號後才過);產業流向四組
-      (+30%/+10%/−10%/−40%)分別正確對到 `tick-arrow-up-big`/`tick-arrow-up`/
-      `tick-arrow-down`/`tick-arrow-down-big` 四種 class;估值試算打勾前後
-      文字正確帶 ⚠️ 前綴。全程無 JS console 錯誤。
-30. **2026-09-14 把 item 29 討論的「法人軌跡」方法論做成獨立分頁**,使用者這次
-    直接說「來做法人軌跡,先做成獨立tab」。範圍問過使用者(全市場新掃 vs 先只掃
-    現有個股查詢清單):**先只掃現有三份個股查詢清單**(`data/stock-lookup-latest.json`
-    FOMO、`stock-lookup-scan-latest.json` 爆量、`stock-lookup-crashfomo-latest.json`
-    暴跌FOMO)裡已經有的股票——這三份本來就有融資融券/外資投信逐日資料,純前端算,
-    今天就能上線,不用等新的 daily-scan.yml 步驟或吃 FinMind 額度;代價是看不到
-    還沒加進這三份清單的候選股。
-    - **候選判斷直接複用既有的 `computeLookupShrinkZone()`**(🕐蓄勢中判斷同一套
-      邏輯:近10個交易日至少8天量縮、平均日振幅≥3.5%),只挑「還沒等到轉買訊號」
-      (`!alreadyTriggered`)的股票當候選——已經觸發表示量縮階段結束了,不需要再猜
-      方向。**沒有另外定義新窗口**,方向性指標跟量縮判斷用同一個 `[lo, i)`(不含
-      當天)10 天視窗,三處(量縮/振幅/方向)共用一份時間定義。
-    - **`computeLookupInstTrajectory(rowsAsc)`**:窗口內三個指標各投一票,簡單計票
-      (不是加權模型),多數決定標籤——這三個門檻都是使用者經驗值,沒有回測驗證過,
-      跟本站「先試這組固定值」一貫的態度一致:
-      1. 融資餘額窗口內變動:≤−5% 算偏多(浮額洗清,籌碼安定),≥+5% 算偏空
-         (散戶跟進,最後那隻腳不穩),中間算持平不投票。
-      2. 外資+投信窗口內合計買賣超:正的偏多(安靜吸籌),負的偏空。
-      3. 平均收盤位置((close−low)/(high−low),窗口內逐日平均):≥60% 偏多
-         (買方每天都在守),≤40% 偏空(賣方還在,量縮只是沒人願意賣更便宜)。
-      偏多/偏空至少要 2 票以上且明顯多於另一邊才定標籤,否則是「方向不明」;
-      三個指標都缺資料是「資料不足」。
-    - **UI 是新的獨立分頁「法人軌跡」**(`index.html` 的 `#insttrack-wrap`,掛進
-      `VIEWS_ORDER` 排在「兵棋推演」後面、「爆量掃描」前面),表格欄位:代碼/名稱/
-      來源/量縮天數/融資趨勢/外資+投信/收盤位置/方向,點列展開明細看三個指標的
-      原始數字(不是只信任標籤本身)跟投票結果,展開列裡有一段固定提醒文字講清楚
-      門檻沒驗證過、不是進場訊號、時間點這個工具算不出來要另外查催化劑——跟
-      item 29 回覆使用者的方法論完全對應,不是另外發明一套說法。
-    - **同一檔股票可能同時在多份清單裡,合併成一筆、標記所有來源**
-      (`loadInstTrack()` 用 `Promise.all` 平行抓三份 JSON,依股票代號 dedupe,
-      `sources` 陣列記錄哪幾份清單有這檔,畫面上顯示成小 chip)。排序依「|偏多票−
-      偏空票|」降冪(訊號越極端排越前面),同分再依量縮天數降冪。
-    - **純觀察,沒有接「+ 追蹤」**——跟兵棋推演同一種定位,這個分頁是幫忙縮小候選
-      範圍用的,不是下單訊號,使用者要追蹤某檔還是回對應的個股查詢/爆量/FOMO分頁
-      自己加。
-    - **三份清單其中一份讀取失敗不會擋住其他兩份**(`Promise.all` 內每個 fetch 自己
-      `catch`,回傳 `{ok:false}` 而不是讓整個 `Promise.all` reject),失敗的清單名稱
-      會顯示在 meta 區塊,不是靜默吞掉。
-    - 用 Playwright 端對端測過(灌 4 檔合成資料到三份清單,繞過網路直接跑本機
-      http.server):偏多股(融資−12%、外資投信+5000張、收盤位置90%)正確判定
-      「偏多蓄勢」且 3 票全多;偏空股(融資+15%、外資投信−5000張、收盤位置10%)
-      正確判定「偏空蓄勢」且同時出現在爆量跟暴跌FOMO兩份清單,來源 chip 正確合併
-      顯示兩個;方向不明股(融資+1%在門檻內算持平、外資投信小額+100張、收盤位置
-      剛好50%)正確落在「方向不明」;沒有量縮(每天量都大)的股票正確被排除、完全
-      不出現在清單裡;點列展開明細三個指標數字跟手算值一致;meta 摘要的偏多/偏空/
-      不明計數正確。全程無 JS console 錯誤。另外截圖驗證手機寬度(420px)版面正常,
-      跟兵棋推演同一套 `.scan-table`/`.table-scroll` 慣例,不用另外處理響應式。
-    - **2026-09-14 補一個修正**:用真實 repo 資料(不是合成測試資料)挑一檔做全套
-      分析示範時,選到 2069(運錩)——法人軌跡標它「偏空蓄勢」,但攤開價量資料才
-      發現這檔 9/8、9/9 已經爆量漲停+噴出 17%,根本不是「還沒動」的候選,揪出
-      `computeLookupShrinkZone()` 的一個既有限制(候選視窗容許 10 天裡 2 天不量縮,
-      2069 的視窗剛好把這 2 天例外用在真正的突破上;而且 2069 整段歷史 `trust_net`
-      都是 0,「外資+投信同步買超」的 `alreadyTriggered` 判斷因此永遠不會成立,
-      已經噴出的股票還是會一直被當候選)——這個限制原本就存在於既有的 🕐蓄勢中
-      判斷,不是法人軌跡自己的新 bug,只是這次剛好透過它被看見。使用者確認要修:
-      `alreadyTriggered` 加一個例外,`trust_net` 整段歷史都是 0(`rowsAsc.every(r
-      => !r.trust_net)`)的股票,只看外資買超,不要求投信也買超同步成立。**只改了
-      `alreadyTriggered`**,🔔量縮轉買(`computeLookupBreakouts()`)判斷觸發日的
-      條件維持原樣沒有一併改——那是標記「哪一天觸發轉買」的用途,跟「候選要不要
-      繼續列」是不同問題,使用者只要求修後者。用真實資料驗證過:修之前 2069 會
-      出現在法人軌跡候選名單跟爆量個股查詢的下拉選單裡(🕐蓄勢中訊號),修之後
-      正確從兩處都消失;同樣 `trust_net` 整段是 0 的另外兩檔(6416、5546)不受
-      影響繼續留在候選名單(它們今天的外資買賣超是負值,即使套用新例外
-      `alreadyTriggered` 依然是 false);有真實投信活動的 3167 完全沒受影響
-      (`trustAllZero` 判定為 false,走原本邏輯)。
-31. **2026-09-14 出場設定的目標%欄位旁邊加「≈ 目標價」,雙向連動。** 起因:使用者
-    覺得只能輸入 % 不直覺,想直接打價錢。`exitPlanFormHtml()` 新增
-    `exitTargetPriceFromPct(pct, avgCost, dir)` 算價,新欄位 `#exit-target-price`
-    跟既有的 `#exit-target-pct` 都存 `data-avg`(持倉均價 `st.avg`)/`data-dir`
-    (`+1`多/`-1`空)兩個 data attribute,`bind()` 裡新增一個 `#detail-positions`
-    的 `input` 事件委派:打 % 就即時算價寫回價格欄位、打價就反推 % 寫回 % 欄位,
-    純前端算,不用等按「儲存」。
-    - **沒有新增資料欄位**——`saveExitPlan()` 還是只讀 `#exit-target-pct` 的值存進
-      `exit_plan.target_pct`,價格欄位純粹是「輸入輔助」,不落地存價格本身,跟
-      `STEPS`/`exit_plan` 的既有結構完全沒關係。
-    - **公式跟 `evalExitPlan()` 用同一套 `dir` 記法**,不是另外發明:
-      `目標價 = 均價 × (1 + dir × pct / 100)`,做多(`dir=1`)目標價在均價之上,
-      做空(`dir=-1`)目標價在均價之下(反推 `pct` 同理用 `dir` 乘回去)——這樣算
-      出來的 % 存回 `target_pct` 之後,`evalExitPlan()` 讀到的數字意義完全一致,
-      不用另外處理方向轉換。
-    - **沒有持倉(`st.avg` 是 `null`)時目標價欄位直接 `disabled`**,placeholder
-      顯示「需先有持倉均價」,不會讓使用者在算不出來的情況下打字看到誤導的
-      空值或錯誤換算。
-    - 事件直接改 DOM `value`,**不呼叫 `renderPositions()` 重繪**——CLAUDE.md
-      已經記過的坑(自動存檔重繪 DOM 會把使用者正在打的字吃掉),這次兩個欄位
-      互相連動、使用者可能會來回改好幾次,更不能每次都重繪。
-    - **這次只加在「目標%」欄位(`daytrade`/`profit`/`trail` 三種模式共用同一個
-      欄位)**,沒有動「最大回撤 %」——回撤的基準是「期間最高/最低點」,是會
-      每天變動的參考點,不像目標%的基準(持倉均價)是固定的,價格⇄%換算沒有
-      同樣乾淨,這次沒有一併做,使用者之後想要可以再談。
-    - 用 Playwright 端對端測過:做多倉位(均價100)輸入 pct=10 → 價格正確算出
-      110.00,再改價格=120 → pct 正確反推回 20.00,儲存後 `exit_plan.target_pct`
-      正確是字串"20.00"(不是價格);做空倉位(均價100)輸入 pct=10 → 價格正確是
-      90.00(目標在均價下方),改價格=85 → pct 正確是15.00;沒有持倉的紀錄切到
-      `profit`模式時目標價欄位正確 `disabled`、placeholder正確、打 pct 不會讓
-      它跑出錯誤的值;切換模式(hold/trail/days/hold)時兩個欄位的顯示/隱藏正確
-      同步切換。全程無 JS console 錯誤。
-
-32. **2026-09-14 用 2634(漢翔)做了一次思考路徑「大全套」示範(預設入手價 69),
-    產出可匯入的 JSON 放在新資料夾 `data/thinking-paths/`**(`2634-hanxiang-2026-09-14.json`,
-    格式是 `{ data: [], thinking_paths: {...} }`,追蹤分頁「匯入」→「合併」就會進來,
-    `data: []` 配合合併模式不會動到現有追蹤紀錄)。之前 3443/2634/2357 的示範檔都只留在
-    scratchpad 沒進 repo,這次開始把示範檔 commit 進來,之後同類產出放同一個資料夾。
-    流程照 CLAUDE.md 上面那條(先查 repo 官方資料、WebSearch 只補基本面/催化劑、數字類
-    交叉比對),這次多抓到一個坑:**WebSearch 的 AI 摘要會把我查詢字串裡的日期回填進
-    結果**——我查「9月14日 無人機預算」,摘要就說「9/14 立院放行 634 億、漢翔漲停」,但
-    對照 repo 價量,漲停日是 8/14(+9.97%、量 7,900 萬股),來源網址本身也是
-    `20260814`;9/11 真正發生的是行政院副署無人載具條例,當天平盤。摘要文字不能當
-    事實,要看來源日期跟 repo 價量。另外 WebFetch 對主流台媒(udn/ltn/cmoney/
-    statementdog/fugle)全被 proxy 擋掉,只能靠 WebSearch 摘要多來源交叉。
-    這次估值用三方法(TTM 推算 PE、Forward 假設 PE、券商舊目標價)交叉,2025Q4 EPS
-    查不到是用全年減 H1 推的,方塊裡有明講;PB 沒淨值資料留空。事後拿 Sonnet 5 做的同一檔路徑對照時發現我的量縮天數/振幅(9/10、3.07%)用的是自己的 MA20 定義,不是系統 `computeLookupShrinkZone()` 的定義(量/前10日峰量<0.6、振幅用 (高−低)/收盤),系統定義算出來是 10/10、3.11%,已改正——引用系統訊號時要照系統的公式重算,不要用自己順手的近似定義。
-33. **2026-09-14 拿 2634 做思考路徑示範時發現系統缺兩個狀態,補了「固定停損」
-    跟「價格均線狀態」,都是純前端算,沒有接新資料源,沒有動 daily-scan.yml。**
-    - **固定停損**(`exit_plan.stop_loss_pct`):跟 `max_drawdown_pct`(最大回撤)
-      同一種定位——不是新的 `mode`,任何模式下都獨立生效,可以跟移動停利/獲利
-      出場並存。差別是基準用**持倉均價**(`st.avg`),不是期間高低點。
-      `evalExitPlan()` 算法:停損價 = 均價 ×(1 − dir × pct / 100),看多是跌破、
-      看空是反彈突破,一樣用 `dir` 乘出來,沒有複製一份空頭版本。這個 alert
-      的 key `stop_loss` **push 在 alerts 陣列最前面**——`checkAutoExits()` 取
-      `alerts.filter(hit)[0]`,同一天固定停損跟移動停利/獲利出場都命中時,
-      永遠是固定停損贏,不是先命中的模式贏。三個必須同步的地方(item 10 記過
-      的坑)都加了 `stop_loss`:`normalizeExitPlan`(新增 `stop_loss_pct` 欄位,
-      舊資料沒有這欄視為空字串,不會被判壞丟掉)、`normalizeExitResult` 白名單、
-      `EXIT_RULE_LABELS`/`EXIT_RULE_ORDER`,`exitRuleLabelFor()` 依方向換字
-      (多「跌破停損價」、空「反彈至停損價」)。表單的「停損 %」旁邊比照 item 31
-      加「≈ 停損價」,同一種雙向連動(`exitStopPriceFromPct()`,公式跟目標價
-      相反方向)、同一個 `#detail-positions` input 事件委派、同樣直接改 DOM
-      value 不重繪。**這次沒做的**:不處理跳空(假設成交價一律是停損價,不是
-      收盤價,跟 `trail_stop` 的做法一致);沒有回測驗證過門檻數字比移動停損
-      (ATR 版)或最大回撤更好用,使用者要自己填多少完全沒有預設值建議。
-    - **價格均線狀態**(`priceMaState()`):系統原本所有 MA 都是成交量/情緒
-      指標(移動停利的量/MA5、爆量掃描的 vol_ratio⋯),沒有任何地方算「價格」
-      均線,而 `quotes.daily_close` 已經有 30 天收盤,純前端就能算。
-      MA5/MA10/MA20 都是**含當日**的簡單平均(不是 EMA,也不是 shift 1),
-      任一視窗不足天數或有缺值就整組回 `null`,不半殘顯示部分均線。三態:
-      `bull` 多頭排列(`close > MA5 > MA10 > MA20`)、`bear` 空頭排列(相反)、
-      `mixed` 均線糾結(其餘,包含三者剛好相等的邊界情況)。顯示位置比照
-      item 29 的‼️接近前高,兩處共用同一顆核心函式:追蹤卡片(`cardPriceMa()`,
-      只對 `status === 'active'` 算)跟個股查詢 `#lookup-meta`(`computeLookupPriceMa()`,
-      rows 是舊到新,反轉後共用)。**不加進下拉選單 badge,不加進
-      `lookupHasAnySignal()` 的過濾條件**——跟‼️前高警示同一個限制,均線狀態
-      良好也不會讓被濾掉的代號重新出現在個股查詢清單裡。染色沿用全站紅漲綠跌
-      (新 CSS class `price-ma-up`/`price-ma-down`,均線糾結不染色)。測試對照
-      `data/quotes-latest.json` 2026-09-11 的 2634 真實資料(MA5 65.02 / MA10
-      65.48 / MA20 67.58,收盤 63.8 → 空頭排列)手算過,另外灌合成資料驗證過
-      多頭排列、均線糾結、資料只有 15 天(MA20 算不出來,回 `null`,卡片不顯示、
-      不報錯)三種情況。
-    - Playwright 端對端測過 29 項全過(灌假的 `quotes-latest.json`,繞過網路
-      直接跑本機 http.server):固定停損多方觸發(均價69、停損7%→停損價64.17、
-      現價63.8→pl −4,830)、空方觸發(均價60、停損5%→停損價63.00→pl −3,000)、
-      多方未觸發、trail 模式啟動門檻已到跟固定停損同日命中時 rule 正確是
-      `stop_loss` 不是 `trail_*`、舊資料無 `stop_loss_pct` 欄位載入不報錯、
-      表單雙向連動(打7%→64.17、改停損價65→反推5.80、儲存後
-      `exit_plan.stop_loss_pct` 正確是字串"5.80")、自動出場統計正確出現「固定
-      停損」分組且依看多/看空拆開;價格均線狀態的三態(2634 真實資料的空頭
-      排列、合成資料的多頭排列跟均線糾結)跟資料不足情況都在追蹤卡片跟個股
-      查詢(FOMO)meta 兩處驗證過文字跟染色 class。全程無 JS console 錯誤
-      (版本頁抓 GitHub API 的 cert 錯誤除外,那是 proxy)。
-
-34. **2026-09-14 「讓預測更準」大改,一次做完 8 項。** 起因:使用者問「有沒有怎樣改
-    可以讓系統更好(預測分析更好、準)」,我先講實話——所有門檻都是經驗值、唯一量過
-    的命中率(真漲 11%)是壞消息、30 天資料量不出準度——然後提了 8 項,使用者說
-    「趁還有 token 全做」。細節在 `data/README.md` 最後一節跟 `docs/使用教學.md`,
-    這裡只記決定跟坑:
-    - **永久存檔**(`scripts/archive_prices.py`,`data/archive/`):`data/history` 的
-      30 天裁切完全沒動,另存按月分檔的壓縮版(一個月約 1MB)+ 指數逐日檔。回補用
-      既有的 `by_date()`/`market_index_by_date()`,沒有新 API 所以沒 probe。
-      `daily-scan.yml` 新增 `archive_backfill_days`(第一次填 250)。
-    - **訊號記分板**(`scripts/compute_scorecard.py` → `data/scorecard-latest.json`,
-      前端新分頁 `#scorecard-wrap`):事前登記、全樣本、扣指數的超額報酬,5 種分桶。
-      `N<60` 一律 `enough=false` 灰色。**第一次跑的結果:爆量 5 日 n=362 命中 21.5%、
-      平均超額 −3.26%;可能會漲 5 日 n=47 命中 17%**——這是這個系統第一次有全樣本的
-      準度數字,方向跟之前「真漲 11%」一致:單因子爆量訊號在這段弱勢盤裡是反指標。
-      樣本只有 9~10 個交易日的訊號、大盤又剛好偏空,不能推廣,但要盯著。
-    - **均線合流**:`common.ma_state()`(Python 版,跟前端 `priceMaState()` 同定義,
-      測試用 2634 真實資料對過 65.02/65.48/67.58/bear)進 `compute_scan.py`/
-      `compute_crash.py` 每列 `ma_state`,前端爆量/暴跌表格多一欄「均線」;記分板
-      `ma` 分桶用它。**沒有拿它當過濾條件**,只是顯示 + 統計,等記分板說話。
-    - **大盤閘門橫幅**(`renderGateBanner()`):看多分頁在系統性賣壓/指數跌、看空
-      分頁在指數漲的日子顯示黃色橫幅,引用記分板同狀態下的命中率。只提醒不擋。
-    - **門檻掃描**(`scripts/tune_thresholds.py`):純 CLI,用存檔重掃,一次一個參數。
-      現在跑 vol_ratio 1.5/2/3 的 5 日命中率是 20.5/22.9/15.5%,都在 60 樣本以上但
-      只有 30 天存檔,不算數。
-    - **產業覆蓋**(`data/industry_overrides.json`):2634/2630/2645 → 航太軍工。
-      **踩到的坑**:第一版 `evict_mismatched()` 是「凍結成員產業跟現在不同就移出」,
-      結果一跑移了 47 檔——FinMind 的分類本身會漂(44 檔跟凍結時不一樣),那不是
-      使用者的決定,SH2 原則是凍結不動;改成只對覆蓋清單裡的代號生效,`top_up_groups()`
-      也改成只補被移出的那幾組(第一版把所有不足額的組都補了,動到幾十組)。最後
-      `tick-sample-members.json` 的 diff 只有航運業大/小組各少 1~2 檔、大組補 2646、
-      新增航太軍工三組(每組 1 檔,low_n)。TWSE 代碼 15 也是航運業,所以「換成 TWSE
-      分類」解決不了這個,只有手動覆蓋能解。
-    - **事件日曆**(`data/events.json` + localStorage `stock_pipeline_v1__events` +
-      除權息預告自動併入):repo 檔進記分板 `event` 分桶,個人事件不進。追蹤卡片 📅、
-      個股查詢 meta 📅、大盤狀況分頁的面板 + 表單,匯出/匯入多 `events` 欄位(跟
-      `thinking_paths` 同一種合併規則)。
-    - **全市場估值**(`scripts/fetch_valuation.py`,TWSE `BWIBBU_ALL`):**沒有 probe
-      過就上了**——違反「先探測再實作」,理由是容器連不到 TWSE、使用者要一次做完;
-      補償是腳本軟失敗 + 印欄位名 + workflow `continue-on-error`,第一次跑完要看 log。
-      前端:個股查詢 meta 顯示 PE/PB/殖利率;思考路徑估值試算自動帶入收盤價跟
-      `收盤/PE` 反推的 EPS(只填空欄位,不覆蓋使用者已打的)。
-    - 測試:Python 離線 40 項(記分板合成資料手算超額報酬/命中率/分桶、存檔回補
-      mock TWSE 含跨月與冪等、產業覆蓋套用/還原、evict 只動覆蓋清單、top-up 只補
-      被移出的組、ma_state 邊界);Playwright 28 項(匯入含 events、卡片 📅、記分板
-      section/數字對 JSON、均線欄、三個分頁的閘門橫幅顯示/隱藏邏輯、事件面板新增/
-      擋 0050/刪除/持久化、個股查詢 PE/PB、估值試算自動帶入 63.8 / 2.05、匯出含
-      events)。全程無 JS console 錯誤。
-    - **沒做的**:記分板沒有納入個股查詢的 🔔🕐🔻🔥 訊號(那些是前端算的,沒有每日
-      存查檔);`data/archive/prices` 一年約 12MB 進 git 歷史,之後要看 repo 大小;
-      個人事件不進記分板是刻意的(不想讓瀏覽器裡的資料影響統計)。
+- `history/YYYY-MM-DD.json`:全市場 `[id, volume, open, high, low, close, transaction]`,30 天滾動
+- `archive/prices/YYYY-MM.json`、`archive/index.json`、`archive/valuation/YYYY-MM.json`:永久
+- `quotes-latest.json`:`codes/close/prev_close/ret_bp/daily_{high,low,close,volume}`(新到舊)
+- `stock_meta.json`:`industry`(可能被 `industry_override`)、`shares`、`twse_industry_code`
+- `stock-lookup*-latest.json`:`data[code].rows`(舊到新):`open high low close volume margin_balance margin_change short_balance short_change foreign_net trust_net`
+- `market-grid-latest.json`:今日快照 + `history[]`(新到舊 30 天),指數只有收盤沒有開高低
+- `scorecard-latest.json`:`signals[key].horizons["5"|"10"|"20"]` + `buckets{regime,ma,confluence,event,vol_ratio}`
+- `events.json`(手動)、`industry_overrides.json`(手動)、`stock_lookup*.json`(手動清單)、`themes.json`(手動)
 
 ---
 
-## 測試
+## 4. 開發硬規則與踩過的坑(別再踩)
 
-Playwright 在 `/opt/node22/lib/node_modules`,要 `export NODE_PATH=/opt/node22/lib/node_modules`。
-把 repo 複製一份出來 `python3 -m http.server` 再跑。目前三組:
+**資料源**
+- FinMind 免費版不帶 `data_id` 查全市場回 400;只有 `TaiwanStockInfo` 跟逐檔查詢在用。
+  未註冊額度 300/小時,一輪 daily-scan 約 500 次,`FINMIND_TOKEN` 設了才有 600。
+- TWSE `STOCK_DAY_ALL` 是快取,收盤後不一定馬上更新;所以每天用 `MI_INDEX?date=` 補最近 5 個交易日缺口。
+- `BFI82U` 市場買賣差額可能為負,不能當分母;用 T86 買超個股加總。
+- FinMind 的產業分類會自己漂(凍結時跟現在不同的有 44 檔),也把漢翔/亞航/長榮航太放
+  「航運業」(TWSE 代碼 15 也是),只有 `industry_overrides.json` 手動覆蓋能解。
+- 外網:WebFetch 對 udn/ltn/cmoney/statementdog/fugle 全被擋;WebSearch 的 AI 摘要會
+  **把查詢字串裡的日期回填進結果**(2026-09-14 實測:查「9/14 無人機預算」就說 9/14
+  通過,實際是 8/14),摘要不算證據,看來源網址/內文日期並對 repo 價量。
 
-- 追蹤(七步驟、存檔、匯出匯入、損毀救援):24 項
-- 產業流向:27 項,**其中會把前端 JS 公式與後端 Python 的當日值逐格比對**
-  (552 格)—— 個股明細必須前端現算,所以兩份公式都存在,靠這個比對防止走鐘
-- 部位(Kelly / 零股 / 持倉):44 項,每個數字都對照手算值
+**前端**
+- `[hidden] { display: none !important; }` 那行不能拿掉(`.btn-block` 會蓋掉 hidden)。
+- 自動存檔/連動欄位**絕不重繪 DOM**(會吃掉使用者正在打的字):`autoSave()` 不重繪、
+  `saveOpenStep` 有 `keepDom`、Kelly 輸入列只在筆數變時重建、出場設定的 %⇄價格連動直接改 `value`。
+- `.tp-row`、`.tp-row-group` **絕不能設 `position`**:思考路徑連線用 `offsetTop/offsetLeft`
+  算座標,`.tp-canvas` 必須是唯一的 `position:relative` 祖先。SVG 疊在方塊下靠 DOM 順序。
+- 出場規則新增一種 `exit_result.rule` 值時,**三處要一起改**:`normalizeExitResult` 白名單、
+  `EXIT_RULE_LABELS`、`EXIT_RULE_ORDER`(還有 `exitRuleLabelFor()` 依方向換字);漏改會讓
+  舊資料載入時被判成壞格式丟掉。
+- 思考路徑的 `nodes/edges` 沒有 normalize 白名單,舊資料缺欄位(`created_at`、`updates`)
+  要用 `x || []` 這種防禦式讀取,不能假設存在。
+- 訊號準度統計比對舊文字時要同時比「真漲」跟「可能會漲」(舊紀錄存的是舊字)。
+- `signed()` 內部會 `Math.round`,小數金額不要用它包。
 
-Python 側的離線測試散在 scratchpad,`tick_flow` 49 項、`fetch_stock_meta` 23 項、
-`compute_fomo` 額度 16 項。
-2026-09-14 大改的離線測試 40 項 + Playwright 28 項也在 scratchpad(`py_test.py` / `fe_test.js`),
-測法:記分板餵合成價格算手算值、存檔 mock `twse_api.by_date`。
+**產業流向(SH2 8012 移植)**
+- 抽樣一凍結就不重算(`tick-sample-members.json` 是長期狀態)。`--refreeze` 會讓序列
+  不可比,平常別動。產業覆蓋只移動覆蓋清單裡的代號、只補被移出的那幾組,其餘凍結不動。
+- 染色跟 SH2 相反(本站紅漲綠跌);rebase 以 1.0、D0-D1 以 0 為基準;MA21/原始筆數不染色。
 
-## 環境限制
+---
 
-- 容器 proxy 擋掉 TWSE / FinMind / github.io → 對外資料一律走 Actions,我讀 log
-- GitHub token **不能**觸發 workflow(403),要請使用者自己按 Run workflow
-- 容器是 ephemeral,沒 push 的東西會不見
+## 5. 各功能的設計決定與門檻(都是經驗值,沒有一個回測過)
+
+**追蹤 / 持倉**
+- `rec.direction` `long|short`,損益 `pl = dir × (市值 − 成本)`;「+ 追蹤」會問方向,預設依來源分頁。
+  市值加總沒有跟著方向反轉語意(使用者只要求損益對)。
+- 出場設定 `exit_plan`:`mode` = `hold|daytrade|profit|days|trail`,加三個獨立生效的欄位
+  `max_drawdown_pct`(基準期間高低點)、`stop_loss_pct`(基準持倉均價,alert 排最前,同日
+  命中時它贏)、ATR 停損(`trail` 模式附帶,峰值 − 2.5 × ATR14 簡單平均)。移動停利
+  `trail`:持有期間最高價(逐日高點)到過目標 % 就啟動,之後 `量/MA5(shift 1) < 0.7` 或
+  單日 ≥ 9% 出場。所有觸發都用 `dir` 鏡射,看空是跌停/反彈,不複製空頭版本。
+- 自動出場只改 app 狀態、不下單;假設成交價存 `exit_result`(停損類用停損價,不處理跳空)。
+  「全出」是手動批次,存 `manual_exit_result`,不進自動出場統計。`doReactivate()` 清兩者。
+- 目標 % / 停損 % 旁邊有 ≈ 價格欄位雙向連動,只存 %。
+
+**FOMO(`scripts/fomo_score.py`)**
+- 「可能會漲」(內部仍叫 `real_rally`):外資連買 ≥3 天 **且** 融資連買 ≥3 天都是必要條件,
+  總分 ≥60。虛漲、真跌/虛跌沒動。已知舊版「真漲」N=28 命中 11%,新版沒回測。
+
+**個股查詢標記(`createLookupPanel()`,四個分頁共用)**
+- 🔔量縮轉買、🔽量縮、🔻外資出貨、🔥連續增溫、🕐蓄勢中:量比 = 量 / 前 10 日峰量,
+  `< 0.6` 算量縮;蓄勢 = 近 10 日 ≥ 8 天量縮且平均振幅 `(高−低)/收盤 ≥ 3.5%`,且還沒
+  觸發轉買(投信整段為 0 的股票只看外資)。整檔 30 天沒任何標記會被濾出清單。
+- ‼️接近前高:現價 ≥ 近 30 日最高收盤(不含當天)的 85%。
+- 融資維持率估計:現價 / (視窗內量最大日最高價) / 0.6;130 警戒、120 危險。
+- 均線狀態:MA5/10/20 含當日簡單平均;多頭排列 `close>MA5>MA10>MA20`、空頭相反、其餘糾結。
+  Python 版 `common.ma_state()` 與前端 `priceMaState()` 同定義,用 2634 真實資料對過。
+- PE/PB/殖利率來自 `valuation-latest.json`;📅 = 5 天內有事件。
+
+**法人軌跡**:蓄勢候選的三票——融資 10 日變動 ≤−5% 偏多 / ≥+5% 偏空;外資+投信合計正負;
+平均收盤位置 ≥60% 偏多 / ≤40% 偏空。≥2 票且明顯多於另一邊才定標籤。純觀察,不接追蹤。
+
+**思考路徑**
+- 一條路徑綁一檔股票;方塊 `{id, text, cat, created_at, updates[]}`,`cat` 八種:
+  `macro/flow/catalyst/valuation/bull/bear/conclude/note`;`edges {from,to}`;深度決定第幾層。
+- 分岔 = 對同一父方塊按兩次「+ 接續」;合併 = 多選後「合併成新方塊」;刪除連同下游子樹。
+- 方塊建立後**文字鎖住**,只能用「新增更新」疊加(commit 式,立即存檔);方塊上顯示最新一則。
+- 常用詞 `TP_TAGS` 34 個;估值試算(EPS × 本益比上下界,會自動帶入收盤價與 TWSE PE 反推的
+  TTM EPS,只填空欄位)、進出場計算(風險報酬比、`floor(預算/進場價)` 股、不算手續費)。
+- 匯出/匯入含 `thinking_paths`、`lookup_notes`、`events`,合併匯入依 id 覆蓋。
+
+**大盤九宮格**:ΔP_idx ±0.5%、ρ_idx = 成交值 5 日/20 日均;拉積盤、法人+融資交叉、情緒
+溫度計都是純觀察,還沒過 Gate 1(N≥60)。指數只有收盤。
+
+**訊號記分板 / 存檔 / 估值 / 事件 / 產業覆蓋**(2026-09-14 一起加的,細節見 `data/README.md` 末節)
+- 記分板:六種訊號 × 5/10/20 日,超額 = 個股報酬 − 指數同期,命中 = dir × 超額 > 0;
+  分桶 regime / ma / confluence / event / vol_ratio;`N < 60` 一律 `enough=false`。
+  **第一次跑(2026-09-11 資料、30 天)的基準:爆量 5 日 n=362 命中 21.5%、超額 −3.26%;
+  可能會漲 5 日 n=47 命中 17%;暴跌 5 日 n=38 命中 68%。** 弱勢盤裡單因子爆量是反指標,
+  樣本太少不能推廣,但要盯著。
+- 閘門橫幅:看多分頁在系統性賣壓/指數跌、看空分頁在指數漲的日子提醒,引用記分板同狀態命中率。
+- `tune_thresholds.py`:一次動一個參數、N<60 不下結論、調完要用之後的新資料再驗。
+- 事件:`data/events.json` 進記分板;瀏覽器裡新增的個人事件不進(刻意)。
+- 記分板沒納入個股查詢的 🔔🕐🔻🔥(前端算的,沒有每日存查檔)。
+
+## 6. 已知限制 / 還沒決定的事
+
+1. `FINMIND_TOKEN` 沒設,額度緊。
+2. 產業流向 111 組裡 70 幾組樣本數低(只做上市 + 組內切三層的必然);抽樣要不要保留
+   (免費全市場資料其實不用抽)使用者還沒決定,改了就跟 SH2 對不起來。
+3. 所有門檻都是使用者經驗值,記分板是唯一的驗證管道;樣本累積到 60 以上、10/20 日到期
+   之後再談調整。
+4. `data/archive/prices` 一年約 12MB 進 git,之後看 repo 大小。
+5. FinMind `TaiwanStockPER` 可改用免費的 `BWIBBU_ALL`(現在兩邊都有),省額度,還沒做。
+
+---
+
+## 7. 個股「全套分析」操作手冊(思考路徑)
+
+使用者開口「幫我分析 X」「用思考路徑做 X」就照這節做,不需要另外的 prompt。
+**交付物**:`data/thinking-paths/<代號>-<拼音>-<日期>.json`,格式
+`{ "data": [], "thinking_paths": { "currentPathId": "<id>", "paths": [ {...} ] } }`,path/node
+結構見第 5 節思考路徑那段,範例 `data/thinking-paths/2634-hanxiang-2026-09-14.json`。
+寫完用 Playwright 走真實匯入(`#import-file` → 「合併」)確認方塊數/連線數/無 JS 錯誤,
+commit、push 分支跟 main,回覆附:結論一句話、關鍵讀數表、資料缺口、來源清單。
+
+### 7.1 步驟(每步先讀 repo,之後才准上網)
+1. **大盤**:`market-grid-latest.json`(今日 + 30 天 history)、`archive/index.json`。寫
+   `grid_label`、漲跌家數、法人淨額、近期有無系統性賣壓/拉積盤。
+2. **產業流向**:`stock_meta.json` 查 `industry`;`tick-latest.json` 對應組的
+   `rolling_5/fixed_20/d0_d1`;`tick-members-latest.json` 這檔自己的 `ticks`。分組不合理就明講不採用。
+3. **個股量價**:`quotes-latest.json`(30 天)或 `archive/prices/`。算 MA5/10/20(`common.ma_state`
+   定義)、30 日高低、量 vs MA20(shift 1)、ATR14、‼️前高比。**引用系統訊號就照系統公式重算**
+   (量縮 = 量/前 10 日峰量 < 0.6、振幅 (高−低)/收盤),不要用順手的近似。
+4. **籌碼**(只有在個股查詢清單裡才有):外資連續買/賣天數與累計、投信是否缺席、融資
+   10 日變動、融資維持率估計、10 日平均收盤位置、法人軌跡三票。不在清單就寫「無籌碼資料」。
+5. **系統既有判定**:scan/crash(`ma_state`)、fomo/crash-fomo(`per/pbr`、連續天數)、
+   risk(注意股、除權息)、events、valuation、scorecard(這類訊號的歷史命中率)。
+6. **WebSearch 只補 repo 沒有的**(EPS/營收、催化劑、券商觀點):數字兩個獨立來源一致才
+   算可信,否則標「單一來源」;**每條有日期的新聞都對 repo 那天的價量**,對不上先停;
+   券商目標價看它用的是哪一年 EPS。
+7. **估值三方法交叉**:TTM PE(推算過程寫清楚)、Forward PE(假設寫清楚)、券商/同業;
+   PB 沒淨值就留空;有 `valuation-latest.json` 用 TWSE PE 反推 TTM EPS 當第一個錨。
+8. **看多/看空分岔**:各 4~6 條,每條對得到前面某一步的數字。
+9. **決策可執行**:分「已持有(含入手價)」「未進場」;進場條件、停損價(優先用系統有的
+   固定停損 / ATR / 最大回撤)、目標價、風險報酬比。停損紀律 > 訊號強度。
+10. **資料缺口 + 檢討 checkpoint**:沒有的資料留白不硬填;寫 3~5 個之後要回頭驗證的日期/事件。
+
+### 7.2 留給事後驗證的東西(每條路徑都要有,這是精進的唯一辦法)
+- 路徑第一格或 `note` 方塊寫明**資料截止日**(repo 資料到哪天、WebSearch 哪天做的)。
+- 決策方塊裡的**三個價**(進場/停損/目標)跟**觸發條件**要具體到可以事後判對錯。
+- 最後一格 checkpoint 列**日期 + 要看什麼**(營收公布日、財報日、外資何時轉買、標案發包)。
+- **事後檢討怎麼做**:到期時用「新增更新」把實際結果疊在對應方塊上(不覆蓋原文),
+  然後在下面「分析教訓」列補一條:命中/沒命中、哪一步的判斷錯、下次改什麼。只有樣本
+  累積到一定數量的教訓才升格成第 7.1 節的規則,單次巧合不算。
+- 系統面的驗證看記分板,不看單一路徑;路徑是「判斷過程」的樣本,記分板是「訊號」的樣本。
+
+### 7.3 分析教訓(有日期、有樣本數,累積中)
+- 2026-09-13 2357:停損紀律比訊號強度重要——產業流向 rolling_5 2.22 三天內崩到 0.27,
+  示範停損 3.8% 出場 vs 不停損 −9.9%。樣本 1。
+- 2026-09-13 2357/3376:沒資料留白比硬填安全;WebSearch 的股價會過期,先看 repo。樣本 2。
+- 2026-09-14 2634:WebSearch 摘要日期會被查詢字串汙染(9/14 vs 8/14);券商目標價用舊
+  EPS;量縮天數要用系統公式(10/10、3.11%,不是自算的 9/10、3.07%)。樣本 1。
+- 2026-09-14 記分板第一次跑:爆量後 5 天平均跑輸大盤 3.3 個百分點(n=362,弱勢盤)。待累積。
+
+### 7.4 交件前自查
+每個數字指得出來源?新聞日期都對過 repo 價量?籌碼有算?EPS 是最新一季後的口徑?
+決策有三個價、入手價有出現?系統公式重算的數字跟前端一致?匯入測試跑過、檔案 commit 了?
+
+---
+
+## 8. 測試怎麼跑
+
+Playwright 在 `/opt/node22/lib/node_modules`,`export NODE_PATH=/opt/node22/lib/node_modules`;
+把 repo 複製到 scratchpad、`python3 -m http.server`,測試要點掉 `#splash`、把
+`#version-page` 設 hidden。Python 離線測試 mock `twse_api.by_date` / `finmind_api.request`,
+不連網。既有測試組:追蹤 24 項、產業流向 27 項(前端 JS 與後端 Python 逐格比對 552 格)、
+部位 44 項、記分板/存檔/產業覆蓋 40 項、前端大改 28 項,都對照手算值。
