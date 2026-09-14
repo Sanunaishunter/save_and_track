@@ -40,17 +40,18 @@
   var EXIT_RULE_LABELS = {
     target: '獲利/當沖目標', days: '持倉天數到期', drawdown: '最大回撤停損',
     trail_vol: '移動停利(量縮出場)', trail_limit: '移動停利(漲停出場)',
-    trail_stop: '移動停損(ATR回落出場)'
+    trail_stop: '移動停損(ATR回落出場)', stop_loss: '固定停損(跌破停損價)'
   };
-  var EXIT_RULE_ORDER = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop'];
+  var EXIT_RULE_ORDER = ['stop_loss', 'target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop'];
 
-  /** exitStatsHtml() 分組標題用的規則文字。trail_limit/trail_stop 固定寫多方
-   * 那組文字(漲停/回落),但看空的移動停利/停損是跌停/反彈(見 evalExitPlan),
-   * 這裡依分組方向(dirKey:'long'/'short')換字,其餘規則跟方向無關,直接用
-   * EXIT_RULE_LABELS。*/
+  /** exitStatsHtml() 分組標題用的規則文字。trail_limit/trail_stop/stop_loss 固定
+   * 寫多方那組文字(漲停/回落/跌破),但看空的移動停利/停損/固定停損是跌停/
+   * 反彈/反彈突破(見 evalExitPlan),這裡依分組方向(dirKey:'long'/'short')
+   * 換字,其餘規則跟方向無關,直接用 EXIT_RULE_LABELS。*/
   function exitRuleLabelFor(key, dirKey) {
     if (key === 'trail_limit') return dirKey === 'short' ? '移動停利(跌停出場)' : '移動停利(漲停出場)';
     if (key === 'trail_stop') return dirKey === 'short' ? '移動停損(ATR反彈出場)' : '移動停損(ATR回落出場)';
+    if (key === 'stop_loss') return dirKey === 'short' ? '固定停損(反彈至停損價)' : '固定停損(跌破停損價)';
     return EXIT_RULE_LABELS[key] || key;
   }
 
@@ -441,7 +442,7 @@
   }
 
   function blankExitPlan() {
-    return { mode: 'hold', target_pct: '', max_days: '', max_drawdown_pct: '' };
+    return { mode: 'hold', target_pct: '', max_days: '', max_drawdown_pct: '', stop_loss_pct: '' };
   }
 
   function newRecord(stockId, stockName, direction) {
@@ -785,6 +786,54 @@
     return nearHighFromCloses(quotes.daily_close[i]);
   }
 
+  /** 2026-09-14 使用者要求:系統目前所有 MA 都是成交量/情緒指標(移動停利的
+   * 量/MA5、爆量掃描的 vol_ratio⋯),沒有任何地方算「價格」均線,而
+   * quotes.daily_close 已經有 30 天收盤,純前端就能算,不用等新資料源。
+   * closesDesc 跟 nearHighFromCloses 同一個方向(index 0 = 最新一天),
+   * MA5/MA10/MA20 都含當日的簡單平均,任一視窗不足天數或有缺值就整組回
+   * null(不半殘顯示部分均線)。state 三態:'bull' 多頭排列(close > MA5 >
+   * MA10 > MA20)、'bear' 空頭排列(相反)、'mixed' 其餘(均線糾結)。 */
+  function priceMaState(closesDesc) {
+    function maOf(n) {
+      if (!closesDesc || closesDesc.length < n) return null;
+      var sum = 0;
+      for (var i = 0; i < n; i++) {
+        var c = closesDesc[i];
+        if (c == null) return null;
+        sum += c;
+      }
+      return sum / n;
+    }
+    var close = closesDesc && closesDesc[0];
+    var ma5 = maOf(5), ma10 = maOf(10), ma20 = maOf(20);
+    if (close == null || ma5 == null || ma10 == null || ma20 == null) return null;
+    var state = 'mixed';
+    if (close > ma5 && ma5 > ma10 && ma10 > ma20) state = 'bull';
+    else if (close < ma5 && ma5 < ma10 && ma10 < ma20) state = 'bear';
+    return { ma5: ma5, ma10: ma10, ma20: ma20, state: state };
+  }
+
+  var PRICE_MA_STATE_LABEL = { bull: '多頭排列', bear: '空頭排列', mixed: '均線糾結' };
+
+  /** priceMaState() 結果的顯示文字,MA 數值統一小數 2 位。 */
+  function priceMaText(pm) {
+    return PRICE_MA_STATE_LABEL[pm.state] + '(MA5 ' + pm.ma5.toFixed(2) + ' / MA10 ' + pm.ma10.toFixed(2) +
+      ' / MA20 ' + pm.ma20.toFixed(2) + ')';
+  }
+
+  /** 染色沿用全站紅漲綠跌:多頭排列 --up、空頭排列 --down、糾結不染色。 */
+  function priceMaClass(pm) {
+    return pm.state === 'bull' ? 'price-ma-up' : (pm.state === 'bear' ? 'price-ma-down' : '');
+  }
+
+  /** 追蹤卡片用,跟 cardNearHigh() 同一種「沒報價就回 null,不擋渲染」作法。 */
+  function cardPriceMa(stockId) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(stockId || '').trim()];
+    if (i == null) return null;
+    return priceMaState(quotes.daily_close[i]);
+  }
+
   function cardHtml(rec) {
     var stepTitle = STEPS[rec.current_step - 1].title;
     var sub;
@@ -803,6 +852,10 @@
         nh.prevHigh + ' 的 ' + (nh.pct * 100).toFixed(1) +
         '%——使用者經驗:接近前高時容易有解套賣壓,門檻(85%)沒有回測驗證過">‼️</span>'
       : '';
+    var pm = rec.status === 'active' ? cardPriceMa(rec.stock_id) : null;
+    var pmHtml = pm
+      ? '<div class="card-ma"><span class="' + priceMaClass(pm) + '">' + esc(priceMaText(pm)) + '</span></div>'
+      : '';
     return '' +
       '<article class="card" data-id="' + esc(rec.id) + '">' +
         '<div class="card-head">' +
@@ -815,6 +868,7 @@
         dotsHtml(rec) +
         '<div class="card-step">第 ' + rec.current_step + ' 步 · ' + esc(stepTitle) + '</div>' +
         cardPosHtml(rec) +
+        pmHtml +
         '<div class="card-sub">' + esc(sub) + '</div>' +
       '</article>';
   }
@@ -3502,6 +3556,13 @@
     return nearHighFromCloses(closesDesc);
   }
 
+  /** 個股查詢的價格均線狀態,同一種「rows 舊到新反轉後共用核心函式」作法。 */
+  function computeLookupPriceMa(rowsAsc) {
+    if (!rowsAsc || rowsAsc.length < 2) return null;
+    var closesDesc = rowsAsc.map(function (r) { return r.close; }).reverse();
+    return priceMaState(closesDesc);
+  }
+
   function computeLookupMarginMaintenance(rowsAsc) {
     if (!rowsAsc || rowsAsc.length < 2) return null;
     var bestIdx = null;
@@ -3758,6 +3819,7 @@
       var shrinkZone = computeLookupShrinkZone(rec.rows || []);
       var marginMaint = computeLookupMarginMaintenance(rec.rows || []);
       var nearHigh = computeLookupNearHigh(rec.rows || []);
+      var priceMa = computeLookupPriceMa(rec.rows || []);
 
       var zoneNote = '';
       if (shrinkZone && !shrinkZone.alreadyTriggered) {
@@ -3790,9 +3852,13 @@
           ' 已到近30天最高收盤價 ' + nearHigh.prevHigh + ' 的 ' + (nearHigh.pct * 100).toFixed(1) +
           '%(接近前高,使用者經驗:容易有解套賣壓,門檻 85% 沒有回測驗證過)</span>';
       }
+      var maNote = '';
+      if (priceMa) {
+        maNote = '  ·  <span class="' + priceMaClass(priceMa) + '">' + esc(priceMaText(priceMa)) + '</span>';
+      }
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
-        zoneNote + lowActivityNote) + maintNote + nearHighNote;
+        zoneNote + lowActivityNote) + maintNote + nearHighNote + maNote;
 
       table.hidden = false;
       if (!allRows.length) {
@@ -5180,14 +5246,18 @@
       mode: mode,
       target_pct: String(v.target_pct == null ? '' : v.target_pct),
       max_days: String(v.max_days == null ? '' : v.max_days),
-      max_drawdown_pct: String(v.max_drawdown_pct == null ? '' : v.max_drawdown_pct)
+      max_drawdown_pct: String(v.max_drawdown_pct == null ? '' : v.max_drawdown_pct),
+      // 2026-09-14 新增:跟 max_drawdown_pct 同一種定位,不是新的 mode,任何
+      // 模式下都獨立生效,基準是持倉均價(不是期間高低點)。舊資料沒有這欄要
+      // 視為空字串,不能被判成壞資料丟掉。
+      stop_loss_pct: String(v.stop_loss_pct == null ? '' : v.stop_loss_pct)
     };
   }
 
   /** 自動出場當下的快照(觸發規則/假設成交價/當時損益),事後算勝率要用這份,不能用「現在」的報價回推。*/
   function normalizeExitResult(v) {
     if (!v || typeof v !== 'object') return null;
-    var rule = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop'].indexOf(v.rule) >= 0 ? v.rule : null;
+    var rule = ['target', 'days', 'drawdown', 'trail_vol', 'trail_limit', 'trail_stop', 'stop_loss'].indexOf(v.rule) >= 0 ? v.rule : null;
     if (!rule) return null;
     return {
       date: String(v.date || ''),
@@ -5353,6 +5423,25 @@
     // 下面每個條件都乘 dir 統一算,不用整段複製一份空頭邏輯——跟 compute_crash.py
     // 跟 compute_scan.py 對稱的作法是同一個精神。
     var dir = rec.direction === 'short' ? -1 : 1;
+
+    // 固定停損:跟最大回撤(max_drawdown_pct)同一種定位——不是新的 mode,
+    // 任何模式下都獨立生效,可以跟移動停利/獲利出場並存。差別是基準用「持倉
+    // 均價」(st.avg),不是期間高低點。看多是跌破停損價、看空是反彈突破停損價,
+    // 一樣用 dir 乘出來,不複製一份空頭版本。push 在陣列最前面——
+    // checkAutoExits() 取第一個命中的 alert,同一天停損跟停利都命中時以停損為準。
+    if (plan.stop_loss_pct && st.avg > 0) {
+      var slPct = Number(plan.stop_loss_pct);
+      if (slPct > 0) {
+        var stopPrice2 = st.avg * (1 - dir * slPct / 100);
+        alerts.push({
+          key: 'stop_loss',
+          hit: dir > 0 ? st.close <= stopPrice2 : st.close >= stopPrice2,
+          price: stopPrice2,
+          label: '固定停損 -' + slPct + '%(對均價)',
+          detail: '停損價 ' + stopPrice2.toFixed(2) + '(現價 ' + st.close + ')'
+        });
+      }
+    }
 
     if ((plan.mode === 'daytrade' || plan.mode === 'profit') && plan.target_pct) {
       var pct = Number(plan.target_pct);
@@ -6348,6 +6437,13 @@
     return (avgCost * (1 + dir * Number(pct) / 100)).toFixed(2);
   }
 
+  /** 停損%欄位對應的價格,算法跟目標價相反方向(見 evalExitPlan 的 stop_loss
+   * alert):stopPrice = avgCost × (1 − dir × pct / 100)。 */
+  function exitStopPriceFromPct(pct, avgCost, dir) {
+    if (!(avgCost > 0) || pct === '' || pct == null || isNaN(Number(pct))) return '';
+    return (avgCost * (1 - dir * Number(pct) / 100)).toFixed(2);
+  }
+
   /** 出場設定表單,值從 rec.exit_plan 帶入。direction 決定門檻/漲跌方向的文字說明,
    * avgCost(持倉均價,沒有持倉時是 null/undefined)拿來算「≈ 目標價」欄位的初始值。*/
   function exitPlanFormHtml(plan, direction, avgCost) {
@@ -6358,6 +6454,7 @@
     var isTrail = plan.mode === 'trail';
     var hasAvg = avgCost > 0;
     var targetPriceInit = exitTargetPriceFromPct(plan.target_pct, avgCost, dir);
+    var stopPriceInit = exitStopPriceFromPct(plan.stop_loss_pct, avgCost, dir);
     return '<div class="pos-exit">' +
       '<div class="pos-head"><span>出場設定</span>' +
         '<span class="dim">只是提醒,不會自動下單;資料一天更新一次,不是即時報價</span></div>' +
@@ -6387,6 +6484,15 @@
         '<label class="field"><span class="field-label">最大回撤 %(選填,獨立生效)</span>' +
           '<input type="text" id="exit-max-drawdown" inputmode="decimal" placeholder="例如 8" value="' +
             esc(plan.max_drawdown_pct) + '"></label>' +
+        '<label class="field"><span class="field-label">停損 %(對均價,選填,獨立生效)</span>' +
+          '<input type="text" id="exit-stop-pct" inputmode="decimal" placeholder="例如 7" value="' +
+            esc(plan.stop_loss_pct) + '" data-avg="' + (hasAvg ? avgCost : '') + '" data-dir="' + dir + '"></label>' +
+        '<label class="field"><span class="field-label">≈ 停損價(選填,跟左邊 % 雙向連動)</span>' +
+          '<input type="text" id="exit-stop-price" inputmode="decimal"' +
+            (hasAvg ? '' : ' disabled') +
+            ' placeholder="' + (hasAvg ? '例如 ' + (avgCost * (1 - dir * 7 / 100)).toFixed(1) : '需先有持倉均價') + '"' +
+            ' value="' + esc(stopPriceInit) + '"' +
+            ' data-avg="' + (hasAvg ? avgCost : '') + '" data-dir="' + dir + '"></label>' +
       '</div>' +
       (isTrail ? '<p class="dim">' + (dir > 0
         ? ('漲到啟動門檻之後才開始追蹤(拉回也算已啟動),之後只要' +
@@ -6742,7 +6848,8 @@
       mode: mode,
       target_pct: el('exit-target-pct').value.trim(),
       max_days: el('exit-max-days').value.trim(),
-      max_drawdown_pct: el('exit-max-drawdown').value.trim()
+      max_drawdown_pct: el('exit-max-drawdown').value.trim(),
+      stop_loss_pct: el('exit-stop-pct').value.trim()
     };
     touch(rec);
     if (!saveAll()) return;
@@ -6965,6 +7072,34 @@
             pctField.value = '';
           } else {
             pctField.value = (dir2 * (Number(priceVal) - avg2) / avg2 * 100).toFixed(2);
+          }
+        }
+        return;
+      }
+
+      // 停損%⇄停損價,同一種雙向連動,換算方向跟目標價相反(見
+      // exitStopPriceFromPct)——一樣直接改 DOM value,不重繪。
+      var stopPctInput = e.target.closest('#exit-stop-pct');
+      var stopPriceInput = e.target.closest('#exit-stop-price');
+      if (stopPctInput) {
+        var avg3 = parseFloat(stopPctInput.getAttribute('data-avg'));
+        var dir3 = stopPctInput.getAttribute('data-dir') === '-1' ? -1 : 1;
+        var stopPriceField = el('exit-stop-price');
+        if (stopPriceField && avg3 > 0) {
+          stopPriceField.value = exitStopPriceFromPct(stopPctInput.value.trim(), avg3, dir3);
+        }
+        return;
+      }
+      if (stopPriceInput) {
+        var avg4 = parseFloat(stopPriceInput.getAttribute('data-avg'));
+        var dir4 = stopPriceInput.getAttribute('data-dir') === '-1' ? -1 : 1;
+        var stopPctField = el('exit-stop-pct');
+        var stopPriceVal = stopPriceInput.value.trim();
+        if (stopPctField && avg4 > 0) {
+          if (stopPriceVal === '' || isNaN(Number(stopPriceVal))) {
+            stopPctField.value = '';
+          } else {
+            stopPctField.value = (dir4 * (avg4 - Number(stopPriceVal)) / avg4 * 100).toFixed(2);
           }
         }
       }
