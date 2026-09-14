@@ -947,6 +947,53 @@ git commit + push      if: always(),某步失敗也保存已算出的資料
     statementdog/fugle)全被 proxy 擋掉,只能靠 WebSearch 摘要多來源交叉。
     這次估值用三方法(TTM 推算 PE、Forward 假設 PE、券商舊目標價)交叉,2025Q4 EPS
     查不到是用全年減 H1 推的,方塊裡有明講;PB 沒淨值資料留空。
+33. **2026-09-14 拿 2634 做思考路徑示範時發現系統缺兩個狀態,補了「固定停損」
+    跟「價格均線狀態」,都是純前端算,沒有接新資料源,沒有動 daily-scan.yml。**
+    - **固定停損**(`exit_plan.stop_loss_pct`):跟 `max_drawdown_pct`(最大回撤)
+      同一種定位——不是新的 `mode`,任何模式下都獨立生效,可以跟移動停利/獲利
+      出場並存。差別是基準用**持倉均價**(`st.avg`),不是期間高低點。
+      `evalExitPlan()` 算法:停損價 = 均價 ×(1 − dir × pct / 100),看多是跌破、
+      看空是反彈突破,一樣用 `dir` 乘出來,沒有複製一份空頭版本。這個 alert
+      的 key `stop_loss` **push 在 alerts 陣列最前面**——`checkAutoExits()` 取
+      `alerts.filter(hit)[0]`,同一天固定停損跟移動停利/獲利出場都命中時,
+      永遠是固定停損贏,不是先命中的模式贏。三個必須同步的地方(item 10 記過
+      的坑)都加了 `stop_loss`:`normalizeExitPlan`(新增 `stop_loss_pct` 欄位,
+      舊資料沒有這欄視為空字串,不會被判壞丟掉)、`normalizeExitResult` 白名單、
+      `EXIT_RULE_LABELS`/`EXIT_RULE_ORDER`,`exitRuleLabelFor()` 依方向換字
+      (多「跌破停損價」、空「反彈至停損價」)。表單的「停損 %」旁邊比照 item 31
+      加「≈ 停損價」,同一種雙向連動(`exitStopPriceFromPct()`,公式跟目標價
+      相反方向)、同一個 `#detail-positions` input 事件委派、同樣直接改 DOM
+      value 不重繪。**這次沒做的**:不處理跳空(假設成交價一律是停損價,不是
+      收盤價,跟 `trail_stop` 的做法一致);沒有回測驗證過門檻數字比移動停損
+      (ATR 版)或最大回撤更好用,使用者要自己填多少完全沒有預設值建議。
+    - **價格均線狀態**(`priceMaState()`):系統原本所有 MA 都是成交量/情緒
+      指標(移動停利的量/MA5、爆量掃描的 vol_ratio⋯),沒有任何地方算「價格」
+      均線,而 `quotes.daily_close` 已經有 30 天收盤,純前端就能算。
+      MA5/MA10/MA20 都是**含當日**的簡單平均(不是 EMA,也不是 shift 1),
+      任一視窗不足天數或有缺值就整組回 `null`,不半殘顯示部分均線。三態:
+      `bull` 多頭排列(`close > MA5 > MA10 > MA20`)、`bear` 空頭排列(相反)、
+      `mixed` 均線糾結(其餘,包含三者剛好相等的邊界情況)。顯示位置比照
+      item 29 的‼️接近前高,兩處共用同一顆核心函式:追蹤卡片(`cardPriceMa()`,
+      只對 `status === 'active'` 算)跟個股查詢 `#lookup-meta`(`computeLookupPriceMa()`,
+      rows 是舊到新,反轉後共用)。**不加進下拉選單 badge,不加進
+      `lookupHasAnySignal()` 的過濾條件**——跟‼️前高警示同一個限制,均線狀態
+      良好也不會讓被濾掉的代號重新出現在個股查詢清單裡。染色沿用全站紅漲綠跌
+      (新 CSS class `price-ma-up`/`price-ma-down`,均線糾結不染色)。測試對照
+      `data/quotes-latest.json` 2026-09-11 的 2634 真實資料(MA5 65.02 / MA10
+      65.48 / MA20 67.58,收盤 63.8 → 空頭排列)手算過,另外灌合成資料驗證過
+      多頭排列、均線糾結、資料只有 15 天(MA20 算不出來,回 `null`,卡片不顯示、
+      不報錯)三種情況。
+    - Playwright 端對端測過 29 項全過(灌假的 `quotes-latest.json`,繞過網路
+      直接跑本機 http.server):固定停損多方觸發(均價69、停損7%→停損價64.17、
+      現價63.8→pl −4,830)、空方觸發(均價60、停損5%→停損價63.00→pl −3,000)、
+      多方未觸發、trail 模式啟動門檻已到跟固定停損同日命中時 rule 正確是
+      `stop_loss` 不是 `trail_*`、舊資料無 `stop_loss_pct` 欄位載入不報錯、
+      表單雙向連動(打7%→64.17、改停損價65→反推5.80、儲存後
+      `exit_plan.stop_loss_pct` 正確是字串"5.80")、自動出場統計正確出現「固定
+      停損」分組且依看多/看空拆開;價格均線狀態的三態(2634 真實資料的空頭
+      排列、合成資料的多頭排列跟均線糾結)跟資料不足情況都在追蹤卡片跟個股
+      查詢(FOMO)meta 兩處驗證過文字跟染色 class。全程無 JS console 錯誤
+      (版本頁抓 GitHub API 的 cert 錯誤除外,那是 proxy)。
 
 ---
 
