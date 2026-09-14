@@ -786,6 +786,54 @@
     return nearHighFromCloses(quotes.daily_close[i]);
   }
 
+  /** 2026-09-14 使用者要求:系統目前所有 MA 都是成交量/情緒指標(移動停利的
+   * 量/MA5、爆量掃描的 vol_ratio⋯),沒有任何地方算「價格」均線,而
+   * quotes.daily_close 已經有 30 天收盤,純前端就能算,不用等新資料源。
+   * closesDesc 跟 nearHighFromCloses 同一個方向(index 0 = 最新一天),
+   * MA5/MA10/MA20 都含當日的簡單平均,任一視窗不足天數或有缺值就整組回
+   * null(不半殘顯示部分均線)。state 三態:'bull' 多頭排列(close > MA5 >
+   * MA10 > MA20)、'bear' 空頭排列(相反)、'mixed' 其餘(均線糾結)。 */
+  function priceMaState(closesDesc) {
+    function maOf(n) {
+      if (!closesDesc || closesDesc.length < n) return null;
+      var sum = 0;
+      for (var i = 0; i < n; i++) {
+        var c = closesDesc[i];
+        if (c == null) return null;
+        sum += c;
+      }
+      return sum / n;
+    }
+    var close = closesDesc && closesDesc[0];
+    var ma5 = maOf(5), ma10 = maOf(10), ma20 = maOf(20);
+    if (close == null || ma5 == null || ma10 == null || ma20 == null) return null;
+    var state = 'mixed';
+    if (close > ma5 && ma5 > ma10 && ma10 > ma20) state = 'bull';
+    else if (close < ma5 && ma5 < ma10 && ma10 < ma20) state = 'bear';
+    return { ma5: ma5, ma10: ma10, ma20: ma20, state: state };
+  }
+
+  var PRICE_MA_STATE_LABEL = { bull: '多頭排列', bear: '空頭排列', mixed: '均線糾結' };
+
+  /** priceMaState() 結果的顯示文字,MA 數值統一小數 2 位。 */
+  function priceMaText(pm) {
+    return PRICE_MA_STATE_LABEL[pm.state] + '(MA5 ' + pm.ma5.toFixed(2) + ' / MA10 ' + pm.ma10.toFixed(2) +
+      ' / MA20 ' + pm.ma20.toFixed(2) + ')';
+  }
+
+  /** 染色沿用全站紅漲綠跌:多頭排列 --up、空頭排列 --down、糾結不染色。 */
+  function priceMaClass(pm) {
+    return pm.state === 'bull' ? 'price-ma-up' : (pm.state === 'bear' ? 'price-ma-down' : '');
+  }
+
+  /** 追蹤卡片用,跟 cardNearHigh() 同一種「沒報價就回 null,不擋渲染」作法。 */
+  function cardPriceMa(stockId) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(stockId || '').trim()];
+    if (i == null) return null;
+    return priceMaState(quotes.daily_close[i]);
+  }
+
   function cardHtml(rec) {
     var stepTitle = STEPS[rec.current_step - 1].title;
     var sub;
@@ -804,6 +852,10 @@
         nh.prevHigh + ' 的 ' + (nh.pct * 100).toFixed(1) +
         '%——使用者經驗:接近前高時容易有解套賣壓,門檻(85%)沒有回測驗證過">‼️</span>'
       : '';
+    var pm = rec.status === 'active' ? cardPriceMa(rec.stock_id) : null;
+    var pmHtml = pm
+      ? '<div class="card-ma"><span class="' + priceMaClass(pm) + '">' + esc(priceMaText(pm)) + '</span></div>'
+      : '';
     return '' +
       '<article class="card" data-id="' + esc(rec.id) + '">' +
         '<div class="card-head">' +
@@ -816,6 +868,7 @@
         dotsHtml(rec) +
         '<div class="card-step">第 ' + rec.current_step + ' 步 · ' + esc(stepTitle) + '</div>' +
         cardPosHtml(rec) +
+        pmHtml +
         '<div class="card-sub">' + esc(sub) + '</div>' +
       '</article>';
   }
@@ -3503,6 +3556,13 @@
     return nearHighFromCloses(closesDesc);
   }
 
+  /** 個股查詢的價格均線狀態,同一種「rows 舊到新反轉後共用核心函式」作法。 */
+  function computeLookupPriceMa(rowsAsc) {
+    if (!rowsAsc || rowsAsc.length < 2) return null;
+    var closesDesc = rowsAsc.map(function (r) { return r.close; }).reverse();
+    return priceMaState(closesDesc);
+  }
+
   function computeLookupMarginMaintenance(rowsAsc) {
     if (!rowsAsc || rowsAsc.length < 2) return null;
     var bestIdx = null;
@@ -3759,6 +3819,7 @@
       var shrinkZone = computeLookupShrinkZone(rec.rows || []);
       var marginMaint = computeLookupMarginMaintenance(rec.rows || []);
       var nearHigh = computeLookupNearHigh(rec.rows || []);
+      var priceMa = computeLookupPriceMa(rec.rows || []);
 
       var zoneNote = '';
       if (shrinkZone && !shrinkZone.alreadyTriggered) {
@@ -3791,9 +3852,13 @@
           ' 已到近30天最高收盤價 ' + nearHigh.prevHigh + ' 的 ' + (nearHigh.pct * 100).toFixed(1) +
           '%(接近前高,使用者經驗:容易有解套賣壓,門檻 85% 沒有回測驗證過)</span>';
       }
+      var maNote = '';
+      if (priceMa) {
+        maNote = '  ·  <span class="' + priceMaClass(priceMa) + '">' + esc(priceMaText(priceMa)) + '</span>';
+      }
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
-        zoneNote + lowActivityNote) + maintNote + nearHighNote;
+        zoneNote + lowActivityNote) + maintNote + nearHighNote + maNote;
 
       table.hidden = false;
       if (!allRows.length) {
