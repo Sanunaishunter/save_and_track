@@ -152,6 +152,13 @@ git commit + push      if: always()
   (value_add −0.18%~−0.36%,dir=−1 的訊號提早停損容易錯過後續反轉)。訊號存查
   (`data/scans` 等)才存 2 週多,10/20 日天期樣本還很少,這只是第一次跑、不是定論,
   之後要用更多資料再驗。工具不寫檔,純 CLI 探測,跟 `tune_thresholds.py` 同一種用法。
+- 2026-09-15 使用者要求:凡是「教科書公式、沒有站上自己驗證」的指標(均線多頭/空頭排列、
+  固定停損%、ATR 2.5×停損、Kelly)在畫面上的標籤前面統一加 `TEXTBOOK_ICON`(📖)當純視覺
+  標記,跟系統自己驗證過的訊號(記分板、爆量/暴跌門檻)區分開來。純加字首,不改資料結構、
+  不影響 `normalizeExitResult`/`EXIT_RULE_LABELS` 等白名單比對,`js/app.js` 搜
+  `TEXTBOOK_ICON` 可以看到全部四個套用點(均線卡片、個股查詢均線欄、固定停損 alert、
+  ATR 移動停損 alert)+ `index.html` 的 Kelly 分頁標題。之後新增同類「沒回測過的教科書
+  公式」指標,照這個慣例加。
 
 **部位(Kelly,`kellySolo()`/`corrHaircut()`)**
 - Kelly 公式本身是課本標準式(`f = p − q/R`),沒有自創門檻;多筆持倉的相關係數折減
