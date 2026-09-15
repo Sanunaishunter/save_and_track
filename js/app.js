@@ -813,7 +813,14 @@
     return { ma5: ma5, ma10: ma10, ma20: ma20, state: state };
   }
 
-  var PRICE_MA_STATE_LABEL = { bull: '多頭排列', bear: '空頭排列', mixed: '均線糾結' };
+  // 2026-09-15 使用者要求:均線排列、固定停損/ATR停損、Kelly 都是教科書公式,
+  // 沒有站上自己的驗證(是落後指標,等交叉出現時行情通常已經走掉),用 📖
+  // 跟系統自己驗證過的訊號(記分板、爆量/暴跌門檻)區分開來,純視覺標記。
+  var TEXTBOOK_ICON = '📖';
+
+  var PRICE_MA_STATE_LABEL = {
+    bull: TEXTBOOK_ICON + ' 多頭排列', bear: TEXTBOOK_ICON + ' 空頭排列', mixed: TEXTBOOK_ICON + ' 均線糾結'
+  };
 
   /** priceMaState() 結果的顯示文字,MA 數值統一小數 2 位。 */
   function priceMaText(pm) {
@@ -5463,7 +5470,7 @@
           key: 'stop_loss',
           hit: dir > 0 ? st.close <= stopPrice2 : st.close >= stopPrice2,
           price: stopPrice2,
-          label: '固定停損 -' + slPct + '%(對均價)',
+          label: TEXTBOOK_ICON + ' 固定停損 -' + slPct + '%(對均價)',
           detail: '停損價 ' + stopPrice2.toFixed(2) + '(現價 ' + st.close + ')'
         });
       }
@@ -5555,7 +5562,7 @@
               key: 'trail_stop',
               hit: dir > 0 ? st.close <= atrStop : st.close >= atrStop,
               price: atrStop,
-              label: '移動停損:ATR' + (dir > 0 ? '回落' : '反彈') + '出場(' + TRAIL_ATR_MULT + '×ATR)',
+              label: TEXTBOOK_ICON + ' 移動停損:ATR' + (dir > 0 ? '回落' : '反彈') + '出場(' + TRAIL_ATR_MULT + '×ATR)',
               detail: 'ATR(' + TRAIL_ATR_WINDOW + ') ' + atr.toFixed(2) + '、停損價 ' + atrStop.toFixed(2) +
                 '(現價 ' + st.close + ')'
             });
@@ -7578,7 +7585,9 @@
   }
 
   // ---------------------------------------------------------- 均線狀態(爆量/暴跌表格)
-  var MA_STATE_LABEL = { bull: '多頭排列', bear: '空頭排列', mixed: '糾結' };
+  var MA_STATE_LABEL = {
+    bull: TEXTBOOK_ICON + ' 多頭排列', bear: TEXTBOOK_ICON + ' 空頭排列', mixed: TEXTBOOK_ICON + ' 糾結'
+  };
   function maStateCellHtml(state) {
     if (!state) return '<td class="ma-cell">—</td>';
     var cls = state === 'bull' ? 'price-ma-up' : (state === 'bear' ? 'price-ma-down' : '');
