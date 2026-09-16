@@ -70,6 +70,7 @@
     <button type="button" class="viewbtn" data-view="crashfomo">暴跌FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
+    <button type="button" class="viewbtn" data-view="yieldcalc">📖 利率試算</button>
     <button type="button" class="viewbtn" data-view="themes">題材分類</button>
     <button type="button" class="viewbtn" data-view="signals">量價訊號</button>
     <button type="button" class="viewbtn" data-view="lookup">FOMO個股查詢</button>
@@ -393,6 +394,33 @@
         <input type="text" id="odd-min" inputmode="decimal" value="1"></label>
     </div>
     <div id="odd-out"></div>
+  </section>
+</main>
+
+<main class="list-wrap" id="yieldcalc-wrap" hidden>
+  <div class="scan-meta" id="yieldcalc-meta">輸入股票代號開始計算。</div>
+
+  <section class="panel">
+    <h2 class="panel-title">📖 利率敏感度試算(反推股利折現模型)</h2>
+    <p class="panel-note">
+      用現在的股價、本益比、股價淨值比、殖利率,反推這檔股票隱含的必要報酬率 r
+      跟永續成長率 g(股利折現模型/Gordon Growth 的反推版本),再疊加你輸入的
+      殖利率變動,算出「只看利率變動、其他條件不變」情況下的合理股價參考值,
+      跟現價比較出估值修正空間。這是使用者自創的簡化公式,不是系統驗證過的
+      訊號,也沒有回測過;只適用於有穩定配息、殖利率不接近 0 的股票,成長股
+      (不太配息)這個模型算不出有意義的結果。數字只做參考,不是目標價。
+    </p>
+
+    <div class="grid2">
+      <label class="field"><span class="field-label">股票代號</span>
+        <input type="text" id="yc-code" inputmode="numeric" autocomplete="off" placeholder="例如 2634"></label>
+      <label class="field"><span class="field-label">Δ殖利率(百分點,升息為正)</span>
+        <input type="text" id="yc-delta" inputmode="decimal" placeholder="例如 0.5 或 -0.3"></label>
+      <label class="field"><span class="field-label">傳導係數(預設 1)</span>
+        <input type="text" id="yc-coeff" inputmode="decimal" value="1"></label>
+    </div>
+
+    <div id="yc-out"></div>
   </section>
 </main>
 

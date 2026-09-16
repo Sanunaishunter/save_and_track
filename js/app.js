@@ -4087,6 +4087,7 @@
     el('crashfomo-wrap').hidden = v !== 'crashfomo';
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
+    el('yieldcalc-wrap').hidden = v !== 'yieldcalc';
     el('themes-wrap').hidden = v !== 'themes';
     el('risk-wrap').hidden = v !== 'risk';
     el('signals-wrap').hidden = v !== 'signals';
@@ -4107,6 +4108,7 @@
     if (v === 'crashfomo') loadCrashFomo(false);
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
+    if (v === 'yieldcalc') loadYieldCalc();
     if (v === 'themes') loadThemes(false);
     if (v === 'risk') loadRisk(false);
     if (v === 'signals') loadSignals(false);
@@ -4120,7 +4122,7 @@
 
   // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
   // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -7534,6 +7536,146 @@
     bits.push('PB ' + (v.pb == null ? '—' : v.pb));
     bits.push('殖利率 ' + (v['yield'] == null ? '—' : v['yield'] + '%'));
     return bits.join(' · ') + '(TWSE ' + (valuationData.date || '') + ')';
+  }
+
+  // ---------------------------------------------------------- 利率敏感度試算
+  // 2026-09-16 使用者要求的獨立分頁:用現價/PE/PB/殖利率反推股利折現模型
+  // (Gordon Growth)隱含的必要報酬率 r 跟永續成長率 g,疊加使用者輸入的
+  // 殖利率變動 × 傳導係數,算出「只看利率變動、其他條件不變」的合理股價
+  // 參考值。使用者自創的簡化公式,不是系統驗證過的訊號,r−g 越薄(通常
+  // 對應本益比越高)對輸入越敏感是模型本身的特性,不是算錯。只吃現有的
+  // quotes-latest.json / valuation-latest.json,不需要新資料源。
+  //
+  // 公式推導(股利折現 P/E = payout×(1+g)/(r−g),反解 r):
+  //   ROE = PB / PE(EPS/淨值 = (price/PE) / (price/PB))
+  //   payout(配息率) = 殖利率 × PE(dividend/EPS = (dividend/price)×(price/EPS))
+  //   g = ROE × (1 − payout)
+  //   r_implied = g + payout×(1+g) / PE
+  //   r_new = r_implied + Δ殖利率 × 傳導係數
+  //   新合理PE = payout×(1+g) / (r_new − g);新合理股價 = EPS × 新合理PE
+
+  function yieldCalcCompute(code, deltaPct, coeff) {
+    var q = quoteOf(code);
+    var v = valuationOf(code);
+    if (!q || !(q.close > 0)) return { fatal: '查無現價資料(代號打錯,或不是上市普通股)。' };
+    if (!v) return { fatal: '查無估值資料(代號打錯,或不是上市普通股)。' };
+    var price = q.close, pe = v.pe, pb = v.pb, yld = v['yield'];
+    if (!(pe > 0)) return { fatal: '這檔股票 PE 無效(近期虧損或無穩定獲利),本模型算不出來。' };
+    if (!(pb > 0)) return { fatal: '這檔股票沒有 PB 資料,算不出 ROE。' };
+    var yieldFrac = (yld > 0) ? yld / 100 : 0;
+    var payoutRaw = yieldFrac * pe;
+    if (payoutRaw < 0.02) {
+      return { fatal: '殖利率太低(接近 0),股利折現模型在這裡數學上不穩定,' +
+        '通常是還沒穩定配息的成長股,這個工具不適用。' };
+    }
+    var payout = Math.min(payoutRaw, 0.98);
+    var retention = 1 - payout;
+    var roe = pb / pe;
+    var g = roe * retention;
+    var rImplied = g + payout * (1 + g) / pe;
+    var deltaR = (Number(deltaPct) || 0) / 100 * (Number(coeff) || 0);
+    var rNew = rImplied + deltaR;
+    var base = {
+      name: v.name, code: code, price: price, pe: pe, pb: pb, yieldPct: yld,
+      eps: price / pe, bookValue: price / pb,
+      payout: payout, payoutRaw: payoutRaw, retention: retention, roe: roe, g: g,
+      rImplied: rImplied, deltaR: deltaR, rNew: rNew
+    };
+    if (rNew <= g) {
+      base.rangeError = '這個假設下 r_new(' + fmtPct(rNew, 2) + ') ≤ g(' + fmtPct(g, 2) +
+        '),模型無法算合理股價(通常是降息假設太大,或這檔的 g 被高估),試著調小 Δ殖利率或傳導係數。';
+      return base;
+    }
+    base.newPe = payout * (1 + g) / (rNew - g);
+    base.newFairPrice = base.eps * base.newPe;
+    base.pullbackPct = (base.newFairPrice - price) / price;
+    return base;
+  }
+
+  function yieldCalcResultHtml(r, deltaInput, coeffInput) {
+    if (r.fatal) return '<p class="warn-sm">' + esc(r.fatal) + '</p>';
+    var warn = '';
+    if (r.payoutRaw > 0.98) {
+      warn += '<p class="warn-sm">配息率超過 100%(' + fmtPct(r.payoutRaw, 1) +
+        '),配息政策可能不穩定,模型用 98% 上限計算,參考價值較低。</p>';
+    }
+    if (r.g < 0 || r.g > 0.2) {
+      warn += '<p class="warn-sm">反推出來的永續成長率 g=' + fmtPct(r.g, 2) +
+        ' 明顯偏離常態(0~15% 區間),ROE 或配息率可能是單一年度的極端值,結果僅供參考。</p>';
+    }
+    var head = '<div class="k-sum">' +
+        '<div><span>股票</span><b>' + esc(r.code) + ' ' + esc(r.name || '') + '</b></div>' +
+        '<div><span>現價</span><b>' + r.price + '</b></div>' +
+        '<div><span>PE / PB / 殖利率</span><b>' + r.pe + ' / ' + r.pb + ' / ' +
+          (r.yieldPct == null ? '—' : r.yieldPct + '%') + '</b></div>' +
+        '<div><span>反推 EPS / 每股淨值</span><b>' + r.eps.toFixed(2) + ' / ' + r.bookValue.toFixed(2) + '</b></div>' +
+        '<div><span>ROE / 配息率 / 保留率</span><b>' + fmtPct(r.roe, 1) + ' / ' + fmtPct(r.payout, 1) + ' / ' + fmtPct(r.retention, 1) + '</b></div>' +
+        '<div><span>永續成長率 g</span><b>' + fmtPct(r.g, 2) + '</b></div>' +
+        '<div><span>隱含必要報酬率 r</span><b>' + fmtPct(r.rImplied, 2) + '</b></div>' +
+        '<div><span>Δr(Δ殖利率 × 傳導係數)</span><b>' + fmtPct(r.deltaR, 2) + '</b></div>' +
+        '<div><span>新必要報酬率 r_new</span><b>' + fmtPct(r.rNew, 2) + '</b></div>';
+    if (r.rangeError) {
+      return head + '</div>' + warn + '<p class="warn-sm">' + esc(r.rangeError) + '</p>';
+    }
+    var dirWord = r.pullbackPct >= 0 ? '上看' : '下看';
+    var pullCls = r.pullbackPct >= 0 ? 'up' : 'down';
+    var tail = '<div><span>新合理本益比</span><b>' + r.newPe.toFixed(1) + ' 倍(原 ' + r.pe + ' 倍)</b></div>' +
+        '<div><span>新合理股價參考</span><b>' + r.newFairPrice.toFixed(1) + '</b></div>' +
+        '<div><span>對現價的估值修正空間</span><b class="' + pullCls + '">' +
+          (r.pullbackPct >= 0 ? '+' : '') + fmtPct(r.pullbackPct, 1) + '</b></div>' +
+      '</div>';
+    var summary = '<p class="panel-note">白話:若殖利率變動 ' + (Number(deltaInput) >= 0 ? '+' : '') + deltaInput +
+      ' 個百分點(傳導係數 ' + coeffInput + '),只看利率這一個變數、其他假設不變,' + esc(r.code) +
+      ' 的合理股價參考值大約' + dirWord + ' ' + r.newFairPrice.toFixed(1) + ' 元,相對現價 ' +
+      (r.pullbackPct >= 0 ? '+' : '') + fmtPct(r.pullbackPct, 1) + '。</p>' +
+      '<p class="panel-note">這不是目標價,是「假設 g 不變、r 完全按傳導係數跟著殖利率動」的簡化推論。' +
+      '真實股價還會受獲利成長預期本身變化(常常跟利率同時變動)、風險溢酬、籌碼面影響,' +
+      'r−g 越薄(通常對應本益比越高)的股票對這個假設越敏感,不是模型算錯。</p>';
+    return head + tail + warn + summary;
+  }
+
+  var yieldCalcBound = false;
+
+  function recalcYieldCalc() {
+    var codeEl = el('yc-code'), deltaEl = el('yc-delta'), coeffEl = el('yc-coeff'), out = el('yc-out');
+    if (!codeEl || !out) return;
+    var code = codeEl.value.trim();
+    if (!code) { out.innerHTML = ''; return; }
+    if (!/^[1-9]\d{3}$/.test(code)) {
+      out.innerHTML = '<p class="dim">股票代號要是 4 碼數字、開頭不是 0(只支援上市普通股)。</p>';
+      return;
+    }
+    var deltaInput = deltaEl.value.trim() === '' ? '0' : deltaEl.value.trim();
+    var coeffInput = coeffEl.value.trim() === '' ? '1' : coeffEl.value.trim();
+    var deltaPct = Number(deltaInput), coeff = Number(coeffInput);
+    if (isNaN(deltaPct) || isNaN(coeff)) {
+      out.innerHTML = '<p class="warn-sm">Δ殖利率跟傳導係數要是數字。</p>';
+      return;
+    }
+    out.innerHTML = '<p class="dim">計算中…</p>';
+    Promise.all([loadQuotes(), loadValuation()]).then(function () {
+      var r = yieldCalcCompute(code, deltaPct, coeff);
+      out.innerHTML = yieldCalcResultHtml(r, deltaInput, coeffInput);
+    }).catch(function (e) {
+      out.innerHTML = '<p class="warn-sm">讀不到報價或估值資料(' + esc(e.message || String(e)) + ')。</p>';
+    });
+  }
+
+  function loadYieldCalc() {
+    if (yieldCalcBound) return;
+    yieldCalcBound = true;
+    ['yc-code', 'yc-delta', 'yc-coeff'].forEach(function (id) {
+      var node = el(id);
+      if (node) node.addEventListener('input', recalcYieldCalc);
+    });
+    var meta = el('yieldcalc-meta');
+    if (meta) {
+      loadValuation().then(function (d) {
+        meta.textContent = 'TWSE 估值資料 ' + (d.date || '') + ',收錄 ' + fmtInt(d.count || 0) + ' 檔。輸入股票代號開始計算。';
+      }).catch(function () {
+        meta.textContent = '讀不到估值資料,輸入股票代號後會再重試。';
+      });
+    }
   }
 
   /** 個股查詢 meta 那行的非同步附加:估值 + 事件。兩份資料抓不到就什麼都不加。 */
