@@ -49,6 +49,33 @@ def main():
         errors.append("大盤成交資訊:%r" % (e,))
         print("!! 大盤成交資訊抓取失敗,沿用既有資料:%r" % (e,), file=sys.stderr)
 
+    # 2026-09-16 補丁:market_summary()(FMTQIK)docstring 早就寫「實測回應
+    # 只含最近兩個交易日」,而且收盤後不一定馬上更新——跟 STOCK_DAY_ALL 同一種
+    # TWSE 快取延遲問題。compute_market_grid.py 在 2026-09-10 已經改用日期
+    # 可定址的 market_index_by_date() 解決這個問題(見 data/README.md 大盤
+    # 30 日追蹤表那節),但這裡當時沒有一起改,導致這張「大盤」小卡片自己
+    # 用的 market 陣列可能卡在昨天,跟同一次排程裡九宮格拿到的今天資料對不
+    # 起來(2026-09-16 使用者截圖抓到:九宮格已經是 9/16,這裡還是 9/15)。
+    # 用 market_index_by_date() 補今天這一筆,今天不在 FMTQIK 回應裡才補,
+    # 抓不到(非交易日/TWSE 也還沒更新)就維持原樣,不擋其他資料來源。
+    today = today_str()
+    market_list = out.get("market") or []
+    if not any(r.get("date") == today for r in market_list):
+        try:
+            snap = twse_api.market_index_by_date(today.replace("-", ""))
+        except Exception as e:                  # noqa: BLE001
+            snap = None
+            print("!! 大盤成交資訊(補今日缺口)失敗,沿用既有資料:%r" % (e,), file=sys.stderr)
+        if snap and snap.get("idx_close") is not None:
+            out["market"] = [{
+                "date": snap["date"],
+                "taiex": snap["idx_close"],
+                "change": snap["idx_change"],
+                "trade_value": snap["turnover_amount"],
+                "trade_volume": snap["turnover_shares"],
+                "transaction": snap["turnover_tx"],
+            }] + [r for r in market_list if r.get("date") != snap["date"]]
+
     try:
         out["attention"] = twse_api.attention_stocks()
     except Exception as e:                     # noqa: BLE001
