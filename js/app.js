@@ -6262,6 +6262,19 @@
     return out;
   }
 
+  /**
+   * positionRangeStats() 的 high/low 是字面上的期間最高/最低價,不因方向而
+   * 互換(見那邊的說明);但「最佳/最差出場」是價值判斷,看空時期間最高價
+   * 反而是最差出場、最低價才是最佳出場,兩者要對調——跟 evalExitPlan() 裡
+   * `dir > 0 ? st.range.high : st.range.low` 抓峰值同一種 dir 判斷,這裡補上
+   * 對稱的另一半(2026-09-16 使用者截圖抓到:看空時「最佳出場」欄位還是顯示
+   * 期間最高價的虧損,標籤跟數字對不起來)。
+   */
+  function bestWorstExit(rec, range) {
+    var dir = rec.direction === 'short' ? -1 : 1;
+    return dir > 0 ? { best: range.high, worst: range.low } : { best: range.low, worst: range.high };
+  }
+
   function plClass(v) {
     if (v == null) return '';
     if (v > 0) return 'up';
@@ -6285,6 +6298,7 @@
   function renderPosBreakdown(rows) {
     var trs = rows.map(function (r) {
       var rec = r.rec, st = r.st;
+      var bw = st.range ? bestWorstExit(rec, st.range) : null;
       return '<tr>' +
         '<td class="code mono">' + esc(rec.stock_id) + '</td>' +
         '<td>' + esc(rec.stock_name || '') + '</td>' +
@@ -6294,10 +6308,10 @@
           (st.priced ? signed(st.pl) : '—') + '</td>' +
         '<td class="num mono ' + plClass(st.today) + '">' +
           (st.today != null ? signed(st.today) : '—') + '</td>' +
-        '<td class="num mono ' + plClass(st.range && st.range.high.pl) + '">' +
-          (st.range ? signed(st.range.high.pl) + ' (' + esc(st.range.high.date) + ')' : '—') + '</td>' +
-        '<td class="num mono ' + plClass(st.range && st.range.low.pl) + '">' +
-          (st.range ? signed(st.range.low.pl) + ' (' + esc(st.range.low.date) + ')' : '—') + '</td>' +
+        '<td class="num mono ' + plClass(bw && bw.best.pl) + '">' +
+          (bw ? signed(bw.best.pl) + ' (' + esc(bw.best.date) + ')' : '—') + '</td>' +
+        '<td class="num mono ' + plClass(bw && bw.worst.pl) + '">' +
+          (bw ? signed(bw.worst.pl) + ' (' + esc(bw.worst.date) + ')' : '—') + '</td>' +
       '</tr>';
     }).join('');
 
@@ -6406,7 +6420,8 @@
         unpriced++;
       }
       if (st.range) {
-        bestSum += st.range.high.pl; worstSum += st.range.low.pl; hasRange = true;
+        var bw = bestWorstExit(data[i], st.range);
+        bestSum += bw.best.pl; worstSum += bw.worst.pl; hasRange = true;
       } else {
         noRange++;
       }

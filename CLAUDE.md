@@ -136,6 +136,18 @@ git commit + push      if: always()
   要用 `x || []` 這種防禦式讀取,不能假設存在。
 - 訊號準度統計比對舊文字時要同時比「真漲」跟「可能會漲」(舊紀錄存的是舊字)。
 - `signed()` 內部會 `Math.round`,小數金額不要用它包。
+- **2026-09-16 修過的坑:追蹤頂部「持有期間各自最佳/最差出場」看空時標籤跟數字對不起來**
+  ——`positionRangeStats()` 的 `range.high`/`range.low` 是字面上的期間最高/最低**價格**,
+  不因方向互換(這是刻意的,`evalExitPlan()`/兵棋推演都靠這個字面意義,自己用
+  `dir > 0 ? high : low` 抓峰值);但 `renderPosSummary()`/`renderPosBreakdown()` 舊版
+  直接把 `.high.pl` 當「最佳出場」、`.low.pl` 當「最差出場」,對看多是對的(價格最高點
+  = 最賺),但看空時價格最高點其實是最慘出場,兩個標籤剛好貼反,使用者截圖抓到「最佳
+  出場」顯示負值、「最差出場」顯示正值。修法是新增 `bestWorstExit(rec, range)`,依
+  `rec.direction` 選 `dir>0 ? {best:high,worst:low} : {best:low,worst:high}`,跟
+  `evalExitPlan()` 抓峰值同一種 `dir` 判斷,套用在彙總的 `bestSum`/`worstSum` 跟展開明細
+  表兩個地方;`positionRangeStats()` 本身不用改,字面高/低的語意保留給其他呼叫端用。
+  Playwright 用真實 UI(在 localStorage 種一筆看空、一筆看多的同一檔持倉)驗證過:看空
+  最佳出場對應價格最低那天、最差出場對應價格最高那天,方向跟看多剛好相反,加總對得起來。
 - **隱藏一個分頁只加 `hidden` 屬性到 nav 按鈕、同步把它從 `VIEWS_ORDER` 拿掉,不要刪
   `<main>` 區塊或 `switchView()`/`loadXxx()` 的邏輯**:2026-09-16 使用者要求 FOMO/暴跌FOMO
   no show 就是這樣做——按鈕 `hidden` 讓使用者點不到,`VIEWS_ORDER` 拿掉讓左右滑動手勢也
