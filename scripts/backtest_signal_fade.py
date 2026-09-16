@@ -17,8 +17,13 @@ import,不重寫一份),把某個訊號的 dir 反過來重新算 hit_rate/預�
 則是真的用相反方向重新呼叫 summarize() 算出來的(不是用 100%−原命中率去猜,
 因為 excess 剛好等於 0 的樣本兩邊都不算命中)。
 
-用法:python scripts/backtest_signal_fade.py [scan|crash|fomo_real|fomo_fake|crashfomo_real|crashfomo_fake]
-不帶參數預設 scan。
+用法:python scripts/backtest_signal_fade.py [訊號] [排除跟哪個訊號重疊]
+第一個參數不帶預設 scan;第二個參數是選填的訊號名稱,同一天同一檔股票如果
+兩個訊號都有觸發就從第一個訊號的樣本裡拿掉,拿來拆「這個訊號的優勢是不是
+其實是另一個訊號的優勢」。例如 fomo_real 的候選股票本來就是從 scan(爆量)
+前 60 名再篩出來的(見 load_signal_instances()),`python backtest_signal_fade.py
+fomo_real scan` 就是把跟 scan 同一天同一檔重複的樣本拿掉,只看 fomo_real
+「多篩了外資/融資連買 ≥3 天」這個額外條件、扣掉純爆量效果之後,還剩不剩優勢。
 """
 
 import sys
@@ -48,8 +53,12 @@ def fade_summary(samples, original_dir, horizon_label):
 
 def main():
     sig = sys.argv[1] if len(sys.argv) > 1 else "scan"
+    exclude_sig = sys.argv[2] if len(sys.argv) > 2 else None
     if sig not in sc.SIGNAL_DEFS:
         print("不認得的訊號 %r,可用:%s" % (sig, ", ".join(sc.SIGNAL_DEFS.keys())), file=sys.stderr)
+        return 1
+    if exclude_sig is not None and exclude_sig not in sc.SIGNAL_DEFS:
+        print("不認得要排除重疊的訊號 %r,可用:%s" % (exclude_sig, ", ".join(sc.SIGNAL_DEFS.keys())), file=sys.stderr)
         return 1
     sdef = sc.SIGNAL_DEFS[sig]
     original_dir = sdef["dir"]
@@ -61,10 +70,23 @@ def main():
         print("錯誤:沒有任何價格資料(data/archive/prices 或 data/history)", file=sys.stderr)
         return 1
     index_days = sc.load_index_days()
-    instances = [it for it in sc.load_signal_instances() if it["signal"] == sig]
+    all_instances = sc.load_signal_instances()
+    instances = [it for it in all_instances if it["signal"] == sig]
     if not instances:
         print("沒有任何%s(%s)訊號可以測" % (sdef["label"], sig), file=sys.stderr)
         return 1
+
+    overlap_note = ""
+    if exclude_sig:
+        other_keys = {(it["date"], it["stock_id"]) for it in all_instances if it["signal"] == exclude_sig}
+        before = len(instances)
+        instances = [it for it in instances if (it["date"], it["stock_id"]) not in other_keys]
+        removed = before - len(instances)
+        overlap_note = "(排除跟 %s 同一天同一檔重疊的樣本:%d/%d 筆被拿掉,剩 %d 筆獨立樣本)" % (
+            exclude_sig, removed, before, len(instances))
+        if not instances:
+            print("排除重疊後沒有任何獨立樣本可以測(%s 完全被 %s 涵蓋)" % (sig, exclude_sig), file=sys.stderr)
+            return 1
 
     pos_of = {d: i for i, d in enumerate(dates)}
     by_h = {h: [] for h in sc.HORIZONS}
@@ -82,7 +104,7 @@ def main():
             by_regime_h.setdefault(reg, {h: [] for h in sc.HORIZONS})[h].append(sample)
 
     print("== %s(%s)訊號反著用(原本%s → 反著做%s)回測 ==" % (sdef["label"], sig, orig_label, fade_label))
-    print("訊號筆數 %d,價格 %s ~ %s(%d 天)\n" % (len(instances), dates[0], dates[-1], len(dates)))
+    print("訊號筆數 %d,價格 %s ~ %s(%d 天)%s\n" % (len(instances), dates[0], dates[-1], len(dates), overlap_note))
 
     print("-- 全樣本,按天期 --")
     for h in sc.HORIZONS:
