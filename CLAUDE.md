@@ -57,7 +57,7 @@
 | 法人軌跡 | 三份 `stock-lookup*-latest.json` | 量縮蓄勢候選的方向三票(融資/外資投信/收盤位置) |
 | 訊號記分板 | `scorecard-latest.json` | 歷史訊號之後 5/10/20 日超額報酬、命中率,五種分桶,N<60 灰 |
 | 爆量掃描 / 暴跌掃描 | `scan-latest.json` / `crash-latest.json` | `量/MA20(shift 1) > 1.5` 且 `close > open`(暴跌對稱 `<`),≥300 張;每列有 `ma_state` |
-| FOMO / 暴跌FOMO | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數) |
+| ~~FOMO / 暴跌FOMO~~ | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數)。**2026-09-16 使用者要求 no show,兩個分頁按鈕 `hidden`、拿出 `VIEWS_ORDER`**(見第 4 節),資料照樣每天產生,個股查詢的 🔔🕐🔻🔥 標記跟記分板/backtest 工具都還在吃 |
 | 產業流向 | `tick-latest.json`、`tick-members-latest.json` | 移植 SH2 8012:產業 × 市值級距的成交筆數,凍結抽樣每組 10 檔 |
 | 部位 | `quotes-latest.json` | Kelly 部位 + 零股試算 |
 | 📖 利率試算 | `quotes-latest.json`、`valuation-latest.json` | 輸入代號+Δ殖利率+傳導係數,反推股利折現模型隱含 r/g,算利率變動下的合理股價參考(見第 5 節) |
@@ -136,6 +136,13 @@ git commit + push      if: always()
   要用 `x || []` 這種防禦式讀取,不能假設存在。
 - 訊號準度統計比對舊文字時要同時比「真漲」跟「可能會漲」(舊紀錄存的是舊字)。
 - `signed()` 內部會 `Math.round`,小數金額不要用它包。
+- **隱藏一個分頁只加 `hidden` 屬性到 nav 按鈕、同步把它從 `VIEWS_ORDER` 拿掉,不要刪
+  `<main>` 區塊或 `switchView()`/`loadXxx()` 的邏輯**:2026-09-16 使用者要求 FOMO/暴跌FOMO
+  no show 就是這樣做——按鈕 `hidden` 讓使用者點不到,`VIEWS_ORDER` 拿掉讓左右滑動手勢也
+  跳過(不然按鈕看不到、手勢還是滑得進去),但 `data/fomo*.json`/`data/crash-fomo*.json`
+  照樣每天產生、`switchView()` 裡對應的 `if (v==='fomo') loadFomo(false)` 這幾行也留著
+  沒刪——個股查詢的 🔔🕐🔻🔥 標記、記分板、`backtest_signal_fade.py` 都還在吃這份資料,
+  只是拿掉「單獨的整頁列表」這個入口,不是砍功能。
 
 **產業流向(SH2 8012 移植)**
 - 抽樣一凍結就不重算(`tick-sample-members.json` 是長期狀態)。`--refreeze` 會讓序列

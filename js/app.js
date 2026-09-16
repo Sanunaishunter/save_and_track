@@ -4122,7 +4122,13 @@
 
   // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
   // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'fomo', 'crashfomo', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  // 2026-09-16 使用者要求把 FOMO/暴跌FOMO 這兩個分頁 no show(按鈕 hidden):
+  // 訊號記分板/backtest_signal_fade.py 測出來 fomo_real/fomo_fake/crashfomo_real/
+  // crashfomo_fake 樣本都太少(N<60)或幾乎完全跟 scan/crash 重疊,沒有獨立證據。
+  // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
+  // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
+  // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
