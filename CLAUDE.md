@@ -105,6 +105,17 @@ git commit + push      if: always()
 - FinMind 免費版不帶 `data_id` 查全市場回 400;只有 `TaiwanStockInfo` 跟逐檔查詢在用。
   未註冊額度 300/小時,一輪 daily-scan 約 500 次,`FINMIND_TOKEN` 設了才有 600。
 - TWSE `STOCK_DAY_ALL` 是快取,收盤後不一定馬上更新;所以每天用 `MI_INDEX?date=` 補最近 5 個交易日缺口。
+- `FMTQIK`(`twse_api.market_summary()`)跟 `STOCK_DAY_ALL` 同一種快取延遲問題,docstring
+  早就寫「實測回應只含最近兩個交易日」。`compute_market_grid.py` 2026-09-10 已經改用日期
+  可定址的 `market_index_by_date()`(`market-grid-latest.json` 沒事),但 `fetch_risk_flags.py`
+  的 `risk-latest.json.market`(「籌碼/風險」頁那張獨立的「大盤」小卡片,欄位
+  `taiex/change/trade_value/trade_volume/transaction`)當時沒有一起改,漏網了快 一週,
+  2026-09-16 使用者截圖抓到:九宮格已經是當天,這張小卡片還停在前一天。2026-09-16 修好:
+  `fetch_risk_flags.py` 抓完 `market_summary()` 後,今天這天不在回應裡就用
+  `market_index_by_date(今天)` 補一筆蓋上去,抓不到(非交易日/TWSE 還沒更新)就維持原樣、
+  不擋其他資料來源,離線 mock 測過四種情況(已新鮮/需要補/補不到 None/補的時候丟例外)。
+  這個 container 連不到 TWSE,補丁只在下次 Actions 真的跑 `daily-scan.yml` 時才會生效——
+  當天要立刻看到修正,要請使用者手動按一次 Run workflow,不能等到隔天排程。
 - `BFI82U` 市場買賣差額可能為負,不能當分母;用 T86 買超個股加總。
 - FinMind 的產業分類會自己漂(凍結時跟現在不同的有 44 檔),也把漢翔/亞航/長榮航太放
   「航運業」(TWSE 代碼 15 也是),只有 `industry_overrides.json` 手動覆蓋能解。
