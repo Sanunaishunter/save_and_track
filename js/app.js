@@ -8031,11 +8031,11 @@
   // loadScorecard() 的快取,不用另外打一次 fetch。加了寬鬆版(😝)兩個訊號。
   var FADE_SIGNAL_ORDER = SC_SIGNAL_ORDER.concat(['fomo_real_loose', 'fomo_fake_loose']);
 
-  function scFadeRow(h, st) {
+  function scFadeRow(h, st, dir) {
     if (!st || !st.n) {
       return '<tr><td>' + h + ' 日</td><td class="num is-thin">0</td>' +
-        '<td class="num is-thin">—</td><td class="num is-thin">—</td>' +
-        '<td class="num is-thin">—</td><td class="num is-thin">—</td></tr>';
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td></tr>';
     }
     var thin = st.enough ? '' : ' is-thin';
     var origHit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
@@ -8044,12 +8044,22 @@
     var fadeHit = st.fade_hit_rate == null ? '—' : st.fade_hit_rate.toFixed(1) + '%';
     var fadePnl = st.fade_pnl == null ? '—' : (st.fade_pnl > 0 ? '+' : '') + st.fade_pnl.toFixed(2) + '%';
     var fadeCls = st.fade_pnl == null ? '' : (st.fade_pnl > 0 ? ' up' : ' down');
+    // 2026-09-18 中位數:跟 pnl/fade_pnl 同一種「方向 × median_excess」換算,
+    // 只是用中位數代替平均數,比較不受極端值影響。
+    var origMedianVal = st.median_excess == null ? null : dir * st.median_excess;
+    var origMedian = origMedianVal == null ? '—' : (origMedianVal > 0 ? '+' : '') + origMedianVal.toFixed(2) + '%';
+    var origMedianCls = origMedianVal == null ? '' : (origMedianVal > 0 ? ' up' : ' down');
+    var fadeMedianVal = st.median_excess == null ? null : -dir * st.median_excess;
+    var fadeMedian = fadeMedianVal == null ? '—' : (fadeMedianVal > 0 ? '+' : '') + fadeMedianVal.toFixed(2) + '%';
+    var fadeMedianCls = fadeMedianVal == null ? '' : (fadeMedianVal > 0 ? ' up' : ' down');
     return '<tr><td>' + h + ' 日</td>' +
       '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
       '<td class="num' + thin + '">' + origHit + '</td>' +
       '<td class="num' + thin + origCls + '">' + origPnl + '</td>' +
+      '<td class="num' + thin + origMedianCls + '">' + origMedian + '</td>' +
       '<td class="num' + thin + '">' + fadeHit + '</td>' +
       '<td class="num' + thin + fadeCls + '">' + fadePnl + '</td>' +
+      '<td class="num' + thin + fadeMedianCls + '">' + fadeMedian + '</td>' +
     '</tr>';
   }
 
@@ -8075,9 +8085,9 @@
         '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
         (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
         '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th>' +
-        '<th class="num">正用命中率</th><th class="num">正用預期報酬</th>' +
-        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th></tr></thead><tbody>' +
-        hs.map(function (h) { return scFadeRow(h, s.horizons[h]); }).join('') +
+        '<th class="num">正用命中率</th><th class="num">正用預期報酬</th><th class="num">正用中位數</th>' +
+        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">反用中位數</th></tr></thead><tbody>' +
+        hs.map(function (h) { return scFadeRow(h, s.horizons[h], s.dir); }).join('') +
         '</tbody></table></div></section>';
     });
     if (!html) html = '<p class="panel-note">還沒有任何訊號樣本。</p>';
