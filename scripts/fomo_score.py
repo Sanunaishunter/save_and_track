@@ -434,6 +434,17 @@ def score_stock(stock_id, stock_name, m):
             if k not in missing:
                 missing.append(k)
 
+    # 2026-09-17 使用者要求:「可能會漲」跟「虛漲」是兩個各自獨立打分的判斷,
+    # 沒有互斥檢查——外資連買(可能會漲的必要條件)常常跟融資5日暴增(虛漲的
+    # 加分項)同時出現,因為兩者都是在量「散戶/籌碼是不是在瘋狂追價」,只是
+    # 用「連續天數」跟「5日累積%」兩把不同的尺量同一件事;PBR 對「可能會漲」
+    # 只是加分項不是必要條件,分數已經靠外資+融資兩個必要條件湊滿也不會被
+    # PBR 偏高卡住。使用者決定不做互斥(不強制二選一),只加一個衝突旗標,
+    # 兩個判斷各自的 reasons 都留著給人自己判斷——不是「可能會漲」或「虛漲」
+    # 錯了,是兩者本來就是從不同角度打分,同時成立時代表法人籌碼跟散戶
+    # 行為/估值站在對立面,這本身就是值得注意的資訊,不該被合併掩蓋掉。
+    conflict = bool(real["is_real_rally"] and fake["is_fake_rally"])
+
     return {
         "stock_id": stock_id,
         "stock_name": stock_name,
@@ -442,6 +453,7 @@ def score_stock(stock_id, stock_name, m):
         "real_rally_score": real["score"],
         "is_fake_rally": fake["is_fake_rally"],
         "fake_rally_score": fake["score"],
+        "is_conflict": conflict,
         "is_divergence": diverge["is_divergence"],
         "divergence_reason": diverge["reason"],
         "foreign_note": foreign_annotation(m),
@@ -499,6 +511,11 @@ def score_stock_crash(stock_id, stock_name, m):
             if k not in missing:
                 missing.append(k)
 
+    # 跟 score_stock() 的 is_conflict 同一個道理:真跌(外資連賣)跟虛跌
+    # (融資斷頭式減倉)理論上是相反的判斷,但沒有互斥檢查,同時成立時只標記
+    # 不強制二選一。
+    conflict = bool(real["is_real_crash"] and fake["is_fake_crash"])
+
     return {
         "stock_id": stock_id,
         "stock_name": stock_name,
@@ -507,6 +524,7 @@ def score_stock_crash(stock_id, stock_name, m):
         "real_crash_score": real["score"],
         "is_fake_crash": fake["is_fake_crash"],
         "fake_crash_score": fake["score"],
+        "is_conflict": conflict,
         "is_divergence": diverge["is_divergence"],
         "divergence_reason": diverge["reason"],
         "foreign_note": foreign_annotation(m),

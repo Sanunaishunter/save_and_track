@@ -218,6 +218,22 @@ git commit + push      if: always()
 **FOMO(`scripts/fomo_score.py`)**
 - 「可能會漲」(內部仍叫 `real_rally`):外資連買 ≥3 天 **且** 融資連買 ≥3 天都是必要條件,
   總分 ≥60。虛漲、真跌/虛跌沒動。已知舊版「真漲」N=28 命中 11%,新版沒回測。
+- **2026-09-17 加 `is_conflict`(可能會漲/虛漲、真跌/虛跌各自一組):兩個判斷是各自獨立
+  打分,沒有互斥檢查**,使用者截圖抓到 2305 在 9/14 兩個旗標同時 True(`real_rally_score`/
+  `fake_rally_score` 都是 60)。根本原因:「融資連續買超≥3天」(可能會漲的必要條件)跟
+  「融資5日增幅>15%」(虛漲的加分項)是同一件事(散戶瘋狂追價)的兩種量法,常常一起
+  觸發;PBR 對可能會漲只是加分項不是必要條件,外資+融資兩個必要條件湊滿 60 分就不需要
+  PBR 過關,所以 PBR 偏高(虛漲的訊號)完全不會卡住可能會漲成立。使用者決定**不做互斥**
+  (不強制二選一,原因見上——這兩個判斷各自都有累積比對記分板的歷史命中率,合併會牽動
+  比較基礎),只加 `is_conflict` 布林旗標,`score_stock()`/`score_stock_crash()` 都加了,
+  前端 `badges()`/`fomoTriggerNote()`/`fomoDetailHtml()`(跟 crash 對應版本)加⚠️
+  訊號衝突標記+說明文字,`renderFomo()`/`renderCrashFomo()` 的統計列也加衝突檔數。
+  `compute_fomo.py`/`compute_crash_fomo.py` 把 `score_stock()` 整包 dict 存檔,不用另外
+  改就會帶出新欄位。**FOMO/暴跌FOMO 分頁目前是 hidden(no show)**,這個修正在資料層
+  跟隱藏分頁裡都做了,但沒有其他還看得到的地方會顯示這個警示——如果之後要在個股查詢
+  或別的地方也看得到,要再另外接。離線用 2305 的真實數字(9/14 metrics)+ 兩個乾淨案例
+  驗證過 `is_conflict` 算得對,Playwright 走真實 UI(暫時拿掉 hidden 屬性點進去)確認
+  badge、統計列、展開明細的說明文字都正確顯示,無 JS 錯誤。
 
 **個股查詢標記(`createLookupPanel()`,四個分頁共用)**
 - 🔔量縮轉買、🔽量縮、🔻外資出貨、🔥連續增溫、🕐蓄勢中:量比 = 量 / 前 10 日峰量,
