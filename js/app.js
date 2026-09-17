@@ -8025,9 +8025,15 @@
     var hit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
     var ex = st.avg_excess == null ? '—' : (st.avg_excess > 0 ? '+' : '') + st.avg_excess.toFixed(2) + '%';
     var exCls = st.avg_excess == null ? '' : (st.avg_excess > 0 ? ' up' : ' down');
+    // 2026-09-18 第二基準(同日中位股):扣掉同一天全市場個股報酬的中位數,隨機挑一檔贏過它的機率依定義是 50%。
+    var hitEw = st.hit_rate_ew == null ? '—' : st.hit_rate_ew.toFixed(1) + '%';
+    var exEw = st.avg_excess_ew == null ? '—' : (st.avg_excess_ew > 0 ? '+' : '') + st.avg_excess_ew.toFixed(2) + '%';
+    var exEwCls = st.avg_excess_ew == null ? '' : (st.avg_excess_ew > 0 ? ' up' : ' down');
     return '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
       '<td class="num' + thin + '" title="命中 = 方向 × 超額報酬 > 0">' + hit + '</td>' +
-      '<td class="num' + thin + exCls + '" title="平均超額報酬(扣掉同期加權指數)">' + ex + '</td>';
+      '<td class="num' + thin + exCls + '" title="平均超額報酬(扣掉同期加權指數)">' + ex + '</td>' +
+      '<td class="num' + thin + '" title="vs中位股命中 = 方向 × (個股報酬 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%">' + hitEw + '</td>' +
+      '<td class="num' + thin + exEwCls + '" title="平均超額報酬(扣掉同日全市場個股報酬中位數)">' + exEw + '</td>';
   }
 
   function scBucketTable(buckets, kind, hs) {
@@ -8043,7 +8049,7 @@
     });
     return '<details class="sc-details"><summary>' + esc(SC_BUCKET_LABEL[kind] || kind) + '</summary>' +
       '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>分桶</th>' +
-      hs.map(function (h) { return '<th class="num">' + h + '日 n</th><th class="num">命中</th><th class="num">超額</th>'; }).join('') +
+      hs.map(function (h) { return '<th class="num">' + h + '日 n</th><th class="num">命中</th><th class="num">超額</th><th class="num">vs中位股命中</th><th class="num">vs中位股超額</th>'; }).join('') +
       '</tr></thead><tbody>' +
       labels.map(function (lab) {
         return '<tr><td>' + esc(lab) + '</td>' + hs.map(function (h) { return scStatCells(groups[lab][h]); }).join('') + '</tr>';
@@ -8058,7 +8064,8 @@
     var hs = (res.params && res.params.horizons ? res.params.horizons : [5, 10, 20]).map(String);
     meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
       ' 個交易日)· 訊號 ' + (cov.instances || 0) + ' 筆 · 事件 ' + (cov.events || 0) + ' 筆 · 樣本不到 ' +
-      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色,只能看方向感,不能下結論';
+      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色,只能看方向感,不能下結論' +
+      ' · 「vs中位股」= 扣掉同一天全市場個股報酬的中位數,隨機挑一檔命中率依定義是 50%,直接跟 50% 比;「vs指數」在台積電獨漲的年份會把跑輸指數誤讀成訊號有效';
     var sigs = res.signals || {};
     var html = '';
     SC_SIGNAL_ORDER.forEach(function (key) {
@@ -8068,7 +8075,7 @@
         '<h2 class="panel-title">' + esc(s.label) + ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">' + esc(s.direction) + '</span>' +
         '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
         (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
-        '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th><th class="num">命中率</th><th class="num">平均超額</th><th class="num">中位超額</th><th class="num">不扣指數命中</th></tr></thead><tbody>' +
+        '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th><th class="num">命中率(vs指數)</th><th class="num">平均超額(vs指數)</th><th class="num">命中率(vs中位股)</th><th class="num">平均超額(vs中位股)</th><th class="num">中位超額</th><th class="num">不扣指數命中</th></tr></thead><tbody>' +
         hs.map(function (h) {
           var st = s.horizons[h] || {};
           var thin = st.enough ? '' : ' is-thin';
@@ -8104,7 +8111,7 @@
       return '<tr><td>' + h + ' 日</td><td class="num is-thin">0</td>' +
         '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
         '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
-        '<td class="num is-thin">—</td></tr>';
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td></tr>';
     }
     var thin = st.enough ? '' : ' is-thin';
     var origHit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
@@ -8126,6 +8133,9 @@
     var fadeAfterCostVal = st.fade_pnl == null ? null : st.fade_pnl - FADE_ROUND_TRIP_COST_PCT;
     var fadeAfterCost = fadeAfterCostVal == null ? '—' : (fadeAfterCostVal > 0 ? '+' : '') + fadeAfterCostVal.toFixed(2) + '%';
     var fadeAfterCostCls = fadeAfterCostVal == null ? '' : (fadeAfterCostVal > 0 ? ' up' : ' down');
+    // 2026-09-18 第二基準(同日中位股):正用/反用命中率各一格,隨機挑一檔是 50%。
+    var origHitEw = st.hit_rate_ew == null ? '—' : st.hit_rate_ew.toFixed(1) + '%';
+    var fadeHitEw = st.fade_hit_rate_ew == null ? '—' : st.fade_hit_rate_ew.toFixed(1) + '%';
     return '<tr><td>' + h + ' 日</td>' +
       '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
       '<td class="num' + thin + '">' + origHit + '</td>' +
@@ -8135,6 +8145,8 @@
       '<td class="num' + thin + fadeCls + '">' + fadePnl + '</td>' +
       '<td class="num' + thin + fadeAfterCostCls + '" title="fade_pnl − ' + FADE_ROUND_TRIP_COST_PCT + '%(假設成本,見檔頭 FADE_ROUND_TRIP_COST_PCT 註解)">' + fadeAfterCost + '</td>' +
       '<td class="num' + thin + fadeMedianCls + '">' + fadeMedian + '</td>' +
+      '<td class="num' + thin + '" title="vs中位股:方向 × (個股 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%">' + origHitEw + '</td>' +
+      '<td class="num' + thin + '" title="vs中位股,方向相反重算">' + fadeHitEw + '</td>' +
     '</tr>';
   }
 
@@ -8147,7 +8159,8 @@
     meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
       ' 個交易日)· 「反用」是同一批樣本方向相反重算,不是重新驗證出來的新資料 · 樣本不到 ' +
       (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色 · 「扣成本後」假設反著做(放空)' +
-      '來回成本 ' + FADE_ROUND_TRIP_COST_PCT + '%(證交稅 0.3% + 手續費 0.1425%×2,借券費未計)';
+      '來回成本 ' + FADE_ROUND_TRIP_COST_PCT + '%(證交稅 0.3% + 手續費 0.1425%×2,借券費未計)' +
+      ' · 「vs中位股」= 扣同日全市場個股報酬中位數,隨機挑一檔是 50%;vs指數那幾欄在台積電獨漲的年份會把跑輸指數誤讀成反用有效';
     var sigs = res.signals || {};
     var html = '';
     FADE_SIGNAL_ORDER.forEach(function (key) {
@@ -8162,7 +8175,8 @@
         (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
         '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th>' +
         '<th class="num">正用命中率</th><th class="num">正用預期報酬</th><th class="num">正用中位數</th>' +
-        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">扣成本後</th><th class="num">反用中位數</th></tr></thead><tbody>' +
+        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">扣成本後</th><th class="num">反用中位數</th>' +
+        '<th class="num">正用命中(vs中位股)</th><th class="num">反用命中(vs中位股)</th></tr></thead><tbody>' +
         hs.map(function (h) { return scFadeRow(h, s.horizons[h], s.dir); }).join('') +
         '</tbody></table></div></section>';
     });

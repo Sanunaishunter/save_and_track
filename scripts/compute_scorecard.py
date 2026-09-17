@@ -255,8 +255,44 @@ def vol_ratio_label(vr):
 
 # ---------------------------------------------------------------- 報酬與統計
 
+_EW_CACHE = {}
+
+
+def universe_ew_return(prices, dates, pos, h):
+    """
+    2026-09-18 加的第二基準:訊號日 pos 起 h 天,全市場(上市普通股)每一檔
+    報酬的**中位數**(欄位名沿用 _ew,意思是「同日中位股」)。加權指數在台積電
+    獨漲的年份(存檔這一年指數 +101%)會讓大多數個股「跑輸指數」,記分板的
+    命中率就被基準本身拉偏(暴跌看空 20 日 69.6% 命中,同日隨機挑一檔放空也有
+    72.3%)。一開始用等權「平均」,但個股報酬右偏(少數大漲拉高平均),隨機挑
+    一檔贏過平均的機率只有 42.5%(5 日),還是不能跟 50% 比;改用中位數後,
+    隨機挑一檔贏過中位股的機率**依定義就是 50%**,hit_rate_ew 才能直接跟 50% 比。
+    """
+    key = (pos, h)
+    if key in _EW_CACHE:
+        return _EW_CACHE[key]
+    j = pos + h
+    if j >= len(dates):
+        _EW_CACHE[key] = None
+        return None
+    day0 = prices.get(dates[pos]) or {}
+    day1 = prices.get(dates[j]) or {}
+    rets = []
+    for sid, r in day0.items():
+        if not common.LISTED_CODE.match(sid):
+            continue
+        c0 = r.get("close")
+        r1 = day1.get(sid)
+        if not c0 or not r1 or not r1.get("close"):
+            continue
+        rets.append((r1["close"] - c0) / c0 * 100.0)
+    _EW_CACHE[key] = statistics.median(rets) if rets else None
+    return _EW_CACHE[key]
+
+
 def forward_returns(prices, dates, index_days, pos, sid):
-    """回傳 {h: (raw_pct, excess_pct or None)},只包含已到期的天期。"""
+    """回傳 {h: (raw_pct, excess_pct or None, excess_ew_pct or None)},只包含已到期的天期。
+    excess = 減加權指數;excess_ew = 減同日全市場個股報酬中位數(見 universe_ew_return)。"""
     base_day = prices.get(dates[pos]) or {}
     c0 = (base_day.get(sid) or {}).get("close")
     if not c0:
@@ -273,7 +309,9 @@ def forward_returns(prices, dates, index_days, pos, sid):
         raw = (c1 - c0) / c0 * 100.0
         i1 = (index_days.get(dates[j]) or {}).get("idx_close")
         excess = raw - ((i1 - i0) / i0 * 100.0) if (i0 and i1) else None
-        out[h] = (raw, excess)
+        ew = universe_ew_return(prices, dates, pos, h)
+        excess_ew = (raw - ew) if ew is not None else None
+        out[h] = (raw, excess, excess_ew)
     return out
 
 
@@ -302,6 +340,18 @@ def summarize(samples, direction):
         })
     else:
         out.update({"n_excess": 0, "hit_rate": None, "avg_excess": None, "median_excess": None})
+    # 2026-09-18 第二基準:減同日全市場個股報酬中位數(見 universe_ew_return 的說明)
+    ew = [s[2] for s in samples if len(s) > 2 and s[2] is not None]
+    if ew:
+        hit_ew = sum(1 for r in ew if direction * r > 0) / float(len(ew))
+        out.update({
+            "n_ew": len(ew),
+            "hit_rate_ew": round(hit_ew * 100, 1),
+            "avg_excess_ew": round(statistics.fmean(ew), 2),
+            "median_excess_ew": round(statistics.median(ew), 2),
+        })
+    else:
+        out.update({"n_ew": 0, "hit_rate_ew": None, "avg_excess_ew": None, "median_excess_ew": None})
     return out
 
 
@@ -328,12 +378,19 @@ def summarize_with_fade(samples, direction):
     fade_st = summarize(samples, -direction)
     st["fade_hit_rate"] = fade_st.get("hit_rate")
     st["fade_hit_rate_raw"] = fade_st.get("hit_rate_raw")
+    st["fade_hit_rate_ew"] = fade_st.get("hit_rate_ew")
     if st.get("avg_excess") is not None:
         st["pnl"] = round(direction * st["avg_excess"], 2)
         st["fade_pnl"] = round(-st["pnl"], 2)
     else:
         st["pnl"] = None
         st["fade_pnl"] = None
+    if st.get("avg_excess_ew") is not None:
+        st["pnl_ew"] = round(direction * st["avg_excess_ew"], 2)
+        st["fade_pnl_ew"] = round(-st["pnl_ew"], 2)
+    else:
+        st["pnl_ew"] = None
+        st["fade_pnl_ew"] = None
     return st
 
 
@@ -410,6 +467,9 @@ def main():
         "params": {
             "horizons": list(HORIZONS), "min_n": common.SCORECARD_MIN_N,
             "hit_definition": "dir × (個股報酬 − 加權指數同期報酬) > 0;hit_rate_raw 是不扣指數的版本",
+            "hit_definition_ew": ("2026-09-18 第二基準:dir × (個股報酬 − 同日全市場個股報酬中位數) > 0;"
+                                  "加權指數被台積電主導時,跑輸指數不代表訊號沒挑到好股票;"
+                                  "隨機挑一檔贏過同日中位股的機率依定義是 50%,hit_rate_ew 直接跟 50% 比"),
             "bucket_kinds": {"regime": "訊號日大盤狀態", "ma": "訊號日個股均線狀態",
                              "bias": "訊號日 20 日乖離率(含當日 MA20),五桶有正負號",
                              "confluence": "爆量/暴跌當天 FOMO 籌碼合流", "event": "事件日 ±1 個交易日",

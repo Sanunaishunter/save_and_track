@@ -953,7 +953,11 @@ Actions 上跑過,不是照文件猜的。
 | `crashfomo_real` 真跌 / `crashfomo_fake` 虛跌 | `data/crash-fomo/*.json` | 看空 / 看多 |
 
 每筆訊號算訊號日收盤 → +5/+10/+20 個交易日的報酬,扣掉同期加權指數 = 超額報酬,
-`hit = dir × 超額 > 0`;`hit_rate_raw` 是不扣指數的版本。分桶 `buckets`:
+`hit = dir × 超額 > 0`;`hit_rate_raw` 是不扣指數的版本。2026-09-18 加第二基準
+`hit_rate_ew`/`avg_excess_ew`/`median_excess_ew`/`n_ew`(頂層還有 `pnl_ew`/`fade_pnl_ew`/
+`fade_hit_rate_ew`):超額改成扣「同日全市場上市普通股報酬的**中位數**」(欄位名 ew 是
+歷史遺留),隨機挑一檔贏過中位股依定義是 50%,命中率直接跟 50% 比;每個分桶的格子
+也都有這組欄位。分桶 `buckets`:
 `regime`(訊號日大盤:系統性賣壓/指數漲/平/跌)、`ma`(訊號日均線:多頭排列/空頭
 排列/糾結,`common.ma_state()`,跟前端 `priceMaState()` 同定義)、`confluence`
 (爆量/暴跌當天 FOMO 裡的外資連續 ≥3、融資連續 ≥3;不在 FOMO 前 60 的標「無合流

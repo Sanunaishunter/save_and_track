@@ -98,7 +98,8 @@ git commit + push      if: always()
 - `stock_meta.json`:`industry`(可能被 `industry_override`)、`shares`、`twse_industry_code`
 - `stock-lookup*-latest.json`:`data[code].rows`(舊到新):`open high low close volume margin_balance margin_change short_balance short_change foreign_net trust_net`
 - `market-grid-latest.json`:今日快照 + `history[]`(新到舊 30 天),指數只有收盤沒有開高低
-- `scorecard-latest.json`:`signals[key].horizons["5"|"10"|"20"]` + `buckets{regime,ma,confluence,event,vol_ratio}`
+- `scorecard-latest.json`:`signals[key].horizons["5"|"10"|"20"]` + `buckets{regime,ma,bias,confluence,event,vol_ratio}`;
+  每格兩組基準:`hit_rate/avg_excess`(vs 加權指數)跟 `hit_rate_ew/avg_excess_ew`(vs 同日全市場個股報酬中位數,見第 5 節)
 - `events.json`(手動)、`industry_overrides.json`(手動)、`stock_lookup*.json`(手動清單)、`themes.json`(手動)
 
 ---
@@ -415,6 +416,26 @@ git commit + push      if: always()
   回補到一年後要重看一次。Playwright 走真實 UI 14 項對照 JSON 跟手算值(6957 9/17
   +20.47% 落 ≥+10%、2330 +0.45% 落 −5~+5%),無 JS 錯誤。**2026-09-18 回補後樣本擴大
   到一年,新數字見 commit b25ff69,結論待重新確認。**
+- **2026-09-18 記分板加第二基準「vs 同日中位股」(`hit_rate_ew`/`avg_excess_ew`/`median_excess_ew`/
+  `pnl_ew`/`fade_hit_rate_ew`/`fade_pnl_ew`,欄位名的 ew 是歷史遺留,實際是中位數)**。起因:
+  存查檔回補到一年後檢查發現,存檔這一年加權指數 +101%(台積電獨漲),「個股 − 指數」
+  這個基準讓全市場隨機挑一檔 5 日只有 36.5%、20 日只有 28.1% 能跑贏指數,所以看多訊號
+  命中率天生偏低、看空天生偏高——暴跌看空 20 日 69.6% 命中,同日隨機挑一檔放空也有
+  72.3%,整個是基準給的。先試過「等權平均」,但個股報酬右偏,隨機挑一檔贏過平均只有
+  42.5%,還是不能跟 50% 比;改用**同日全市場個股報酬中位數**,隨機挑一檔贏過它依定義
+  就是 50%,命中率才能直接跟 50% 比(自我檢查:同日贏過中位股的比例 50.0%)。實作在
+  `universe_ew_return()`(有 cache),`forward_returns()` 回傳三元組 `(raw, excess, excess_ew)`,
+  `summarize()`/`summarize_with_fade()` 各多算一組;前端記分板主表、分桶表、訊號反用表都
+  多兩欄,vs 指數那組保留(回答「有沒有跑贏大盤」),vs 中位股回答「有沒有比隨機挑好」。
+  **一年樣本、對中位股的結論(這才是真的):爆量看多 5/10/20 日命中 46.2/47.2/48.5%、
+  暴跌看空 51.3/51.5/49.5%、薄股看多 46.5/46.6/44.4%,全部貼著 50%,沒有一個量價訊號
+  有方向優勢;平均超額為正但中位超額為負(爆量 20 日平均 +3.38%、中位 −0.35%),
+  意思是爆量後多數股票小輸同日中位股、少數大漲把平均拉起來。反著用 51~55%,扣 0.6%
+  成本後沒肉。** 前幾條(9/16 記的爆量反著用 70.4%、9/18 記的乖離 ≥+10% 桶反著用更強)
+  是「兩週弱勢盤 + 有偏的指數基準」疊出來的,正式撤回,不要再引用;那幾段原文留著當
+  紀錄,以這條為準。薄股測試比爆量再差 2~4 個百分點,仍然成立。Playwright 13 項對照
+  JSON 跟手算(1451 2026-03-11 5 日:個股 −0.549%、同日中位數 +0.779%、超額 −1.329%),
+  無 JS 錯誤。`scorecard-latest.json` 這次有 commit(前端要有新欄位才顯示得出來)。
 - **2026-09-17 加「訊號反用」分頁(`index.html` 的 `data-view="fade"`,排在訊號記分板
   後面)**:使用者要求把 `backtest_signal_fade.py` 探測出來的「反著用」命中率跟「正用」
   放在同一張表比較,不用每次手動跑 CLI。做法是把反用統計直接算進 `scorecard-latest.json`

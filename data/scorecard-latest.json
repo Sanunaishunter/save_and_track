@@ -1,6 +1,6 @@
 {
   "date": "2026-09-17",
-  "generated_at": "2026-09-17T16:13:29Z",
+  "generated_at": "2026-09-17T17:43:40Z",
   "params": {
     "horizons": [
       5,
@@ -9,6 +9,7 @@
     ],
     "min_n": 60,
     "hit_definition": "dir × (個股報酬 − 加權指數同期報酬) > 0;hit_rate_raw 是不扣指數的版本",
+    "hit_definition_ew": "2026-09-18 第二基準:dir × (個股報酬 − 同日全市場個股報酬中位數) > 0;加權指數被台積電主導時,跑輸指數不代表訊號沒挑到好股票;隨機挑一檔贏過同日中位股的機率依定義是 50%,hit_rate_ew 直接跟 50% 比",
     "bucket_kinds": {
       "regime": "訊號日大盤狀態",
       "ma": "訊號日個股均線狀態",
@@ -47,10 +48,17 @@
           "hit_rate": 57.9,
           "avg_excess": -2.06,
           "median_excess": -2.05,
+          "n_ew": 19,
+          "hit_rate_ew": 57.9,
+          "avg_excess_ew": -1.6,
+          "median_excess_ew": -0.45,
           "fade_hit_rate": 42.1,
           "fade_hit_rate_raw": 42.1,
+          "fade_hit_rate_ew": 42.1,
           "pnl": 2.06,
-          "fade_pnl": -2.06
+          "fade_pnl": -2.06,
+          "pnl_ew": 1.6,
+          "fade_pnl_ew": -1.6
         },
         "10": {
           "n": 6,
@@ -62,18 +70,28 @@
           "hit_rate": 50.0,
           "avg_excess": -1.06,
           "median_excess": -1.88,
+          "n_ew": 6,
+          "hit_rate_ew": 50.0,
+          "avg_excess_ew": 0.21,
+          "median_excess_ew": -0.85,
           "fade_hit_rate": 50.0,
           "fade_hit_rate_raw": 33.3,
+          "fade_hit_rate_ew": 50.0,
           "pnl": 1.06,
-          "fade_pnl": -1.06
+          "fade_pnl": -1.06,
+          "pnl_ew": -0.21,
+          "fade_pnl_ew": 0.21
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {
@@ -88,7 +106,11 @@
               "n_excess": 10,
               "hit_rate": 80.0,
               "avg_excess": -4.93,
-              "median_excess": -4.93
+              "median_excess": -4.93,
+              "n_ew": 10,
+              "hit_rate_ew": 80.0,
+              "avg_excess_ew": -4.67,
+              "median_excess_ew": -6.0
             },
             "10": {
               "n": 2,
@@ -99,7 +121,11 @@
               "n_excess": 2,
               "hit_rate": 0.0,
               "avg_excess": 4.94,
-              "median_excess": 4.94
+              "median_excess": 4.94,
+              "n_ew": 2,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": 5.23,
+              "median_excess_ew": 5.23
             },
             "20": {
               "n": 0,
@@ -116,7 +142,11 @@
               "n_excess": 4,
               "hit_rate": 50.0,
               "avg_excess": -3.22,
-              "median_excess": 0.43
+              "median_excess": 0.43,
+              "n_ew": 4,
+              "hit_rate_ew": 25.0,
+              "avg_excess_ew": -0.39,
+              "median_excess_ew": 3.27
             },
             "10": {
               "n": 4,
@@ -127,7 +157,11 @@
               "n_excess": 4,
               "hit_rate": 75.0,
               "avg_excess": -4.05,
-              "median_excess": -8.64
+              "median_excess": -8.64,
+              "n_ew": 4,
+              "hit_rate_ew": 75.0,
+              "avg_excess_ew": -2.29,
+              "median_excess_ew": -6.88
             },
             "20": {
               "n": 0,
@@ -144,7 +178,11 @@
               "n_excess": 2,
               "hit_rate": 0.0,
               "avg_excess": 3.39,
-              "median_excess": 3.39
+              "median_excess": 3.39,
+              "n_ew": 2,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": 2.25,
+              "median_excess_ew": 2.25
             },
             "10": {
               "n": 0,
@@ -165,7 +203,11 @@
               "n_excess": 3,
               "hit_rate": 33.3,
               "avg_excess": 5.43,
-              "median_excess": 6.12
+              "median_excess": 6.12,
+              "n_ew": 3,
+              "hit_rate_ew": 33.3,
+              "avg_excess_ew": 4.41,
+              "median_excess_ew": 5.11
             },
             "10": {
               "n": 0,
@@ -188,7 +230,11 @@
               "n_excess": 2,
               "hit_rate": 50.0,
               "avg_excess": 4.63,
-              "median_excess": 4.63
+              "median_excess": 4.63,
+              "n_ew": 2,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": 5.89,
+              "median_excess_ew": 5.89
             },
             "10": {
               "n": 1,
@@ -199,7 +245,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": 7.58,
-              "median_excess": 7.58
+              "median_excess": 7.58,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": 7.87,
+              "median_excess_ew": 7.87
             },
             "20": {
               "n": 0,
@@ -216,7 +266,11 @@
               "n_excess": 15,
               "hit_rate": 60.0,
               "avg_excess": -3.28,
-              "median_excess": -2.71
+              "median_excess": -2.71,
+              "n_ew": 15,
+              "hit_rate_ew": 66.7,
+              "avg_excess_ew": -3.25,
+              "median_excess_ew": -3.77
             },
             "10": {
               "n": 3,
@@ -227,7 +281,11 @@
               "n_excess": 3,
               "hit_rate": 33.3,
               "avg_excess": 1.12,
-              "median_excess": 2.3
+              "median_excess": 2.3,
+              "n_ew": 3,
+              "hit_rate_ew": 33.3,
+              "avg_excess_ew": 2.39,
+              "median_excess_ew": 2.59
             },
             "20": {
               "n": 0,
@@ -244,7 +302,11 @@
               "n_excess": 2,
               "hit_rate": 50.0,
               "avg_excess": 0.43,
-              "median_excess": 0.43
+              "median_excess": 0.43,
+              "n_ew": 2,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": 3.27,
+              "median_excess_ew": 3.27
             },
             "10": {
               "n": 2,
@@ -255,7 +317,11 @@
               "n_excess": 2,
               "hit_rate": 100.0,
               "avg_excess": -8.64,
-              "median_excess": -8.64
+              "median_excess": -8.64,
+              "n_ew": 2,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -6.88,
+              "median_excess_ew": -6.88
             },
             "20": {
               "n": 0,
@@ -274,7 +340,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": 18.4,
-              "median_excess": 18.4
+              "median_excess": 18.4,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": 20.01,
+              "median_excess_ew": 20.01
             },
             "10": {
               "n": 1,
@@ -285,7 +355,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": 7.58,
-              "median_excess": 7.58
+              "median_excess": 7.58,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": 7.87,
+              "median_excess_ew": 7.87
             },
             "20": {
               "n": 0,
@@ -302,7 +376,11 @@
               "n_excess": 12,
               "hit_rate": 58.3,
               "avg_excess": -3.65,
-              "median_excess": -3.01
+              "median_excess": -3.01,
+              "n_ew": 12,
+              "hit_rate_ew": 58.3,
+              "avg_excess_ew": -3.34,
+              "median_excess_ew": -2.71
             },
             "10": {
               "n": 3,
@@ -313,7 +391,11 @@
               "n_excess": 3,
               "hit_rate": 33.3,
               "avg_excess": 1.12,
-              "median_excess": 2.3
+              "median_excess": 2.3,
+              "n_ew": 3,
+              "hit_rate_ew": 33.3,
+              "avg_excess_ew": 2.39,
+              "median_excess_ew": 2.59
             },
             "20": {
               "n": 0,
@@ -330,7 +412,11 @@
               "n_excess": 3,
               "hit_rate": 66.7,
               "avg_excess": -1.84,
-              "median_excess": -2.71
+              "median_excess": -2.71,
+              "n_ew": 3,
+              "hit_rate_ew": 66.7,
+              "avg_excess_ew": -1.61,
+              "median_excess_ew": -3.77
             },
             "10": {
               "n": 1,
@@ -341,7 +427,11 @@
               "n_excess": 1,
               "hit_rate": 100.0,
               "avg_excess": -11.23,
-              "median_excess": -11.23
+              "median_excess": -11.23,
+              "n_ew": 1,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -9.47,
+              "median_excess_ew": -9.47
             },
             "20": {
               "n": 0,
@@ -358,7 +448,11 @@
               "n_excess": 2,
               "hit_rate": 50.0,
               "avg_excess": 0.48,
-              "median_excess": 0.48
+              "median_excess": 0.48,
+              "n_ew": 2,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": 1.31,
+              "median_excess_ew": 1.31
             },
             "10": {
               "n": 1,
@@ -369,7 +463,11 @@
               "n_excess": 1,
               "hit_rate": 100.0,
               "avg_excess": -6.05,
-              "median_excess": -6.05
+              "median_excess": -6.05,
+              "n_ew": 1,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -4.29,
+              "median_excess_ew": -4.29
             },
             "20": {
               "n": 0,
@@ -386,7 +484,11 @@
               "n_excess": 1,
               "hit_rate": 100.0,
               "avg_excess": -9.15,
-              "median_excess": -9.15
+              "median_excess": -9.15,
+              "n_ew": 1,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -8.22,
+              "median_excess_ew": -8.22
             },
             "10": {
               "n": 0,
@@ -409,7 +511,11 @@
               "n_excess": 16,
               "hit_rate": 62.5,
               "avg_excess": -3.46,
-              "median_excess": -2.38
+              "median_excess": -2.38,
+              "n_ew": 16,
+              "hit_rate_ew": 62.5,
+              "avg_excess_ew": -2.73,
+              "median_excess_ew": -2.11
             },
             "10": {
               "n": 6,
@@ -420,7 +526,11 @@
               "n_excess": 6,
               "hit_rate": 50.0,
               "avg_excess": -1.06,
-              "median_excess": -1.88
+              "median_excess": -1.88,
+              "n_ew": 6,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": 0.21,
+              "median_excess_ew": -0.85
             },
             "20": {
               "n": 0,
@@ -437,7 +547,11 @@
               "n_excess": 3,
               "hit_rate": 33.3,
               "avg_excess": 5.43,
-              "median_excess": 6.12
+              "median_excess": 6.12,
+              "n_ew": 3,
+              "hit_rate_ew": 33.3,
+              "avg_excess_ew": 4.41,
+              "median_excess_ew": 5.11
             },
             "10": {
               "n": 0,
@@ -471,10 +585,17 @@
           "hit_rate": 33.3,
           "avg_excess": -2.11,
           "median_excess": -1.86,
+          "n_ew": 75,
+          "hit_rate_ew": 36.0,
+          "avg_excess_ew": -1.28,
+          "median_excess_ew": -1.14,
           "fade_hit_rate": 66.7,
           "fade_hit_rate_raw": 80.0,
+          "fade_hit_rate_ew": 64.0,
           "pnl": -2.11,
-          "fade_pnl": 2.11
+          "fade_pnl": 2.11,
+          "pnl_ew": -1.28,
+          "fade_pnl_ew": 1.28
         },
         "10": {
           "n": 35,
@@ -486,18 +607,28 @@
           "hit_rate": 31.4,
           "avg_excess": -2.76,
           "median_excess": -1.29,
+          "n_ew": 35,
+          "hit_rate_ew": 45.7,
+          "avg_excess_ew": -1.64,
+          "median_excess_ew": -0.78,
           "fade_hit_rate": 68.6,
           "fade_hit_rate_raw": 71.4,
+          "fade_hit_rate_ew": 54.3,
           "pnl": -2.76,
-          "fade_pnl": 2.76
+          "fade_pnl": 2.76,
+          "pnl_ew": -1.64,
+          "fade_pnl_ew": 1.64
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {
@@ -512,7 +643,11 @@
               "n_excess": 38,
               "hit_rate": 39.5,
               "avg_excess": -1.88,
-              "median_excess": -1.6
+              "median_excess": -1.6,
+              "n_ew": 38,
+              "hit_rate_ew": 42.1,
+              "avg_excess_ew": -1.38,
+              "median_excess_ew": -0.81
             },
             "10": {
               "n": 13,
@@ -523,7 +658,11 @@
               "n_excess": 13,
               "hit_rate": 23.1,
               "avg_excess": -3.29,
-              "median_excess": -2.35
+              "median_excess": -2.35,
+              "n_ew": 13,
+              "hit_rate_ew": 30.8,
+              "avg_excess_ew": -3.0,
+              "median_excess_ew": -2.06
             },
             "20": {
               "n": 0,
@@ -540,7 +679,11 @@
               "n_excess": 22,
               "hit_rate": 13.6,
               "avg_excess": -4.44,
-              "median_excess": -3.66
+              "median_excess": -3.66,
+              "n_ew": 22,
+              "hit_rate_ew": 31.8,
+              "avg_excess_ew": -1.69,
+              "median_excess_ew": -0.92
             },
             "10": {
               "n": 22,
@@ -551,7 +694,11 @@
               "n_excess": 22,
               "hit_rate": 36.4,
               "avg_excess": -2.45,
-              "median_excess": -1.11
+              "median_excess": -1.11,
+              "n_ew": 22,
+              "hit_rate_ew": 54.5,
+              "avg_excess_ew": -0.84,
+              "median_excess_ew": 0.48
             },
             "20": {
               "n": 0,
@@ -568,7 +715,11 @@
               "n_excess": 14,
               "hit_rate": 50.0,
               "avg_excess": 0.95,
-              "median_excess": 0.01
+              "median_excess": 0.01,
+              "n_ew": 14,
+              "hit_rate_ew": 28.6,
+              "avg_excess_ew": -0.19,
+              "median_excess_ew": -1.12
             },
             "10": {
               "n": 0,
@@ -589,7 +740,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -2.4,
-              "median_excess": -2.4
+              "median_excess": -2.4,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -3.41,
+              "median_excess_ew": -3.41
             },
             "10": {
               "n": 0,
@@ -612,7 +767,11 @@
               "n_excess": 29,
               "hit_rate": 31.0,
               "avg_excess": -2.36,
-              "median_excess": -0.88
+              "median_excess": -0.88,
+              "n_ew": 29,
+              "hit_rate_ew": 37.9,
+              "avg_excess_ew": -1.54,
+              "median_excess_ew": -0.22
             },
             "10": {
               "n": 12,
@@ -623,7 +782,11 @@
               "n_excess": 12,
               "hit_rate": 33.3,
               "avg_excess": -1.09,
-              "median_excess": -0.21
+              "median_excess": -0.21,
+              "n_ew": 12,
+              "hit_rate_ew": 66.7,
+              "avg_excess_ew": 0.07,
+              "median_excess_ew": 0.85
             },
             "20": {
               "n": 0,
@@ -640,7 +803,11 @@
               "n_excess": 46,
               "hit_rate": 34.8,
               "avg_excess": -1.95,
-              "median_excess": -2.76
+              "median_excess": -2.76,
+              "n_ew": 46,
+              "hit_rate_ew": 34.8,
+              "avg_excess_ew": -1.11,
+              "median_excess_ew": -1.79
             },
             "10": {
               "n": 23,
@@ -651,7 +818,11 @@
               "n_excess": 23,
               "hit_rate": 30.4,
               "avg_excess": -3.63,
-              "median_excess": -2.35
+              "median_excess": -2.35,
+              "n_ew": 23,
+              "hit_rate_ew": 34.8,
+              "avg_excess_ew": -2.54,
+              "median_excess_ew": -2.06
             },
             "20": {
               "n": 0,
@@ -670,7 +841,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -2.09,
-              "median_excess": -2.09
+              "median_excess": -2.09,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -0.48,
+              "median_excess_ew": -0.48
             },
             "10": {
               "n": 1,
@@ -681,7 +856,11 @@
               "n_excess": 1,
               "hit_rate": 100.0,
               "avg_excess": 1.0,
-              "median_excess": 1.0
+              "median_excess": 1.0,
+              "n_ew": 1,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": 1.3,
+              "median_excess_ew": 1.3
             },
             "20": {
               "n": 0,
@@ -698,7 +877,11 @@
               "n_excess": 16,
               "hit_rate": 37.5,
               "avg_excess": -0.7,
-              "median_excess": -3.01
+              "median_excess": -3.01,
+              "n_ew": 16,
+              "hit_rate_ew": 37.5,
+              "avg_excess_ew": 0.4,
+              "median_excess_ew": -1.52
             },
             "10": {
               "n": 7,
@@ -709,7 +892,11 @@
               "n_excess": 7,
               "hit_rate": 42.9,
               "avg_excess": 1.06,
-              "median_excess": -0.08
+              "median_excess": -0.08,
+              "n_ew": 7,
+              "hit_rate_ew": 57.1,
+              "avg_excess_ew": 2.21,
+              "median_excess_ew": 0.21
             },
             "20": {
               "n": 0,
@@ -726,7 +913,11 @@
               "n_excess": 42,
               "hit_rate": 38.1,
               "avg_excess": -1.35,
-              "median_excess": -0.81
+              "median_excess": -0.81,
+              "n_ew": 42,
+              "hit_rate_ew": 45.2,
+              "avg_excess_ew": -0.71,
+              "median_excess_ew": -0.09
             },
             "10": {
               "n": 17,
@@ -737,7 +928,11 @@
               "n_excess": 17,
               "hit_rate": 41.2,
               "avg_excess": -0.95,
-              "median_excess": -0.21
+              "median_excess": -0.21,
+              "n_ew": 17,
+              "hit_rate_ew": 58.8,
+              "avg_excess_ew": 0.35,
+              "median_excess_ew": 1.21
             },
             "20": {
               "n": 0,
@@ -754,7 +949,11 @@
               "n_excess": 16,
               "hit_rate": 18.8,
               "avg_excess": -5.5,
-              "median_excess": -5.01
+              "median_excess": -5.01,
+              "n_ew": 16,
+              "hit_rate_ew": 12.5,
+              "avg_excess_ew": -4.48,
+              "median_excess_ew": -3.56
             },
             "10": {
               "n": 10,
@@ -765,7 +964,11 @@
               "n_excess": 10,
               "hit_rate": 0.0,
               "avg_excess": -8.9,
-              "median_excess": -7.6
+              "median_excess": -7.6,
+              "n_ew": 10,
+              "hit_rate_ew": 10.0,
+              "avg_excess_ew": -8.02,
+              "median_excess_ew": -7.3
             },
             "20": {
               "n": 0,
@@ -784,7 +987,11 @@
               "n_excess": 74,
               "hit_rate": 33.8,
               "avg_excess": -2.1,
-              "median_excess": -1.81
+              "median_excess": -1.81,
+              "n_ew": 74,
+              "hit_rate_ew": 36.5,
+              "avg_excess_ew": -1.25,
+              "median_excess_ew": -0.9
             },
             "10": {
               "n": 35,
@@ -795,7 +1002,11 @@
               "n_excess": 35,
               "hit_rate": 31.4,
               "avg_excess": -2.76,
-              "median_excess": -1.29
+              "median_excess": -1.29,
+              "n_ew": 35,
+              "hit_rate_ew": 45.7,
+              "avg_excess_ew": -1.64,
+              "median_excess_ew": -0.78
             },
             "20": {
               "n": 0,
@@ -812,7 +1023,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -2.4,
-              "median_excess": -2.4
+              "median_excess": -2.4,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -3.41,
+              "median_excess_ew": -3.41
             },
             "10": {
               "n": 0,
@@ -841,24 +1056,33 @@
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "10": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {}
@@ -878,24 +1102,33 @@
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "10": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {}
@@ -920,26 +1153,39 @@
           "hit_rate": 62.8,
           "avg_excess": -0.97,
           "median_excess": -0.3,
+          "n_ew": 43,
+          "hit_rate_ew": 62.8,
+          "avg_excess_ew": -1.83,
+          "median_excess_ew": -1.27,
           "fade_hit_rate": 37.2,
           "fade_hit_rate_raw": 14.0,
+          "fade_hit_rate_ew": 37.2,
           "pnl": 0.97,
-          "fade_pnl": -0.97
+          "fade_pnl": -0.97,
+          "pnl_ew": 1.83,
+          "fade_pnl_ew": -1.83
         },
         "10": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {
@@ -954,7 +1200,11 @@
               "n_excess": 13,
               "hit_rate": 76.9,
               "avg_excess": -2.98,
-              "median_excess": -3.18
+              "median_excess": -3.18,
+              "n_ew": 13,
+              "hit_rate_ew": 61.5,
+              "avg_excess_ew": -3.28,
+              "median_excess_ew": -2.25
             },
             "10": {
               "n": 0,
@@ -975,7 +1225,11 @@
               "n_excess": 18,
               "hit_rate": 50.0,
               "avg_excess": 0.46,
-              "median_excess": 0.39
+              "median_excess": 0.39,
+              "n_ew": 18,
+              "hit_rate_ew": 55.6,
+              "avg_excess_ew": -0.68,
+              "median_excess_ew": -0.78
             },
             "10": {
               "n": 0,
@@ -996,7 +1250,11 @@
               "n_excess": 12,
               "hit_rate": 66.7,
               "avg_excess": -0.96,
-              "median_excess": -0.56
+              "median_excess": -0.56,
+              "n_ew": 12,
+              "hit_rate_ew": 75.0,
+              "avg_excess_ew": -1.97,
+              "median_excess_ew": -1.57
             },
             "10": {
               "n": 0,
@@ -1019,7 +1277,11 @@
               "n_excess": 13,
               "hit_rate": 84.6,
               "avg_excess": -3.95,
-              "median_excess": -4.18
+              "median_excess": -4.18,
+              "n_ew": 13,
+              "hit_rate_ew": 76.9,
+              "avg_excess_ew": -4.57,
+              "median_excess_ew": -4.29
             },
             "10": {
               "n": 0,
@@ -1040,7 +1302,11 @@
               "n_excess": 7,
               "hit_rate": 57.1,
               "avg_excess": -0.67,
-              "median_excess": -3.18
+              "median_excess": -3.18,
+              "n_ew": 7,
+              "hit_rate_ew": 57.1,
+              "avg_excess_ew": -1.48,
+              "median_excess_ew": -2.25
             },
             "10": {
               "n": 0,
@@ -1061,7 +1327,11 @@
               "n_excess": 23,
               "hit_rate": 52.2,
               "avg_excess": 0.62,
-              "median_excess": -0.1
+              "median_excess": -0.1,
+              "n_ew": 23,
+              "hit_rate_ew": 56.5,
+              "avg_excess_ew": -0.38,
+              "median_excess_ew": -0.38
             },
             "10": {
               "n": 0,
@@ -1084,7 +1354,11 @@
               "n_excess": 26,
               "hit_rate": 57.7,
               "avg_excess": -0.57,
-              "median_excess": -0.19
+              "median_excess": -0.19,
+              "n_ew": 26,
+              "hit_rate_ew": 53.8,
+              "avg_excess_ew": -1.35,
+              "median_excess_ew": -0.66
             },
             "10": {
               "n": 0,
@@ -1105,7 +1379,11 @@
               "n_excess": 1,
               "hit_rate": 100.0,
               "avg_excess": -5.22,
-              "median_excess": -5.22
+              "median_excess": -5.22,
+              "n_ew": 1,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -4.29,
+              "median_excess_ew": -4.29
             },
             "10": {
               "n": 0,
@@ -1126,7 +1404,11 @@
               "n_excess": 4,
               "hit_rate": 50.0,
               "avg_excess": -0.07,
-              "median_excess": -2.09
+              "median_excess": -2.09,
+              "n_ew": 4,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": -1.16,
+              "median_excess_ew": -3.21
             },
             "10": {
               "n": 0,
@@ -1147,7 +1429,11 @@
               "n_excess": 4,
               "hit_rate": 100.0,
               "avg_excess": -3.17,
-              "median_excess": -3.27
+              "median_excess": -3.27,
+              "n_ew": 4,
+              "hit_rate_ew": 100.0,
+              "avg_excess_ew": -4.29,
+              "median_excess_ew": -4.39
             },
             "10": {
               "n": 0,
@@ -1168,7 +1454,11 @@
               "n_excess": 8,
               "hit_rate": 62.5,
               "avg_excess": -1.1,
-              "median_excess": -0.51
+              "median_excess": -0.51,
+              "n_ew": 8,
+              "hit_rate_ew": 75.0,
+              "avg_excess_ew": -2.16,
+              "median_excess_ew": -1.6
             },
             "10": {
               "n": 0,
@@ -1191,7 +1481,11 @@
               "n_excess": 31,
               "hit_rate": 61.3,
               "avg_excess": -0.98,
-              "median_excess": -0.3
+              "median_excess": -0.3,
+              "n_ew": 31,
+              "hit_rate_ew": 58.1,
+              "avg_excess_ew": -1.77,
+              "median_excess_ew": -1.27
             },
             "10": {
               "n": 0,
@@ -1212,7 +1506,11 @@
               "n_excess": 12,
               "hit_rate": 66.7,
               "avg_excess": -0.96,
-              "median_excess": -0.56
+              "median_excess": -0.56,
+              "n_ew": 12,
+              "hit_rate_ew": 75.0,
+              "avg_excess_ew": -1.97,
+              "median_excess_ew": -1.57
             },
             "10": {
               "n": 0,
@@ -1241,24 +1539,33 @@
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "10": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         },
         "20": {
           "n": 0,
           "enough": false,
           "fade_hit_rate": null,
           "fade_hit_rate_raw": null,
+          "fade_hit_rate_ew": null,
           "pnl": null,
-          "fade_pnl": null
+          "fade_pnl": null,
+          "pnl_ew": null,
+          "fade_pnl_ew": null
         }
       },
       "buckets": {}
@@ -1283,10 +1590,17 @@
           "hit_rate": 38.1,
           "avg_excess": -0.63,
           "median_excess": -1.95,
+          "n_ew": 19026,
+          "hit_rate_ew": 46.2,
+          "avg_excess_ew": 0.92,
+          "median_excess_ew": -0.44,
           "fade_hit_rate": 61.9,
           "fade_hit_rate_raw": 56.0,
+          "fade_hit_rate_ew": 53.6,
           "pnl": -0.63,
-          "fade_pnl": 0.63
+          "fade_pnl": 0.63,
+          "pnl_ew": 0.92,
+          "fade_pnl_ew": -0.92
         },
         "10": {
           "n": 18790,
@@ -1298,10 +1612,17 @@
           "hit_rate": 35.4,
           "avg_excess": -1.39,
           "median_excess": -3.37,
+          "n_ew": 18790,
+          "hit_rate_ew": 47.2,
+          "avg_excess_ew": 1.69,
+          "median_excess_ew": -0.46,
           "fade_hit_rate": 64.6,
           "fade_hit_rate_raw": 55.5,
+          "fade_hit_rate_ew": 52.7,
           "pnl": -1.39,
-          "fade_pnl": 1.39
+          "fade_pnl": 1.39,
+          "pnl_ew": 1.69,
+          "fade_pnl_ew": -1.69
         },
         "20": {
           "n": 18083,
@@ -1313,10 +1634,17 @@
           "hit_rate": 31.4,
           "avg_excess": -2.88,
           "median_excess": -6.08,
+          "n_ew": 18083,
+          "hit_rate_ew": 48.5,
+          "avg_excess_ew": 3.38,
+          "median_excess_ew": -0.35,
           "fade_hit_rate": 68.6,
           "fade_hit_rate_raw": 53.6,
+          "fade_hit_rate_ew": 51.4,
           "pnl": -2.88,
-          "fade_pnl": 2.88
+          "fade_pnl": 2.88,
+          "pnl_ew": 3.38,
+          "fade_pnl_ew": -3.38
         }
       },
       "buckets": {
@@ -1331,7 +1659,11 @@
               "n_excess": 4377,
               "hit_rate": 36.5,
               "avg_excess": -1.02,
-              "median_excess": -2.31
+              "median_excess": -2.31,
+              "n_ew": 4377,
+              "hit_rate_ew": 45.1,
+              "avg_excess_ew": 0.65,
+              "median_excess_ew": -0.6
             },
             "10": {
               "n": 4344,
@@ -1342,7 +1674,11 @@
               "n_excess": 4344,
               "hit_rate": 33.3,
               "avg_excess": -2.11,
-              "median_excess": -4.19
+              "median_excess": -4.19,
+              "n_ew": 4344,
+              "hit_rate_ew": 45.1,
+              "avg_excess_ew": 1.45,
+              "median_excess_ew": -0.79
             },
             "20": {
               "n": 4313,
@@ -1353,7 +1689,11 @@
               "n_excess": 4313,
               "hit_rate": 31.3,
               "avg_excess": -3.14,
-              "median_excess": -6.24
+              "median_excess": -6.24,
+              "n_ew": 4313,
+              "hit_rate_ew": 47.5,
+              "avg_excess_ew": 2.95,
+              "median_excess_ew": -0.6
             }
           },
           "指數漲": {
@@ -1366,7 +1706,11 @@
               "n_excess": 8996,
               "hit_rate": 40.1,
               "avg_excess": -0.11,
-              "median_excess": -1.65
+              "median_excess": -1.65,
+              "n_ew": 8996,
+              "hit_rate_ew": 47.7,
+              "avg_excess_ew": 1.28,
+              "median_excess_ew": -0.25
             },
             "10": {
               "n": 8874,
@@ -1377,7 +1721,11 @@
               "n_excess": 8874,
               "hit_rate": 36.9,
               "avg_excess": -0.86,
-              "median_excess": -2.9
+              "median_excess": -2.9,
+              "n_ew": 8874,
+              "hit_rate_ew": 48.4,
+              "avg_excess_ew": 1.97,
+              "median_excess_ew": -0.27
             },
             "20": {
               "n": 8501,
@@ -1388,7 +1736,11 @@
               "n_excess": 8501,
               "hit_rate": 32.1,
               "avg_excess": -2.41,
-              "median_excess": -5.85
+              "median_excess": -5.85,
+              "n_ew": 8501,
+              "hit_rate_ew": 49.7,
+              "avg_excess_ew": 3.93,
+              "median_excess_ew": -0.03
             }
           },
           "指數平": {
@@ -1401,7 +1753,11 @@
               "n_excess": 5391,
               "hit_rate": 35.8,
               "avg_excess": -1.21,
-              "median_excess": -2.25
+              "median_excess": -2.25,
+              "n_ew": 5391,
+              "hit_rate_ew": 44.6,
+              "avg_excess_ew": 0.58,
+              "median_excess_ew": -0.66
             },
             "10": {
               "n": 5310,
@@ -1412,7 +1768,11 @@
               "n_excess": 5310,
               "hit_rate": 33.7,
               "avg_excess": -1.82,
-              "median_excess": -3.54
+              "median_excess": -3.54,
+              "n_ew": 5310,
+              "hit_rate_ew": 46.7,
+              "avg_excess_ew": 1.44,
+              "median_excess_ew": -0.57
             },
             "20": {
               "n": 5117,
@@ -1423,7 +1783,11 @@
               "n_excess": 5117,
               "hit_rate": 29.4,
               "avg_excess": -3.67,
-              "median_excess": -6.54
+              "median_excess": -6.54,
+              "n_ew": 5117,
+              "hit_rate_ew": 47.5,
+              "avg_excess_ew": 2.85,
+              "median_excess_ew": -0.66
             }
           },
           "無大盤資料": {
@@ -1436,7 +1800,11 @@
               "n_excess": 152,
               "hit_rate": 61.2,
               "avg_excess": 3.03,
-              "median_excess": 1.99
+              "median_excess": 1.99,
+              "n_ew": 152,
+              "hit_rate_ew": 47.4,
+              "avg_excess_ew": 0.77,
+              "median_excess_ew": -0.27
             },
             "10": {
               "n": 152,
@@ -1447,7 +1815,11 @@
               "n_excess": 152,
               "hit_rate": 61.2,
               "avg_excess": 4.11,
-              "median_excess": 1.42
+              "median_excess": 1.42,
+              "n_ew": 152,
+              "hit_rate_ew": 48.0,
+              "avg_excess_ew": 2.53,
+              "median_excess_ew": -0.16
             },
             "20": {
               "n": 152,
@@ -1458,7 +1830,11 @@
               "n_excess": 152,
               "hit_rate": 58.6,
               "avg_excess": 4.93,
-              "median_excess": 2.03
+              "median_excess": 2.03,
+              "n_ew": 152,
+              "hit_rate_ew": 46.1,
+              "avg_excess_ew": 2.38,
+              "median_excess_ew": -0.51
             }
           },
           "系統性賣壓": {
@@ -1471,7 +1847,11 @@
               "n_excess": 110,
               "hit_rate": 15.5,
               "avg_excess": -3.8,
-              "median_excess": -3.35
+              "median_excess": -3.35,
+              "n_ew": 110,
+              "hit_rate_ew": 41.8,
+              "avg_excess_ew": -1.03,
+              "median_excess_ew": -0.67
             },
             "10": {
               "n": 110,
@@ -1482,7 +1862,11 @@
               "n_excess": 110,
               "hit_rate": 35.5,
               "avg_excess": -2.28,
-              "median_excess": -2.82
+              "median_excess": -2.82,
+              "n_ew": 110,
+              "hit_rate_ew": 46.4,
+              "avg_excess_ew": -0.62,
+              "median_excess_ew": -1.18
             },
             "20": {
               "n": 0,
@@ -1501,7 +1885,11 @@
               "n_excess": 10493,
               "hit_rate": 38.2,
               "avg_excess": -0.64,
-              "median_excess": -2.12
+              "median_excess": -2.12,
+              "n_ew": 10493,
+              "hit_rate_ew": 45.8,
+              "avg_excess_ew": 0.99,
+              "median_excess_ew": -0.54
             },
             "10": {
               "n": 10379,
@@ -1512,7 +1900,11 @@
               "n_excess": 10379,
               "hit_rate": 34.8,
               "avg_excess": -1.42,
-              "median_excess": -3.76
+              "median_excess": -3.76,
+              "n_ew": 10379,
+              "hit_rate_ew": 46.7,
+              "avg_excess_ew": 1.89,
+              "median_excess_ew": -0.64
             },
             "20": {
               "n": 9925,
@@ -1523,7 +1915,11 @@
               "n_excess": 9925,
               "hit_rate": 31.6,
               "avg_excess": -2.89,
-              "median_excess": -6.66
+              "median_excess": -6.66,
+              "n_ew": 9925,
+              "hit_rate_ew": 47.7,
+              "avg_excess_ew": 3.65,
+              "median_excess_ew": -0.63
             }
           },
           "均線糾結": {
@@ -1536,7 +1932,11 @@
               "n_excess": 8034,
               "hit_rate": 38.0,
               "avg_excess": -0.64,
-              "median_excess": -1.81
+              "median_excess": -1.81,
+              "n_ew": 8034,
+              "hit_rate_ew": 46.3,
+              "avg_excess_ew": 0.79,
+              "median_excess_ew": -0.41
             },
             "10": {
               "n": 7925,
@@ -1547,7 +1947,11 @@
               "n_excess": 7925,
               "hit_rate": 35.7,
               "avg_excess": -1.42,
-              "median_excess": -2.96
+              "median_excess": -2.96,
+              "n_ew": 7925,
+              "hit_rate_ew": 47.5,
+              "avg_excess_ew": 1.36,
+              "median_excess_ew": -0.37
             },
             "20": {
               "n": 7697,
@@ -1558,7 +1962,11 @@
               "n_excess": 7697,
               "hit_rate": 31.0,
               "avg_excess": -2.93,
-              "median_excess": -5.5
+              "median_excess": -5.5,
+              "n_ew": 7697,
+              "hit_rate_ew": 49.3,
+              "avg_excess_ew": 2.99,
+              "median_excess_ew": -0.13
             }
           },
           "空頭排列": {
@@ -1571,7 +1979,11 @@
               "n_excess": 499,
               "hit_rate": 37.5,
               "avg_excess": -0.15,
-              "median_excess": -1.34
+              "median_excess": -1.34,
+              "n_ew": 499,
+              "hit_rate_ew": 53.9,
+              "avg_excess_ew": 1.61,
+              "median_excess_ew": 0.35
             },
             "10": {
               "n": 486,
@@ -1582,7 +1994,11 @@
               "n_excess": 486,
               "hit_rate": 41.6,
               "avg_excess": -0.27,
-              "median_excess": -1.73
+              "median_excess": -1.73,
+              "n_ew": 486,
+              "hit_rate_ew": 53.5,
+              "avg_excess_ew": 2.76,
+              "median_excess_ew": 0.51
             },
             "20": {
               "n": 461,
@@ -1593,7 +2009,11 @@
               "n_excess": 461,
               "hit_rate": 33.4,
               "avg_excess": -1.77,
-              "median_excess": -4.48
+              "median_excess": -4.48,
+              "n_ew": 461,
+              "hit_rate_ew": 54.0,
+              "avg_excess_ew": 3.95,
+              "median_excess_ew": 0.68
             }
           }
         },
@@ -1608,7 +2028,11 @@
               "n_excess": 6792,
               "hit_rate": 40.0,
               "avg_excess": -0.3,
-              "median_excess": -2.3
+              "median_excess": -2.3,
+              "n_ew": 6792,
+              "hit_rate_ew": 45.8,
+              "avg_excess_ew": 1.27,
+              "median_excess_ew": -0.86
             },
             "10": {
               "n": 6738,
@@ -1619,7 +2043,11 @@
               "n_excess": 6738,
               "hit_rate": 38.1,
               "avg_excess": -0.69,
-              "median_excess": -3.87
+              "median_excess": -3.87,
+              "n_ew": 6738,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 2.5,
+              "median_excess_ew": -0.9
             },
             "20": {
               "n": 6470,
@@ -1630,7 +2058,11 @@
               "n_excess": 6470,
               "hit_rate": 35.9,
               "avg_excess": -1.56,
-              "median_excess": -6.65
+              "median_excess": -6.65,
+              "n_ew": 6470,
+              "hit_rate_ew": 48.1,
+              "avg_excess_ew": 4.88,
+              "median_excess_ew": -0.8
             }
           },
           "+5 ~ +10%": {
@@ -1643,7 +2075,11 @@
               "n_excess": 4840,
               "hit_rate": 35.7,
               "avg_excess": -0.86,
-              "median_excess": -2.22
+              "median_excess": -2.22,
+              "n_ew": 4840,
+              "hit_rate_ew": 43.1,
+              "avg_excess_ew": 0.69,
+              "median_excess_ew": -0.82
             },
             "10": {
               "n": 4777,
@@ -1654,7 +2090,11 @@
               "n_excess": 4777,
               "hit_rate": 32.2,
               "avg_excess": -1.89,
-              "median_excess": -3.82
+              "median_excess": -3.82,
+              "n_ew": 4777,
+              "hit_rate_ew": 43.7,
+              "avg_excess_ew": 1.18,
+              "median_excess_ew": -1.06
             },
             "20": {
               "n": 4604,
@@ -1665,7 +2105,11 @@
               "n_excess": 4604,
               "hit_rate": 29.4,
               "avg_excess": -3.25,
-              "median_excess": -6.62
+              "median_excess": -6.62,
+              "n_ew": 4604,
+              "hit_rate_ew": 46.3,
+              "avg_excess_ew": 3.09,
+              "median_excess_ew": -0.92
             }
           },
           "−5 ~ +5%": {
@@ -1678,7 +2122,11 @@
               "n_excess": 7012,
               "hit_rate": 37.4,
               "avg_excess": -0.85,
-              "median_excess": -1.63
+              "median_excess": -1.63,
+              "n_ew": 7012,
+              "hit_rate_ew": 48.3,
+              "avg_excess_ew": 0.66,
+              "median_excess_ew": -0.14
             },
             "10": {
               "n": 6898,
@@ -1689,7 +2137,11 @@
               "n_excess": 6898,
               "hit_rate": 34.3,
               "avg_excess": -1.84,
-              "median_excess": -2.8
+              "median_excess": -2.8,
+              "n_ew": 6898,
+              "hit_rate_ew": 49.3,
+              "avg_excess_ew": 1.13,
+              "median_excess_ew": -0.08
             },
             "20": {
               "n": 6646,
@@ -1700,7 +2152,11 @@
               "n_excess": 6646,
               "hit_rate": 27.8,
               "avg_excess": -4.02,
-              "median_excess": -5.44
+              "median_excess": -5.44,
+              "n_ew": 6646,
+              "hit_rate_ew": 50.1,
+              "avg_excess_ew": 2.03,
+              "median_excess_ew": 0.01
             }
           },
           "< −10%": {
@@ -1713,7 +2169,11 @@
               "n_excess": 146,
               "hit_rate": 50.7,
               "avg_excess": 2.43,
-              "median_excess": 0.25
+              "median_excess": 0.25,
+              "n_ew": 146,
+              "hit_rate_ew": 63.0,
+              "avg_excess_ew": 4.65,
+              "median_excess_ew": 2.52
             },
             "10": {
               "n": 145,
@@ -1724,7 +2184,11 @@
               "n_excess": 145,
               "hit_rate": 51.0,
               "avg_excess": 1.91,
-              "median_excess": 0.26
+              "median_excess": 0.26,
+              "n_ew": 145,
+              "hit_rate_ew": 61.4,
+              "avg_excess_ew": 5.81,
+              "median_excess_ew": 3.0
             },
             "20": {
               "n": 141,
@@ -1735,7 +2199,11 @@
               "n_excess": 141,
               "hit_rate": 43.3,
               "avg_excess": -0.1,
-              "median_excess": -4.0
+              "median_excess": -4.0,
+              "n_ew": 141,
+              "hit_rate_ew": 55.3,
+              "avg_excess_ew": 6.56,
+              "median_excess_ew": 2.9
             }
           },
           "−10 ~ −5%": {
@@ -1748,7 +2216,11 @@
               "n_excess": 236,
               "hit_rate": 40.7,
               "avg_excess": -0.33,
-              "median_excess": -1.09
+              "median_excess": -1.09,
+              "n_ew": 236,
+              "hit_rate_ew": 50.4,
+              "avg_excess_ew": 1.07,
+              "median_excess_ew": 0.04
             },
             "10": {
               "n": 232,
@@ -1759,7 +2231,11 @@
               "n_excess": 232,
               "hit_rate": 40.5,
               "avg_excess": 0.01,
-              "median_excess": -1.98
+              "median_excess": -1.98,
+              "n_ew": 232,
+              "hit_rate_ew": 51.7,
+              "avg_excess_ew": 2.61,
+              "median_excess_ew": 0.36
             },
             "20": {
               "n": 222,
@@ -1770,7 +2246,11 @@
               "n_excess": 222,
               "hit_rate": 37.4,
               "avg_excess": -1.5,
-              "median_excess": -4.19
+              "median_excess": -4.19,
+              "n_ew": 222,
+              "hit_rate_ew": 53.6,
+              "avg_excess_ew": 3.78,
+              "median_excess_ew": 0.59
             }
           }
         },
@@ -1785,7 +2265,11 @@
               "n_excess": 18648,
               "hit_rate": 38.1,
               "avg_excess": -0.61,
-              "median_excess": -1.95
+              "median_excess": -1.95,
+              "n_ew": 18648,
+              "hit_rate_ew": 46.3,
+              "avg_excess_ew": 0.95,
+              "median_excess_ew": -0.43
             },
             "10": {
               "n": 18636,
@@ -1796,7 +2280,11 @@
               "n_excess": 18636,
               "hit_rate": 35.3,
               "avg_excess": -1.38,
-              "median_excess": -3.37
+              "median_excess": -3.37,
+              "n_ew": 18636,
+              "hit_rate_ew": 47.2,
+              "avg_excess_ew": 1.71,
+              "median_excess_ew": -0.46
             },
             "20": {
               "n": 18083,
@@ -1807,7 +2295,11 @@
               "n_excess": 18083,
               "hit_rate": 31.4,
               "avg_excess": -2.88,
-              "median_excess": -6.08
+              "median_excess": -6.08,
+              "n_ew": 18083,
+              "hit_rate_ew": 48.5,
+              "avg_excess_ew": 3.38,
+              "median_excess_ew": -0.35
             }
           },
           "外資連續≥3": {
@@ -1820,7 +2312,11 @@
               "n_excess": 88,
               "hit_rate": 31.8,
               "avg_excess": -2.08,
-              "median_excess": -1.97
+              "median_excess": -1.97,
+              "n_ew": 88,
+              "hit_rate_ew": 36.4,
+              "avg_excess_ew": -1.32,
+              "median_excess_ew": -1.44
             },
             "10": {
               "n": 40,
@@ -1831,7 +2327,11 @@
               "n_excess": 40,
               "hit_rate": 30.0,
               "avg_excess": -2.9,
-              "median_excess": -2.1
+              "median_excess": -2.1,
+              "n_ew": 40,
+              "hit_rate_ew": 42.5,
+              "avg_excess_ew": -1.76,
+              "median_excess_ew": -0.88
             },
             "20": {
               "n": 0,
@@ -1848,7 +2348,11 @@
               "n_excess": 283,
               "hit_rate": 36.0,
               "avg_excess": -1.32,
-              "median_excess": -1.93
+              "median_excess": -1.93,
+              "n_ew": 283,
+              "hit_rate_ew": 42.4,
+              "avg_excess_ew": -0.74,
+              "median_excess_ew": -1.04
             },
             "10": {
               "n": 114,
@@ -1859,7 +2363,11 @@
               "n_excess": 114,
               "hit_rate": 38.6,
               "avg_excess": -1.65,
-              "median_excess": -3.08
+              "median_excess": -3.08,
+              "n_ew": 114,
+              "hit_rate_ew": 43.0,
+              "avg_excess_ew": -0.54,
+              "median_excess_ew": -2.31
             },
             "20": {
               "n": 0,
@@ -1876,7 +2384,11 @@
               "n_excess": 6,
               "hit_rate": 83.3,
               "avg_excess": 11.84,
-              "median_excess": 7.21
+              "median_excess": 7.21,
+              "n_ew": 6,
+              "hit_rate_ew": 83.3,
+              "avg_excess_ew": 10.82,
+              "median_excess_ew": 6.19
             },
             "10": {
               "n": 0,
@@ -1897,7 +2409,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -2.4,
-              "median_excess": -2.4
+              "median_excess": -2.4,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -3.41,
+              "median_excess_ew": -3.41
             },
             "10": {
               "n": 0,
@@ -1920,7 +2436,11 @@
               "n_excess": 18795,
               "hit_rate": 37.9,
               "avg_excess": -0.65,
-              "median_excess": -1.97
+              "median_excess": -1.97,
+              "n_ew": 18795,
+              "hit_rate_ew": 46.3,
+              "avg_excess_ew": 0.93,
+              "median_excess_ew": -0.43
             },
             "10": {
               "n": 18592,
@@ -1931,7 +2451,11 @@
               "n_excess": 18592,
               "hit_rate": 35.3,
               "avg_excess": -1.41,
-              "median_excess": -3.39
+              "median_excess": -3.39,
+              "n_ew": 18592,
+              "hit_rate_ew": 47.2,
+              "avg_excess_ew": 1.7,
+              "median_excess_ew": -0.46
             },
             "20": {
               "n": 17887,
@@ -1942,7 +2466,11 @@
               "n_excess": 17887,
               "hit_rate": 31.4,
               "avg_excess": -2.89,
-              "median_excess": -6.11
+              "median_excess": -6.11,
+              "n_ew": 17887,
+              "hit_rate_ew": 48.6,
+              "avg_excess_ew": 3.4,
+              "median_excess_ew": -0.31
             }
           },
           "大盤事件±1日": {
@@ -1955,7 +2483,11 @@
               "n_excess": 230,
               "hit_rate": 52.2,
               "avg_excess": 1.4,
-              "median_excess": 0.3
+              "median_excess": 0.3,
+              "n_ew": 230,
+              "hit_rate_ew": 42.2,
+              "avg_excess_ew": -0.21,
+              "median_excess_ew": -1.12
             },
             "10": {
               "n": 197,
@@ -1966,7 +2498,11 @@
               "n_excess": 197,
               "hit_rate": 41.1,
               "avg_excess": 0.49,
-              "median_excess": -1.8
+              "median_excess": -1.8,
+              "n_ew": 197,
+              "hit_rate_ew": 41.6,
+              "avg_excess_ew": 1.02,
+              "median_excess_ew": -1.18
             },
             "20": {
               "n": 195,
@@ -1977,7 +2513,11 @@
               "n_excess": 195,
               "hit_rate": 30.3,
               "avg_excess": -1.67,
-              "median_excess": -4.35
+              "median_excess": -4.35,
+              "n_ew": 195,
+              "hit_rate_ew": 41.5,
+              "avg_excess_ew": 1.05,
+              "median_excess_ew": -1.79
             }
           },
           "個股事件±1日": {
@@ -1990,7 +2530,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -5.08,
-              "median_excess": -5.08
+              "median_excess": -5.08,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -3.53,
+              "median_excess_ew": -3.53
             },
             "10": {
               "n": 1,
@@ -2001,7 +2545,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -12.98,
-              "median_excess": -12.98
+              "median_excess": -12.98,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -10.2,
+              "median_excess_ew": -10.2
             },
             "20": {
               "n": 1,
@@ -2012,7 +2560,11 @@
               "n_excess": 1,
               "hit_rate": 0.0,
               "avg_excess": -14.63,
-              "median_excess": -14.63
+              "median_excess": -14.63,
+              "n_ew": 1,
+              "hit_rate_ew": 0.0,
+              "avg_excess_ew": -10.4,
+              "median_excess_ew": -10.4
             }
           }
         },
@@ -2027,7 +2579,11 @@
               "n_excess": 2457,
               "hit_rate": 35.1,
               "avg_excess": -1.12,
-              "median_excess": -2.71
+              "median_excess": -2.71,
+              "n_ew": 2457,
+              "hit_rate_ew": 42.5,
+              "avg_excess_ew": 0.56,
+              "median_excess_ew": -1.14
             },
             "10": {
               "n": 2434,
@@ -2038,7 +2594,11 @@
               "n_excess": 2434,
               "hit_rate": 30.8,
               "avg_excess": -2.29,
-              "median_excess": -4.61
+              "median_excess": -4.61,
+              "n_ew": 2434,
+              "hit_rate_ew": 41.7,
+              "avg_excess_ew": 1.02,
+              "median_excess_ew": -1.58
             },
             "20": {
               "n": 2367,
@@ -2049,7 +2609,11 @@
               "n_excess": 2367,
               "hit_rate": 27.2,
               "avg_excess": -4.95,
-              "median_excess": -8.36
+              "median_excess": -8.36,
+              "n_ew": 2367,
+              "hit_rate_ew": 41.8,
+              "avg_excess_ew": 1.8,
+              "median_excess_ew": -1.99
             }
           },
           "3~5": {
@@ -2062,7 +2626,11 @@
               "n_excess": 3949,
               "hit_rate": 38.1,
               "avg_excess": -0.54,
-              "median_excess": -2.1
+              "median_excess": -2.1,
+              "n_ew": 3949,
+              "hit_rate_ew": 45.3,
+              "avg_excess_ew": 1.03,
+              "median_excess_ew": -0.6
             },
             "10": {
               "n": 3906,
@@ -2073,7 +2641,11 @@
               "n_excess": 3906,
               "hit_rate": 36.1,
               "avg_excess": -1.12,
-              "median_excess": -3.51
+              "median_excess": -3.51,
+              "n_ew": 3906,
+              "hit_rate_ew": 47.2,
+              "avg_excess_ew": 2.06,
+              "median_excess_ew": -0.5
             },
             "20": {
               "n": 3772,
@@ -2084,7 +2656,11 @@
               "n_excess": 3772,
               "hit_rate": 31.5,
               "avg_excess": -2.6,
-              "median_excess": -6.3
+              "median_excess": -6.3,
+              "n_ew": 3772,
+              "hit_rate_ew": 47.4,
+              "avg_excess_ew": 3.74,
+              "median_excess_ew": -0.67
             }
           },
           "2~3": {
@@ -2097,7 +2673,11 @@
               "n_excess": 5999,
               "hit_rate": 39.2,
               "avg_excess": -0.49,
-              "median_excess": -1.76
+              "median_excess": -1.76,
+              "n_ew": 5999,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 1.02,
+              "median_excess_ew": -0.34
             },
             "10": {
               "n": 5925,
@@ -2108,7 +2688,11 @@
               "n_excess": 5925,
               "hit_rate": 35.9,
               "avg_excess": -1.27,
-              "median_excess": -3.21
+              "median_excess": -3.21,
+              "n_ew": 5925,
+              "hit_rate_ew": 47.6,
+              "avg_excess_ew": 1.76,
+              "median_excess_ew": -0.38
             },
             "20": {
               "n": 5677,
@@ -2119,7 +2703,11 @@
               "n_excess": 5677,
               "hit_rate": 31.8,
               "avg_excess": -2.59,
-              "median_excess": -5.68
+              "median_excess": -5.68,
+              "n_ew": 5677,
+              "hit_rate_ew": 49.4,
+              "avg_excess_ew": 3.56,
+              "median_excess_ew": -0.16
             }
           },
           "1.5~2": {
@@ -2132,7 +2720,11 @@
               "n_excess": 6621,
               "hit_rate": 38.0,
               "avg_excess": -0.61,
-              "median_excess": -1.76
+              "median_excess": -1.76,
+              "n_ew": 6621,
+              "hit_rate_ew": 47.4,
+              "avg_excess_ew": 0.9,
+              "median_excess_ew": -0.26
             },
             "10": {
               "n": 6525,
@@ -2143,7 +2735,11 @@
               "n_excess": 6525,
               "hit_rate": 36.1,
               "avg_excess": -1.32,
-              "median_excess": -2.95
+              "median_excess": -2.95,
+              "n_ew": 6525,
+              "hit_rate_ew": 48.8,
+              "avg_excess_ew": 1.65,
+              "median_excess_ew": -0.19
             },
             "20": {
               "n": 6267,
@@ -2154,7 +2750,11 @@
               "n_excess": 6267,
               "hit_rate": 32.5,
               "avg_excess": -2.53,
-              "median_excess": -5.41
+              "median_excess": -5.41,
+              "n_ew": 6267,
+              "hit_rate_ew": 50.9,
+              "avg_excess_ew": 3.59,
+              "median_excess_ew": 0.2
             }
           }
         }
@@ -2180,10 +2780,17 @@
           "hit_rate": 62.6,
           "avg_excess": -0.98,
           "median_excess": -1.73,
+          "n_ew": 15983,
+          "hit_rate_ew": 51.3,
+          "avg_excess_ew": 0.73,
+          "median_excess_ew": -0.14,
           "fade_hit_rate": 37.4,
           "fade_hit_rate_raw": 45.6,
+          "fade_hit_rate_ew": 48.5,
           "pnl": 0.98,
-          "fade_pnl": -0.98
+          "fade_pnl": -0.98,
+          "pnl_ew": -0.73,
+          "fade_pnl_ew": 0.73
         },
         "10": {
           "n": 15719,
@@ -2195,10 +2802,17 @@
           "hit_rate": 66.8,
           "avg_excess": -1.97,
           "median_excess": -3.31,
+          "n_ew": 15719,
+          "hit_rate_ew": 51.5,
+          "avg_excess_ew": 1.39,
+          "median_excess_ew": -0.24,
           "fade_hit_rate": 33.2,
           "fade_hit_rate_raw": 45.9,
+          "fade_hit_rate_ew": 48.4,
           "pnl": 1.97,
-          "fade_pnl": -1.97
+          "fade_pnl": -1.97,
+          "pnl_ew": -1.39,
+          "fade_pnl_ew": 1.39
         },
         "20": {
           "n": 15258,
@@ -2210,10 +2824,17 @@
           "hit_rate": 69.6,
           "avg_excess": -3.47,
           "median_excess": -5.76,
+          "n_ew": 15258,
+          "hit_rate_ew": 49.5,
+          "avg_excess_ew": 2.91,
+          "median_excess_ew": 0.07,
           "fade_hit_rate": 30.4,
           "fade_hit_rate_raw": 48.2,
+          "fade_hit_rate_ew": 50.4,
           "pnl": 3.47,
-          "fade_pnl": -3.47
+          "fade_pnl": -3.47,
+          "pnl_ew": -2.91,
+          "fade_pnl_ew": 2.91
         }
       },
       "buckets": {
@@ -2228,7 +2849,11 @@
               "n_excess": 4700,
               "hit_rate": 62.5,
               "avg_excess": -1.09,
-              "median_excess": -1.72
+              "median_excess": -1.72,
+              "n_ew": 4700,
+              "hit_rate_ew": 50.8,
+              "avg_excess_ew": 0.78,
+              "median_excess_ew": -0.11
             },
             "10": {
               "n": 4655,
@@ -2239,7 +2864,11 @@
               "n_excess": 4655,
               "hit_rate": 67.2,
               "avg_excess": -1.89,
-              "median_excess": -3.34
+              "median_excess": -3.34,
+              "n_ew": 4655,
+              "hit_rate_ew": 51.6,
+              "avg_excess_ew": 1.67,
+              "median_excess_ew": -0.24
             },
             "20": {
               "n": 4599,
@@ -2250,7 +2879,11 @@
               "n_excess": 4599,
               "hit_rate": 69.1,
               "avg_excess": -3.15,
-              "median_excess": -5.24
+              "median_excess": -5.24,
+              "n_ew": 4599,
+              "hit_rate_ew": 50.3,
+              "avg_excess_ew": 2.69,
+              "median_excess_ew": -0.04
             }
           },
           "指數漲": {
@@ -2263,7 +2896,11 @@
               "n_excess": 6317,
               "hit_rate": 61.8,
               "avg_excess": -0.73,
-              "median_excess": -1.59
+              "median_excess": -1.59,
+              "n_ew": 6317,
+              "hit_rate_ew": 51.7,
+              "avg_excess_ew": 0.75,
+              "median_excess_ew": -0.18
             },
             "10": {
               "n": 6197,
@@ -2274,7 +2911,11 @@
               "n_excess": 6197,
               "hit_rate": 65.4,
               "avg_excess": -1.66,
-              "median_excess": -3.03
+              "median_excess": -3.03,
+              "n_ew": 6197,
+              "hit_rate_ew": 51.6,
+              "avg_excess_ew": 1.24,
+              "median_excess_ew": -0.25
             },
             "20": {
               "n": 6021,
@@ -2285,7 +2926,11 @@
               "n_excess": 6021,
               "hit_rate": 69.3,
               "avg_excess": -3.46,
-              "median_excess": -5.81
+              "median_excess": -5.81,
+              "n_ew": 6021,
+              "hit_rate_ew": 48.9,
+              "avg_excess_ew": 2.93,
+              "median_excess_ew": 0.2
             }
           },
           "指數平": {
@@ -2298,7 +2943,11 @@
               "n_excess": 4753,
               "hit_rate": 64.0,
               "avg_excess": -1.22,
-              "median_excess": -1.95
+              "median_excess": -1.95,
+              "n_ew": 4753,
+              "hit_rate_ew": 51.2,
+              "avg_excess_ew": 0.67,
+              "median_excess_ew": -0.12
             },
             "10": {
               "n": 4654,
@@ -2309,7 +2958,11 @@
               "n_excess": 4654,
               "hit_rate": 68.5,
               "avg_excess": -2.55,
-              "median_excess": -3.81
+              "median_excess": -3.81,
+              "n_ew": 4654,
+              "hit_rate_ew": 51.1,
+              "avg_excess_ew": 1.39,
+              "median_excess_ew": -0.19
             },
             "20": {
               "n": 4556,
@@ -2320,7 +2973,11 @@
               "n_excess": 4556,
               "hit_rate": 71.1,
               "avg_excess": -3.92,
-              "median_excess": -6.49
+              "median_excess": -6.49,
+              "n_ew": 4556,
+              "hit_rate_ew": 49.6,
+              "avg_excess_ew": 3.15,
+              "median_excess_ew": 0.06
             }
           },
           "無大盤資料": {
@@ -2333,7 +2990,11 @@
               "n_excess": 82,
               "hit_rate": 32.9,
               "avg_excess": 1.78,
-              "median_excess": 2.18
+              "median_excess": 2.18,
+              "n_ew": 82,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": -0.48,
+              "median_excess_ew": -0.08
             },
             "10": {
               "n": 82,
@@ -2344,7 +3005,11 @@
               "n_excess": 82,
               "hit_rate": 39.0,
               "avg_excess": 1.77,
-              "median_excess": 1.69
+              "median_excess": 1.69,
+              "n_ew": 82,
+              "hit_rate_ew": 50.0,
+              "avg_excess_ew": 0.19,
+              "median_excess_ew": 0.1
             },
             "20": {
               "n": 82,
@@ -2355,7 +3020,11 @@
               "n_excess": 82,
               "hit_rate": 40.2,
               "avg_excess": 2.77,
-              "median_excess": 3.13
+              "median_excess": 3.13,
+              "n_ew": 82,
+              "hit_rate_ew": 48.8,
+              "avg_excess_ew": 0.23,
+              "median_excess_ew": 0.59
             }
           },
           "系統性賣壓": {
@@ -2368,7 +3037,11 @@
               "n_excess": 131,
               "hit_rate": 75.6,
               "avg_excess": -2.25,
-              "median_excess": -3.06
+              "median_excess": -3.06,
+              "n_ew": 131,
+              "hit_rate_ew": 51.1,
+              "avg_excess_ew": 0.45,
+              "median_excess_ew": -0.31
             },
             "10": {
               "n": 131,
@@ -2379,7 +3052,11 @@
               "n_excess": 131,
               "hit_rate": 73.3,
               "avg_excess": -1.72,
-              "median_excess": -2.09
+              "median_excess": -2.09,
+              "n_ew": 131,
+              "hit_rate_ew": 56.5,
+              "avg_excess_ew": -0.21,
+              "median_excess_ew": -0.62
             },
             "20": {
               "n": 0,
@@ -2398,7 +3075,11 @@
               "n_excess": 5029,
               "hit_rate": 63.8,
               "avg_excess": -1.18,
-              "median_excess": -2.36
+              "median_excess": -2.36,
+              "n_ew": 5029,
+              "hit_rate_ew": 55.8,
+              "avg_excess_ew": 0.45,
+              "median_excess_ew": -0.81
             },
             "10": {
               "n": 4969,
@@ -2409,7 +3090,11 @@
               "n_excess": 4969,
               "hit_rate": 67.4,
               "avg_excess": -2.13,
-              "median_excess": -4.36
+              "median_excess": -4.36,
+              "n_ew": 4969,
+              "hit_rate_ew": 55.7,
+              "avg_excess_ew": 1.27,
+              "median_excess_ew": -1.05
             },
             "20": {
               "n": 4791,
@@ -2420,7 +3105,11 @@
               "n_excess": 4791,
               "hit_rate": 69.0,
               "avg_excess": -3.37,
-              "median_excess": -7.06
+              "median_excess": -7.06,
+              "n_ew": 4791,
+              "hit_rate_ew": 53.3,
+              "avg_excess_ew": 3.26,
+              "median_excess_ew": -0.92
             }
           },
           "均線糾結": {
@@ -2433,7 +3122,11 @@
               "n_excess": 7083,
               "hit_rate": 62.2,
               "avg_excess": -0.79,
-              "median_excess": -1.65
+              "median_excess": -1.65,
+              "n_ew": 7083,
+              "hit_rate_ew": 50.5,
+              "avg_excess_ew": 0.92,
+              "median_excess_ew": -0.03
             },
             "10": {
               "n": 6977,
@@ -2444,7 +3137,11 @@
               "n_excess": 6977,
               "hit_rate": 66.6,
               "avg_excess": -1.81,
-              "median_excess": -3.13
+              "median_excess": -3.13,
+              "n_ew": 6977,
+              "hit_rate_ew": 50.8,
+              "avg_excess_ew": 1.53,
+              "median_excess_ew": -0.12
             },
             "20": {
               "n": 6755,
@@ -2455,7 +3152,11 @@
               "n_excess": 6755,
               "hit_rate": 69.0,
               "avg_excess": -3.15,
-              "median_excess": -5.55
+              "median_excess": -5.55,
+              "n_ew": 6755,
+              "hit_rate_ew": 48.9,
+              "avg_excess_ew": 3.2,
+              "median_excess_ew": 0.22
             }
           },
           "空頭排列": {
@@ -2468,7 +3169,11 @@
               "n_excess": 3871,
               "hit_rate": 62.0,
               "avg_excess": -1.08,
-              "median_excess": -1.31
+              "median_excess": -1.31,
+              "n_ew": 3871,
+              "hit_rate_ew": 46.9,
+              "avg_excess_ew": 0.73,
+              "median_excess_ew": 0.24
             },
             "10": {
               "n": 3773,
@@ -2479,7 +3184,11 @@
               "n_excess": 3773,
               "hit_rate": 66.2,
               "avg_excess": -2.07,
-              "median_excess": -2.63
+              "median_excess": -2.63,
+              "n_ew": 3773,
+              "hit_rate_ew": 47.3,
+              "avg_excess_ew": 1.3,
+              "median_excess_ew": 0.3
             },
             "20": {
               "n": 3712,
@@ -2490,7 +3199,11 @@
               "n_excess": 3712,
               "hit_rate": 71.7,
               "avg_excess": -4.18,
-              "median_excess": -5.01
+              "median_excess": -5.01,
+              "n_ew": 3712,
+              "hit_rate_ew": 45.8,
+              "avg_excess_ew": 1.92,
+              "median_excess_ew": 0.55
             }
           }
         },
@@ -2505,7 +3218,11 @@
               "n_excess": 3173,
               "hit_rate": 62.4,
               "avg_excess": -0.89,
-              "median_excess": -2.66
+              "median_excess": -2.66,
+              "n_ew": 3173,
+              "hit_rate_ew": 55.9,
+              "avg_excess_ew": 0.72,
+              "median_excess_ew": -1.36
             },
             "10": {
               "n": 3143,
@@ -2516,7 +3233,11 @@
               "n_excess": 3143,
               "hit_rate": 64.9,
               "avg_excess": -1.49,
-              "median_excess": -4.64
+              "median_excess": -4.64,
+              "n_ew": 3143,
+              "hit_rate_ew": 55.0,
+              "avg_excess_ew": 1.85,
+              "median_excess_ew": -1.43
             },
             "20": {
               "n": 3036,
@@ -2527,7 +3248,11 @@
               "n_excess": 3036,
               "hit_rate": 66.2,
               "avg_excess": -2.34,
-              "median_excess": -7.57
+              "median_excess": -7.57,
+              "n_ew": 3036,
+              "hit_rate_ew": 53.7,
+              "avg_excess_ew": 4.22,
+              "median_excess_ew": -1.47
             }
           },
           "+5 ~ +10%": {
@@ -2540,7 +3265,11 @@
               "n_excess": 2377,
               "hit_rate": 63.4,
               "avg_excess": -0.71,
-              "median_excess": -2.06
+              "median_excess": -2.06,
+              "n_ew": 2377,
+              "hit_rate_ew": 54.8,
+              "avg_excess_ew": 0.95,
+              "median_excess_ew": -0.58
             },
             "10": {
               "n": 2355,
@@ -2551,7 +3280,11 @@
               "n_excess": 2355,
               "hit_rate": 67.9,
               "avg_excess": -1.88,
-              "median_excess": -3.98
+              "median_excess": -3.98,
+              "n_ew": 2355,
+              "hit_rate_ew": 54.4,
+              "avg_excess_ew": 1.55,
+              "median_excess_ew": -0.84
             },
             "20": {
               "n": 2264,
@@ -2562,7 +3295,11 @@
               "n_excess": 2264,
               "hit_rate": 68.5,
               "avg_excess": -3.08,
-              "median_excess": -6.61
+              "median_excess": -6.61,
+              "n_ew": 2264,
+              "hit_rate_ew": 51.4,
+              "avg_excess_ew": 3.71,
+              "median_excess_ew": -0.42
             }
           },
           "−5 ~ +5%": {
@@ -2575,7 +3312,11 @@
               "n_excess": 7999,
               "hit_rate": 63.5,
               "avg_excess": -1.15,
-              "median_excess": -1.62
+              "median_excess": -1.62,
+              "n_ew": 7999,
+              "hit_rate_ew": 49.6,
+              "avg_excess_ew": 0.59,
+              "median_excess_ew": 0.01
             },
             "10": {
               "n": 7835,
@@ -2586,7 +3327,11 @@
               "n_excess": 7835,
               "hit_rate": 68.5,
               "avg_excess": -2.34,
-              "median_excess": -3.12
+              "median_excess": -3.12,
+              "n_ew": 7835,
+              "hit_rate_ew": 50.2,
+              "avg_excess_ew": 1.11,
+              "median_excess_ew": -0.02
             },
             "20": {
               "n": 7616,
@@ -2597,7 +3342,11 @@
               "n_excess": 7616,
               "hit_rate": 72.3,
               "avg_excess": -4.17,
-              "median_excess": -5.65
+              "median_excess": -5.65,
+              "n_ew": 7616,
+              "hit_rate_ew": 48.2,
+              "avg_excess_ew": 2.24,
+              "median_excess_ew": 0.27
             }
           },
           "< −10%": {
@@ -2610,7 +3359,11 @@
               "n_excess": 743,
               "hit_rate": 52.2,
               "avg_excess": -0.01,
-              "median_excess": -0.34
+              "median_excess": -0.34,
+              "n_ew": 743,
+              "hit_rate_ew": 42.7,
+              "avg_excess_ew": 2.14,
+              "median_excess_ew": 0.94
             },
             "10": {
               "n": 730,
@@ -2621,7 +3374,11 @@
               "n_excess": 730,
               "hit_rate": 55.2,
               "avg_excess": -0.23,
-              "median_excess": -1.14
+              "median_excess": -1.14,
+              "n_ew": 730,
+              "hit_rate_ew": 43.2,
+              "avg_excess_ew": 3.1,
+              "median_excess_ew": 1.01
             },
             "20": {
               "n": 711,
@@ -2632,7 +3389,11 @@
               "n_excess": 711,
               "hit_rate": 61.3,
               "avg_excess": -1.74,
-              "median_excess": -2.88
+              "median_excess": -2.88,
+              "n_ew": 711,
+              "hit_rate_ew": 44.0,
+              "avg_excess_ew": 4.08,
+              "median_excess_ew": 1.49
             }
           },
           "−10 ~ −5%": {
@@ -2645,7 +3406,11 @@
               "n_excess": 1691,
               "hit_rate": 62.9,
               "avg_excess": -1.16,
-              "median_excess": -1.44
+              "median_excess": -1.44,
+              "n_ew": 1691,
+              "hit_rate_ew": 49.6,
+              "avg_excess_ew": 0.41,
+              "median_excess_ew": 0.05
             },
             "10": {
               "n": 1656,
@@ -2656,7 +3421,11 @@
               "n_excess": 1656,
               "hit_rate": 65.4,
               "avg_excess": -2.03,
-              "median_excess": -2.77
+              "median_excess": -2.77,
+              "n_ew": 1656,
+              "hit_rate_ew": 50.4,
+              "avg_excess_ew": 0.91,
+              "median_excess_ew": -0.07
             },
             "20": {
               "n": 1631,
@@ -2667,7 +3436,11 @@
               "n_excess": 1631,
               "hit_rate": 68.7,
               "avg_excess": -3.59,
-              "median_excess": -4.62
+              "median_excess": -4.62,
+              "n_ew": 1631,
+              "hit_rate_ew": 47.8,
+              "avg_excess_ew": 1.93,
+              "median_excess_ew": 0.34
             }
           }
         },
@@ -2682,7 +3455,11 @@
               "n_excess": 15783,
               "hit_rate": 62.8,
               "avg_excess": -1.0,
-              "median_excess": -1.77
+              "median_excess": -1.77,
+              "n_ew": 15783,
+              "hit_rate_ew": 51.2,
+              "avg_excess_ew": 0.74,
+              "median_excess_ew": -0.14
             },
             "10": {
               "n": 15719,
@@ -2693,7 +3470,11 @@
               "n_excess": 15719,
               "hit_rate": 66.8,
               "avg_excess": -1.97,
-              "median_excess": -3.31
+              "median_excess": -3.31,
+              "n_ew": 15719,
+              "hit_rate_ew": 51.5,
+              "avg_excess_ew": 1.39,
+              "median_excess_ew": -0.24
             },
             "20": {
               "n": 15258,
@@ -2704,7 +3485,11 @@
               "n_excess": 15258,
               "hit_rate": 69.6,
               "avg_excess": -3.47,
-              "median_excess": -5.76
+              "median_excess": -5.76,
+              "n_ew": 15258,
+              "hit_rate_ew": 49.5,
+              "avg_excess_ew": 2.91,
+              "median_excess_ew": 0.07
             }
           },
           "無合流": {
@@ -2717,7 +3502,11 @@
               "n_excess": 157,
               "hit_rate": 45.9,
               "avg_excess": 0.54,
-              "median_excess": 0.53
+              "median_excess": 0.53,
+              "n_ew": 157,
+              "hit_rate_ew": 56.1,
+              "avg_excess_ew": -0.34,
+              "median_excess_ew": -0.54
             },
             "10": {
               "n": 0,
@@ -2738,7 +3527,11 @@
               "n_excess": 43,
               "hit_rate": 62.8,
               "avg_excess": -1.15,
-              "median_excess": -0.3
+              "median_excess": -0.3,
+              "n_ew": 43,
+              "hit_rate_ew": 62.8,
+              "avg_excess_ew": -2.0,
+              "median_excess_ew": -1.27
             },
             "10": {
               "n": 0,
@@ -2761,7 +3554,11 @@
               "n_excess": 15764,
               "hit_rate": 62.9,
               "avg_excess": -1.0,
-              "median_excess": -1.77
+              "median_excess": -1.77,
+              "n_ew": 15764,
+              "hit_rate_ew": 51.2,
+              "avg_excess_ew": 0.75,
+              "median_excess_ew": -0.13
             },
             "10": {
               "n": 15544,
@@ -2772,7 +3569,11 @@
               "n_excess": 15544,
               "hit_rate": 66.8,
               "avg_excess": -1.99,
-              "median_excess": -3.35
+              "median_excess": -3.35,
+              "n_ew": 15544,
+              "hit_rate_ew": 51.4,
+              "avg_excess_ew": 1.41,
+              "median_excess_ew": -0.23
             },
             "20": {
               "n": 15083,
@@ -2783,7 +3584,11 @@
               "n_excess": 15083,
               "hit_rate": 69.5,
               "avg_excess": -3.46,
-              "median_excess": -5.77
+              "median_excess": -5.77,
+              "n_ew": 15083,
+              "hit_rate_ew": 49.4,
+              "avg_excess_ew": 2.96,
+              "median_excess_ew": 0.1
             }
           },
           "大盤事件±1日": {
@@ -2796,7 +3601,11 @@
               "n_excess": 219,
               "hit_rate": 46.1,
               "avg_excess": 0.46,
-              "median_excess": 0.44
+              "median_excess": 0.44,
+              "n_ew": 219,
+              "hit_rate_ew": 58.4,
+              "avg_excess_ew": -1.07,
+              "median_excess_ew": -1.03
             },
             "10": {
               "n": 175,
@@ -2807,7 +3616,11 @@
               "n_excess": 175,
               "hit_rate": 62.3,
               "avg_excess": -0.78,
-              "median_excess": -1.22
+              "median_excess": -1.22,
+              "n_ew": 175,
+              "hit_rate_ew": 58.9,
+              "avg_excess_ew": -0.38,
+              "median_excess_ew": -0.96
             },
             "20": {
               "n": 175,
@@ -2818,7 +3631,11 @@
               "n_excess": 175,
               "hit_rate": 77.1,
               "avg_excess": -4.53,
-              "median_excess": -5.63
+              "median_excess": -5.63,
+              "n_ew": 175,
+              "hit_rate_ew": 61.7,
+              "avg_excess_ew": -1.66,
+              "median_excess_ew": -2.71
             }
           }
         },
@@ -2833,7 +3650,11 @@
               "n_excess": 1360,
               "hit_rate": 66.3,
               "avg_excess": -1.47,
-              "median_excess": -2.63
+              "median_excess": -2.63,
+              "n_ew": 1360,
+              "hit_rate_ew": 57.5,
+              "avg_excess_ew": 0.13,
+              "median_excess_ew": -1.06
             },
             "10": {
               "n": 1347,
@@ -2844,7 +3665,11 @@
               "n_excess": 1347,
               "hit_rate": 70.4,
               "avg_excess": -2.6,
-              "median_excess": -4.91
+              "median_excess": -4.91,
+              "n_ew": 1347,
+              "hit_rate_ew": 57.8,
+              "avg_excess_ew": 0.89,
+              "median_excess_ew": -1.3
             },
             "20": {
               "n": 1316,
@@ -2855,7 +3680,11 @@
               "n_excess": 1316,
               "hit_rate": 71.5,
               "avg_excess": -4.38,
-              "median_excess": -7.43
+              "median_excess": -7.43,
+              "n_ew": 1316,
+              "hit_rate_ew": 55.3,
+              "avg_excess_ew": 2.26,
+              "median_excess_ew": -1.4
             }
           },
           "3~5": {
@@ -2868,7 +3697,11 @@
               "n_excess": 2298,
               "hit_rate": 63.4,
               "avg_excess": -1.1,
-              "median_excess": -1.92
+              "median_excess": -1.92,
+              "n_ew": 2298,
+              "hit_rate_ew": 54.8,
+              "avg_excess_ew": 0.51,
+              "median_excess_ew": -0.52
             },
             "10": {
               "n": 2260,
@@ -2879,7 +3712,11 @@
               "n_excess": 2260,
               "hit_rate": 66.9,
               "avg_excess": -2.23,
-              "median_excess": -3.62
+              "median_excess": -3.62,
+              "n_ew": 2260,
+              "hit_rate_ew": 54.5,
+              "avg_excess_ew": 0.95,
+              "median_excess_ew": -0.67
             },
             "20": {
               "n": 2173,
@@ -2890,7 +3727,11 @@
               "n_excess": 2173,
               "hit_rate": 70.6,
               "avg_excess": -4.07,
-              "median_excess": -6.51
+              "median_excess": -6.51,
+              "n_ew": 2173,
+              "hit_rate_ew": 52.5,
+              "avg_excess_ew": 2.18,
+              "median_excess_ew": -0.65
             }
           },
           "2~3": {
@@ -2903,7 +3744,11 @@
               "n_excess": 4979,
               "hit_rate": 63.3,
               "avg_excess": -1.1,
-              "median_excess": -1.9
+              "median_excess": -1.9,
+              "n_ew": 4979,
+              "hit_rate_ew": 51.6,
+              "avg_excess_ew": 0.62,
+              "median_excess_ew": -0.18
             },
             "10": {
               "n": 4898,
@@ -2914,7 +3759,11 @@
               "n_excess": 4898,
               "hit_rate": 67.1,
               "avg_excess": -2.03,
-              "median_excess": -3.42
+              "median_excess": -3.42,
+              "n_ew": 4898,
+              "hit_rate_ew": 51.4,
+              "avg_excess_ew": 1.35,
+              "median_excess_ew": -0.24
             },
             "20": {
               "n": 4742,
@@ -2925,7 +3774,11 @@
               "n_excess": 4742,
               "hit_rate": 69.4,
               "avg_excess": -3.2,
-              "median_excess": -5.75
+              "median_excess": -5.75,
+              "n_ew": 4742,
+              "hit_rate_ew": 49.4,
+              "avg_excess_ew": 3.19,
+              "median_excess_ew": 0.1
             }
           },
           "1.5~2": {
@@ -2938,7 +3791,11 @@
               "n_excess": 7346,
               "hit_rate": 61.3,
               "avg_excess": -0.78,
-              "median_excess": -1.44
+              "median_excess": -1.44,
+              "n_ew": 7346,
+              "hit_rate_ew": 48.8,
+              "avg_excess_ew": 0.98,
+              "median_excess_ew": 0.1
             },
             "10": {
               "n": 7214,
@@ -2949,7 +3806,11 @@
               "n_excess": 7214,
               "hit_rate": 65.8,
               "avg_excess": -1.73,
-              "median_excess": -2.93
+              "median_excess": -2.93,
+              "n_ew": 7214,
+              "hit_rate_ew": 49.4,
+              "avg_excess_ew": 1.65,
+              "median_excess_ew": 0.06
             },
             "20": {
               "n": 7027,
@@ -2960,7 +3821,11 @@
               "n_excess": 7027,
               "hit_rate": 69.2,
               "avg_excess": -3.29,
-              "median_excess": -5.27
+              "median_excess": -5.27,
+              "n_ew": 7027,
+              "hit_rate_ew": 47.6,
+              "avg_excess_ew": 3.06,
+              "median_excess_ew": 0.44
             }
           }
         }
@@ -2986,10 +3851,17 @@
           "hit_rate": 33.4,
           "avg_excess": -1.4,
           "median_excess": -1.76,
+          "n_ew": 4026,
+          "hit_rate_ew": 46.5,
+          "avg_excess_ew": 0.29,
+          "median_excess_ew": -0.19,
           "fade_hit_rate": 66.6,
           "fade_hit_rate_raw": 58.1,
+          "fade_hit_rate_ew": 52.9,
           "pnl": -1.4,
-          "fade_pnl": 1.4
+          "fade_pnl": 1.4,
+          "pnl_ew": 0.29,
+          "fade_pnl_ew": -0.29
         },
         "10": {
           "n": 3931,
@@ -3001,10 +3873,17 @@
           "hit_rate": 28.9,
           "avg_excess": -2.65,
           "median_excess": -3.23,
+          "n_ew": 3931,
+          "hit_rate_ew": 46.6,
+          "avg_excess_ew": 0.54,
+          "median_excess_ew": -0.24,
           "fade_hit_rate": 71.1,
           "fade_hit_rate_raw": 59.1,
+          "fade_hit_rate_ew": 53.1,
           "pnl": -2.65,
-          "fade_pnl": 2.65
+          "fade_pnl": 2.65,
+          "pnl_ew": 0.54,
+          "fade_pnl_ew": -0.54
         },
         "20": {
           "n": 3806,
@@ -3016,10 +3895,17 @@
           "hit_rate": 21.4,
           "avg_excess": -5.82,
           "median_excess": -6.87,
+          "n_ew": 3806,
+          "hit_rate_ew": 44.4,
+          "avg_excess_ew": 0.63,
+          "median_excess_ew": -0.67,
           "fade_hit_rate": 78.6,
           "fade_hit_rate_raw": 60.5,
+          "fade_hit_rate_ew": 55.4,
           "pnl": -5.82,
-          "fade_pnl": 5.82
+          "fade_pnl": 5.82,
+          "pnl_ew": 0.63,
+          "fade_pnl_ew": -0.63
         }
       },
       "buckets": {
@@ -3034,7 +3920,11 @@
               "n_excess": 906,
               "hit_rate": 32.1,
               "avg_excess": -2.03,
-              "median_excess": -1.99
+              "median_excess": -1.99,
+              "n_ew": 906,
+              "hit_rate_ew": 42.4,
+              "avg_excess_ew": -0.31,
+              "median_excess_ew": -0.51
             },
             "10": {
               "n": 883,
@@ -3045,7 +3935,11 @@
               "n_excess": 883,
               "hit_rate": 25.6,
               "avg_excess": -3.54,
-              "median_excess": -3.59
+              "median_excess": -3.59,
+              "n_ew": 883,
+              "hit_rate_ew": 44.5,
+              "avg_excess_ew": 0.04,
+              "median_excess_ew": -0.42
             },
             "20": {
               "n": 878,
@@ -3056,7 +3950,11 @@
               "n_excess": 878,
               "hit_rate": 19.9,
               "avg_excess": -5.87,
-              "median_excess": -6.33
+              "median_excess": -6.33,
+              "n_ew": 878,
+              "hit_rate_ew": 39.7,
+              "avg_excess_ew": 0.31,
+              "median_excess_ew": -1.23
             }
           },
           "指數漲": {
@@ -3069,7 +3967,11 @@
               "n_excess": 1986,
               "hit_rate": 33.1,
               "avg_excess": -1.15,
-              "median_excess": -1.67
+              "median_excess": -1.67,
+              "n_ew": 1986,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 0.42,
+              "median_excess_ew": -0.17
             },
             "10": {
               "n": 1935,
@@ -3080,7 +3982,11 @@
               "n_excess": 1935,
               "hit_rate": 29.9,
               "avg_excess": -2.17,
-              "median_excess": -2.9
+              "median_excess": -2.9,
+              "n_ew": 1935,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 0.77,
+              "median_excess_ew": -0.2
             },
             "20": {
               "n": 1867,
@@ -3091,7 +3997,11 @@
               "n_excess": 1867,
               "hit_rate": 20.3,
               "avg_excess": -5.73,
-              "median_excess": -7.07
+              "median_excess": -7.07,
+              "n_ew": 1867,
+              "hit_rate_ew": 44.7,
+              "avg_excess_ew": 0.89,
+              "median_excess_ew": -0.65
             }
           },
           "指數平": {
@@ -3104,7 +4014,11 @@
               "n_excess": 1090,
               "hit_rate": 34.2,
               "avg_excess": -1.42,
-              "median_excess": -1.83
+              "median_excess": -1.83,
+              "n_ew": 1090,
+              "hit_rate_ew": 48.5,
+              "avg_excess_ew": 0.56,
+              "median_excess_ew": -0.04
             },
             "10": {
               "n": 1069,
@@ -3115,7 +4029,11 @@
               "n_excess": 1069,
               "hit_rate": 28.6,
               "avg_excess": -2.94,
-              "median_excess": -3.63
+              "median_excess": -3.63,
+              "n_ew": 1069,
+              "hit_rate_ew": 46.8,
+              "avg_excess_ew": 0.56,
+              "median_excess_ew": -0.27
             },
             "20": {
               "n": 1033,
@@ -3126,7 +4044,11 @@
               "n_excess": 1033,
               "hit_rate": 23.4,
               "avg_excess": -6.19,
-              "median_excess": -6.87
+              "median_excess": -6.87,
+              "n_ew": 1033,
+              "hit_rate_ew": 47.2,
+              "avg_excess_ew": 0.42,
+              "median_excess_ew": -0.45
             }
           },
           "無大盤資料": {
@@ -3139,7 +4061,11 @@
               "n_excess": 29,
               "hit_rate": 79.3,
               "avg_excess": 2.7,
-              "median_excess": 4.22
+              "median_excess": 4.22,
+              "n_ew": 29,
+              "hit_rate_ew": 69.0,
+              "avg_excess_ew": 0.44,
+              "median_excess_ew": 1.96
             },
             "10": {
               "n": 29,
@@ -3150,7 +4076,11 @@
               "n_excess": 29,
               "hit_rate": 65.5,
               "avg_excess": 2.04,
-              "median_excess": 3.18
+              "median_excess": 3.18,
+              "n_ew": 29,
+              "hit_rate_ew": 65.5,
+              "avg_excess_ew": 0.46,
+              "median_excess_ew": 1.59
             },
             "20": {
               "n": 28,
@@ -3161,7 +4091,11 @@
               "n_excess": 28,
               "hit_rate": 71.4,
               "avg_excess": 3.6,
-              "median_excess": 4.9
+              "median_excess": 4.9,
+              "n_ew": 28,
+              "hit_rate_ew": 64.3,
+              "avg_excess_ew": 1.05,
+              "median_excess_ew": 2.36
             }
           },
           "系統性賣壓": {
@@ -3174,7 +4108,11 @@
               "n_excess": 15,
               "hit_rate": 6.7,
               "avg_excess": -3.22,
-              "median_excess": -2.7
+              "median_excess": -2.7,
+              "n_ew": 15,
+              "hit_rate_ew": 53.3,
+              "avg_excess_ew": -0.44,
+              "median_excess_ew": 0.11
             },
             "10": {
               "n": 15,
@@ -3185,7 +4123,11 @@
               "n_excess": 15,
               "hit_rate": 40.0,
               "avg_excess": -1.95,
-              "median_excess": -0.94
+              "median_excess": -0.94,
+              "n_ew": 15,
+              "hit_rate_ew": 53.3,
+              "avg_excess_ew": -0.28,
+              "median_excess_ew": 0.48
             },
             "20": {
               "n": 0,
@@ -3204,7 +4146,11 @@
               "n_excess": 2333,
               "hit_rate": 31.8,
               "avg_excess": -1.47,
-              "median_excess": -1.94
+              "median_excess": -1.94,
+              "n_ew": 2333,
+              "hit_rate_ew": 43.5,
+              "avg_excess_ew": 0.19,
+              "median_excess_ew": -0.33
             },
             "10": {
               "n": 2279,
@@ -3215,7 +4161,11 @@
               "n_excess": 2279,
               "hit_rate": 28.4,
               "avg_excess": -2.72,
-              "median_excess": -3.25
+              "median_excess": -3.25,
+              "n_ew": 2279,
+              "hit_rate_ew": 45.8,
+              "avg_excess_ew": 0.36,
+              "median_excess_ew": -0.33
             },
             "20": {
               "n": 2217,
@@ -3226,7 +4176,11 @@
               "n_excess": 2217,
               "hit_rate": 20.8,
               "avg_excess": -5.87,
-              "median_excess": -6.65
+              "median_excess": -6.65,
+              "n_ew": 2217,
+              "hit_rate_ew": 43.4,
+              "avg_excess_ew": 0.39,
+              "median_excess_ew": -0.8
             }
           },
           "多頭排列": {
@@ -3239,7 +4193,11 @@
               "n_excess": 1223,
               "hit_rate": 37.4,
               "avg_excess": -1.18,
-              "median_excess": -1.57
+              "median_excess": -1.57,
+              "n_ew": 1223,
+              "hit_rate_ew": 51.3,
+              "avg_excess_ew": 0.6,
+              "median_excess_ew": 0.09
             },
             "10": {
               "n": 1195,
@@ -3250,7 +4208,11 @@
               "n_excess": 1195,
               "hit_rate": 29.7,
               "avg_excess": -2.55,
-              "median_excess": -3.24
+              "median_excess": -3.24,
+              "n_ew": 1195,
+              "hit_rate_ew": 48.5,
+              "avg_excess_ew": 0.97,
+              "median_excess_ew": -0.09
             },
             "20": {
               "n": 1149,
@@ -3261,7 +4223,11 @@
               "n_excess": 1149,
               "hit_rate": 23.5,
               "avg_excess": -5.59,
-              "median_excess": -7.09
+              "median_excess": -7.09,
+              "n_ew": 1149,
+              "hit_rate_ew": 45.6,
+              "avg_excess_ew": 1.25,
+              "median_excess_ew": -0.43
             }
           },
           "空頭排列": {
@@ -3274,7 +4240,11 @@
               "n_excess": 470,
               "hit_rate": 31.3,
               "avg_excess": -1.61,
-              "median_excess": -1.65
+              "median_excess": -1.65,
+              "n_ew": 470,
+              "hit_rate_ew": 49.1,
+              "avg_excess_ew": 0.0,
+              "median_excess_ew": -0.01
             },
             "10": {
               "n": 457,
@@ -3285,7 +4255,11 @@
               "n_excess": 457,
               "hit_rate": 29.1,
               "avg_excess": -2.59,
-              "median_excess": -2.98
+              "median_excess": -2.98,
+              "n_ew": 457,
+              "hit_rate_ew": 45.3,
+              "avg_excess_ew": 0.34,
+              "median_excess_ew": -0.27
             },
             "20": {
               "n": 440,
@@ -3296,7 +4270,11 @@
               "n_excess": 440,
               "hit_rate": 19.3,
               "avg_excess": -6.16,
-              "median_excess": -7.07
+              "median_excess": -7.07,
+              "n_ew": 440,
+              "hit_rate_ew": 46.1,
+              "avg_excess_ew": 0.21,
+              "median_excess_ew": -0.4
             }
           }
         },
@@ -3311,7 +4289,11 @@
               "n_excess": 3280,
               "hit_rate": 33.1,
               "avg_excess": -1.36,
-              "median_excess": -1.74
+              "median_excess": -1.74,
+              "n_ew": 3280,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 0.32,
+              "median_excess_ew": -0.15
             },
             "10": {
               "n": 3196,
@@ -3322,7 +4304,11 @@
               "n_excess": 3196,
               "hit_rate": 28.2,
               "avg_excess": -2.63,
-              "median_excess": -3.08
+              "median_excess": -3.08,
+              "n_ew": 3196,
+              "hit_rate_ew": 47.0,
+              "avg_excess_ew": 0.52,
+              "median_excess_ew": -0.19
             },
             "20": {
               "n": 3100,
@@ -3333,7 +4319,11 @@
               "n_excess": 3100,
               "hit_rate": 20.9,
               "avg_excess": -5.73,
-              "median_excess": -6.66
+              "median_excess": -6.66,
+              "n_ew": 3100,
+              "hit_rate_ew": 44.8,
+              "avg_excess_ew": 0.65,
+              "median_excess_ew": -0.55
             }
           },
           "+5 ~ +10%": {
@@ -3346,7 +4336,11 @@
               "n_excess": 421,
               "hit_rate": 37.3,
               "avg_excess": -1.02,
-              "median_excess": -1.55
+              "median_excess": -1.55,
+              "n_ew": 421,
+              "hit_rate_ew": 46.8,
+              "avg_excess_ew": 0.69,
+              "median_excess_ew": -0.29
             },
             "10": {
               "n": 410,
@@ -3357,7 +4351,11 @@
               "n_excess": 410,
               "hit_rate": 32.0,
               "avg_excess": -2.13,
-              "median_excess": -4.03
+              "median_excess": -4.03,
+              "n_ew": 410,
+              "hit_rate_ew": 46.8,
+              "avg_excess_ew": 1.37,
+              "median_excess_ew": -0.46
             },
             "20": {
               "n": 391,
@@ -3368,7 +4366,11 @@
               "n_excess": 391,
               "hit_rate": 26.1,
               "avg_excess": -5.11,
-              "median_excess": -6.87
+              "median_excess": -6.87,
+              "n_ew": 391,
+              "hit_rate_ew": 44.8,
+              "avg_excess_ew": 1.88,
+              "median_excess_ew": -1.08
             }
           },
           "≥ +10%": {
@@ -3381,7 +4383,11 @@
               "n_excess": 199,
               "hit_rate": 29.6,
               "avg_excess": -2.58,
-              "median_excess": -3.3
+              "median_excess": -3.3,
+              "n_ew": 199,
+              "hit_rate_ew": 38.7,
+              "avg_excess_ew": -0.57,
+              "median_excess_ew": -1.77
             },
             "10": {
               "n": 200,
@@ -3392,7 +4398,11 @@
               "n_excess": 200,
               "hit_rate": 29.0,
               "avg_excess": -4.6,
-              "median_excess": -6.08
+              "median_excess": -6.08,
+              "n_ew": 200,
+              "hit_rate_ew": 40.0,
+              "avg_excess_ew": -0.66,
+              "median_excess_ew": -2.22
             },
             "20": {
               "n": 192,
@@ -3403,7 +4413,11 @@
               "n_excess": 192,
               "hit_rate": 18.2,
               "avg_excess": -8.68,
-              "median_excess": -12.1
+              "median_excess": -12.1,
+              "n_ew": 192,
+              "hit_rate_ew": 35.9,
+              "avg_excess_ew": -1.59,
+              "median_excess_ew": -4.04
             }
           },
           "−10 ~ −5%": {
@@ -3416,7 +4430,11 @@
               "n_excess": 101,
               "hit_rate": 38.6,
               "avg_excess": -1.44,
-              "median_excess": -0.86
+              "median_excess": -0.86,
+              "n_ew": 101,
+              "hit_rate_ew": 48.5,
+              "avg_excess_ew": -0.06,
+              "median_excess_ew": 0.0
             },
             "10": {
               "n": 100,
@@ -3427,7 +4445,11 @@
               "n_excess": 100,
               "hit_rate": 41.0,
               "avg_excess": -0.99,
-              "median_excess": -1.97
+              "median_excess": -1.97,
+              "n_ew": 100,
+              "hit_rate_ew": 53.0,
+              "avg_excess_ew": 1.1,
+              "median_excess_ew": 0.48
             },
             "20": {
               "n": 98,
@@ -3438,7 +4460,11 @@
               "n_excess": 98,
               "hit_rate": 28.6,
               "avg_excess": -4.66,
-              "median_excess": -5.3
+              "median_excess": -5.3,
+              "n_ew": 98,
+              "hit_rate_ew": 49.0,
+              "avg_excess_ew": 0.31,
+              "median_excess_ew": -0.57
             }
           },
           "< −10%": {
@@ -3451,7 +4477,11 @@
               "n_excess": 25,
               "hit_rate": 20.0,
               "avg_excess": -3.46,
-              "median_excess": -4.53
+              "median_excess": -4.53,
+              "n_ew": 25,
+              "hit_rate_ew": 32.0,
+              "avg_excess_ew": -2.12,
+              "median_excess_ew": -3.13
             },
             "10": {
               "n": 25,
@@ -3462,7 +4492,11 @@
               "n_excess": 25,
               "hit_rate": 12.0,
               "avg_excess": -5.78,
-              "median_excess": -5.3
+              "median_excess": -5.3,
+              "n_ew": 25,
+              "hit_rate_ew": 16.0,
+              "avg_excess_ew": -2.74,
+              "median_excess_ew": -2.71
             },
             "20": {
               "n": 25,
@@ -3473,7 +4507,11 @@
               "n_excess": 25,
               "hit_rate": 16.0,
               "avg_excess": -10.04,
-              "median_excess": -9.17
+              "median_excess": -9.17,
+              "n_ew": 25,
+              "hit_rate_ew": 36.0,
+              "avg_excess_ew": -2.81,
+              "median_excess_ew": -2.35
             }
           }
         },
@@ -3488,7 +4526,11 @@
               "n_excess": 3964,
               "hit_rate": 32.8,
               "avg_excess": -1.45,
-              "median_excess": -1.84
+              "median_excess": -1.84,
+              "n_ew": 3964,
+              "hit_rate_ew": 46.6,
+              "avg_excess_ew": 0.3,
+              "median_excess_ew": -0.19
             },
             "10": {
               "n": 3887,
@@ -3499,7 +4541,11 @@
               "n_excess": 3887,
               "hit_rate": 28.9,
               "avg_excess": -2.67,
-              "median_excess": -3.27
+              "median_excess": -3.27,
+              "n_ew": 3887,
+              "hit_rate_ew": 46.6,
+              "avg_excess_ew": 0.56,
+              "median_excess_ew": -0.24
             },
             "20": {
               "n": 3762,
@@ -3510,7 +4556,11 @@
               "n_excess": 3762,
               "hit_rate": 21.5,
               "avg_excess": -5.84,
-              "median_excess": -6.97
+              "median_excess": -6.97,
+              "n_ew": 3762,
+              "hit_rate_ew": 44.4,
+              "avg_excess_ew": 0.65,
+              "median_excess_ew": -0.69
             }
           },
           "大盤事件±1日": {
@@ -3523,7 +4573,11 @@
               "n_excess": 62,
               "hit_rate": 74.2,
               "avg_excess": 1.54,
-              "median_excess": 1.34
+              "median_excess": 1.34,
+              "n_ew": 62,
+              "hit_rate_ew": 45.2,
+              "avg_excess_ew": 0.05,
+              "median_excess_ew": -0.18
             },
             "10": {
               "n": 44,
@@ -3534,7 +4588,11 @@
               "n_excess": 44,
               "hit_rate": 29.5,
               "avg_excess": -1.15,
-              "median_excess": -0.77
+              "median_excess": -0.77,
+              "n_ew": 44,
+              "hit_rate_ew": 40.9,
+              "avg_excess_ew": -0.75,
+              "median_excess_ew": -0.64
             },
             "20": {
               "n": 44,
@@ -3545,7 +4603,11 @@
               "n_excess": 44,
               "hit_rate": 15.9,
               "avg_excess": -3.69,
-              "median_excess": -3.4
+              "median_excess": -3.4,
+              "n_ew": 44,
+              "hit_rate_ew": 45.5,
+              "avg_excess_ew": -0.82,
+              "median_excess_ew": -0.26
             }
           }
         },
@@ -3560,7 +4622,11 @@
               "n_excess": 146,
               "hit_rate": 33.6,
               "avg_excess": -1.14,
-              "median_excess": -2.03
+              "median_excess": -2.03,
+              "n_ew": 146,
+              "hit_rate_ew": 40.4,
+              "avg_excess_ew": 0.29,
+              "median_excess_ew": -0.97
             },
             "10": {
               "n": 142,
@@ -3571,7 +4637,11 @@
               "n_excess": 142,
               "hit_rate": 30.3,
               "avg_excess": -3.21,
-              "median_excess": -4.01
+              "median_excess": -4.01,
+              "n_ew": 142,
+              "hit_rate_ew": 40.1,
+              "avg_excess_ew": -0.31,
+              "median_excess_ew": -1.39
             },
             "20": {
               "n": 141,
@@ -3582,7 +4652,11 @@
               "n_excess": 141,
               "hit_rate": 18.4,
               "avg_excess": -7.0,
-              "median_excess": -7.24
+              "median_excess": -7.24,
+              "n_ew": 141,
+              "hit_rate_ew": 36.9,
+              "avg_excess_ew": -0.94,
+              "median_excess_ew": -2.01
             }
           },
           "3~5": {
@@ -3595,7 +4669,11 @@
               "n_excess": 496,
               "hit_rate": 32.7,
               "avg_excess": -1.6,
-              "median_excess": -2.12
+              "median_excess": -2.12,
+              "n_ew": 496,
+              "hit_rate_ew": 43.8,
+              "avg_excess_ew": 0.04,
+              "median_excess_ew": -0.48
             },
             "10": {
               "n": 478,
@@ -3606,7 +4684,11 @@
               "n_excess": 478,
               "hit_rate": 28.0,
               "avg_excess": -2.71,
-              "median_excess": -3.56
+              "median_excess": -3.56,
+              "n_ew": 478,
+              "hit_rate_ew": 42.7,
+              "avg_excess_ew": 0.55,
+              "median_excess_ew": -0.47
             },
             "20": {
               "n": 458,
@@ -3617,7 +4699,11 @@
               "n_excess": 458,
               "hit_rate": 21.0,
               "avg_excess": -6.12,
-              "median_excess": -7.06
+              "median_excess": -7.06,
+              "n_ew": 458,
+              "hit_rate_ew": 46.1,
+              "avg_excess_ew": 0.32,
+              "median_excess_ew": -0.71
             }
           },
           "2~3": {
@@ -3630,7 +4716,11 @@
               "n_excess": 1287,
               "hit_rate": 34.4,
               "avg_excess": -1.43,
-              "median_excess": -1.81
+              "median_excess": -1.81,
+              "n_ew": 1287,
+              "hit_rate_ew": 47.2,
+              "avg_excess_ew": 0.35,
+              "median_excess_ew": -0.13
             },
             "10": {
               "n": 1265,
@@ -3641,7 +4731,11 @@
               "n_excess": 1265,
               "hit_rate": 28.5,
               "avg_excess": -2.78,
-              "median_excess": -3.12
+              "median_excess": -3.12,
+              "n_ew": 1265,
+              "hit_rate_ew": 46.5,
+              "avg_excess_ew": 0.55,
+              "median_excess_ew": -0.23
             },
             "20": {
               "n": 1230,
@@ -3652,7 +4746,11 @@
               "n_excess": 1230,
               "hit_rate": 21.6,
               "avg_excess": -5.86,
-              "median_excess": -6.63
+              "median_excess": -6.63,
+              "n_ew": 1230,
+              "hit_rate_ew": 42.7,
+              "avg_excess_ew": 0.67,
+              "median_excess_ew": -0.69
             }
           },
           "1.5~2": {
@@ -3665,7 +4763,11 @@
               "n_excess": 2097,
               "hit_rate": 33.0,
               "avg_excess": -1.35,
-              "median_excess": -1.67
+              "median_excess": -1.67,
+              "n_ew": 2097,
+              "hit_rate_ew": 47.3,
+              "avg_excess_ew": 0.32,
+              "median_excess_ew": -0.16
             },
             "10": {
               "n": 2046,
@@ -3676,7 +4778,11 @@
               "n_excess": 2046,
               "hit_rate": 29.2,
               "avg_excess": -2.52,
-              "median_excess": -3.15
+              "median_excess": -3.15,
+              "n_ew": 2046,
+              "hit_rate_ew": 47.9,
+              "avg_excess_ew": 0.6,
+              "median_excess_ew": -0.16
             },
             "20": {
               "n": 1977,
@@ -3687,7 +4793,11 @@
               "n_excess": 1977,
               "hit_rate": 21.6,
               "avg_excess": -5.63,
-              "median_excess": -6.97
+              "median_excess": -6.97,
+              "n_ew": 1977,
+              "hit_rate_ew": 45.6,
+              "avg_excess_ew": 0.79,
+              "median_excess_ew": -0.59
             }
           }
         }
