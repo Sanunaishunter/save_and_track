@@ -1820,6 +1820,19 @@ input[type="date"] {
 /* 2026-09-19:重疊樣本提醒(scOverlapNote()),獨立樣本 <60 筆時比 sc-count
    本身更淡,暗示「這幾乎不是獨立驗證」。 */
 .sc-count .is-thin { opacity: 0.65; font-style: italic; }
+
+/* 2026-09-19「今天該看什麼」首頁總覽:每塊最多三條,點了跳對應分頁。 */
+.today-panel .panel-title { margin-bottom: 4px; }
+.today-list { display: flex; flex-direction: column; }
+.today-item {
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.today-item:last-child { border-bottom: none; }
+.today-item:hover { background: var(--panel-hover, rgba(255,255,255,0.04)); }
 .sc-details { margin-top: 8px; }
 .sc-details summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 6px 0; }
 .sc-details[open] summary { color: var(--text); }

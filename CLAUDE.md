@@ -51,6 +51,7 @@
 
 | 分頁 | 資料 | 一句話 |
 | --- | --- | --- |
+| 今天 | 大盤九宮格+爆量/暴跌/薄股+localStorage 持倉+事件(全部既有資料源) | 首頁總覽,四塊各列前三條(大盤狀態、今日訊號、持倉出場提醒、近期事件),點了跳對應分頁,見第 5 節 |
 | 大盤狀況 | `market-grid-latest.json`、`risk-latest.json`、`fx-futures-latest.json`、`events.json` | 九宮格(ΔP_idx × 成交值 5/20 日比)、30 日追蹤表、法人融資交叉、拉積盤、注意股/除權息、**事件日曆** |
 | 追蹤 | localStorage | 七步驟紀錄 + 持倉損益 + 出場設定 + 自動出場/全出統計 + 進場訊號準度統計 |
 | 思考路徑 | localStorage `stock_pipeline_v1__thinking_paths` | 分岔/合併的鐵軌圖,一檔股票一條;估值試算/進出場計算兩個計算機 |
@@ -533,6 +534,14 @@ git commit + push      if: always()
   09-11 起檔案 `git diff` 為空,確認沒動到。**副作用**:fomo_real 跟 scan 的
   重疊筆數從 79/2 變 65/16(因為 scan 這幾天的股票清單變乾淨,少了原本不該
   在裡面的薄股),上一條記的「79 筆」checkpoint 是重算前驗證的,不是錯誤。
+- **2026-09-19 加首頁「今天」分頁**:純彙整既有資料源,不重新實作評估邏輯——
+  持倉提醒直接呼叫 `positionStats()`/`evalExitPlan()`(跟兵棋推演/
+  `checkAutoExits()` 同一套),只從回傳的 alerts 挑離現價最近那條算距離%;
+  今日訊號直接讀 scan/crash/thin-scan-latest.json 的 `rows[0]`(後端已經
+  依 vol_ratio 排序)配上 `scorecard-latest.json` 的 vs中位股命中率。四塊
+  分開 try/catch,個別失敗互不影響。`VIEWS_ORDER`/nav 按鈕/`switchView()`
+  都加在最前面(`'today'`),不影響其餘分頁的預設進場行為(`track` 還是
+  預設 active view)。
 
 ## 6. 已知限制 / 還沒決定的事
 

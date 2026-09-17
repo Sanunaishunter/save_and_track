@@ -4206,6 +4206,7 @@
   }
 
   function switchView(v) {
+    el('today-wrap').hidden = v !== 'today';
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
     el('thinking-wrap').hidden = v !== 'thinking';
@@ -4232,6 +4233,7 @@
     Array.prototype.forEach.call(el('views').children, function (b) {
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
+    if (v === 'today') loadToday(false);
     if (v === 'thinking') loadThinkingView();
     if (v === 'trail') loadTrailWatch();
     if (v === 'insttrack') loadInstTrack(false);
@@ -4257,15 +4259,15 @@
 
   // ---------------------------------------------------------- 左右滑動切換分頁
 
-  // 'risk'(大盤狀況)排在最前面,跟 index.html 的 #views 按鈕順序一致——
-  // 這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
+  // 'today'(今天該看什麼)2026-09-19 排到最前面,跟 index.html 的 #views
+  // 按鈕順序一致——這個陣列的順序就是左右滑動切換的順序,兩邊要同步改。
   // 2026-09-16 使用者要求把 FOMO/暴跌FOMO 這兩個分頁 no show(按鈕 hidden):
   // 訊號記分板/backtest_signal_fade.py 測出來 fomo_real/fomo_fake/crashfomo_real/
   // crashfomo_fake 樣本都太少(N<60)或幾乎完全跟 scan/crash 重疊,沒有獨立證據。
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['today', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -8331,6 +8333,143 @@
     });
   }
 
+  // ---------------------------------------------------------- 今天該看什麼
+  // 2026-09-19 使用者要求的首頁總覽:不是新功能,是把四個既有資料源(大盤
+  // 九宮格、爆量/暴跌/薄股訊號、追蹤分頁的出場提醒、事件日曆)的重點摘要
+  // 放在最前面,每塊只列前三條、每條一行,點了跳對應分頁看細節(用既有的
+  // switchView() 名稱)。持倉提醒直接呼叫既有的 positionStats()/
+  // evalExitPlan(),不重寫任何評估邏輯,只是從回傳的 alerts 挑「離現價
+  // 最近」那條算距離%。全部包 try/catch,任一塊讀不到只顯示「— 讀不到」,
+  // 不擋其他三塊;這頁沒有輸入欄位,不用擔心搶使用者打字的 DOM 重繪限制。
+
+  function todayJumpRow(view, html) {
+    return '<div class="today-item" data-jump="' + esc(view) + '">' + html + '</div>';
+  }
+
+  function todayMarketRows(mg) {
+    if (!mg || mg.idx_close == null) return ['無大盤資料(排程可能還沒跑)'];
+    var rows = [];
+    rows.push(esc(mg.grid_label || '無九宮格資料'));
+    rows.push('上漲 ' + fmtInt(mg.advancing_count || 0) + '、下跌 ' + fmtInt(mg.declining_count || 0));
+    var regime = regimeOfToday(mg);
+    rows.push(regime === '系統性賣壓' ? '⚠️ 系統性賣壓' : ('目前:' + esc(regime || '無大盤資料')));
+    return rows;
+  }
+
+  function todaySignalRow(sig, label, r, sc) {
+    if (!r) return label + ':今天沒有符合條件的股票';
+    var chg = r.change_pct;
+    var chgTxt = chg == null ? '' : ('、' + (chg > 0 ? '+' : '') + chg.toFixed(2) + '%');
+    var st = sc && sc.signals && sc.signals[sig] && sc.signals[sig].horizons && sc.signals[sig].horizons['5'];
+    var scTxt = st && st.hit_rate_ew != null
+      ? '記分板5日vs中位股命中 ' + st.hit_rate_ew.toFixed(1) + '%(n=' + st.n + (st.enough ? '' : ',樣本不足') + ')'
+      : '記分板無到期樣本';
+    return esc(label) + ' ' + esc(r.stock_id) + ' ' + esc(r.stock_name || '') + ' 量比 ' +
+      Number(r.vol_ratio).toFixed(2) + 'x' + esc(chgTxt) + ' · ' + esc(scTxt);
+  }
+
+  function todayPositionItems() {
+    var items = [];
+    (data || []).forEach(function (rec) {
+      if (rec.status !== 'active' || !rec.exit_plan) return;
+      var st = positionStats(rec);
+      if (!st || !st.priced || !st.shares) return;
+      var alerts = evalExitPlan(rec, st);
+      if (!alerts) return;
+      var candidates = alerts.filter(function (a) { return a.price != null && !a.hit; });
+      if (!candidates.length) return;
+      candidates.sort(function (a, b) { return Math.abs(a.price - st.close) - Math.abs(b.price - st.close); });
+      var nearest = candidates[0];
+      if (!(st.close > 0)) return;
+      items.push({ rec: rec, alert: nearest, distPct: Math.abs((nearest.price - st.close) / st.close * 100) });
+    });
+    items.sort(function (a, b) { return a.distPct - b.distPct; });
+    return items.slice(0, 3);
+  }
+
+  function todayEventItems() {
+    var lo = todayStr(new Date()), hi = dateOffsetStr(5);
+    return allEvents().filter(function (e) { return e.date >= lo && e.date <= hi; }).slice(0, 3);
+  }
+
+  function renderToday(res) {
+    var meta = el('today-meta');
+    meta.textContent = todayStr(new Date()) + ' · 每塊只列重點前三條,細節請點進對應分頁看';
+
+    var marketBox = el('today-market');
+    try {
+      marketBox.innerHTML = todayMarketRows(res.mg).map(function (line) {
+        return todayJumpRow('risk', line);
+      }).join('');
+    } catch (e) { marketBox.innerHTML = '— 讀不到'; }
+
+    var sigBox = el('today-signals');
+    try {
+      var lines = [
+        { sig: 'scan', label: '爆量', view: 'scan', row: res.scan && res.scan.rows && res.scan.rows[0] },
+        { sig: 'crash', label: '暴跌', view: 'crash', row: res.crash && res.crash.rows && res.crash.rows[0] },
+        { sig: 'thin_scan', label: '薄股', view: 'thinscan', row: res.thinscan && res.thinscan.rows && res.thinscan.rows[0] }
+      ];
+      sigBox.innerHTML = lines.map(function (item) {
+        return todayJumpRow(item.view, todaySignalRow(item.sig, item.label, item.row, res.sc));
+      }).join('');
+    } catch (e) { sigBox.innerHTML = '— 讀不到'; }
+
+    var posBox = el('today-positions');
+    try {
+      var posItems = todayPositionItems();
+      posBox.innerHTML = posItems.length
+        ? posItems.map(function (it) {
+            return todayJumpRow('track', esc(displayTitle(it.rec)) + ' 距' + esc(it.alert.label) + ' ' +
+              it.distPct.toFixed(1) + '%');
+          }).join('')
+        : '<div class="today-item">目前沒有設定出場條件的進行中持倉</div>';
+    } catch (e) { posBox.innerHTML = '— 讀不到'; }
+
+    var evBox = el('today-events');
+    try {
+      var evItems = todayEventItems();
+      evBox.innerHTML = evItems.length
+        ? evItems.map(function (e) {
+            return todayJumpRow('risk', esc(eventShortText(e)) + (e.note ? ':' + esc(e.note) : ''));
+          }).join('')
+        : '<div class="today-item">5 天內沒有事件</div>';
+    } catch (e) { evBox.innerHTML = '— 讀不到'; }
+  }
+
+  var todayClicksBound = false;
+  function bindTodayClicks() {
+    if (todayClicksBound) return;
+    todayClicksBound = true;
+    el('today-wrap').addEventListener('click', function (ev) {
+      var item = ev.target.closest ? ev.target.closest('.today-item') : null;
+      var v = item && item.getAttribute('data-jump');
+      if (v) switchView(v);
+    });
+  }
+
+  function fetchJsonOrNull(url) {
+    return fetch(url, { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+
+  function loadToday() {
+    bindTodayClicks();
+    el('today-meta').textContent = '載入中…';
+    Promise.all([
+      loadMarketGrid().catch(function () { return null; }),
+      fetchJsonOrNull('data/scan-latest.json'),
+      fetchJsonOrNull('data/crash-latest.json'),
+      fetchJsonOrNull('data/thin-scan-latest.json'),
+      loadScorecard().catch(function () { return null; }),
+      loadQuotes().catch(function () { return null; }),
+      loadRepoEvents().catch(function () { return []; }),
+      loadRiskData().catch(function () { return null; })
+    ]).then(function (res) {
+      renderToday({ mg: res[0], scan: res[1], crash: res[2], thinscan: res[3], sc: res[4] });
+    });
+  }
 
   function init() {
     initSplash();

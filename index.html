@@ -58,6 +58,7 @@
     </div>
   </div>
   <nav class="views" id="views">
+    <button type="button" class="viewbtn" data-view="today">今天</button>
     <button type="button" class="viewbtn" data-view="risk">大盤狀況</button>
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
@@ -88,6 +89,33 @@
     <button type="button" class="tab" data-tab="all">全部 <span class="tab-count" data-count="all">0</span></button>
   </nav>
 </header>
+
+<!-- 今天該看什麼(2026-09-19):不是新功能,是把四個既有資料源(大盤九宮格、
+     爆量/暴跌/薄股訊號、追蹤分頁的出場提醒、事件日曆)的重點摘要放最前面,
+     每塊只列前三條,點了跳對應分頁看細節。純讀取,沒有輸入欄位。 -->
+<main class="list-wrap" id="today-wrap" hidden>
+  <div class="scan-meta" id="today-meta">載入中…</div>
+
+  <section class="panel today-panel">
+    <h2 class="panel-title">大盤</h2>
+    <div class="today-list" id="today-market"></div>
+  </section>
+
+  <section class="panel today-panel">
+    <h2 class="panel-title">今日訊號</h2>
+    <div class="today-list" id="today-signals"></div>
+  </section>
+
+  <section class="panel today-panel">
+    <h2 class="panel-title">持倉提醒</h2>
+    <div class="today-list" id="today-positions"></div>
+  </section>
+
+  <section class="panel today-panel">
+    <h2 class="panel-title">事件</h2>
+    <div class="today-list" id="today-events"></div>
+  </section>
+</main>
 
 <main class="list-wrap" id="track-wrap">
   <div class="pos-summary" id="pos-summary" hidden></div>
