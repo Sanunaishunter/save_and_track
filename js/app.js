@@ -4213,6 +4213,7 @@
     el('insttrack-wrap').hidden = v !== 'insttrack';
     el('scorecard-wrap').hidden = v !== 'scorecard';
     el('fade-wrap').hidden = v !== 'fade';
+    el('exitsc-wrap').hidden = v !== 'exitsc';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
     el('thinscan-wrap').hidden = v !== 'thinscan';
@@ -4236,6 +4237,7 @@
     if (v === 'insttrack') loadInstTrack(false);
     if (v === 'scorecard') loadScorecardView(false);
     if (v === 'fade') loadFadeView(false);
+    if (v === 'exitsc') loadExitScorecardView(false);
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
     if (v === 'thinscan') loadThinScan(false);
@@ -4263,7 +4265,7 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -8208,6 +8210,70 @@
     if (scorecardData) { renderFade(scorecardData); return; }
     el('fade-meta').textContent = '載入中…';
     loadScorecard().then(renderFade).catch(function (e) { renderFade({ error: e.message || String(e) }); });
+  }
+
+  // ---------------------------------------------------------- 出場記分板(2026-09-18)
+  // 讀 data/exit-scorecard-latest.json(scripts/compute_exit_scorecard.py),每個訊號一張表:
+  // 列 = 出場規則,欄 = 5/10/20 日各五格(n、觸發率、規則平均報酬、value_add、贏過抱到底%)。
+  // value_add 是配對差(規則 − 抱到底),正的加紅、負的加綠,跟站上紅漲綠跌一致。
+  var EXITSC_URL = 'data/exit-scorecard-latest.json';
+  var exitscData = null;
+
+  function exitscCells(st) {
+    if (!st || !st.n) {
+      return '<td class="num is-thin">0</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td>';
+    }
+    var thin = st.enough ? '' : ' is-thin';
+    var sgn = function (v) { return v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(2) + '%'; };
+    var cls = function (v) { return v == null || v === 0 ? '' : (v > 0 ? ' up' : ' down'); };
+    return '<td class="num' + thin + '" title="配對樣本數(跟訊號記分板同一批)' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
+      '<td class="num' + thin + '" title="規則在天期內被觸發的比例;平均持有 ' + st.avg_hold_days + ' 天">' + st.trigger_rate.toFixed(1) + '%</td>' +
+      '<td class="num' + thin + cls(st.avg_rule) + '" title="套用規則的平均報酬(中位 ' + sgn(st.median_rule) + ',最差 ' + sgn(st.worst_rule) + ');抱到底平均 ' + sgn(st.avg_hold) + '">' + sgn(st.avg_rule) + '</td>' +
+      '<td class="num' + thin + cls(st.avg_value_add) + '" title="規則 − 抱到底,同一筆樣本配對;中位 ' + sgn(st.median_value_add) + '">' + sgn(st.avg_value_add) + '</td>' +
+      '<td class="num' + thin + '" title="配對樣本裡規則報酬高於抱到底的比例">' + st.beat_hold_rate.toFixed(1) + '%</td>';
+  }
+
+  function renderExitScorecard(res) {
+    var meta = el('exitsc-meta');
+    var body = el('exitsc-body');
+    if (res.error) { meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>'; body.innerHTML = ''; return; }
+    var cov = res.coverage || {};
+    var params = res.params || {};
+    var hs = (params.horizons || [5, 10, 20]).map(String);
+    var ruleOrder = (params.rules || []).map(function (r) { return r.key; });
+    meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
+      ' 個交易日)· 訊號 ' + (cov.instances || 0) + ' 筆 · value_add = 規則 − 抱到底(同筆配對)· 樣本不到 ' +
+      (params.min_n || 60) + ' 的格子顯示成灰色';
+    var sigs = res.signals || {};
+    var html = '';
+    SC_SIGNAL_ORDER.forEach(function (key) {
+      var s = sigs[key];
+      if (!s || !s.instances) return;
+      html += '<section class="panel sc-signal">' +
+        '<h2 class="panel-title">' + esc(s.label) + ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">' + esc(s.direction) + '</span>' +
+        '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') + '</span></h2>' +
+        '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>出場規則</th>' +
+        hs.map(function (h) { return '<th class="num">' + h + '日 n</th><th class="num">觸發率</th><th class="num">規則平均</th><th class="num">value_add</th><th class="num">贏過抱到底</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        ruleOrder.map(function (rk) {
+          var r = s.rules && s.rules[rk];
+          if (!r) return '';
+          return '<tr><td>' + esc(r.label) + '</td>' + hs.map(function (h) { return exitscCells(r.horizons[h]); }).join('') + '</tr>';
+        }).join('') + '</tbody></table></div></section>';
+    });
+    if (!html) html = '<p class="panel-note">還沒有任何訊號樣本。</p>';
+    body.innerHTML = html;
+  }
+
+  function loadExitScorecardView(force) {
+    if (exitscData && !force) { renderExitScorecard(exitscData); return; }
+    el('exitsc-meta').textContent = '載入中…';
+    if (location.protocol === 'file:') { renderExitScorecard({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' }); return; }
+    fetch(EXITSC_URL, { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) { exitscData = d; renderExitScorecard(d); })
+      .catch(function (e) { renderExitScorecard({ error: '讀不到出場記分板(' + (e.message || e) + ')。每日排程尚未跑過,或檔案還沒產生。' }); });
   }
 
   // ---------------------------------------------------------- 大盤閘門橫幅

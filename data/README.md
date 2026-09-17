@@ -942,6 +942,14 @@ Actions 上跑過,不是照文件猜的。
   (每次 `MI_INDEX` 呼叫間隔 3 秒)。資料源是既有在用的 `by_date()` /
   `market_index_by_date()`,沒有新 API,所以沒有另外 probe。
 
+### `data/exit-scorecard-latest.json`(出場記分板,2026-09-18)
+`scripts/compute_exit_scorecard.py`,純讀檔。`signals[key].rules[rule].horizons["5"|"10"|"20"]`,
+rule = `hold|profit_target|fixed_stop|profit_and_stop|atr_stop|max_drawdown`(門檻在 `params`:
+目標 4.5%、停損 8%、ATR 2.5×、回撤 5%)。每格:`n`(跟訊號記分板同一批到期樣本)、
+`trigger_rate`、`avg_hold_days`、`avg_rule`/`median_rule`/`hit_rate_rule`/`worst_rule`、
+`avg_hold`/`hit_rate_hold`/`worst_hold`、`avg_value_add`/`median_value_add`(規則 − 抱到底,
+同筆配對)、`beat_hold_rate`。進場 = 訊號日收盤,觸發用當日高低價、成交在規則價、不處理跳空。
+
 ### `data/scorecard-latest.json`(訊號記分板)
 `scripts/compute_scorecard.py`,純讀檔。訊號來源與方向:
 

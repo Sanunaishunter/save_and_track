@@ -202,6 +202,10 @@ jobs:
       - name: 計算訊號記分板
         run: python scripts/compute_scorecard.py
 
+      # 出場記分板(2026-09-18):同一批訊號套六種出場規則,跟抱到底配對比較。純讀檔。
+      - name: 計算出場記分板
+        run: python scripts/compute_exit_scorecard.py
+
       # 即使前面某一步失敗,已經算出來的資料仍要保存。
       # 步驟本身不吞錯,所以 job 該紅還是會紅。
       - name: 提交結果

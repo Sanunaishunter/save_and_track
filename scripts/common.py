@@ -80,6 +80,8 @@ THIN_SCAN_MIN_VOLUME_LOTS = 10
 THIN_SCAN_MIN_VOLUME_SHARES = THIN_SCAN_MIN_VOLUME_LOTS * 1000
 THIN_SCANS_DIR = os.path.join(DATA_DIR, "thin-scans")
 THIN_SCAN_LATEST_FILE = os.path.join(DATA_DIR, "thin-scan-latest.json")
+# 出場記分板(2026-09-18,scripts/compute_exit_scorecard.py)
+EXIT_SCORECARD_FILE = os.path.join(DATA_DIR, "exit-scorecard-latest.json")
 
 # 只要上市普通股:四位數、開頭非 0(排除 00 開頭的 ETF 與六位數權證)
 LISTED_CODE = re.compile(r"^[1-9]\d{3}$")

@@ -1,0 +1,2067 @@
+{
+  "date": "2026-09-17",
+  "generated_at": "2026-09-17T17:51:13Z",
+  "params": {
+    "horizons": [
+      5,
+      10,
+      20
+    ],
+    "min_n": 60,
+    "rules": [
+      {
+        "key": "hold",
+        "label": "抱到天期收盤(基準)"
+      },
+      {
+        "key": "profit_target",
+        "label": "獲利目標 4.5%"
+      },
+      {
+        "key": "fixed_stop",
+        "label": "固定停損 8.0%"
+      },
+      {
+        "key": "profit_and_stop",
+        "label": "目標 4.5% + 停損 8.0%"
+      },
+      {
+        "key": "atr_stop",
+        "label": "ATR 停損 2.5×"
+      },
+      {
+        "key": "max_drawdown",
+        "label": "最大回撤 5.0%"
+      }
+    ],
+    "stop_pct": 8.0,
+    "atr_mult": 2.5,
+    "target_pct": 4.5,
+    "drawdown_pct": 5.0,
+    "definition": "進場 = 訊號日收盤,方向照訊號 dir;每條規則跟同一筆樣本「抱到天期收盤」配對,value_add = 規則報酬 − 抱到底報酬(同檔同日配對,基準偏誤互相抵消);觸發用當日最高/最低價、成交在規則價、不處理跳空;同日目標+停損都碰到時停損贏"
+  },
+  "coverage": {
+    "price_days": 284,
+    "price_from": "2025-07-22",
+    "price_to": "2026-09-17",
+    "instances": 39759
+  },
+  "signals": {
+    "fomo_fake": {
+      "label": "虛漲",
+      "direction": "看空",
+      "dir": -1,
+      "instances": 37,
+      "first_date": "2026-09-01",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": 2.92,
+              "median_rule": 2.24,
+              "hit_rate_rule": 57.9,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -18.74,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 10.0,
+              "avg_rule": 2.53,
+              "median_rule": 3.75,
+              "hit_rate_rule": 66.7,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -15.49,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 73.7,
+              "avg_hold_days": 2.8,
+              "avg_rule": 2.0,
+              "median_rule": 4.5,
+              "hit_rate_rule": 78.9,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": -0.92,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 26.3,
+              "worst_rule": -18.74,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 83.3,
+              "avg_hold_days": 5.2,
+              "avg_rule": 3.0,
+              "median_rule": 4.5,
+              "hit_rate_rule": 83.3,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": 0.46,
+              "median_value_add": -1.12,
+              "beat_hold_rate": 33.3,
+              "worst_rule": -4.51,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 36.8,
+              "avg_hold_days": 4.6,
+              "avg_rule": 2.61,
+              "median_rule": 2.24,
+              "hit_rate_rule": 57.9,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": -0.32,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 10.5,
+              "worst_rule": -8.0,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 66.7,
+              "avg_hold_days": 6.0,
+              "avg_rule": -2.57,
+              "median_rule": -8.0,
+              "hit_rate_rule": 33.3,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": -5.11,
+              "median_value_add": -1.74,
+              "beat_hold_rate": 16.7,
+              "worst_rule": -8.0,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 94.7,
+              "avg_hold_days": 2.4,
+              "avg_rule": 1.75,
+              "median_rule": 4.5,
+              "hit_rate_rule": 78.9,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": -1.17,
+              "median_value_add": -2.46,
+              "beat_hold_rate": 31.6,
+              "worst_rule": -8.0,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 100.0,
+              "avg_hold_days": 2.7,
+              "avg_rule": -1.75,
+              "median_rule": -1.75,
+              "hit_rate_rule": 50.0,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": -4.28,
+              "median_value_add": -7.39,
+              "beat_hold_rate": 33.3,
+              "worst_rule": -8.0,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 26.3,
+              "avg_hold_days": 4.9,
+              "avg_rule": 3.15,
+              "median_rule": 2.24,
+              "hit_rate_rule": 57.9,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": 0.23,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 15.8,
+              "worst_rule": -13.0,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 50.0,
+              "avg_hold_days": 7.3,
+              "avg_rule": -0.75,
+              "median_rule": -2.33,
+              "hit_rate_rule": 50.0,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": -3.28,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 16.7,
+              "worst_rule": -13.0,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 19,
+              "enough": false,
+              "trigger_rate": 84.2,
+              "avg_hold_days": 1.8,
+              "avg_rule": 1.83,
+              "median_rule": 2.24,
+              "hit_rate_rule": 63.2,
+              "avg_hold": 2.92,
+              "hit_rate_hold": 57.9,
+              "avg_value_add": -1.1,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 36.8,
+              "worst_rule": -4.26,
+              "worst_hold": -18.74
+            },
+            "10": {
+              "n": 6,
+              "enough": false,
+              "trigger_rate": 100.0,
+              "avg_hold_days": 1.2,
+              "avg_rule": 0.07,
+              "median_rule": -1.17,
+              "hit_rate_rule": 33.3,
+              "avg_hold": 2.53,
+              "hit_rate_hold": 66.7,
+              "avg_value_add": -2.47,
+              "median_value_add": -5.65,
+              "beat_hold_rate": 33.3,
+              "worst_rule": -4.26,
+              "worst_hold": -15.49
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "fomo_real": {
+      "label": "可能會漲",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 81,
+      "first_date": "2026-09-01",
+      "last_date": "2026-09-16",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": -2.63,
+              "median_rule": -2.41,
+              "hit_rate_rule": 20.0,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -16.5,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 10.0,
+              "avg_rule": -3.87,
+              "median_rule": -3.6,
+              "hit_rate_rule": 25.7,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -19.6,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 22.7,
+              "avg_hold_days": 4.3,
+              "avg_rule": -1.22,
+              "median_rule": -1.29,
+              "hit_rate_rule": 34.7,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": 1.41,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 20.0,
+              "worst_rule": -14.64,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 42.9,
+              "avg_hold_days": 7.0,
+              "avg_rule": -0.95,
+              "median_rule": 0.73,
+              "hit_rate_rule": 54.3,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 2.92,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 31.4,
+              "worst_rule": -19.6,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 17.3,
+              "avg_hold_days": 4.7,
+              "avg_rule": -2.86,
+              "median_rule": -2.51,
+              "hit_rate_rule": 18.7,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": -0.22,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 6.7,
+              "worst_rule": -8.0,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 37.1,
+              "avg_hold_days": 8.4,
+              "avg_rule": -2.63,
+              "median_rule": -3.77,
+              "hit_rate_rule": 25.7,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 1.23,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 28.6,
+              "worst_rule": -8.0,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 33.3,
+              "avg_hold_days": 4.2,
+              "avg_rule": -1.57,
+              "median_rule": -1.47,
+              "hit_rate_rule": 32.0,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": 1.07,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 24.0,
+              "worst_rule": -8.0,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 62.9,
+              "avg_hold_days": 6.0,
+              "avg_rule": -0.58,
+              "median_rule": 0.73,
+              "hit_rate_rule": 51.4,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 3.28,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 45.7,
+              "worst_rule": -8.0,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 57.3,
+              "avg_hold_days": 3.9,
+              "avg_rule": -2.85,
+              "median_rule": -2.52,
+              "hit_rate_rule": 18.7,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": -0.21,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 25.3,
+              "worst_rule": -14.18,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 74.3,
+              "avg_hold_days": 5.3,
+              "avg_rule": -2.38,
+              "median_rule": -2.06,
+              "hit_rate_rule": 31.4,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 1.49,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 48.6,
+              "worst_rule": -12.78,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 75,
+              "enough": true,
+              "trigger_rate": 60.0,
+              "avg_hold_days": 3.3,
+              "avg_rule": -1.54,
+              "median_rule": -1.67,
+              "hit_rate_rule": 22.7,
+              "avg_hold": -2.63,
+              "hit_rate_hold": 20.0,
+              "avg_value_add": 1.1,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 40.0,
+              "worst_rule": -5.0,
+              "worst_hold": -16.5
+            },
+            "10": {
+              "n": 35,
+              "enough": false,
+              "trigger_rate": 62.9,
+              "avg_hold_days": 4.9,
+              "avg_rule": -0.32,
+              "median_rule": -1.08,
+              "hit_rate_rule": 37.1,
+              "avg_hold": -3.87,
+              "hit_rate_hold": 25.7,
+              "avg_value_add": 3.54,
+              "median_value_add": 0.39,
+              "beat_hold_rate": 51.4,
+              "worst_rule": -5.0,
+              "worst_hold": -19.6
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "fomo_real_loose": {
+      "label": "可能會漲😝",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 3,
+      "first_date": "2026-09-17",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "fomo_fake_loose": {
+      "label": "虛漲😝",
+      "direction": "看空",
+      "dir": -1,
+      "instances": 1,
+      "first_date": "2026-09-17",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "crashfomo_real": {
+      "label": "真跌",
+      "direction": "看空",
+      "dir": -1,
+      "instances": 82,
+      "first_date": "2026-09-04",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": 3.35,
+              "median_rule": 2.55,
+              "hit_rate_rule": 83.7,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -9.49,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 48.8,
+              "avg_hold_days": 3.8,
+              "avg_rule": 2.45,
+              "median_rule": 3.97,
+              "hit_rate_rule": 86.0,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": -0.9,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 18.6,
+              "worst_rule": -7.55,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 9.3,
+              "avg_hold_days": 4.8,
+              "avg_rule": 3.06,
+              "median_rule": 2.55,
+              "hit_rate_rule": 81.4,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": -0.3,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 2.3,
+              "worst_rule": -8.0,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 55.8,
+              "avg_hold_days": 3.6,
+              "avg_rule": 2.12,
+              "median_rule": 3.97,
+              "hit_rate_rule": 83.7,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": -1.23,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 18.6,
+              "worst_rule": -8.0,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 20.9,
+              "avg_hold_days": 4.6,
+              "avg_rule": 2.94,
+              "median_rule": 2.51,
+              "hit_rate_rule": 81.4,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": -0.42,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 9.3,
+              "worst_rule": -6.79,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "trigger_rate": 41.9,
+              "avg_hold_days": 4.0,
+              "avg_rule": 2.21,
+              "median_rule": 1.87,
+              "hit_rate_rule": 74.4,
+              "avg_hold": 3.35,
+              "hit_rate_hold": 83.7,
+              "avg_value_add": -1.15,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 7.0,
+              "worst_rule": -5.0,
+              "worst_hold": -9.49
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "crashfomo_fake": {
+      "label": "虛跌",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 1,
+      "first_date": "2026-09-15",
+      "last_date": "2026-09-15",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 0,
+              "enough": false
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          }
+        }
+      }
+    },
+    "scan": {
+      "label": "爆量",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 19276,
+      "first_date": "2025-08-19",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": 0.41,
+              "median_rule": -0.89,
+              "hit_rate_rule": 42.4,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -70.0,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 10.0,
+              "avg_rule": 1.06,
+              "median_rule": -1.04,
+              "hit_rate_rule": 43.3,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -96.32,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 20.0,
+              "avg_rule": 2.64,
+              "median_rule": -1.0,
+              "hit_rate_rule": 45.5,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -90.99,
+              "worst_hold": -90.99
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 49.2,
+              "avg_hold_days": 3.5,
+              "avg_rule": 0.17,
+              "median_rule": 2.9,
+              "hit_rate_rule": 58.0,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": -0.23,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 27.5,
+              "worst_rule": -70.0,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 58.9,
+              "avg_hold_days": 5.8,
+              "avg_rule": 0.35,
+              "median_rule": 4.5,
+              "hit_rate_rule": 64.2,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": -0.7,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 33.3,
+              "worst_rule": -96.32,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 69.1,
+              "avg_hold_days": 9.3,
+              "avg_rule": 0.61,
+              "median_rule": 4.5,
+              "hit_rate_rule": 72.0,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": -2.03,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 37.3,
+              "worst_rule": -90.99,
+              "worst_hold": -90.99
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 22.1,
+              "avg_hold_days": 4.5,
+              "avg_rule": 0.42,
+              "median_rule": -1.15,
+              "hit_rate_rule": 40.6,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": 0.02,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 12.2,
+              "worst_rule": -8.0,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 34.3,
+              "avg_hold_days": 8.2,
+              "avg_rule": 0.79,
+              "median_rule": -2.18,
+              "hit_rate_rule": 38.6,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": -0.27,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 17.5,
+              "worst_rule": -8.0,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 46.6,
+              "avg_hold_days": 14.1,
+              "avg_rule": 1.81,
+              "median_rule": -4.82,
+              "hit_rate_rule": 36.1,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": -0.82,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 23.9,
+              "worst_rule": -8.0,
+              "worst_hold": -90.99
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 64.0,
+              "avg_hold_days": 3.1,
+              "avg_rule": 0.14,
+              "median_rule": 1.76,
+              "hit_rate_rule": 55.8,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": -0.26,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 35.7,
+              "worst_rule": -8.0,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 77.7,
+              "avg_hold_days": 4.6,
+              "avg_rule": 0.18,
+              "median_rule": 4.5,
+              "hit_rate_rule": 59.5,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": -0.88,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 42.7,
+              "worst_rule": -8.0,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 88.7,
+              "avg_hold_days": 6.2,
+              "avg_rule": 0.26,
+              "median_rule": 4.5,
+              "hit_rate_rule": 63.3,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": -2.37,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 47.2,
+              "worst_rule": -8.0,
+              "worst_hold": -90.99
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 54.9,
+              "avg_hold_days": 3.8,
+              "avg_rule": -0.15,
+              "median_rule": -1.06,
+              "hit_rate_rule": 40.1,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": -0.55,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 26.8,
+              "worst_rule": -32.11,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 79.4,
+              "avg_hold_days": 5.5,
+              "avg_rule": -0.09,
+              "median_rule": -1.52,
+              "hit_rate_rule": 38.8,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": -1.15,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 39.9,
+              "worst_rule": -32.11,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 94.3,
+              "avg_hold_days": 6.7,
+              "avg_rule": 0.04,
+              "median_rule": -1.75,
+              "hit_rate_rule": 38.0,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": -2.6,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 47.2,
+              "worst_rule": -32.11,
+              "worst_hold": -90.99
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 19026,
+              "enough": true,
+              "trigger_rate": 79.7,
+              "avg_hold_days": 2.5,
+              "avg_rule": -0.06,
+              "median_rule": -0.75,
+              "hit_rate_rule": 41.9,
+              "avg_hold": 0.41,
+              "hit_rate_hold": 42.4,
+              "avg_value_add": -0.47,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 42.0,
+              "worst_rule": -5.0,
+              "worst_hold": -70.0
+            },
+            "10": {
+              "n": 18790,
+              "enough": true,
+              "trigger_rate": 89.5,
+              "avg_hold_days": 3.3,
+              "avg_rule": -0.08,
+              "median_rule": -0.92,
+              "hit_rate_rule": 41.1,
+              "avg_hold": 1.06,
+              "hit_rate_hold": 43.3,
+              "avg_value_add": -1.13,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 47.3,
+              "worst_rule": -5.0,
+              "worst_hold": -96.32
+            },
+            "20": {
+              "n": 18083,
+              "enough": true,
+              "trigger_rate": 95.0,
+              "avg_hold_days": 4.0,
+              "avg_rule": -0.06,
+              "median_rule": -1.0,
+              "hit_rate_rule": 41.1,
+              "avg_hold": 2.64,
+              "hit_rate_hold": 45.5,
+              "avg_value_add": -2.69,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 49.5,
+              "worst_rule": -5.0,
+              "worst_hold": -90.99
+            }
+          }
+        }
+      }
+    },
+    "crash": {
+      "label": "暴跌",
+      "direction": "看空",
+      "dir": -1,
+      "instances": 16156,
+      "first_date": "2025-08-19",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": -0.44,
+              "median_rule": 0.36,
+              "hit_rate_rule": 52.2,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -60.7,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 10.0,
+              "avg_rule": -1.09,
+              "median_rule": 0.47,
+              "hit_rate_rule": 52.5,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -207.14,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 20.0,
+              "avg_rule": -2.45,
+              "median_rule": 0.29,
+              "hit_rate_rule": 50.7,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -214.29,
+              "worst_hold": -214.29
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 38.8,
+              "avg_hold_days": 4.0,
+              "avg_rule": -0.4,
+              "median_rule": 1.27,
+              "hit_rate_rule": 58.6,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.04,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 17.5,
+              "worst_rule": -60.7,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 50.3,
+              "avg_hold_days": 6.8,
+              "avg_rule": -0.71,
+              "median_rule": 4.5,
+              "hit_rate_rule": 63.8,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.38,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 24.0,
+              "worst_rule": -207.14,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 61.3,
+              "avg_hold_days": 11.2,
+              "avg_rule": -1.31,
+              "median_rule": 4.5,
+              "hit_rate_rule": 68.6,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 1.14,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 29.8,
+              "worst_rule": -214.29,
+              "worst_hold": -214.29
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 23.8,
+              "avg_hold_days": 4.4,
+              "avg_rule": -0.14,
+              "median_rule": -0.0,
+              "hit_rate_rule": 49.2,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.31,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 11.4,
+              "worst_rule": -8.0,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 35.3,
+              "avg_hold_days": 8.0,
+              "avg_rule": -0.46,
+              "median_rule": -0.58,
+              "hit_rate_rule": 46.2,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.63,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 16.3,
+              "worst_rule": -8.0,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 48.2,
+              "avg_hold_days": 13.8,
+              "avg_rule": -0.92,
+              "median_rule": -4.29,
+              "hit_rate_rule": 39.5,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 1.53,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 22.7,
+              "worst_rule": -8.0,
+              "worst_hold": -214.29
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 57.2,
+              "avg_hold_days": 3.5,
+              "avg_rule": -0.19,
+              "median_rule": 0.86,
+              "hit_rate_rule": 55.4,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.25,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 26.0,
+              "worst_rule": -8.0,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 73.0,
+              "avg_hold_days": 5.2,
+              "avg_rule": -0.31,
+              "median_rule": 1.88,
+              "hit_rate_rule": 57.3,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.78,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 34.0,
+              "worst_rule": -8.0,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 85.5,
+              "avg_hold_days": 7.3,
+              "avg_rule": -0.4,
+              "median_rule": 4.5,
+              "hit_rate_rule": 58.1,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 2.04,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 40.9,
+              "worst_rule": -8.0,
+              "worst_hold": -214.29
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 32.0,
+              "avg_hold_days": 4.4,
+              "avg_rule": -0.26,
+              "median_rule": -0.0,
+              "hit_rate_rule": 48.6,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.19,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 14.8,
+              "worst_rule": -35.01,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 53.9,
+              "avg_hold_days": 7.3,
+              "avg_rule": -0.48,
+              "median_rule": -0.87,
+              "hit_rate_rule": 44.3,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.6,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 25.1,
+              "worst_rule": -35.01,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 76.4,
+              "avg_hold_days": 10.7,
+              "avg_rule": -0.79,
+              "median_rule": -1.93,
+              "hit_rate_rule": 37.7,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 1.66,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 36.3,
+              "worst_rule": -35.01,
+              "worst_hold": -214.29
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 15983,
+              "enough": true,
+              "trigger_rate": 65.6,
+              "avg_hold_days": 3.0,
+              "avg_rule": -0.4,
+              "median_rule": -0.68,
+              "hit_rate_rule": 41.6,
+              "avg_hold": -0.44,
+              "hit_rate_hold": 52.2,
+              "avg_value_add": 0.05,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 27.5,
+              "worst_rule": -5.0,
+              "worst_hold": -60.7
+            },
+            "10": {
+              "n": 15719,
+              "enough": true,
+              "trigger_rate": 79.5,
+              "avg_hold_days": 4.4,
+              "avg_rule": -0.5,
+              "median_rule": -1.03,
+              "hit_rate_rule": 39.1,
+              "avg_hold": -1.09,
+              "hit_rate_hold": 52.5,
+              "avg_value_add": 0.59,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 34.4,
+              "worst_rule": -5.0,
+              "worst_hold": -207.14
+            },
+            "20": {
+              "n": 15258,
+              "enough": true,
+              "trigger_rate": 90.0,
+              "avg_hold_days": 5.9,
+              "avg_rule": -0.57,
+              "median_rule": -1.27,
+              "hit_rate_rule": 37.1,
+              "avg_hold": -2.45,
+              "hit_rate_hold": 50.7,
+              "avg_value_add": 1.88,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 41.4,
+              "worst_rule": -5.0,
+              "worst_hold": -214.29
+            }
+          }
+        }
+      }
+    },
+    "thin_scan": {
+      "label": "薄股爆量",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 4122,
+      "first_date": "2025-08-19",
+      "last_date": "2026-09-17",
+      "rules": {
+        "hold": {
+          "label": "抱到天期收盤(基準)",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 5.0,
+              "avg_rule": -0.13,
+              "median_rule": -0.51,
+              "hit_rate_rule": 37.7,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -28.95,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 10.0,
+              "avg_rule": -0.1,
+              "median_rule": -0.77,
+              "hit_rate_rule": 37.6,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -34.64,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 0.0,
+              "avg_hold_days": 20.0,
+              "avg_rule": -0.03,
+              "median_rule": -1.15,
+              "hit_rate_rule": 37.4,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": 0.0,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 0.0,
+              "worst_rule": -34.82,
+              "worst_hold": -34.82
+            }
+          }
+        },
+        "profit_target": {
+          "label": "獲利目標 4.5%",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 22.6,
+              "avg_hold_days": 4.4,
+              "avg_rule": -0.22,
+              "median_rule": -0.35,
+              "hit_rate_rule": 42.1,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": -0.09,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 12.8,
+              "worst_rule": -28.95,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 32.4,
+              "avg_hold_days": 8.1,
+              "avg_rule": -0.29,
+              "median_rule": -0.23,
+              "hit_rate_rule": 46.1,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": -0.19,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 19.4,
+              "worst_rule": -32.38,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 42.6,
+              "avg_hold_days": 14.3,
+              "avg_rule": -0.34,
+              "median_rule": 0.45,
+              "hit_rate_rule": 51.4,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": -0.31,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 25.7,
+              "worst_rule": -33.52,
+              "worst_hold": -34.82
+            }
+          }
+        },
+        "fixed_stop": {
+          "label": "固定停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 5.8,
+              "avg_hold_days": 4.9,
+              "avg_rule": -0.1,
+              "median_rule": -0.51,
+              "hit_rate_rule": 37.6,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": 0.03,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 2.8,
+              "worst_rule": -8.0,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 12.7,
+              "avg_hold_days": 9.5,
+              "avg_rule": -0.08,
+              "median_rule": -0.83,
+              "hit_rate_rule": 37.0,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": 0.02,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 6.9,
+              "worst_rule": -8.0,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 22.7,
+              "avg_hold_days": 17.8,
+              "avg_rule": 0.08,
+              "median_rule": -1.37,
+              "hit_rate_rule": 35.8,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": 0.11,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 12.2,
+              "worst_rule": -8.0,
+              "worst_hold": -34.82
+            }
+          }
+        },
+        "profit_and_stop": {
+          "label": "目標 4.5% + 停損 8.0%",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 27.7,
+              "avg_hold_days": 4.3,
+              "avg_rule": -0.2,
+              "median_rule": -0.36,
+              "hit_rate_rule": 41.8,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": -0.06,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 15.2,
+              "worst_rule": -8.0,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 42.6,
+              "avg_hold_days": 7.6,
+              "avg_rule": -0.27,
+              "median_rule": -0.29,
+              "hit_rate_rule": 45.4,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": -0.17,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 25.0,
+              "worst_rule": -8.0,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 59.0,
+              "avg_hold_days": 12.5,
+              "avg_rule": -0.35,
+              "median_rule": 0.0,
+              "hit_rate_rule": 49.4,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": -0.32,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 33.9,
+              "worst_rule": -8.0,
+              "worst_hold": -34.82
+            }
+          }
+        },
+        "atr_stop": {
+          "label": "ATR 停損 2.5×",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 45.2,
+              "avg_hold_days": 4.1,
+              "avg_rule": -0.44,
+              "median_rule": -0.63,
+              "hit_rate_rule": 35.7,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": -0.31,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 20.3,
+              "worst_rule": -17.12,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 70.2,
+              "avg_hold_days": 6.2,
+              "avg_rule": -0.57,
+              "median_rule": -0.99,
+              "hit_rate_rule": 34.5,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": -0.47,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 34.1,
+              "worst_rule": -17.12,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 89.6,
+              "avg_hold_days": 8.1,
+              "avg_rule": -0.62,
+              "median_rule": -1.22,
+              "hit_rate_rule": 33.1,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": -0.59,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 46.6,
+              "worst_rule": -20.93,
+              "worst_hold": -34.82
+            }
+          }
+        },
+        "max_drawdown": {
+          "label": "最大回撤 5.0%",
+          "horizons": {
+            "5": {
+              "n": 4026,
+              "enough": true,
+              "trigger_rate": 40.7,
+              "avg_hold_days": 4.0,
+              "avg_rule": -0.41,
+              "median_rule": -0.6,
+              "hit_rate_rule": 36.1,
+              "avg_hold": -0.13,
+              "hit_rate_hold": 37.7,
+              "avg_value_add": -0.28,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 19.0,
+              "worst_rule": -5.0,
+              "worst_hold": -28.95
+            },
+            "10": {
+              "n": 3931,
+              "enough": true,
+              "trigger_rate": 60.5,
+              "avg_hold_days": 6.6,
+              "avg_rule": -0.52,
+              "median_rule": -0.94,
+              "hit_rate_rule": 35.2,
+              "avg_hold": -0.1,
+              "hit_rate_hold": 37.6,
+              "avg_value_add": -0.42,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 30.8,
+              "worst_rule": -5.0,
+              "worst_hold": -34.64
+            },
+            "20": {
+              "n": 3806,
+              "enough": true,
+              "trigger_rate": 78.7,
+              "avg_hold_days": 9.6,
+              "avg_rule": -0.59,
+              "median_rule": -1.38,
+              "hit_rate_rule": 34.4,
+              "avg_hold": -0.03,
+              "hit_rate_hold": 37.4,
+              "avg_value_add": -0.56,
+              "median_value_add": 0.0,
+              "beat_hold_rate": 41.3,
+              "worst_rule": -5.0,
+              "worst_hold": -34.82
+            }
+          }
+        }
+      }
+    }
+  }
+}
