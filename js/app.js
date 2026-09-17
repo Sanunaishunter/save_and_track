@@ -9,6 +9,12 @@
   var IMPORT_BACKUP_KEY = 'stock_pipeline_v1__before_import';
   var STATS_RESET_KEY = 'stock_pipeline_v1__stats_reset_at';
 
+  // 2026-09-18「訊號反用」分頁的假設值:反著用等於放空,來回成本抓證交稅 0.3%
+  // (現股當沖減半,這裡保守用一般融券/借券賣出的稅率)+ 手續費 0.1425% × 2
+  // (買回也要收一次)= 0.6%,借券費/融券保證金/軋空風險都沒算進去,純粹讓
+  // 使用者知道命中率高不代表淨賺,不是精算過的實際成本。
+  var FADE_ROUND_TRIP_COST_PCT = 0.6;
+
   var STEPS = [
     { n: 1, title: '觸發', type: 'text',
       hint: '爆量／無量上漲來源，美股新聞背景（大盤現況、大公司動態）' },
@@ -8035,7 +8041,8 @@
     if (!st || !st.n) {
       return '<tr><td>' + h + ' 日</td><td class="num is-thin">0</td>' +
         '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
-        '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td></tr>';
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
+        '<td class="num is-thin">—</td></tr>';
     }
     var thin = st.enough ? '' : ' is-thin';
     var origHit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
@@ -8052,6 +8059,11 @@
     var fadeMedianVal = st.median_excess == null ? null : -dir * st.median_excess;
     var fadeMedian = fadeMedianVal == null ? '—' : (fadeMedianVal > 0 ? '+' : '') + fadeMedianVal.toFixed(2) + '%';
     var fadeMedianCls = fadeMedianVal == null ? '' : (fadeMedianVal > 0 ? ' up' : ' down');
+    // 2026-09-18 扣成本後:反著用等於放空,FADE_ROUND_TRIP_COST_PCT 是來回交易
+    // 成本的假設值(見檔頭註解),fade_pnl 已經是「反著做的預期報酬」,直接扣掉。
+    var fadeAfterCostVal = st.fade_pnl == null ? null : st.fade_pnl - FADE_ROUND_TRIP_COST_PCT;
+    var fadeAfterCost = fadeAfterCostVal == null ? '—' : (fadeAfterCostVal > 0 ? '+' : '') + fadeAfterCostVal.toFixed(2) + '%';
+    var fadeAfterCostCls = fadeAfterCostVal == null ? '' : (fadeAfterCostVal > 0 ? ' up' : ' down');
     return '<tr><td>' + h + ' 日</td>' +
       '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
       '<td class="num' + thin + '">' + origHit + '</td>' +
@@ -8059,6 +8071,7 @@
       '<td class="num' + thin + origMedianCls + '">' + origMedian + '</td>' +
       '<td class="num' + thin + '">' + fadeHit + '</td>' +
       '<td class="num' + thin + fadeCls + '">' + fadePnl + '</td>' +
+      '<td class="num' + thin + fadeAfterCostCls + '" title="fade_pnl − ' + FADE_ROUND_TRIP_COST_PCT + '%(假設成本,見檔頭 FADE_ROUND_TRIP_COST_PCT 註解)">' + fadeAfterCost + '</td>' +
       '<td class="num' + thin + fadeMedianCls + '">' + fadeMedian + '</td>' +
     '</tr>';
   }
@@ -8071,7 +8084,8 @@
     var hs = (res.params && res.params.horizons ? res.params.horizons : [5, 10, 20]).map(String);
     meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
       ' 個交易日)· 「反用」是同一批樣本方向相反重算,不是重新驗證出來的新資料 · 樣本不到 ' +
-      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色';
+      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色 · 「扣成本後」假設反著做(放空)' +
+      '來回成本 ' + FADE_ROUND_TRIP_COST_PCT + '%(證交稅 0.3% + 手續費 0.1425%×2,借券費未計)';
     var sigs = res.signals || {};
     var html = '';
     FADE_SIGNAL_ORDER.forEach(function (key) {
@@ -8086,7 +8100,7 @@
         (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
         '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th>' +
         '<th class="num">正用命中率</th><th class="num">正用預期報酬</th><th class="num">正用中位數</th>' +
-        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">反用中位數</th></tr></thead><tbody>' +
+        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">扣成本後</th><th class="num">反用中位數</th></tr></thead><tbody>' +
         hs.map(function (h) { return scFadeRow(h, s.horizons[h], s.dir); }).join('') +
         '</tbody></table></div></section>';
     });

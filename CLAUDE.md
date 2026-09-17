@@ -446,6 +446,9 @@ git commit + push      if: always()
 - **2026-09-18 訊號反用分頁加中位數欄**:`scFadeRow()` 加 `dir` 參數,正用中位數 =
   `dir × median_excess`、反用中位數 = `-dir × median_excess`,跟 `pnl`/`fade_pnl`
   同一種換算,只是用中位數代替平均數。Playwright 對過 scan 5 日 −1.95%/+1.95%。
+- **2026-09-18 訊號反用分頁加「扣成本後」**:`FADE_ROUND_TRIP_COST_PCT = 0.6`
+  (證交稅 0.3% + 手續費 0.1425%×2,借券費/軋空風險沒算,純視覺提醒不是精算)、
+  `fade_pnl − 0.6`,純前端不動資料檔。Playwright 對過 scan 5 日 +0.63%→+0.03%。
 
 ## 6. 已知限制 / 還沒決定的事
 
