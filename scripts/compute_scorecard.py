@@ -32,6 +32,7 @@ data/archive/index.json。存檔剛開始只有 30 天,記分板一開始幾乎�
 """
 
 import datetime as dt
+import math
 import os
 import statistics
 import sys
@@ -315,6 +316,25 @@ def forward_returns(prices, dates, index_days, pos, sid):
     return out
 
 
+def _wilson_ci(hits, n):
+    """
+    2026-09-19 Wilson 95% 信賴區間(z=1.96),回傳 [lo, hi](百分比,一位小數)。
+    不用常態近似(p ± z√(p(1-p)/n)):n 小時常態近似的區間會跑出 0~100 之外,
+    Wilson 區間天生就夾在 0~100 內,樣本小時也比較保守(區間較寬)。
+    n=0 回 None。
+    """
+    if not n:
+        return None
+    z = 1.96
+    p = hits / float(n)
+    denom = 1.0 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denom
+    lo = max(0.0, centre - half) * 100.0
+    hi = min(1.0, centre + half) * 100.0
+    return [round(lo, 1), round(hi, 1)]
+
+
 def summarize(samples, direction):
     """samples: list of (raw, excess)。命中用超額報酬;沒有指數的樣本只算 raw。"""
     raws = [s[0] for s in samples]
@@ -331,27 +351,35 @@ def summarize(samples, direction):
         "median_raw": round(statistics.median(raws), 2),
     }
     if exc:
-        hit = sum(1 for r in exc if direction * r > 0) / float(len(exc))
+        hit_count = sum(1 for r in exc if direction * r > 0)
+        hit = hit_count / float(len(exc))
         out.update({
             "n_excess": len(exc),
             "hit_rate": round(hit * 100, 1),
+            # 2026-09-19:vs指數基準本身有偏(見 universe_ew_return 說明的台積電
+            # 獨漲問題),這個區間只給前端放在 title 參考,不用來標「顯著」。
+            "hit_ci": _wilson_ci(hit_count, len(exc)),
             "avg_excess": round(statistics.fmean(exc), 2),
             "median_excess": round(statistics.median(exc), 2),
         })
     else:
-        out.update({"n_excess": 0, "hit_rate": None, "avg_excess": None, "median_excess": None})
+        out.update({"n_excess": 0, "hit_rate": None, "hit_ci": None, "avg_excess": None, "median_excess": None})
     # 2026-09-18 第二基準:減同日全市場個股報酬中位數(見 universe_ew_return 的說明)
     ew = [s[2] for s in samples if len(s) > 2 and s[2] is not None]
     if ew:
-        hit_ew = sum(1 for r in ew if direction * r > 0) / float(len(ew))
+        hit_count_ew = sum(1 for r in ew if direction * r > 0)
+        hit_ew = hit_count_ew / float(len(ew))
         out.update({
             "n_ew": len(ew),
             "hit_rate_ew": round(hit_ew * 100, 1),
+            # 2026-09-19:這個基準隨機挑一檔命中率依定義是 50%,區間不含 50%
+            # 才算「跟拋硬幣不一樣」,前端用這個標粗(sc-sig)。
+            "hit_ci_ew": _wilson_ci(hit_count_ew, len(ew)),
             "avg_excess_ew": round(statistics.fmean(ew), 2),
             "median_excess_ew": round(statistics.median(ew), 2),
         })
     else:
-        out.update({"n_ew": 0, "hit_rate_ew": None, "avg_excess_ew": None, "median_excess_ew": None})
+        out.update({"n_ew": 0, "hit_rate_ew": None, "hit_ci_ew": None, "avg_excess_ew": None, "median_excess_ew": None})
     return out
 
 
@@ -379,6 +407,8 @@ def summarize_with_fade(samples, direction):
     st["fade_hit_rate"] = fade_st.get("hit_rate")
     st["fade_hit_rate_raw"] = fade_st.get("hit_rate_raw")
     st["fade_hit_rate_ew"] = fade_st.get("hit_rate_ew")
+    st["fade_hit_ci"] = fade_st.get("hit_ci")
+    st["fade_hit_ci_ew"] = fade_st.get("hit_ci_ew")
     if st.get("avg_excess") is not None:
         st["pnl"] = round(direction * st["avg_excess"], 2)
         st["fade_pnl"] = round(-st["pnl"], 2)

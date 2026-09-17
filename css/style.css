@@ -1812,6 +1812,11 @@ input[type="date"] {
 .sc-dir { font-size: 12px; font-weight: 600; }
 .sc-count { font-size: 12px; color: var(--muted); font-weight: 400; margin-left: auto; }
 .sc-table td.is-thin, .sc-table td.is-thin.up, .sc-table td.is-thin.down { color: var(--muted); font-weight: 400; }
+/* 2026-09-19:vs中位股命中率的 Wilson 95% 區間不含 50% 時標出來——這組基準
+   隨機挑一檔命中率依定義就是 50%,沒有偏誤,才能用這個標粗+底線暗示「跟拋
+   硬幣不一樣」;vs指數那組基準本身有偏(見 compute_scorecard.py 的
+   universe_ew_return() 說明),不套用這個樣式,只在 title 附區間參考。 */
+.sc-table td.sc-sig { font-weight: 700; text-decoration: underline; }
 .sc-details { margin-top: 8px; }
 .sc-details summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 6px 0; }
 .sc-details[open] summary { color: var(--text); }

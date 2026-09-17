@@ -8019,8 +8019,23 @@
     return scorecardPending;
   }
 
+  // 2026-09-19 Wilson 95% 信賴區間(compute_scorecard.py 的 _wilson_ci() 算好存進
+  // hit_ci/hit_ci_ew,前端只負責顯示):scCiTitle() 組 title 附註文字,scIsSig()
+  // 判斷「vs中位股」區間有沒有跨過 50%——vs指數基準本身有偏(台積電獨漲問題,
+  // 見 universe_ew_return() 註解),所以只在 title 附區間、不標粗;vs中位股基準
+  // 隨機挑一檔依定義就是 50%,區間不含 50% 才用 sc-sig(粗體+底線)標出來。
+  function scCiTitle(ci) {
+    return ci ? '(95% 區間 ' + ci[0] + '~' + ci[1] + ')' : '';
+  }
+  function scIsSig(ci) {
+    return !!ci && (ci[1] < 50 || ci[0] > 50);
+  }
+
   function scStatCells(st) {
-    if (!st || !st.n) return '<td class="num is-thin">0</td><td class="num is-thin">—</td><td class="num is-thin">—</td>';
+    if (!st || !st.n) {
+      return '<td class="num is-thin">0</td><td class="num is-thin">—</td><td class="num is-thin">—</td>' +
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td>';
+    }
     var thin = st.enough ? '' : ' is-thin';
     var hit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
     var ex = st.avg_excess == null ? '—' : (st.avg_excess > 0 ? '+' : '') + st.avg_excess.toFixed(2) + '%';
@@ -8029,10 +8044,11 @@
     var hitEw = st.hit_rate_ew == null ? '—' : st.hit_rate_ew.toFixed(1) + '%';
     var exEw = st.avg_excess_ew == null ? '—' : (st.avg_excess_ew > 0 ? '+' : '') + st.avg_excess_ew.toFixed(2) + '%';
     var exEwCls = st.avg_excess_ew == null ? '' : (st.avg_excess_ew > 0 ? ' up' : ' down');
+    var hitEwSig = scIsSig(st.hit_ci_ew) ? ' sc-sig' : '';
     return '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
-      '<td class="num' + thin + '" title="命中 = 方向 × 超額報酬 > 0">' + hit + '</td>' +
+      '<td class="num' + thin + '" title="命中 = 方向 × 超額報酬 > 0' + scCiTitle(st.hit_ci) + '">' + hit + '</td>' +
       '<td class="num' + thin + exCls + '" title="平均超額報酬(扣掉同期加權指數)">' + ex + '</td>' +
-      '<td class="num' + thin + '" title="vs中位股命中 = 方向 × (個股報酬 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%">' + hitEw + '</td>' +
+      '<td class="num' + thin + hitEwSig + '" title="vs中位股命中 = 方向 × (個股報酬 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%' + scCiTitle(st.hit_ci_ew) + '">' + hitEw + '</td>' +
       '<td class="num' + thin + exEwCls + '" title="平均超額報酬(扣掉同日全市場個股報酬中位數)">' + exEw + '</td>';
   }
 
@@ -8134,19 +8150,22 @@
     var fadeAfterCost = fadeAfterCostVal == null ? '—' : (fadeAfterCostVal > 0 ? '+' : '') + fadeAfterCostVal.toFixed(2) + '%';
     var fadeAfterCostCls = fadeAfterCostVal == null ? '' : (fadeAfterCostVal > 0 ? ' up' : ' down');
     // 2026-09-18 第二基準(同日中位股):正用/反用命中率各一格,隨機挑一檔是 50%。
+    // 2026-09-19:區間不含 50% 才標粗(sc-sig),理由跟 scStatCells() 一樣。
     var origHitEw = st.hit_rate_ew == null ? '—' : st.hit_rate_ew.toFixed(1) + '%';
     var fadeHitEw = st.fade_hit_rate_ew == null ? '—' : st.fade_hit_rate_ew.toFixed(1) + '%';
+    var origHitEwSig = scIsSig(st.hit_ci_ew) ? ' sc-sig' : '';
+    var fadeHitEwSig = scIsSig(st.fade_hit_ci_ew) ? ' sc-sig' : '';
     return '<tr><td>' + h + ' 日</td>' +
       '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
-      '<td class="num' + thin + '">' + origHit + '</td>' +
+      '<td class="num' + thin + '" title="' + scCiTitle(st.hit_ci) + '">' + origHit + '</td>' +
       '<td class="num' + thin + origCls + '">' + origPnl + '</td>' +
       '<td class="num' + thin + origMedianCls + '">' + origMedian + '</td>' +
-      '<td class="num' + thin + '">' + fadeHit + '</td>' +
+      '<td class="num' + thin + '" title="' + scCiTitle(st.fade_hit_ci) + '">' + fadeHit + '</td>' +
       '<td class="num' + thin + fadeCls + '">' + fadePnl + '</td>' +
       '<td class="num' + thin + fadeAfterCostCls + '" title="fade_pnl − ' + FADE_ROUND_TRIP_COST_PCT + '%(假設成本,見檔頭 FADE_ROUND_TRIP_COST_PCT 註解)">' + fadeAfterCost + '</td>' +
       '<td class="num' + thin + fadeMedianCls + '">' + fadeMedian + '</td>' +
-      '<td class="num' + thin + '" title="vs中位股:方向 × (個股 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%">' + origHitEw + '</td>' +
-      '<td class="num' + thin + '" title="vs中位股,方向相反重算">' + fadeHitEw + '</td>' +
+      '<td class="num' + thin + origHitEwSig + '" title="vs中位股:方向 × (個股 − 同日全市場個股報酬中位數) > 0,隨機挑一檔是 50%' + scCiTitle(st.hit_ci_ew) + '">' + origHitEw + '</td>' +
+      '<td class="num' + thin + fadeHitEwSig + '" title="vs中位股,方向相反重算' + scCiTitle(st.fade_hit_ci_ew) + '">' + fadeHitEw + '</td>' +
     '</tr>';
   }
 
