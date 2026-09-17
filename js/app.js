@@ -2378,8 +2378,11 @@
   function thinscanTriggerNote(r) {
     var chg = r.change_pct;
     var chgTxt = chg == null ? '' : ('、漲 ' + (chg > 0 ? '+' : '') + chg.toFixed(2) + '%');
+    // 2026-09-18 加 MA20 量:提醒這種量 <300 張的股票,平常量能水準有多低,
+    // 出場時可能沒有對手盤接。
+    var ma20Txt = r.ma20_volume == null ? '' : ('、MA20 量 ' + (r.ma20_volume / 1000).toFixed(1) + '張');
     return '薄股測試(量比 ' + Number(r.vol_ratio).toFixed(2) + 'x' + chgTxt +
-      '、量 ' + (r.volume / 1000).toFixed(1) + '張)';
+      '、量 ' + (r.volume / 1000).toFixed(1) + '張' + ma20Txt + ')';
   }
 
   function renderThinScan(res) {
@@ -2397,7 +2400,8 @@
     renderGateBanner('thinscan-gate', 'long', 'thin_scan');
     var p = res.params || {};
     meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
-      '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
+      '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')' +
+      ' · 量 <300 張的股票出場時可能沒人接,部位建議不超過 MA20 量的一成';
 
     if (!res.rows || !res.rows.length) {
       tbody.innerHTML = '<tr><td colspan="11" class="scan-empty">當日沒有符合條件的股票</td></tr>';
@@ -2417,7 +2421,8 @@
         '<td class="code mono">' + esc(r.stock_id) + '</td>' +
         '<td>' + esc(r.stock_name || '') + '</td>' +
         '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
-        '<td class="num mono">' + (r.volume / 1000).toFixed(1) + '</td>' +
+        '<td class="num mono" title="MA20 量 ' + (r.ma20_volume == null ? '—' : (r.ma20_volume / 1000).toFixed(1)) +
+          ' 張">' + (r.volume / 1000).toFixed(1) + '</td>' +
         '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
         maStateCellHtml(r.ma_state) +
         '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +

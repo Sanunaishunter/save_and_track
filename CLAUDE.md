@@ -470,6 +470,10 @@ git commit + push      if: always()
   `loadCrashFomo()` 原本是 fire-and-forget,沒有 `return` fetch 的
   Promise,呼叫 `.catch()` 會整個炸掉——補上 `return` 後兩個既有呼叫點
   (`switchView()`)行為不變(本來就沒用回傳值)。
+- **2026-09-18 薄股測試加流動性提醒**:`thinscanTriggerNote()`/表格量欄
+  `title` 都補 `r.ma20_volume / 1000` 張(一位小數),meta 補一句「量
+  <300 張出場可能沒人接,部位建議不超過 MA20 量的一成」,純前端不動
+  資料檔。Playwright 對過 8482(9/17)MA20 量 8.0 張跟手算一致。
 
 ## 6. 已知限制 / 還沒決定的事
 
