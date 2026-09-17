@@ -68,9 +68,15 @@
   // 把顯示文字從「真漲」改成「可能會漲」,但舊的追蹤紀錄裡還存著「真漲」
   // 這個舊字,拿掉舊字會比對不到,分類、訊號準度統計都會悄悄把舊紀錄歸類
   // 成「未分類」,所以兩種都留著比對。
+  // real_rally_loose/fake_rally_loose(2026-09-17 使用者要求的寬鬆版 😝)
+  // 要排在 real_rally/fake_rally 前面:entryGroupKey() 取第一個命中的規則,
+  // 寬鬆版的自動文字(「可能會漲😝」)本身就包含「可能會漲」,順序放後面
+  // 會被前面的規則先攔截,永遠分類不到寬鬆版那組。
   var ENTRY_TAG_RULES = [
     { key: 'surge', label: '爆量', test: /爆量/ },
     { key: 'thinrally', label: '無量上漲', test: /無量上漲/ },
+    { key: 'real_rally_loose', label: '可能會漲😝', test: /可能會漲😝/ },
+    { key: 'fake_rally_loose', label: '虛漲😝', test: /虛漲😝/ },
     { key: 'real_rally', label: '可能會漲', test: /真漲|可能會漲/, exclude: /無明顯(真漲|可能會漲)\/虛漲/ },
     { key: 'fake_rally', label: '虛漲', test: /虛漲/, exclude: /無明顯(真漲|可能會漲)\/虛漲/ },
     { key: 'real_crash', label: '真跌', test: /真跌/, exclude: /無明顯真跌\/虛跌/ },
@@ -4210,6 +4216,11 @@
     // 加分項)同時觸發,兩者都成立時不強制二選一,只加警示——見
     // scripts/fomo_score.py 的 is_conflict 說明。
     if (r.is_conflict) out += '<span class="badge badge-diverge">⚠️ 訊號衝突</span>';
+    // 2026-09-17 使用者要求的寬鬆版(😝):跟上面兩個是平行、獨立的第二組
+    // 判斷(門檻更寬鬆),不是同一件事放大顯示,所以獨立的 badge。
+    if (r.is_real_rally_loose) out += '<span class="badge badge-real">可能會漲😝</span>';
+    if (r.is_fake_rally_loose) out += '<span class="badge badge-fake">虛漲😝</span>';
+    if (r.is_conflict_loose) out += '<span class="badge badge-diverge">⚠️ 訊號衝突😝</span>';
     if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
     if (!out) out = '<span class="badge badge-none">—</span>';
     return out;
@@ -4223,6 +4234,9 @@
     if (r.is_real_rally) tags.push('可能會漲');
     if (r.is_fake_rally) tags.push('虛漲');
     if (r.is_conflict) tags.push('⚠️訊號衝突');
+    if (r.is_real_rally_loose) tags.push('可能會漲😝');
+    if (r.is_fake_rally_loose) tags.push('虛漲😝');
+    if (r.is_conflict_loose) tags.push('⚠️訊號衝突😝');
     if (r.is_divergence) tags.push('背離');
     return 'FOMO(' + r.fomo_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯可能會漲/虛漲訊號');
   }
@@ -4261,6 +4275,10 @@
         '但估值/融資追價的角度偏空,兩個判斷各自獨立打分沒有互斥,自行判斷哪個角度比較重要,' +
         '不代表其中一個判斷錯了。</div>';
     }
+    if (r.is_conflict_loose) {
+      notes += '<div class="note note-diverge">⚠️ 可能會漲😝跟虛漲😝(寬鬆版門檻)同時成立,' +
+        '道理跟上面一樣,兩個判斷各自獨立打分沒有互斥。</div>';
+    }
 
     return '<tr class="fomo-detail"><td colspan="5">' +
       notes +
@@ -4268,6 +4286,8 @@
       reasonList('FOMO 依據(' + r.fomo_score + ' 分)', r.reasons.fomo) +
       reasonList('可能會漲依據(' + r.real_rally_score + ' 分)', r.reasons.real_rally) +
       reasonList('虛漲依據(' + r.fake_rally_score + ' 分)', r.reasons.fake_rally) +
+      reasonList('可能會漲😝依據(寬鬆版,' + r.real_rally_loose_score + ' 分)', r.reasons.real_rally_loose) +
+      reasonList('虛漲😝依據(寬鬆版,' + r.fake_rally_loose_score + ' 分)', r.reasons.fake_rally_loose) +
       (r.missing && r.missing.length
         ? '<h4>缺少資料</h4><div class="none">' + esc(r.missing.join('、')) + '</div>'
         : '') +
@@ -4287,16 +4307,22 @@
     }
     el('fomo-table').hidden = false;
 
-    var real = 0, fake = 0, conflict = 0;
+    var real = 0, fake = 0, conflict = 0, realLoose = 0, fakeLoose = 0, conflictLoose = 0;
     res.rows.forEach(function (r) {
       if (r.is_real_rally) real++;
       if (r.is_fake_rally) fake++;
       if (r.is_conflict) conflict++;
+      if (r.is_real_rally_loose) realLoose++;
+      if (r.is_fake_rally_loose) fakeLoose++;
+      if (r.is_conflict_loose) conflictLoose++;
     });
     var src = res.source_list === 'watchlist' ? '手動名單' : '爆量前段班';
     meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
       ' · 可能會漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔' +
-      (conflict ? ' · ⚠️ 訊號衝突 ' + conflict + ' 檔' : '') + '(點列可看理由)';
+      (conflict ? ' · ⚠️ 訊號衝突 ' + conflict + ' 檔' : '') +
+      ' · 可能會漲😝 ' + realLoose + ' 檔 · 虛漲😝 ' + fakeLoose + ' 檔' +
+      (conflictLoose ? ' · ⚠️ 訊號衝突😝 ' + conflictLoose + ' 檔' : '') +
+      '(點列可看理由)';
 
     if (!res.rows.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
@@ -6144,6 +6170,8 @@
     surge: { dir: 1, label: '預期偏多(掃描定義 close>open)' },
     real_rally: { dir: 1, label: '預期續漲' },
     fake_rally: { dir: -1, label: '預期不是真的,該回檔' },
+    real_rally_loose: { dir: 1, label: '預期續漲(寬鬆版門檻😝)' },
+    fake_rally_loose: { dir: -1, label: '預期不是真的,該回檔(寬鬆版門檻😝)' },
     crash: { dir: -1, label: '預期偏空(掃描定義 close<open)' },
     real_crash: { dir: -1, label: '預期續跌' },
     fake_crash: { dir: 1, label: '預期不是真的,該反彈' }

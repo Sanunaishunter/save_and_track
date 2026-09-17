@@ -48,6 +48,12 @@ SIGNAL_DEFS = {
     "fomo_fake": {"label": "虛漲", "dir": -1, "dir_label": "看空"},
     "crashfomo_real": {"label": "真跌", "dir": -1, "dir_label": "看空"},
     "crashfomo_fake": {"label": "虛跌", "dir": 1, "dir_label": "看多"},
+    # 2026-09-17 使用者要求的寬鬆版(😝):跟 fomo_real/fomo_fake 平行、獨立
+    # 累積樣本的第二組判斷,見 scripts/fomo_score.py 的 judge_real_rally_loose()/
+    # judge_fake_stock_rally_loose()。只做了 FOMO(可能會漲/虛漲)這一組,
+    # 使用者沒有要求暴跌FOMO(真跌/虛跌)也放寬,沒有一起做。
+    "fomo_real_loose": {"label": "可能會漲😝", "dir": 1, "dir_label": "看多"},
+    "fomo_fake_loose": {"label": "虛漲😝", "dir": -1, "dir_label": "看空"},
 }
 
 
@@ -82,6 +88,12 @@ def load_signal_instances():
                 inst.append(dict(base, signal="fomo_real", dir=1))
             if r.get("is_fake_rally"):
                 inst.append(dict(base, signal="fomo_fake", dir=-1))
+            # 寬鬆版(😝)舊存查檔沒有這兩個欄位,.get() 拿到 None 自然跳過,
+            # 從新欄位開始出現的那天起才會累積樣本,跟其他訊號當初上線時一樣。
+            if r.get("is_real_rally_loose"):
+                inst.append(dict(base, signal="fomo_real_loose", dir=1))
+            if r.get("is_fake_rally_loose"):
+                inst.append(dict(base, signal="fomo_fake_loose", dir=-1))
     cfomo_by_date = {}
     for ds, path in _dated_files(common.CRASH_FOMO_DIR):
         blob = common.read_json(path) or {}

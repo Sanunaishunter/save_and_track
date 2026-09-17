@@ -24,6 +24,19 @@ MARGIN_CONSECUTIVE = 3       # 融資連續買超(散戶連續進場)天數門�
 REAL_RALLY_PASS = 60         # 真漲(顯示文字:可能會漲)成立分數
 FAKE_RALLY_PASS = 60         # 虛漲成立分數
 
+# --- 2026-09-17 使用者要求的寬鬆版「可能會漲😝/虛漲😝」---
+# 跟上面 judge_real_rally()/judge_fake_stock_rally() 平行、獨立存在的第二組
+# 判斷,不是取代:門檻放寬(連續天數 3→2、融資5日增幅 15%→10%、PBR 2.5→2.0),
+# 拿掉券資比/外資買賣超這些加分項,只留最少的必要條件湊滿 60 分,想看看
+# 放寬之後樣本會不會變多、命中率會不會因此變差——兩組判斷各自累積歷史命中率
+# (訊號記分板的 fomo_real/fomo_fake 跟 fomo_real_loose/fomo_fake_loose 分開看),
+# 不能混在一起比較。
+FOREIGN_CONSECUTIVE_LOOSE = 2   # 外資連續買超天數門檻(寬鬆版)
+MARGIN_CONSECUTIVE_LOOSE = 2    # 融資連續買超天數門檻(寬鬆版)
+PBR_LOOSE_HIGH = 2.0            # 虛漲😝:股價淨值比偏高門檻(寬鬆版,比 PBR_HIGH 低)
+REAL_RALLY_LOOSE_PASS = 60      # 可能會漲😝 成立分數
+FAKE_RALLY_LOOSE_PASS = 60      # 虛漲😝 成立分數
+
 # --- 暴跌 FOMO(真跌/虛跌)專用門檻 ---
 # 概念上是真漲/虛漲的鏡射,但方向不是單純把號誌反過來就好,見 compute_crash_fomo.py
 # 開頭的說明。PBR_CRASH_CHEAP、MARGIN_DROP_PANIC 是這裡新增、原本 FOMO 沒有的門檻。
@@ -46,6 +59,11 @@ THRESHOLDS = {
     "FAKE_RALLY_PASS": FAKE_RALLY_PASS,
     "REAL_RALLY_REQUIRES_FOREIGN": True,
     "REAL_RALLY_REQUIRES_MARGIN": True,
+    "FOREIGN_CONSECUTIVE_LOOSE": FOREIGN_CONSECUTIVE_LOOSE,
+    "MARGIN_CONSECUTIVE_LOOSE": MARGIN_CONSECUTIVE_LOOSE,
+    "PBR_LOOSE_HIGH": PBR_LOOSE_HIGH,
+    "REAL_RALLY_LOOSE_PASS": REAL_RALLY_LOOSE_PASS,
+    "FAKE_RALLY_LOOSE_PASS": FAKE_RALLY_LOOSE_PASS,
     "PBR_CRASH_CHEAP": PBR_CRASH_CHEAP,
     "MARGIN_DROP_PANIC": MARGIN_DROP_PANIC,
     "REAL_CRASH_PASS": REAL_CRASH_PASS,
@@ -172,6 +190,81 @@ def judge_fake_stock_rally(m):
     return {
         "score": _clamp(score),
         "is_fake_rally": score >= FAKE_RALLY_PASS,
+        "reasons": reasons,
+        "missing": missing,
+    }
+
+
+def judge_real_rally_loose(m):
+    """
+    「可能會漲😝」——judge_real_rally() 的寬鬆版,平行存在、不是取代。
+    只留外資/融資連續買超兩個必要條件,門檻從 ≥3 天降到 ≥2 天,拿掉
+    券資比、PBR 這兩個加分項。40+20=60 剛好等於門檻,結構上就必須兩個
+    條件都成立才會過(不像原版還要另外寫必要條件檢查,因為原版加分項
+    多,單靠外資+其中一項加分就可能湊到 60)。
+    """
+    score = 0
+    reasons = []
+    missing = []
+
+    v = m.get("foreign_consecutive_buy_days")
+    if v is None:
+        missing.append("外資連續買超天數")
+    elif v >= FOREIGN_CONSECUTIVE_LOOSE:
+        score += 40
+        reasons.append("外資連續買超 %d 天(≥%d,寬鬆版)" % (v, FOREIGN_CONSECUTIVE_LOOSE))
+
+    v = m.get("margin_consecutive_buy_days")
+    if v is None:
+        missing.append("融資連續買超天數")
+    elif v >= MARGIN_CONSECUTIVE_LOOSE:
+        score += 20
+        reasons.append("融資連續買超 %d 天(≥%d,散戶跟著進場,寬鬆版)" % (v, MARGIN_CONSECUTIVE_LOOSE))
+
+    return {
+        "score": _clamp(score),
+        "is_real_rally_loose": score >= REAL_RALLY_LOOSE_PASS,
+        "reasons": reasons,
+        "missing": missing,
+    }
+
+
+def judge_fake_stock_rally_loose(m):
+    """
+    「虛漲😝」——judge_fake_stock_rally() 的寬鬆版,平行存在、不是取代。
+    融資5日增幅門檻從 >15% 降到 >10%,PBR 門檻從 >2.5 降到 >2.0,拿掉
+    外資買賣超這個加分項,只留融資增幅+PBR+今日量縮三項(30+20+10=60,
+    三項都要成立才會過)。
+    """
+    score = 0
+    reasons = []
+    missing = []
+
+    v = m.get("margin_change_5d_pct")
+    if v is None:
+        missing.append("融資5日增幅")
+    elif v > MARGIN_CHANGE_NOTICE:
+        score += 30
+        reasons.append("融資5日增幅 %.1f%%(>%d%%,散戶追價明顯,寬鬆版)"
+                       % (v, MARGIN_CHANGE_NOTICE))
+
+    v = m.get("pbr")
+    if v is None:
+        missing.append("PBR")
+    elif v > PBR_LOOSE_HIGH:
+        score += 20
+        reasons.append("PBR %.2f(>%.1f,評價偏高,寬鬆版)" % (v, PBR_LOOSE_HIGH))
+
+    vol, prev = m.get("volume"), m.get("prev_volume")
+    if vol is None or prev is None:
+        missing.append("成交量")
+    elif vol < prev:
+        score += 10
+        reasons.append("今日量縮(%s → %s)" % (format(int(prev), ","), format(int(vol), ",")))
+
+    return {
+        "score": _clamp(score),
+        "is_fake_rally_loose": score >= FAKE_RALLY_LOOSE_PASS,
         "reasons": reasons,
         "missing": missing,
     }
@@ -425,11 +518,13 @@ def score_stock(stock_id, stock_name, m):
     """把三組判斷合成一筆輸出。"""
     real = judge_real_rally(m)
     fake = judge_fake_stock_rally(m)
+    real_loose = judge_real_rally_loose(m)
+    fake_loose = judge_fake_stock_rally_loose(m)
     fomo = calculate_stock_fomo_score(m)
     diverge = judge_divergence(m)
 
     missing = []
-    for part in (real, fake, fomo, diverge):
+    for part in (real, fake, real_loose, fake_loose, fomo, diverge):
         for k in part["missing"]:
             if k not in missing:
                 missing.append(k)
@@ -444,6 +539,10 @@ def score_stock(stock_id, stock_name, m):
     # 錯了,是兩者本來就是從不同角度打分,同時成立時代表法人籌碼跟散戶
     # 行為/估值站在對立面,這本身就是值得注意的資訊,不該被合併掩蓋掉。
     conflict = bool(real["is_real_rally"] and fake["is_fake_rally"])
+    # 2026-09-17 使用者要求的寬鬆版(😝),跟上面的 is_conflict 同一個道理:
+    # 兩個放寬後的判斷各自獨立打分,沒有互斥檢查,只加衝突旗標。跟原版
+    # is_conflict 是各自獨立的旗標,不會互相影響。
+    conflict_loose = bool(real_loose["is_real_rally_loose"] and fake_loose["is_fake_rally_loose"])
 
     return {
         "stock_id": stock_id,
@@ -454,6 +553,11 @@ def score_stock(stock_id, stock_name, m):
         "is_fake_rally": fake["is_fake_rally"],
         "fake_rally_score": fake["score"],
         "is_conflict": conflict,
+        "is_real_rally_loose": real_loose["is_real_rally_loose"],
+        "real_rally_loose_score": real_loose["score"],
+        "is_fake_rally_loose": fake_loose["is_fake_rally_loose"],
+        "fake_rally_loose_score": fake_loose["score"],
+        "is_conflict_loose": conflict_loose,
         "is_divergence": diverge["is_divergence"],
         "divergence_reason": diverge["reason"],
         "foreign_note": foreign_annotation(m),
@@ -487,6 +591,8 @@ def score_stock(stock_id, stock_name, m):
             "fomo": fomo["reasons"],
             "real_rally": real["reasons"],
             "fake_rally": fake["reasons"],
+            "real_rally_loose": real_loose["reasons"],
+            "fake_rally_loose": fake_loose["reasons"],
         },
         "missing": missing,
     }
