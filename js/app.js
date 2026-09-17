@@ -4205,6 +4205,11 @@
     var out = '';
     if (r.is_real_rally) out += '<span class="badge badge-real">可能會漲</span>';
     if (r.is_fake_rally) out += '<span class="badge badge-fake">虛漲</span>';
+    // 2026-09-17 使用者要求:「可能會漲」跟「虛漲」是各自獨立打分、沒有互斥
+    // 檢查,外資連買(可能會漲的必要條件)常跟融資5日暴增+估值偏高(虛漲的
+    // 加分項)同時觸發,兩者都成立時不強制二選一,只加警示——見
+    // scripts/fomo_score.py 的 is_conflict 說明。
+    if (r.is_conflict) out += '<span class="badge badge-diverge">⚠️ 訊號衝突</span>';
     if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
     if (!out) out = '<span class="badge badge-none">—</span>';
     return out;
@@ -4217,6 +4222,7 @@
     var tags = [];
     if (r.is_real_rally) tags.push('可能會漲');
     if (r.is_fake_rally) tags.push('虛漲');
+    if (r.is_conflict) tags.push('⚠️訊號衝突');
     if (r.is_divergence) tags.push('背離');
     return 'FOMO(' + r.fomo_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯可能會漲/虛漲訊號');
   }
@@ -4250,6 +4256,11 @@
     if (r.is_divergence && r.divergence_reason) {
       notes += '<div class="note note-diverge">' + esc(r.divergence_reason) + '</div>';
     }
+    if (r.is_conflict) {
+      notes += '<div class="note note-diverge">⚠️ 可能會漲跟虛漲同時成立——外資籌碼偏多,' +
+        '但估值/融資追價的角度偏空,兩個判斷各自獨立打分沒有互斥,自行判斷哪個角度比較重要,' +
+        '不代表其中一個判斷錯了。</div>';
+    }
 
     return '<tr class="fomo-detail"><td colspan="5">' +
       notes +
@@ -4276,14 +4287,16 @@
     }
     el('fomo-table').hidden = false;
 
-    var real = 0, fake = 0;
+    var real = 0, fake = 0, conflict = 0;
     res.rows.forEach(function (r) {
       if (r.is_real_rally) real++;
       if (r.is_fake_rally) fake++;
+      if (r.is_conflict) conflict++;
     });
     var src = res.source_list === 'watchlist' ? '手動名單' : '爆量前段班';
     meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
-      ' · 可能會漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔(點列可看理由)';
+      ' · 可能會漲 ' + real + ' 檔 · 虛漲 ' + fake + ' 檔' +
+      (conflict ? ' · ⚠️ 訊號衝突 ' + conflict + ' 檔' : '') + '(點列可看理由)';
 
     if (!res.rows.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
@@ -4344,6 +4357,7 @@
     var out = '';
     if (r.is_real_crash) out += '<span class="badge badge-crash-real">真跌</span>';
     if (r.is_fake_crash) out += '<span class="badge badge-crash-fake">虛跌</span>';
+    if (r.is_conflict) out += '<span class="badge badge-diverge">⚠️ 訊號衝突</span>';
     if (r.is_divergence) out += '<span class="badge badge-diverge">背離</span>';
     if (!out) out = '<span class="badge badge-none">—</span>';
     return out;
@@ -4354,6 +4368,7 @@
     var tags = [];
     if (r.is_real_crash) tags.push('真跌');
     if (r.is_fake_crash) tags.push('虛跌');
+    if (r.is_conflict) tags.push('⚠️訊號衝突');
     if (r.is_divergence) tags.push('背離');
     return '暴跌FOMO(' + r.crash_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯真跌/虛跌訊號');
   }
@@ -4377,6 +4392,11 @@
     }
     if (r.is_divergence && r.divergence_reason) {
       notes += '<div class="note note-diverge">' + esc(r.divergence_reason) + '</div>';
+    }
+    if (r.is_conflict) {
+      notes += '<div class="note note-diverge">⚠️ 真跌跟虛跌同時成立——外資籌碼偏空,' +
+        '但融資斷頭式減倉/估值角度偏多,兩個判斷各自獨立打分沒有互斥,自行判斷哪個角度' +
+        '比較重要,不代表其中一個判斷錯了。</div>';
     }
 
     return '<tr class="fomo-detail"><td colspan="5">' +
@@ -4403,14 +4423,16 @@
     }
     el('crashfomo-table').hidden = false;
 
-    var real = 0, fake = 0;
+    var real = 0, fake = 0, conflict = 0;
     res.rows.forEach(function (r) {
       if (r.is_real_crash) real++;
       if (r.is_fake_crash) fake++;
+      if (r.is_conflict) conflict++;
     });
     var src = res.source_list === 'watchlist' ? '手動名單' : '暴跌前段班';
     meta.textContent = res.date + ' · ' + src + ' ' + res.scored_count + ' 檔' +
-      ' · 真跌 ' + real + ' 檔 · 虛跌 ' + fake + ' 檔(點列可看理由)';
+      ' · 真跌 ' + real + ' 檔 · 虛跌 ' + fake + ' 檔' +
+      (conflict ? ' · ⚠️ 訊號衝突 ' + conflict + ' 檔' : '') + '(點列可看理由)';
 
     if (!res.rows.length) {
       tbody.innerHTML = '<tr><td colspan="5" class="scan-empty">沒有資料</td></tr>';
