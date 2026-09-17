@@ -40,6 +40,14 @@ import common
 
 HORIZONS = (5, 10, 20)
 VOL_RATIO_BINS = ((1.5, 2.0, "1.5~2"), (2.0, 3.0, "2~3"), (3.0, 5.0, "3~5"), (5.0, 1e9, "5+"))
+# 2026-09-18 加的 20 日乖離率分桶:乖離 = (收盤 − MA20) / MA20 × 100,MA20 含當日
+# (跟 common.ma_state() / 前端 priceMaState() 同一個「含當日」定義,不是爆量
+# vol_ratio 那種 shift 1)。用有正負號的五桶,看多訊號(爆量/薄股)多半落在正
+# 乖離、看空訊號(暴跌)多半落在負乖離,同一組桶兩邊都讀得到。切點 ±5%、±10%
+# 是坊間常用的經驗值,這裡只拿來切樣本,不是拿來當訊號;要驗的是「離均線越遠、
+# 反著用是不是越強」(價格過度反應後回歸均線),數字出來才算站上驗證過。
+BIAS_BINS = ((-1e9, -10.0, "< −10%"), (-10.0, -5.0, "−10 ~ −5%"), (-5.0, 5.0, "−5 ~ +5%"),
+             (5.0, 10.0, "+5 ~ +10%"), (10.0, 1e9, "≥ +10%"))
 
 SIGNAL_DEFS = {
     "scan": {"label": "爆量", "dir": 1, "dir_label": "看多"},
@@ -181,6 +189,21 @@ def ma_label(prices, dates, pos, sid):
         closes.append((prices.get(dates[i]) or {}).get(sid, {}).get("close"))
     st = common.ma_state(closes)
     return {"bull": "多頭排列", "bear": "空頭排列", "mixed": "均線糾結"}.get(st["state"]) if st else "無均線資料"
+
+
+def bias_label(prices, dates, pos, sid):
+    """訊號日 20 日乖離率分桶;MA20 不足 20 天回「無均線資料」(跟 ma_label 同一種缺值處理)。"""
+    closes = []
+    for i in range(pos, max(-1, pos - 20), -1):
+        closes.append((prices.get(dates[i]) or {}).get(sid, {}).get("close"))
+    st = common.ma_state(closes)
+    if not st or not st["ma20"]:
+        return "無均線資料"
+    bias = (closes[0] - st["ma20"]) / st["ma20"] * 100.0
+    for lo, hi, label in BIAS_BINS:
+        if lo <= bias < hi:
+            return label
+    return None
 
 
 def confluence_label(item):
@@ -338,6 +361,7 @@ def build_scorecard(instances, prices, dates, index_days, events):
             entry["pending_20d"] += 1
         reg = regime_label(index_days.get(d))
         mal = ma_label(prices, dates, pos, it["stock_id"])
+        bil = bias_label(prices, dates, pos, it["stock_id"])
         conf = confluence_label(it)
         evl = event_label(events, dates, pos, it["stock_id"])
         vrl = vol_ratio_label(it.get("vol_ratio")) if sig in ("scan", "crash", "thin_scan") else None
@@ -345,6 +369,7 @@ def build_scorecard(instances, prices, dates, index_days, events):
             entry["by_h"][h].append(sample)
             _bucket_add(entry["buckets"], "regime", reg, h, sample)
             _bucket_add(entry["buckets"], "ma", mal, h, sample)
+            _bucket_add(entry["buckets"], "bias", bil, h, sample)
             _bucket_add(entry["buckets"], "confluence", conf, h, sample)
             _bucket_add(entry["buckets"], "event", evl, h, sample)
             _bucket_add(entry["buckets"], "vol_ratio", vrl, h, sample)
@@ -386,6 +411,7 @@ def main():
             "horizons": list(HORIZONS), "min_n": common.SCORECARD_MIN_N,
             "hit_definition": "dir × (個股報酬 − 加權指數同期報酬) > 0;hit_rate_raw 是不扣指數的版本",
             "bucket_kinds": {"regime": "訊號日大盤狀態", "ma": "訊號日個股均線狀態",
+                             "bias": "訊號日 20 日乖離率(含當日 MA20),五桶有正負號",
                              "confluence": "爆量/暴跌當天 FOMO 籌碼合流", "event": "事件日 ±1 個交易日",
                              "vol_ratio": "量比級距(只有爆量/暴跌)"},
         },

@@ -7934,7 +7934,11 @@
   var scorecardPending = null;
   var SC_SIGNAL_ORDER = ['scan', 'thin_scan', 'fomo_real', 'fomo_fake', 'crash', 'crashfomo_real', 'crashfomo_fake'];
   var SC_BUCKET_LABEL = { regime: '訊號日大盤狀態(閘門)', ma: '訊號日均線狀態(合流)',
-                          confluence: '籌碼合流(外資/融資連續)', event: '事件日 ±1 日', vol_ratio: '量比級距' };
+                          confluence: '籌碼合流(外資/融資連續)', event: '事件日 ±1 日', vol_ratio: '量比級距',
+                          bias: '訊號日 20 日乖離率(收盤 − MA20)/MA20' };
+  // 有自然順序的分桶照這個順序排,沒列的分桶維持「樣本多的排前面」。
+  // 乖離率的桶名要跟 scripts/compute_scorecard.py 的 BIAS_BINS 一字不差。
+  var SC_BUCKET_ORDER = { bias: ['< −10%', '−10 ~ −5%', '−5 ~ +5%', '+5 ~ +10%', '≥ +10%', '無均線資料'] };
 
   function loadScorecard() {
     if (scorecardData) return Promise.resolve(scorecardData);
@@ -7961,7 +7965,12 @@
   function scBucketTable(buckets, kind, hs) {
     var groups = buckets && buckets[kind];
     if (!groups) return '';
+    var order = SC_BUCKET_ORDER[kind];
     var labels = Object.keys(groups).sort(function (a, b) {
+      if (order) {
+        var ia = order.indexOf(a), ib = order.indexOf(b);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      }
       var na = (groups[a][hs[0]] || {}).n || 0, nb = (groups[b][hs[0]] || {}).n || 0; return nb - na;
     });
     return '<details class="sc-details"><summary>' + esc(SC_BUCKET_LABEL[kind] || kind) + '</summary>' +
@@ -7999,7 +8008,7 @@
             '<td class="num' + thin + '">' + (st.median_excess == null ? '—' : st.median_excess.toFixed(2) + '%') + '</td>' +
             '<td class="num' + thin + '">' + (st.hit_rate_raw == null ? '—' : st.hit_rate_raw.toFixed(1) + '%') + '</td></tr>';
         }).join('') + '</tbody></table></div>' +
-        ['regime', 'ma', 'confluence', 'event', 'vol_ratio'].map(function (k) { return scBucketTable(s.buckets, k, hs); }).join('') +
+        ['regime', 'ma', 'bias', 'confluence', 'event', 'vol_ratio'].map(function (k) { return scBucketTable(s.buckets, k, hs); }).join('') +
         '</section>';
     });
     if (!html) html = '<p class="panel-note">還沒有任何訊號樣本。</p>';
