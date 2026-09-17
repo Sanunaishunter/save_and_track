@@ -64,6 +64,23 @@ VOL_RATIO_THRESHOLD = 1.5
 MIN_VOLUME_LOTS = 300
 MIN_VOLUME_SHARES = MIN_VOLUME_LOTS * 1000
 
+# 薄股測試(2026-09-17,使用者用 6957 裕慶-KY 真實線圖抓到的案例)。爆量掃描
+# 公式一字不改(vol_ratio > 1.5 且 close > open),只是鎖定「量 < 300 張」這群
+# ——現行 MIN_VOLUME_LOTS 門檻會把這群整批濾掉,6957 這次一路到量衝上 390 張
+# (2026-09-16)才第一次進爆量掃描名單,同一批公式套用在被濾掉的薄股票身上,
+# 9/10(119張)、9/11(162張)甚至更早的 2025-08-19、08-28 等好幾次 vol_ratio
+# 早就超過 1.5。全市場回測過(見 CLAUDE.md 第 5 節):這群平均命中率比現有
+# 爆量掃描(量>=300張)那群更低、超額報酬更負,不是新發現的獨立優勢,是同一個
+# 「爆量看多容易輸」故事的加強版。使用者決定不是要拿這當保證勝率的進場訊號,
+# 是「跟著散戶一起抬轎、有紀律地下車」——照樣做成正式訊號、進記分板算勝率,
+# 讓使用者自己盯著數字判斷,不是系統幫他下結論說穩賺。
+# 下限只是排除接近零成交的雜訊(不是要篩「好」股票),上限沿用 MIN_VOLUME_LOTS
+# 讓兩個掃描完全互補、同一天同一檔不會同時出現在兩份清單。
+THIN_SCAN_MIN_VOLUME_LOTS = 10
+THIN_SCAN_MIN_VOLUME_SHARES = THIN_SCAN_MIN_VOLUME_LOTS * 1000
+THIN_SCANS_DIR = os.path.join(DATA_DIR, "thin-scans")
+THIN_SCAN_LATEST_FILE = os.path.join(DATA_DIR, "thin-scan-latest.json")
+
 # 只要上市普通股:四位數、開頭非 0(排除 00 開頭的 ETF 與六位數權證)
 LISTED_CODE = re.compile(r"^[1-9]\d{3}$")
 

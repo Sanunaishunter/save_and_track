@@ -1,0 +1,58 @@
+{
+  "date": "2026-06-23",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1066,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "6184",
+      "stock_name": "大豐電",
+      "vol_ratio": 4.11,
+      "change_pct": 0.32,
+      "close": 46.95,
+      "volume": 273099,
+      "ma20_volume": 66414,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1730",
+      "stock_name": "花仙子",
+      "vol_ratio": 2.94,
+      "change_pct": 0.38,
+      "close": 53.5,
+      "volume": 174627,
+      "ma20_volume": 59470,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 1.95,
+      "change_pct": -4.68,
+      "close": 59.0,
+      "volume": 25882,
+      "ma20_volume": 13281,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6887",
+      "stock_name": "寶綠特-KY",
+      "vol_ratio": 1.52,
+      "change_pct": 5.71,
+      "close": 37.0,
+      "volume": 71166,
+      "ma20_volume": 46689,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

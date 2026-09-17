@@ -1,0 +1,138 @@
+{
+  "date": "2025-10-03",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1050,
+  "evaluated": 1017,
+  "count": 12,
+  "rows": [
+    {
+      "stock_id": "2910",
+      "stock_name": "統領",
+      "vol_ratio": 8.4,
+      "change_pct": -0.71,
+      "close": 21.05,
+      "volume": 84000,
+      "ma20_volume": 10002,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8443",
+      "stock_name": "阿瘦",
+      "vol_ratio": 4.23,
+      "change_pct": 0.0,
+      "close": 12.15,
+      "volume": 141871,
+      "ma20_volume": 33530,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1235",
+      "stock_name": "興泰",
+      "vol_ratio": 3.36,
+      "change_pct": 2.52,
+      "close": 65.0,
+      "volume": 47302,
+      "ma20_volume": 14098,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1614",
+      "stock_name": "三洋電",
+      "vol_ratio": 2.62,
+      "change_pct": 0.27,
+      "close": 37.0,
+      "volume": 125503,
+      "ma20_volume": 47891,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3164",
+      "stock_name": "景岳",
+      "vol_ratio": 2.15,
+      "change_pct": 1.85,
+      "close": 19.25,
+      "volume": 44472,
+      "ma20_volume": 20655,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6606",
+      "stock_name": "建德工業",
+      "vol_ratio": 2.05,
+      "change_pct": 0.0,
+      "close": 25.05,
+      "volume": 85180,
+      "ma20_volume": 41534,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6183",
+      "stock_name": "關貿",
+      "vol_ratio": 2.04,
+      "change_pct": 1.01,
+      "close": 99.8,
+      "volume": 42150,
+      "ma20_volume": 20661,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9944",
+      "stock_name": "新麗",
+      "vol_ratio": 1.8,
+      "change_pct": 0.6,
+      "close": 16.9,
+      "volume": 74745,
+      "ma20_volume": 41449,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1416",
+      "stock_name": "廣豐",
+      "vol_ratio": 1.64,
+      "change_pct": 1.77,
+      "close": 11.5,
+      "volume": 285161,
+      "ma20_volume": 174178,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1530",
+      "stock_name": "亞崴",
+      "vol_ratio": 1.62,
+      "change_pct": 0.37,
+      "close": 27.4,
+      "volume": 26417,
+      "ma20_volume": 16323,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6969",
+      "stock_name": "成信實業*-創",
+      "vol_ratio": 1.57,
+      "change_pct": 2.23,
+      "close": 39.0,
+      "volume": 42000,
+      "ma20_volume": 26800,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2701",
+      "stock_name": "萬企",
+      "vol_ratio": 1.53,
+      "change_pct": 0.45,
+      "close": 11.15,
+      "volume": 92434,
+      "ma20_volume": 60432,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

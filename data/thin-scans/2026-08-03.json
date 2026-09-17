@@ -1,0 +1,108 @@
+{
+  "date": "2026-08-03",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1083,
+  "evaluated": 1068,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "1470",
+      "stock_name": "大統新創",
+      "vol_ratio": 3.25,
+      "change_pct": -1.48,
+      "close": 23.25,
+      "volume": 29298,
+      "ma20_volume": 9027,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1737",
+      "stock_name": "臺鹽",
+      "vol_ratio": 2.31,
+      "change_pct": 0.62,
+      "close": 32.25,
+      "volume": 271824,
+      "ma20_volume": 117478,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2450",
+      "stock_name": "神腦",
+      "vol_ratio": 1.95,
+      "change_pct": -0.35,
+      "close": 28.65,
+      "volume": 235725,
+      "ma20_volume": 120646,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6908",
+      "stock_name": "宏碁遊戲-創",
+      "vol_ratio": 1.95,
+      "change_pct": 0.0,
+      "close": 33.85,
+      "volume": 29346,
+      "ma20_volume": 15062,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8482",
+      "stock_name": "商億-KY",
+      "vol_ratio": 1.72,
+      "change_pct": -5.75,
+      "close": 49.95,
+      "volume": 11117,
+      "ma20_volume": 6476,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6921",
+      "stock_name": "嘉雨思-創",
+      "vol_ratio": 1.57,
+      "change_pct": 2.36,
+      "close": 60.7,
+      "volume": 37007,
+      "ma20_volume": 23622,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 1.52,
+      "change_pct": -0.88,
+      "close": 39.65,
+      "volume": 125214,
+      "ma20_volume": 82190,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7760",
+      "stock_name": "享溫馨",
+      "vol_ratio": 1.52,
+      "change_pct": -0.59,
+      "close": 33.8,
+      "volume": 144159,
+      "ma20_volume": 95120,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 1.51,
+      "change_pct": 0.0,
+      "close": 54.8,
+      "volume": 126722,
+      "ma20_volume": 84021,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

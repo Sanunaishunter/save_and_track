@@ -1,0 +1,78 @@
+{
+  "date": "2026-02-04",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1066,
+  "evaluated": 1046,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "2939",
+      "stock_name": "永邑-KY",
+      "vol_ratio": 7.84,
+      "change_pct": 9.93,
+      "close": 22.15,
+      "volume": 197351,
+      "ma20_volume": 25174,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6921",
+      "stock_name": "嘉雨思-創",
+      "vol_ratio": 2.74,
+      "change_pct": 8.94,
+      "close": 84.1,
+      "volume": 268057,
+      "ma20_volume": 97970,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 1.95,
+      "change_pct": 0.51,
+      "close": 58.9,
+      "volume": 10259,
+      "ma20_volume": 5260,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1225",
+      "stock_name": "福懋油",
+      "vol_ratio": 1.79,
+      "change_pct": 1.95,
+      "close": 28.75,
+      "volume": 238221,
+      "ma20_volume": 133388,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 1.78,
+      "change_pct": 1.27,
+      "close": 20.0,
+      "volume": 118750,
+      "ma20_volume": 66842,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7705",
+      "stock_name": "三商餐飲",
+      "vol_ratio": 1.5,
+      "change_pct": -0.13,
+      "close": 39.35,
+      "volume": 78077,
+      "ma20_volume": 51971,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

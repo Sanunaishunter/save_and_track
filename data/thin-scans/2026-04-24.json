@@ -1,0 +1,118 @@
+{
+  "date": "2026-04-24",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1073,
+  "evaluated": 1054,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "7736",
+      "stock_name": "虎山",
+      "vol_ratio": 3.08,
+      "change_pct": 2.05,
+      "close": 79.8,
+      "volume": 102292,
+      "ma20_volume": 33174,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2945",
+      "stock_name": "三商家購",
+      "vol_ratio": 2.98,
+      "change_pct": 1.71,
+      "close": 41.7,
+      "volume": 48810,
+      "ma20_volume": 16380,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2459",
+      "stock_name": "敦吉",
+      "vol_ratio": 2.48,
+      "change_pct": 2.72,
+      "close": 68.0,
+      "volume": 263314,
+      "ma20_volume": 105992,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3021",
+      "stock_name": "鴻名",
+      "vol_ratio": 2.48,
+      "change_pct": 2.77,
+      "close": 16.7,
+      "volume": 298545,
+      "ma20_volume": 120614,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3652",
+      "stock_name": "精聯",
+      "vol_ratio": 2.03,
+      "change_pct": 1.73,
+      "close": 29.4,
+      "volume": 102891,
+      "ma20_volume": 50781,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2762",
+      "stock_name": "世界健身-KY",
+      "vol_ratio": 2.01,
+      "change_pct": 0.55,
+      "close": 73.0,
+      "volume": 61470,
+      "ma20_volume": 30606,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4148",
+      "stock_name": "全宇生技-KY",
+      "vol_ratio": 1.7,
+      "change_pct": 4.32,
+      "close": 38.6,
+      "volume": 157140,
+      "ma20_volume": 92250,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3296",
+      "stock_name": "勝德",
+      "vol_ratio": 1.61,
+      "change_pct": 0.5,
+      "close": 20.1,
+      "volume": 126027,
+      "ma20_volume": 78177,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 1.6,
+      "change_pct": -0.74,
+      "close": 47.05,
+      "volume": 33822,
+      "ma20_volume": 21080,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6184",
+      "stock_name": "大豐電",
+      "vol_ratio": 1.52,
+      "change_pct": 0.21,
+      "close": 47.3,
+      "volume": 77289,
+      "ma20_volume": 50746,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

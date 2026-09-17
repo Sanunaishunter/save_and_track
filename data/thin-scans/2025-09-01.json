@@ -1,0 +1,118 @@
+{
+  "date": "2025-09-01",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1046,
+  "evaluated": 1016,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "6225",
+      "stock_name": "天瀚",
+      "vol_ratio": 5.69,
+      "change_pct": 4.36,
+      "close": 15.55,
+      "volume": 221934,
+      "ma20_volume": 39036,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2430",
+      "stock_name": "燦坤",
+      "vol_ratio": 4.46,
+      "change_pct": 2.85,
+      "close": 25.3,
+      "volume": 269139,
+      "ma20_volume": 60312,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 4.44,
+      "change_pct": 1.5,
+      "close": 95.0,
+      "volume": 44015,
+      "ma20_volume": 9914,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 3.36,
+      "change_pct": 0.92,
+      "close": 21.9,
+      "volume": 71815,
+      "ma20_volume": 21352,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2722",
+      "stock_name": "夏都",
+      "vol_ratio": 2.61,
+      "change_pct": 3.66,
+      "close": 29.7,
+      "volume": 90512,
+      "ma20_volume": 34719,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2239",
+      "stock_name": "英利-KY",
+      "vol_ratio": 2.13,
+      "change_pct": -0.65,
+      "close": 30.65,
+      "volume": 243824,
+      "ma20_volume": 114631,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "5546",
+      "stock_name": "永固-KY",
+      "vol_ratio": 2.0,
+      "change_pct": -0.91,
+      "close": 27.2,
+      "volume": 23040,
+      "ma20_volume": 11491,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 1.94,
+      "change_pct": -3.01,
+      "close": 64.5,
+      "volume": 31756,
+      "ma20_volume": 16379,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1441",
+      "stock_name": "大東",
+      "vol_ratio": 1.91,
+      "change_pct": 0.44,
+      "close": 11.5,
+      "volume": 51633,
+      "ma20_volume": 27020,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6641",
+      "stock_name": "基士德-KY",
+      "vol_ratio": 1.67,
+      "change_pct": 0.0,
+      "close": 21.2,
+      "volume": 27198,
+      "ma20_volume": 16284,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

@@ -54,6 +54,10 @@ SIGNAL_DEFS = {
     # 使用者沒有要求暴跌FOMO(真跌/虛跌)也放寬,沒有一起做。
     "fomo_real_loose": {"label": "可能會漲😝", "dir": 1, "dir_label": "看多"},
     "fomo_fake_loose": {"label": "虛漲😝", "dir": -1, "dir_label": "看空"},
+    # 2026-09-17 使用者要求的「薄股測試」:爆量掃描同一個公式(vol_ratio>1.5
+    # 且收紅),只是鎖定 scan 用 MIN_VOLUME_LOTS(300張)下限濾掉的薄股票,見
+    # scripts/compute_thin_scan.py 開頭說明跟 common.py 的 THIN_SCAN_* 常數。
+    "thin_scan": {"label": "薄股爆量", "dir": 1, "dir_label": "看多"},
 }
 
 
@@ -126,6 +130,15 @@ def load_signal_instances():
                          "vol_ratio": r.get("vol_ratio"),
                          "foreign_consec": m.get("foreign_consecutive_sell_days") if f else None,
                          "margin_consec": None})
+    # 薄股測試:跟 scan 同一個公式,只是股票群不同(量<300張),沒有 FOMO
+    # 候選池可以查合流資訊(FOMO/暴跌FOMO 只挑前 60 名,薄股票通常不在裡面),
+    # foreign_consec/margin_consec 留 None——confluence_label() 看到兩者都是
+    # None 會回傳「無合流資料」,不是誤判成「無合流」。
+    for ds, path in _dated_files(common.THIN_SCANS_DIR):
+        blob = common.read_json(path) or {}
+        for r in blob.get("rows") or []:
+            inst.append({"signal": "thin_scan", "date": ds, "stock_id": r.get("stock_id"), "dir": 1,
+                         "vol_ratio": r.get("vol_ratio"), "foreign_consec": None, "margin_consec": None})
     return inst
 
 
@@ -327,7 +340,7 @@ def build_scorecard(instances, prices, dates, index_days, events):
         mal = ma_label(prices, dates, pos, it["stock_id"])
         conf = confluence_label(it)
         evl = event_label(events, dates, pos, it["stock_id"])
-        vrl = vol_ratio_label(it.get("vol_ratio")) if sig in ("scan", "crash") else None
+        vrl = vol_ratio_label(it.get("vol_ratio")) if sig in ("scan", "crash", "thin_scan") else None
         for h, sample in fr.items():
             entry["by_h"][h].append(sample)
             _bucket_add(entry["buckets"], "regime", reg, h, sample)

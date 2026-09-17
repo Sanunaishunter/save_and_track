@@ -1,0 +1,138 @@
+{
+  "date": "2025-10-01",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1049,
+  "evaluated": 1018,
+  "count": 12,
+  "rows": [
+    {
+      "stock_id": "2114",
+      "stock_name": "鑫永銓",
+      "vol_ratio": 3.25,
+      "change_pct": 0.67,
+      "close": 90.7,
+      "volume": 65152,
+      "ma20_volume": 20023,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4999",
+      "stock_name": "鑫禾",
+      "vol_ratio": 3.0,
+      "change_pct": 0.58,
+      "close": 25.95,
+      "volume": 158299,
+      "ma20_volume": 52843,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 2.62,
+      "change_pct": 0.15,
+      "close": 65.2,
+      "volume": 36527,
+      "ma20_volume": 13948,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1475",
+      "stock_name": "業旺",
+      "vol_ratio": 2.51,
+      "change_pct": 4.98,
+      "close": 33.7,
+      "volume": 106444,
+      "ma20_volume": 42365,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4943",
+      "stock_name": "康控-KY",
+      "vol_ratio": 2.47,
+      "change_pct": 4.77,
+      "close": 9.88,
+      "volume": 54930,
+      "ma20_volume": 22207,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5546",
+      "stock_name": "永固-KY",
+      "vol_ratio": 2.44,
+      "change_pct": 0.41,
+      "close": 24.6,
+      "volume": 68070,
+      "ma20_volume": 27921,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1465",
+      "stock_name": "偉全",
+      "vol_ratio": 1.86,
+      "change_pct": 0.76,
+      "close": 13.25,
+      "volume": 104017,
+      "ma20_volume": 55795,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6902",
+      "stock_name": "GOGOLOOK",
+      "vol_ratio": 1.84,
+      "change_pct": 0.63,
+      "close": 80.0,
+      "volume": 134158,
+      "ma20_volume": 72888,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7705",
+      "stock_name": "三商餐飲",
+      "vol_ratio": 1.84,
+      "change_pct": 0.72,
+      "close": 42.2,
+      "volume": 88998,
+      "ma20_volume": 48286,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1725",
+      "stock_name": "元禎",
+      "vol_ratio": 1.71,
+      "change_pct": 6.06,
+      "close": 28.0,
+      "volume": 60665,
+      "ma20_volume": 35374,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 1.69,
+      "change_pct": -0.42,
+      "close": 11.85,
+      "volume": 177543,
+      "ma20_volume": 104802,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 1.6,
+      "change_pct": -0.89,
+      "close": 67.1,
+      "volume": 43247,
+      "ma20_volume": 27051,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

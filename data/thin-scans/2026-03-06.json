@@ -1,0 +1,118 @@
+{
+  "date": "2026-03-06",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1072,
+  "evaluated": 1050,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "2432",
+      "stock_name": "倚天酷碁-創",
+      "vol_ratio": 4.63,
+      "change_pct": 10.0,
+      "close": 25.85,
+      "volume": 191130,
+      "ma20_volume": 41286,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9937",
+      "stock_name": "全國",
+      "vol_ratio": 3.93,
+      "change_pct": 0.51,
+      "close": 59.1,
+      "volume": 236775,
+      "ma20_volume": 60263,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8367",
+      "stock_name": "建新國際",
+      "vol_ratio": 3.88,
+      "change_pct": 1.77,
+      "close": 46.0,
+      "volume": 170556,
+      "ma20_volume": 43988,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1324",
+      "stock_name": "地球",
+      "vol_ratio": 3.56,
+      "change_pct": 3.35,
+      "close": 10.8,
+      "volume": 251076,
+      "ma20_volume": 70576,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1456",
+      "stock_name": "怡華",
+      "vol_ratio": 3.17,
+      "change_pct": 2.78,
+      "close": 12.95,
+      "volume": 127628,
+      "ma20_volume": 40320,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6902",
+      "stock_name": "GOGOLOOK",
+      "vol_ratio": 2.88,
+      "change_pct": 4.76,
+      "close": 79.2,
+      "volume": 129048,
+      "ma20_volume": 44885,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4942",
+      "stock_name": "嘉彰",
+      "vol_ratio": 1.92,
+      "change_pct": 2.82,
+      "close": 38.25,
+      "volume": 257411,
+      "ma20_volume": 134071,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6136",
+      "stock_name": "富爾特",
+      "vol_ratio": 1.61,
+      "change_pct": 0.63,
+      "close": 23.85,
+      "volume": 259231,
+      "ma20_volume": 160533,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1323",
+      "stock_name": "永裕",
+      "vol_ratio": 1.55,
+      "change_pct": 0.27,
+      "close": 18.7,
+      "volume": 81541,
+      "ma20_volume": 52642,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 1.53,
+      "change_pct": 0.87,
+      "close": 11.65,
+      "volume": 100206,
+      "ma20_volume": 65300,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

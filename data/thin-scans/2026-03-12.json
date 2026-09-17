@@ -1,0 +1,118 @@
+{
+  "date": "2026-03-12",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1072,
+  "evaluated": 1056,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "4148",
+      "stock_name": "全宇生技-KY",
+      "vol_ratio": 3.64,
+      "change_pct": 3.11,
+      "close": 38.1,
+      "volume": 139208,
+      "ma20_volume": 38296,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7730",
+      "stock_name": "暉盛-創",
+      "vol_ratio": 3.55,
+      "change_pct": 9.96,
+      "close": 143.5,
+      "volume": 279642,
+      "ma20_volume": 78776,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6754",
+      "stock_name": "匯僑設計",
+      "vol_ratio": 2.61,
+      "change_pct": 7.53,
+      "close": 45.0,
+      "volume": 87068,
+      "ma20_volume": 33310,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8940",
+      "stock_name": "新天地",
+      "vol_ratio": 2.51,
+      "change_pct": -0.26,
+      "close": 18.9,
+      "volume": 150797,
+      "ma20_volume": 60078,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2939",
+      "stock_name": "永邑-KY",
+      "vol_ratio": 2.12,
+      "change_pct": 9.7,
+      "close": 27.15,
+      "volume": 116308,
+      "ma20_volume": 54920,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7732",
+      "stock_name": "金興精密",
+      "vol_ratio": 2.09,
+      "change_pct": -3.04,
+      "close": 36.7,
+      "volume": 24274,
+      "ma20_volume": 11603,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 1.83,
+      "change_pct": -1.92,
+      "close": 38.4,
+      "volume": 59564,
+      "ma20_volume": 32535,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6807",
+      "stock_name": "峰源-KY",
+      "vol_ratio": 1.75,
+      "change_pct": 0.11,
+      "close": 43.9,
+      "volume": 23040,
+      "ma20_volume": 13138,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1321",
+      "stock_name": "大洋",
+      "vol_ratio": 1.53,
+      "change_pct": 0.45,
+      "close": 33.7,
+      "volume": 256137,
+      "ma20_volume": 167088,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 1.51,
+      "change_pct": 1.38,
+      "close": 58.8,
+      "volume": 15404,
+      "ma20_volume": 10169,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

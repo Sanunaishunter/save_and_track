@@ -1,0 +1,58 @@
+{
+  "date": "2025-09-15",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1052,
+  "evaluated": 1026,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "8101",
+      "stock_name": "華冠",
+      "vol_ratio": 4.93,
+      "change_pct": 9.77,
+      "close": 19.1,
+      "volume": 109994,
+      "ma20_volume": 22314,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1474",
+      "stock_name": "弘裕",
+      "vol_ratio": 2.09,
+      "change_pct": 1.69,
+      "close": 12.0,
+      "volume": 173244,
+      "ma20_volume": 82998,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1730",
+      "stock_name": "花仙子",
+      "vol_ratio": 1.92,
+      "change_pct": -0.38,
+      "close": 52.3,
+      "volume": 58210,
+      "ma20_volume": 30327,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6931",
+      "stock_name": "青松健康",
+      "vol_ratio": 1.56,
+      "change_pct": 0.99,
+      "close": 51.0,
+      "volume": 84372,
+      "ma20_volume": 53942,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

@@ -1,0 +1,88 @@
+{
+  "date": "2026-03-27",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1068,
+  "evaluated": 1056,
+  "count": 7,
+  "rows": [
+    {
+      "stock_id": "2910",
+      "stock_name": "統領",
+      "vol_ratio": 5.84,
+      "change_pct": 8.47,
+      "close": 23.05,
+      "volume": 91639,
+      "ma20_volume": 15692,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1538",
+      "stock_name": "正峰",
+      "vol_ratio": 3.43,
+      "change_pct": 0.76,
+      "close": 13.3,
+      "volume": 84697,
+      "ma20_volume": 24671,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6582",
+      "stock_name": "申豐",
+      "vol_ratio": 2.49,
+      "change_pct": 2.16,
+      "close": 33.15,
+      "volume": 218695,
+      "ma20_volume": 87876,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 2.01,
+      "change_pct": 0.41,
+      "close": 12.3,
+      "volume": 198470,
+      "ma20_volume": 98912,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2433",
+      "stock_name": "互盛電",
+      "vol_ratio": 1.91,
+      "change_pct": 0.66,
+      "close": 45.95,
+      "volume": 85331,
+      "ma20_volume": 44698,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1541",
+      "stock_name": "錩泰",
+      "vol_ratio": 1.87,
+      "change_pct": 3.2,
+      "close": 25.8,
+      "volume": 68592,
+      "ma20_volume": 36724,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6933",
+      "stock_name": "AMAX-KY",
+      "vol_ratio": 1.69,
+      "change_pct": 4.69,
+      "close": 134.0,
+      "volume": 231613,
+      "ma20_volume": 137336,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

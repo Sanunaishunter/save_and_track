@@ -1,0 +1,108 @@
+{
+  "date": "2025-10-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1047,
+  "evaluated": 1016,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "3229",
+      "stock_name": "晟鈦",
+      "vol_ratio": 5.92,
+      "change_pct": 9.86,
+      "close": 15.6,
+      "volume": 225698,
+      "ma20_volume": 38104,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3018",
+      "stock_name": "隆銘綠能",
+      "vol_ratio": 4.01,
+      "change_pct": 0.36,
+      "close": 13.8,
+      "volume": 77102,
+      "ma20_volume": 19217,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 3.44,
+      "change_pct": 2.0,
+      "close": 25.45,
+      "volume": 270095,
+      "ma20_volume": 78415,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2373",
+      "stock_name": "震旦行",
+      "vol_ratio": 3.17,
+      "change_pct": 0.87,
+      "close": 58.2,
+      "volume": 71467,
+      "ma20_volume": 22533,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8466",
+      "stock_name": "美吉吉-KY",
+      "vol_ratio": 2.58,
+      "change_pct": 7.79,
+      "close": 25.6,
+      "volume": 180067,
+      "ma20_volume": 69714,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1475",
+      "stock_name": "業旺",
+      "vol_ratio": 2.02,
+      "change_pct": 1.34,
+      "close": 34.15,
+      "volume": 93447,
+      "ma20_volume": 46329,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4764",
+      "stock_name": "雙鍵",
+      "vol_ratio": 1.89,
+      "change_pct": 0.49,
+      "close": 41.0,
+      "volume": 25033,
+      "ma20_volume": 13271,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1783",
+      "stock_name": "和康生",
+      "vol_ratio": 1.82,
+      "change_pct": 1.7,
+      "close": 47.9,
+      "volume": 259632,
+      "ma20_volume": 142857,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6115",
+      "stock_name": "鎰勝",
+      "vol_ratio": 1.58,
+      "change_pct": 0.63,
+      "close": 48.25,
+      "volume": 95422,
+      "ma20_volume": 60249,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

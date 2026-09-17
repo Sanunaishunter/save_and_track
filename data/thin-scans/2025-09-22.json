@@ -1,0 +1,108 @@
+{
+  "date": "2025-09-22",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1048,
+  "evaluated": 1025,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "6794",
+      "stock_name": "向榮生技",
+      "vol_ratio": 5.49,
+      "change_pct": 7.22,
+      "close": 95.0,
+      "volume": 192297,
+      "ma20_volume": 35055,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2483",
+      "stock_name": "百容",
+      "vol_ratio": 4.49,
+      "change_pct": 3.75,
+      "close": 20.75,
+      "volume": 294347,
+      "ma20_volume": 65496,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 3.23,
+      "change_pct": 0.42,
+      "close": 23.8,
+      "volume": 191120,
+      "ma20_volume": 59236,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "5525",
+      "stock_name": "順天",
+      "vol_ratio": 2.76,
+      "change_pct": 1.76,
+      "close": 28.85,
+      "volume": 264900,
+      "ma20_volume": 96121,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1474",
+      "stock_name": "弘裕",
+      "vol_ratio": 2.03,
+      "change_pct": 0.83,
+      "close": 12.1,
+      "volume": 197657,
+      "ma20_volume": 97208,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8411",
+      "stock_name": "福貞-KY",
+      "vol_ratio": 1.77,
+      "change_pct": 0.38,
+      "close": 13.05,
+      "volume": 68433,
+      "ma20_volume": 38668,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1452",
+      "stock_name": "宏益",
+      "vol_ratio": 1.74,
+      "change_pct": 4.49,
+      "close": 13.95,
+      "volume": 256153,
+      "ma20_volume": 146864,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6645",
+      "stock_name": "金萬林-創",
+      "vol_ratio": 1.7,
+      "change_pct": 3.0,
+      "close": 24.0,
+      "volume": 171807,
+      "ma20_volume": 101195,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2115",
+      "stock_name": "六暉-KY",
+      "vol_ratio": 1.51,
+      "change_pct": 1.12,
+      "close": 27.0,
+      "volume": 65795,
+      "ma20_volume": 43652,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

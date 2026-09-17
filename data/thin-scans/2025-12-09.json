@@ -1,0 +1,128 @@
+{
+  "date": "2025-12-09",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1058,
+  "evaluated": 1020,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "3021",
+      "stock_name": "鴻名",
+      "vol_ratio": 3.65,
+      "change_pct": 3.78,
+      "close": 17.85,
+      "volume": 295281,
+      "ma20_volume": 81004,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 2.88,
+      "change_pct": -0.92,
+      "close": 64.8,
+      "volume": 53658,
+      "ma20_volume": 18611,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6835",
+      "stock_name": "圓裕",
+      "vol_ratio": 2.55,
+      "change_pct": 0.76,
+      "close": 40.0,
+      "volume": 171213,
+      "ma20_volume": 67125,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6771",
+      "stock_name": "平和環保-創",
+      "vol_ratio": 2.37,
+      "change_pct": 2.06,
+      "close": 47.0,
+      "volume": 107399,
+      "ma20_volume": 45349,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6796",
+      "stock_name": "晉弘",
+      "vol_ratio": 2.31,
+      "change_pct": 1.37,
+      "close": 96.2,
+      "volume": 132979,
+      "ma20_volume": 57647,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6965",
+      "stock_name": "中傑-KY",
+      "vol_ratio": 2.12,
+      "change_pct": -0.23,
+      "close": 86.3,
+      "volume": 235746,
+      "ma20_volume": 111309,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6794",
+      "stock_name": "向榮生技",
+      "vol_ratio": 1.91,
+      "change_pct": 0.62,
+      "close": 81.1,
+      "volume": 101028,
+      "ma20_volume": 52894,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 1.68,
+      "change_pct": 2.2,
+      "close": 46.5,
+      "volume": 24383,
+      "ma20_volume": 14517,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6243",
+      "stock_name": "迅杰",
+      "vol_ratio": 1.67,
+      "change_pct": 4.92,
+      "close": 30.9,
+      "volume": 199955,
+      "ma20_volume": 119523,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3094",
+      "stock_name": "聯傑",
+      "vol_ratio": 1.62,
+      "change_pct": 2.47,
+      "close": 24.85,
+      "volume": 207369,
+      "ma20_volume": 128154,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3557",
+      "stock_name": "嘉威",
+      "vol_ratio": 1.53,
+      "change_pct": 1.36,
+      "close": 37.2,
+      "volume": 149407,
+      "ma20_volume": 97802,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

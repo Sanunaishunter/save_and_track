@@ -1,0 +1,68 @@
+{
+  "date": "2026-05-19",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1076,
+  "evaluated": 1058,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "6666",
+      "stock_name": "羅麗芬-KY",
+      "vol_ratio": 3.28,
+      "change_pct": 1.99,
+      "close": 41.0,
+      "volume": 76580,
+      "ma20_volume": 23327,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1726",
+      "stock_name": "永記",
+      "vol_ratio": 2.5,
+      "change_pct": 0.39,
+      "close": 76.9,
+      "volume": 67207,
+      "ma20_volume": 26920,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6655",
+      "stock_name": "科定",
+      "vol_ratio": 1.83,
+      "change_pct": -0.75,
+      "close": 132.0,
+      "volume": 16258,
+      "ma20_volume": 8885,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "9930",
+      "stock_name": "中聯資源",
+      "vol_ratio": 1.58,
+      "change_pct": 0.44,
+      "close": 67.9,
+      "volume": 159742,
+      "ma20_volume": 101194,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6957",
+      "stock_name": "裕慶-KY",
+      "vol_ratio": 1.57,
+      "change_pct": 0.31,
+      "close": 160.0,
+      "volume": 136002,
+      "ma20_volume": 86639,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

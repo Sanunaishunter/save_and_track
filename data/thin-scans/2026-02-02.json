@@ -1,0 +1,68 @@
+{
+  "date": "2026-02-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1069,
+  "evaluated": 1047,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 3.4,
+      "change_pct": 0.38,
+      "close": 26.3,
+      "volume": 276770,
+      "ma20_volume": 81311,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2254",
+      "stock_name": "巨鎧精密-創",
+      "vol_ratio": 2.78,
+      "change_pct": 0.17,
+      "close": 59.6,
+      "volume": 194000,
+      "ma20_volume": 69798,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2433",
+      "stock_name": "互盛電",
+      "vol_ratio": 2.04,
+      "change_pct": 1.08,
+      "close": 46.85,
+      "volume": 98787,
+      "ma20_volume": 48418,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6918",
+      "stock_name": "愛派司",
+      "vol_ratio": 1.85,
+      "change_pct": 4.69,
+      "close": 87.0,
+      "volume": 156247,
+      "ma20_volume": 84385,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 1.53,
+      "change_pct": 1.04,
+      "close": 19.5,
+      "volume": 94402,
+      "ma20_volume": 61834,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

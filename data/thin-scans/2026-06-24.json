@@ -1,0 +1,68 @@
+{
+  "date": "2026-06-24",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1066,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "2945",
+      "stock_name": "三商家購",
+      "vol_ratio": 2.34,
+      "change_pct": 0.93,
+      "close": 43.35,
+      "volume": 62461,
+      "ma20_volume": 26712,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6921",
+      "stock_name": "嘉雨思-創",
+      "vol_ratio": 1.94,
+      "change_pct": 1.43,
+      "close": 71.0,
+      "volume": 83164,
+      "ma20_volume": 42915,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6582",
+      "stock_name": "申豐",
+      "vol_ratio": 1.83,
+      "change_pct": 1.09,
+      "close": 32.55,
+      "volume": 152160,
+      "ma20_volume": 83229,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3432",
+      "stock_name": "台端",
+      "vol_ratio": 1.65,
+      "change_pct": 1.08,
+      "close": 18.8,
+      "volume": 110037,
+      "ma20_volume": 66794,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9926",
+      "stock_name": "新海",
+      "vol_ratio": 1.59,
+      "change_pct": -0.1,
+      "close": 49.85,
+      "volume": 40077,
+      "ma20_volume": 25170,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

@@ -1,0 +1,68 @@
+{
+  "date": "2026-03-19",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1070,
+  "evaluated": 1061,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "6582",
+      "stock_name": "申豐",
+      "vol_ratio": 2.64,
+      "change_pct": 3.16,
+      "close": 32.6,
+      "volume": 165671,
+      "ma20_volume": 62756,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4148",
+      "stock_name": "全宇生技-KY",
+      "vol_ratio": 2.46,
+      "change_pct": 2.55,
+      "close": 42.15,
+      "volume": 247757,
+      "ma20_volume": 100800,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1805",
+      "stock_name": "寶徠",
+      "vol_ratio": 1.64,
+      "change_pct": 3.9,
+      "close": 10.65,
+      "volume": 132250,
+      "ma20_volume": 80840,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4555",
+      "stock_name": "氣立",
+      "vol_ratio": 1.56,
+      "change_pct": 1.96,
+      "close": 36.5,
+      "volume": 205418,
+      "ma20_volume": 131374,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1467",
+      "stock_name": "南緯",
+      "vol_ratio": 1.55,
+      "change_pct": -1.39,
+      "close": 7.09,
+      "volume": 244554,
+      "ma20_volume": 157635,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

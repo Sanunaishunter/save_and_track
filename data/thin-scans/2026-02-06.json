@@ -1,0 +1,108 @@
+{
+  "date": "2026-02-06",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1071,
+  "evaluated": 1048,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 2.79,
+      "change_pct": 5.0,
+      "close": 21.0,
+      "volume": 199985,
+      "ma20_volume": 71713,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6807",
+      "stock_name": "峰源-KY",
+      "vol_ratio": 2.69,
+      "change_pct": -0.65,
+      "close": 45.55,
+      "volume": 29693,
+      "ma20_volume": 11023,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6887",
+      "stock_name": "寶綠特-KY",
+      "vol_ratio": 2.22,
+      "change_pct": -1.06,
+      "close": 56.2,
+      "volume": 60047,
+      "ma20_volume": 27025,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6655",
+      "stock_name": "科定",
+      "vol_ratio": 1.95,
+      "change_pct": 0.41,
+      "close": 121.0,
+      "volume": 24538,
+      "ma20_volume": 12587,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3679",
+      "stock_name": "新至陞",
+      "vol_ratio": 1.94,
+      "change_pct": 0.0,
+      "close": 113.0,
+      "volume": 84949,
+      "ma20_volume": 43833,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6464",
+      "stock_name": "台數科",
+      "vol_ratio": 1.78,
+      "change_pct": 0.79,
+      "close": 77.0,
+      "volume": 31007,
+      "ma20_volume": 17405,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6902",
+      "stock_name": "GOGOLOOK",
+      "vol_ratio": 1.64,
+      "change_pct": -0.51,
+      "close": 78.4,
+      "volume": 72000,
+      "ma20_volume": 43898,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2762",
+      "stock_name": "世界健身-KY",
+      "vol_ratio": 1.62,
+      "change_pct": -1.09,
+      "close": 72.5,
+      "volume": 73724,
+      "ma20_volume": 45527,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "9110",
+      "stock_name": "越南控-DR",
+      "vol_ratio": 1.5,
+      "change_pct": 1.61,
+      "close": 3.15,
+      "volume": 65000,
+      "ma20_volume": 43256,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

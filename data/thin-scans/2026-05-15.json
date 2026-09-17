@@ -1,0 +1,108 @@
+{
+  "date": "2026-05-15",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1075,
+  "evaluated": 1058,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 4.3,
+      "change_pct": 3.1,
+      "close": 48.15,
+      "volume": 126134,
+      "ma20_volume": 29313,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 3.92,
+      "change_pct": 1.52,
+      "close": 100.0,
+      "volume": 191738,
+      "ma20_volume": 48932,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 3.5,
+      "change_pct": -0.17,
+      "close": 59.7,
+      "volume": 101889,
+      "ma20_volume": 29148,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7730",
+      "stock_name": "暉盛-創",
+      "vol_ratio": 3.34,
+      "change_pct": 5.85,
+      "close": 181.0,
+      "volume": 248303,
+      "ma20_volume": 74340,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1437",
+      "stock_name": "勤益控",
+      "vol_ratio": 2.4,
+      "change_pct": 0.18,
+      "close": 28.25,
+      "volume": 287338,
+      "ma20_volume": 119600,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6225",
+      "stock_name": "天瀚",
+      "vol_ratio": 2.38,
+      "change_pct": 9.87,
+      "close": 35.05,
+      "volume": 83282,
+      "ma20_volume": 34939,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1530",
+      "stock_name": "亞崴",
+      "vol_ratio": 2.31,
+      "change_pct": 2.08,
+      "close": 26.95,
+      "volume": 91360,
+      "ma20_volume": 39472,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 2.17,
+      "change_pct": 9.97,
+      "close": 17.1,
+      "volume": 135077,
+      "ma20_volume": 62205,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 1.91,
+      "change_pct": 0.49,
+      "close": 61.0,
+      "volume": 17046,
+      "ma20_volume": 8939,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

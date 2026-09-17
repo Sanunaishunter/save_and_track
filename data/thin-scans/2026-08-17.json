@@ -1,0 +1,128 @@
+{
+  "date": "2026-08-17",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1087,
+  "evaluated": 1064,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 4.83,
+      "change_pct": 1.38,
+      "close": 65.9,
+      "volume": 206452,
+      "ma20_volume": 42748,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1626",
+      "stock_name": "艾美特-KY",
+      "vol_ratio": 3.89,
+      "change_pct": 1.79,
+      "close": 9.69,
+      "volume": 252977,
+      "ma20_volume": 65076,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 2.51,
+      "change_pct": 1.65,
+      "close": 40.0,
+      "volume": 158680,
+      "ma20_volume": 63305,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 2.51,
+      "change_pct": 2.96,
+      "close": 104.5,
+      "volume": 55859,
+      "ma20_volume": 22246,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6201",
+      "stock_name": "亞弘電",
+      "vol_ratio": 2.31,
+      "change_pct": -0.33,
+      "close": 45.1,
+      "volume": 91175,
+      "ma20_volume": 39450,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2509",
+      "stock_name": "全坤建",
+      "vol_ratio": 2.28,
+      "change_pct": 4.38,
+      "close": 14.3,
+      "volume": 251599,
+      "ma20_volume": 110536,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3308",
+      "stock_name": "聯德",
+      "vol_ratio": 2.18,
+      "change_pct": 5.14,
+      "close": 20.45,
+      "volume": 130938,
+      "ma20_volume": 60174,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3130",
+      "stock_name": "一零四",
+      "vol_ratio": 2.09,
+      "change_pct": 1.42,
+      "close": 214.0,
+      "volume": 203309,
+      "ma20_volume": 97474,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1537",
+      "stock_name": "廣隆",
+      "vol_ratio": 1.82,
+      "change_pct": 0.39,
+      "close": 127.5,
+      "volume": 195672,
+      "ma20_volume": 107757,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6902",
+      "stock_name": "GOGOLOOK",
+      "vol_ratio": 1.68,
+      "change_pct": 1.89,
+      "close": 134.5,
+      "volume": 188727,
+      "ma20_volume": 112271,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 1.53,
+      "change_pct": -0.47,
+      "close": 84.4,
+      "volume": 38687,
+      "ma20_volume": 25316,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

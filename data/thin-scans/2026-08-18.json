@@ -1,0 +1,58 @@
+{
+  "date": "2026-08-18",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1085,
+  "evaluated": 1063,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "1220",
+      "stock_name": "台榮",
+      "vol_ratio": 3.54,
+      "change_pct": 0.46,
+      "close": 10.95,
+      "volume": 280738,
+      "ma20_volume": 79209,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 3.29,
+      "change_pct": 1.91,
+      "close": 106.5,
+      "volume": 79838,
+      "ma20_volume": 24251,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6936",
+      "stock_name": "永鴻生技",
+      "vol_ratio": 1.73,
+      "change_pct": 0.62,
+      "close": 32.35,
+      "volume": 53815,
+      "ma20_volume": 31026,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9937",
+      "stock_name": "全國",
+      "vol_ratio": 1.59,
+      "change_pct": -0.18,
+      "close": 55.0,
+      "volume": 52426,
+      "ma20_volume": 33069,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

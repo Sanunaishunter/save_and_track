@@ -1,0 +1,108 @@
+{
+  "date": "2026-05-20",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1076,
+  "evaluated": 1058,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "6464",
+      "stock_name": "台數科",
+      "vol_ratio": 5.82,
+      "change_pct": 0.0,
+      "close": 78.0,
+      "volume": 239322,
+      "ma20_volume": 41127,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 3.72,
+      "change_pct": 7.0,
+      "close": 107.0,
+      "volume": 227915,
+      "ma20_volume": 61286,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3164",
+      "stock_name": "景岳",
+      "vol_ratio": 2.62,
+      "change_pct": 1.19,
+      "close": 17.0,
+      "volume": 177073,
+      "ma20_volume": 67615,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7705",
+      "stock_name": "三商餐飲",
+      "vol_ratio": 2.62,
+      "change_pct": 1.81,
+      "close": 31.0,
+      "volume": 191068,
+      "ma20_volume": 72790,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5546",
+      "stock_name": "永固-KY",
+      "vol_ratio": 2.1,
+      "change_pct": 5.43,
+      "close": 16.5,
+      "volume": 63127,
+      "ma20_volume": 30011,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1452",
+      "stock_name": "宏益",
+      "vol_ratio": 2.09,
+      "change_pct": -2.31,
+      "close": 10.55,
+      "volume": 177482,
+      "ma20_volume": 85024,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2114",
+      "stock_name": "鑫永銓",
+      "vol_ratio": 1.94,
+      "change_pct": 0.56,
+      "close": 89.2,
+      "volume": 110210,
+      "ma20_volume": 56783,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4441",
+      "stock_name": "振大環球",
+      "vol_ratio": 1.77,
+      "change_pct": 0.5,
+      "close": 200.5,
+      "volume": 169593,
+      "ma20_volume": 96077,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6863",
+      "stock_name": "永道-KY",
+      "vol_ratio": 1.63,
+      "change_pct": 3.3,
+      "close": 109.5,
+      "volume": 244522,
+      "ma20_volume": 149958,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

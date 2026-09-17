@@ -1,0 +1,118 @@
+{
+  "date": "2025-08-22",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1046,
+  "evaluated": 1009,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "1516",
+      "stock_name": "川飛",
+      "vol_ratio": 6.44,
+      "change_pct": 3.52,
+      "close": 14.7,
+      "volume": 257434,
+      "ma20_volume": 39998,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 3.27,
+      "change_pct": 1.43,
+      "close": 21.25,
+      "volume": 35000,
+      "ma20_volume": 10691,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1783",
+      "stock_name": "和康生",
+      "vol_ratio": 3.0,
+      "change_pct": 1.05,
+      "close": 43.45,
+      "volume": 156247,
+      "ma20_volume": 52087,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2115",
+      "stock_name": "六暉-KY",
+      "vol_ratio": 2.76,
+      "change_pct": 1.3,
+      "close": 27.3,
+      "volume": 51688,
+      "ma20_volume": 18754,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6277",
+      "stock_name": "宏正",
+      "vol_ratio": 2.15,
+      "change_pct": 1.03,
+      "close": 58.8,
+      "volume": 118265,
+      "ma20_volume": 54919,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4912",
+      "stock_name": "聯德控股-KY",
+      "vol_ratio": 2.09,
+      "change_pct": 1.27,
+      "close": 79.5,
+      "volume": 248810,
+      "ma20_volume": 118799,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5007",
+      "stock_name": "三星",
+      "vol_ratio": 1.87,
+      "change_pct": 0.19,
+      "close": 52.6,
+      "volume": 55205,
+      "ma20_volume": 29546,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 1.59,
+      "change_pct": 0.0,
+      "close": 50.8,
+      "volume": 129034,
+      "ma20_volume": 81168,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1220",
+      "stock_name": "台榮",
+      "vol_ratio": 1.53,
+      "change_pct": 0.76,
+      "close": 13.3,
+      "volume": 162221,
+      "ma20_volume": 106086,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3054",
+      "stock_name": "立萬利",
+      "vol_ratio": 1.5,
+      "change_pct": 1.23,
+      "close": 24.6,
+      "volume": 16201,
+      "ma20_volume": 10774,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

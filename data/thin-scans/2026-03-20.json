@@ -1,0 +1,68 @@
+{
+  "date": "2026-03-20",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1069,
+  "evaluated": 1063,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "1456",
+      "stock_name": "怡華",
+      "vol_ratio": 3.06,
+      "change_pct": 9.89,
+      "close": 14.45,
+      "volume": 215348,
+      "ma20_volume": 70268,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 1.71,
+      "change_pct": 1.99,
+      "close": 17.95,
+      "volume": 137049,
+      "ma20_volume": 80340,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1472",
+      "stock_name": "三洋實業",
+      "vol_ratio": 1.71,
+      "change_pct": -0.52,
+      "close": 96.2,
+      "volume": 145246,
+      "ma20_volume": 85028,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2012",
+      "stock_name": "春雨",
+      "vol_ratio": 1.62,
+      "change_pct": 1.54,
+      "close": 16.45,
+      "volume": 162347,
+      "ma20_volume": 100392,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1737",
+      "stock_name": "臺鹽",
+      "vol_ratio": 1.52,
+      "change_pct": -0.32,
+      "close": 31.5,
+      "volume": 183699,
+      "ma20_volume": 120611,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

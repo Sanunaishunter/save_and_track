@@ -1,0 +1,58 @@
+{
+  "date": "2026-06-26",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1078,
+  "evaluated": 1064,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "9937",
+      "stock_name": "全國",
+      "vol_ratio": 3.56,
+      "change_pct": -0.18,
+      "close": 55.2,
+      "volume": 193218,
+      "ma20_volume": 54246,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1730",
+      "stock_name": "花仙子",
+      "vol_ratio": 2.24,
+      "change_pct": -0.19,
+      "close": 53.6,
+      "volume": 152230,
+      "ma20_volume": 68059,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 1.91,
+      "change_pct": 0.61,
+      "close": 24.85,
+      "volume": 125019,
+      "ma20_volume": 65502,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 1.59,
+      "change_pct": 0.0,
+      "close": 17.45,
+      "volume": 83877,
+      "ma20_volume": 52779,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

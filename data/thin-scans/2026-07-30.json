@@ -1,0 +1,108 @@
+{
+  "date": "2026-07-30",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1084,
+  "evaluated": 1069,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "1438",
+      "stock_name": "三地開發",
+      "vol_ratio": 6.56,
+      "change_pct": 4.27,
+      "close": 23.2,
+      "volume": 288687,
+      "ma20_volume": 44021,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 3.63,
+      "change_pct": 0.15,
+      "close": 68.0,
+      "volume": 60484,
+      "ma20_volume": 16682,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6230",
+      "stock_name": "尼得科超眾",
+      "vol_ratio": 3.56,
+      "change_pct": -5.8,
+      "close": 105.5,
+      "volume": 216717,
+      "ma20_volume": 60827,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6914",
+      "stock_name": "阜爾運通",
+      "vol_ratio": 2.93,
+      "change_pct": 0.68,
+      "close": 147.0,
+      "volume": 198756,
+      "ma20_volume": 67948,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2247",
+      "stock_name": "汎德永業",
+      "vol_ratio": 2.48,
+      "change_pct": 1.99,
+      "close": 230.5,
+      "volume": 165598,
+      "ma20_volume": 66712,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1470",
+      "stock_name": "大統新創",
+      "vol_ratio": 2.11,
+      "change_pct": 0.0,
+      "close": 22.95,
+      "volume": 18000,
+      "ma20_volume": 8531,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3057",
+      "stock_name": "喬鼎",
+      "vol_ratio": 1.59,
+      "change_pct": -0.74,
+      "close": 13.5,
+      "volume": 261848,
+      "ma20_volume": 164684,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1558",
+      "stock_name": "伸興",
+      "vol_ratio": 1.58,
+      "change_pct": 0.77,
+      "close": 91.9,
+      "volume": 209716,
+      "ma20_volume": 132386,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6534",
+      "stock_name": "正瀚-創",
+      "vol_ratio": 1.58,
+      "change_pct": 0.54,
+      "close": 93.8,
+      "volume": 138114,
+      "ma20_volume": 87567,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

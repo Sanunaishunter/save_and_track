@@ -1,0 +1,108 @@
+{
+  "date": "2026-07-27",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1083,
+  "evaluated": 1064,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "2939",
+      "stock_name": "永邑-KY",
+      "vol_ratio": 8.53,
+      "change_pct": 9.78,
+      "close": 20.2,
+      "volume": 186008,
+      "ma20_volume": 21810,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 3.82,
+      "change_pct": 6.25,
+      "close": 40.8,
+      "volume": 240615,
+      "ma20_volume": 62951,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9927",
+      "stock_name": "泰銘",
+      "vol_ratio": 2.43,
+      "change_pct": 1.15,
+      "close": 70.5,
+      "volume": 220149,
+      "ma20_volume": 90720,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4930",
+      "stock_name": "燦星網",
+      "vol_ratio": 2.15,
+      "change_pct": 0.31,
+      "close": 16.35,
+      "volume": 126414,
+      "ma20_volume": 58701,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1537",
+      "stock_name": "廣隆",
+      "vol_ratio": 1.96,
+      "change_pct": 0.0,
+      "close": 127.5,
+      "volume": 159244,
+      "ma20_volume": 81168,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1321",
+      "stock_name": "大洋",
+      "vol_ratio": 1.88,
+      "change_pct": 1.24,
+      "close": 32.55,
+      "volume": 243829,
+      "ma20_volume": 129385,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6281",
+      "stock_name": "全國電",
+      "vol_ratio": 1.85,
+      "change_pct": 0.58,
+      "close": 52.2,
+      "volume": 119892,
+      "ma20_volume": 64712,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2227",
+      "stock_name": "裕日車",
+      "vol_ratio": 1.79,
+      "change_pct": 0.8,
+      "close": 50.5,
+      "volume": 75596,
+      "ma20_volume": 42324,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4736",
+      "stock_name": "泰博",
+      "vol_ratio": 1.5,
+      "change_pct": 1.16,
+      "close": 131.0,
+      "volume": 259136,
+      "ma20_volume": 172237,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

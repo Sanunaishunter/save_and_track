@@ -1,0 +1,138 @@
+{
+  "date": "2025-08-28",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1048,
+  "evaluated": 1016,
+  "count": 12,
+  "rows": [
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 4.81,
+      "change_pct": 1.67,
+      "close": 91.5,
+      "volume": 34400,
+      "ma20_volume": 7149,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2712",
+      "stock_name": "遠雄來",
+      "vol_ratio": 3.86,
+      "change_pct": 0.49,
+      "close": 20.4,
+      "volume": 67202,
+      "ma20_volume": 17390,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3150",
+      "stock_name": "鈺寶-創",
+      "vol_ratio": 3.33,
+      "change_pct": -4.15,
+      "close": 21.95,
+      "volume": 156374,
+      "ma20_volume": 46929,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6645",
+      "stock_name": "金萬林-創",
+      "vol_ratio": 3.28,
+      "change_pct": 9.95,
+      "close": 21.55,
+      "volume": 178406,
+      "ma20_volume": 54424,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 3.02,
+      "change_pct": 0.3,
+      "close": 66.3,
+      "volume": 42817,
+      "ma20_volume": 14194,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6579",
+      "stock_name": "研揚",
+      "vol_ratio": 2.39,
+      "change_pct": 0.4,
+      "close": 125.0,
+      "volume": 291002,
+      "ma20_volume": 121804,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8481",
+      "stock_name": "政伸",
+      "vol_ratio": 2.02,
+      "change_pct": 0.23,
+      "close": 43.5,
+      "volume": 23001,
+      "ma20_volume": 11414,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6924",
+      "stock_name": "榮惠-KY創",
+      "vol_ratio": 1.74,
+      "change_pct": 0.46,
+      "close": 65.3,
+      "volume": 31010,
+      "ma20_volume": 17828,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4104",
+      "stock_name": "佳醫",
+      "vol_ratio": 1.72,
+      "change_pct": 0.23,
+      "close": 87.2,
+      "volume": 137609,
+      "ma20_volume": 80062,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1762",
+      "stock_name": "中化生",
+      "vol_ratio": 1.65,
+      "change_pct": 0.54,
+      "close": 27.75,
+      "volume": 127610,
+      "ma20_volume": 77259,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2024",
+      "stock_name": "志聯",
+      "vol_ratio": 1.54,
+      "change_pct": 1.18,
+      "close": 17.1,
+      "volume": 29040,
+      "ma20_volume": 18874,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2107",
+      "stock_name": "厚生",
+      "vol_ratio": 1.51,
+      "change_pct": 0.0,
+      "close": 24.25,
+      "volume": 252085,
+      "ma20_volume": 166537,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

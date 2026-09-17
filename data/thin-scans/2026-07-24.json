@@ -1,0 +1,88 @@
+{
+  "date": "2026-07-24",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1083,
+  "evaluated": 1062,
+  "count": 7,
+  "rows": [
+    {
+      "stock_id": "1530",
+      "stock_name": "亞崴",
+      "vol_ratio": 2.43,
+      "change_pct": 1.97,
+      "close": 31.1,
+      "volume": 182882,
+      "ma20_volume": 75190,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2008",
+      "stock_name": "高興昌",
+      "vol_ratio": 2.33,
+      "change_pct": 0.32,
+      "close": 31.0,
+      "volume": 90080,
+      "ma20_volume": 38698,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9918",
+      "stock_name": "欣天然",
+      "vol_ratio": 2.22,
+      "change_pct": -0.34,
+      "close": 43.35,
+      "volume": 86666,
+      "ma20_volume": 38976,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4581",
+      "stock_name": "光隆精密-KY",
+      "vol_ratio": 2.18,
+      "change_pct": 0.39,
+      "close": 51.2,
+      "volume": 27334,
+      "ma20_volume": 12543,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1537",
+      "stock_name": "廣隆",
+      "vol_ratio": 2.13,
+      "change_pct": 2.0,
+      "close": 127.5,
+      "volume": 160548,
+      "ma20_volume": 75535,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6952",
+      "stock_name": "大武山",
+      "vol_ratio": 1.61,
+      "change_pct": -0.14,
+      "close": 35.5,
+      "volume": 36006,
+      "ma20_volume": 22429,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1472",
+      "stock_name": "三洋實業",
+      "vol_ratio": 1.54,
+      "change_pct": 0.56,
+      "close": 89.5,
+      "volume": 101339,
+      "ma20_volume": 65749,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

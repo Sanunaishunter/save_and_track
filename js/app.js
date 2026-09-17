@@ -74,6 +74,7 @@
   // 會被前面的規則先攔截,永遠分類不到寬鬆版那組。
   var ENTRY_TAG_RULES = [
     { key: 'surge', label: '爆量', test: /爆量/ },
+    { key: 'thin_scan', label: '薄股測試', test: /薄股測試/ },
     { key: 'thinrally', label: '無量上漲', test: /無量上漲/ },
     { key: 'real_rally_loose', label: '可能會漲😝', test: /可能會漲😝/ },
     { key: 'fake_rally_loose', label: '虛漲😝', test: /虛漲😝/ },
@@ -2351,6 +2352,112 @@
       });
   }
 
+  // ---------------------------------------------------------- 薄股測試
+  // 2026-09-17 使用者要求:跟爆量掃描同一個公式(vol_ratio>1.5 且收紅),差別
+  // 只在鎖定「量 < 300 張」這群——現行爆量掃描的 MIN_VOLUME_LOTS 門檻會把這群
+  // 濾掉。使用者用 6957 裕慶-KY 的真實線圖抓到:這檔股票 9/10、9/11(甚至更早
+  // 的 2025-08-19、08-28)vol_ratio 早就超過 1.5,只是量沒到 300 張,系統整批
+  // 看不到,一路到量衝上 390 張(9/16)才第一次進爆量掃描名單。記分板全市場
+  // 回測過(見 scripts/compute_thin_scan.py 開頭說明):這群平均命中率比爆量
+  // 掃描本身更低、超額報酬更負,不是新發現的獨立優勢。使用者的決定不是要拿
+  // 這個當保證勝率的訊號,是「跟著散戶一起抬轎,有紀律地下車」——照樣做成
+  // 正式訊號、進記分板算勝率(見下面 SC_SIGNAL_ORDER 加的 thin_scan),讓
+  // 使用者自己盯著數字判斷,不是系統幫他下結論說穩賺,所以不用📖(那個標記
+  // 是給「沒驗證過的教科書公式」,這個已經驗證過、數字就是偏負,標📖反而誤導)。
+
+  var THINSCAN_URL = 'data/thin-scan-latest.json';
+  var thinscanLoaded = false;
+  var thinscanData = null;
+
+  function thinscanTriggerNote(r) {
+    var chg = r.change_pct;
+    var chgTxt = chg == null ? '' : ('、漲 ' + (chg > 0 ? '+' : '') + chg.toFixed(2) + '%');
+    return '薄股測試(量比 ' + Number(r.vol_ratio).toFixed(2) + 'x' + chgTxt +
+      '、量 ' + (r.volume / 1000).toFixed(1) + '張)';
+  }
+
+  function renderThinScan(res) {
+    var meta = el('thinscan-meta');
+    var tbody = el('thinscan-tbody');
+
+    if (res.error) {
+      meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>';
+      tbody.innerHTML = '';
+      el('thinscan-table').hidden = true;
+      return;
+    }
+
+    el('thinscan-table').hidden = false;
+    renderGateBanner('thinscan-gate', 'long', 'thin_scan');
+    var p = res.params || {};
+    meta.textContent = res.date + ' 收盤 · 掃描 ' + fmtInt(res.universe || 0) + ' 檔上市股票,' +
+      '符合 ' + (res.count || 0) + ' 檔(' + (p.condition || '') + ')';
+
+    if (!res.rows || !res.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="11" class="scan-empty">當日沒有符合條件的股票</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = res.rows.map(function (r) {
+      var chg = r.change_pct;
+      var chgCls = chg == null ? '' : (chg >= 0 ? 'up' : 'down');
+      var chgTxt = chg == null ? '—' : (chg > 0 ? '+' : '') + chg.toFixed(2) + '%';
+      var mg = marginOf(r.stock_id);
+      var marginDelta = (mg && mg.margin_today != null && mg.margin_prev != null)
+        ? mg.margin_today - mg.margin_prev : null;
+      var hu = hunterOf(r.stock_id);
+      var sig = hu && hu.signal;
+      return '<tr>' +
+        '<td class="code mono">' + esc(r.stock_id) + '</td>' +
+        '<td>' + esc(r.stock_name || '') + '</td>' +
+        '<td class="num ratio">' + Number(r.vol_ratio).toFixed(2) + '</td>' +
+        '<td class="num mono">' + (r.volume / 1000).toFixed(1) + '</td>' +
+        '<td class="num ' + chgCls + '">' + chgTxt + '</td>' +
+        maStateCellHtml(r.ma_state) +
+        '<td>' + (sig ? (sig + ' ' + esc(HUNTER_SIGNAL_LABELS[sig])) : '—') + '</td>' +
+        '<td class="num mono">' + (mg && mg.margin_today != null ? fmtInt(mg.margin_today) : '—') + '</td>' +
+        '<td class="num mono ' + plClass(marginDelta) + '">' +
+          (marginDelta == null ? '—' : signed(marginDelta)) + '</td>' +
+        '<td class="num mono">' + (mg && mg.short_today != null ? fmtInt(mg.short_today) : '—') + '</td>' +
+        '<td>' + quickAddBtnHtml(r.stock_id, r.stock_name, thinscanTriggerNote(r), 'long') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function loadThinScan(force) {
+    loadRiskData().then(function () {
+      if (thinscanData) renderThinScan(thinscanData);
+    }).catch(function () { /* 表格已經有 — 佔位,不強求 */ });
+    loadQuotes().then(function () {
+      if (thinscanData) renderThinScan(thinscanData);
+    }).catch(function () { /* 同上 */ });
+
+    if (thinscanLoaded && !force) return;
+    var meta = el('thinscan-meta');
+    meta.textContent = '載入中…';
+
+    if (location.protocol === 'file:') {
+      renderThinScan({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取掃描結果檔。' +
+                          '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
+      return;
+    }
+
+    fetch(THINSCAN_URL, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        thinscanLoaded = true;
+        thinscanData = data;
+        renderThinScan(data);
+      })
+      .catch(function (e) {
+        renderThinScan({ error: '讀不到掃描結果(' + (e.message || e) + ')。' +
+                            '每日排程尚未跑過,或檔案還沒產生。' });
+      });
+  }
+
   // ---------------------------------------------------------- 題材分類
   //
   // 手動維護的靜態清單(data/themes.json),不是掃描/計分結果,沒有每日排程,
@@ -4096,6 +4203,7 @@
     el('fade-wrap').hidden = v !== 'fade';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
+    el('thinscan-wrap').hidden = v !== 'thinscan';
     el('fomo-wrap').hidden = v !== 'fomo';
     el('crashfomo-wrap').hidden = v !== 'crashfomo';
     el('tick-wrap').hidden = v !== 'tick';
@@ -4118,6 +4226,7 @@
     if (v === 'fade') loadFadeView(false);
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
+    if (v === 'thinscan') loadThinScan(false);
     if (v === 'fomo') loadFomo(false);
     if (v === 'crashfomo') loadCrashFomo(false);
     if (v === 'tick') loadTick(false);
@@ -4142,7 +4251,7 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'scan', 'crash', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -6176,6 +6285,7 @@
 
   var ENTRY_TAG_DIRECTION = {
     surge: { dir: 1, label: '預期偏多(掃描定義 close>open)' },
+    thin_scan: { dir: 1, label: '預期偏多(跟爆量掃描同公式,close>open,但記分板量<300張這群平均命中率更低)' },
     real_rally: { dir: 1, label: '預期續漲' },
     fake_rally: { dir: -1, label: '預期不是真的,該回檔' },
     real_rally_loose: { dir: 1, label: '預期續漲(寬鬆版門檻😝)' },
@@ -7052,6 +7162,7 @@
 
     bindQuickAdd(el('scan-tbody'));
     bindQuickAdd(el('crash-tbody'));
+    bindQuickAdd(el('thinscan-tbody'));
     bindQuickAdd(el('signals-tbody'));
     bindQuickAdd(el('themes-list'));
 
@@ -7821,7 +7932,7 @@
   var SCORECARD_URL = 'data/scorecard-latest.json';
   var scorecardData = null;
   var scorecardPending = null;
-  var SC_SIGNAL_ORDER = ['scan', 'fomo_real', 'fomo_fake', 'crash', 'crashfomo_real', 'crashfomo_fake'];
+  var SC_SIGNAL_ORDER = ['scan', 'thin_scan', 'fomo_real', 'fomo_fake', 'crash', 'crashfomo_real', 'crashfomo_fake'];
   var SC_BUCKET_LABEL = { regime: '訊號日大盤狀態(閘門)', ma: '訊號日均線狀態(合流)',
                           confluence: '籌碼合流(外資/融資連續)', event: '事件日 ±1 日', vol_ratio: '量比級距' };
 

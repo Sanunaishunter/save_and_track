@@ -1,0 +1,128 @@
+{
+  "date": "2026-05-22",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1057,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 6.38,
+      "change_pct": 9.83,
+      "close": 64.8,
+      "volume": 225918,
+      "ma20_volume": 35402,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9928",
+      "stock_name": "中視",
+      "vol_ratio": 3.65,
+      "change_pct": 1.7,
+      "close": 17.95,
+      "volume": 125707,
+      "ma20_volume": 34456,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2373",
+      "stock_name": "震旦行",
+      "vol_ratio": 2.51,
+      "change_pct": 0.0,
+      "close": 56.8,
+      "volume": 102486,
+      "ma20_volume": 40816,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6674",
+      "stock_name": "鋐寶科技",
+      "vol_ratio": 2.06,
+      "change_pct": 4.45,
+      "close": 17.6,
+      "volume": 71000,
+      "ma20_volume": 34471,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4942",
+      "stock_name": "嘉彰",
+      "vol_ratio": 1.86,
+      "change_pct": 1.21,
+      "close": 37.65,
+      "volume": 198324,
+      "ma20_volume": 106869,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1805",
+      "stock_name": "寶徠",
+      "vol_ratio": 1.8,
+      "change_pct": 0.0,
+      "close": 10.1,
+      "volume": 234707,
+      "ma20_volume": 130587,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2482",
+      "stock_name": "連宇",
+      "vol_ratio": 1.64,
+      "change_pct": 3.68,
+      "close": 16.9,
+      "volume": 281322,
+      "ma20_volume": 171267,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2433",
+      "stock_name": "互盛電",
+      "vol_ratio": 1.58,
+      "change_pct": -0.11,
+      "close": 44.45,
+      "volume": 70262,
+      "ma20_volume": 44394,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 1.56,
+      "change_pct": -0.12,
+      "close": 42.6,
+      "volume": 42071,
+      "ma20_volume": 27006,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 1.55,
+      "change_pct": -0.52,
+      "close": 38.55,
+      "volume": 70508,
+      "ma20_volume": 45449,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "8463",
+      "stock_name": "潤泰材",
+      "vol_ratio": 1.54,
+      "change_pct": 0.95,
+      "close": 21.25,
+      "volume": 93129,
+      "ma20_volume": 60603,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

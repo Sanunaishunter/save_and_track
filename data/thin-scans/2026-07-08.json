@@ -1,0 +1,58 @@
+{
+  "date": "2026-07-08",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1062,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 3.61,
+      "change_pct": 4.75,
+      "close": 83.8,
+      "volume": 84285,
+      "ma20_volume": 23349,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6969",
+      "stock_name": "成信實業*-創",
+      "vol_ratio": 2.06,
+      "change_pct": 10.0,
+      "close": 27.5,
+      "volume": 195794,
+      "ma20_volume": 94925,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6934",
+      "stock_name": "心誠鎂",
+      "vol_ratio": 1.79,
+      "change_pct": 6.82,
+      "close": 73.6,
+      "volume": 117733,
+      "ma20_volume": 65817,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 1.78,
+      "change_pct": 1.17,
+      "close": 43.4,
+      "volume": 37202,
+      "ma20_volume": 20922,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

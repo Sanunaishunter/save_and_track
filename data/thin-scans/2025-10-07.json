@@ -1,0 +1,138 @@
+{
+  "date": "2025-10-07",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1056,
+  "evaluated": 1018,
+  "count": 12,
+  "rows": [
+    {
+      "stock_id": "1235",
+      "stock_name": "興泰",
+      "vol_ratio": 5.97,
+      "change_pct": 4.0,
+      "close": 67.6,
+      "volume": 93263,
+      "ma20_volume": 15626,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1516",
+      "stock_name": "川飛",
+      "vol_ratio": 4.47,
+      "change_pct": 7.19,
+      "close": 16.4,
+      "volume": 224494,
+      "ma20_volume": 50244,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3164",
+      "stock_name": "景岳",
+      "vol_ratio": 3.74,
+      "change_pct": 0.26,
+      "close": 19.3,
+      "volume": 81860,
+      "ma20_volume": 21891,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2701",
+      "stock_name": "萬企",
+      "vol_ratio": 2.65,
+      "change_pct": 0.0,
+      "close": 11.15,
+      "volume": 163800,
+      "ma20_volume": 61835,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6581",
+      "stock_name": "鋼聯",
+      "vol_ratio": 1.99,
+      "change_pct": 0.45,
+      "close": 111.5,
+      "volume": 20172,
+      "ma20_volume": 10153,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6128",
+      "stock_name": "上福",
+      "vol_ratio": 1.79,
+      "change_pct": 2.87,
+      "close": 28.7,
+      "volume": 119685,
+      "ma20_volume": 66752,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 1.68,
+      "change_pct": 0.85,
+      "close": 11.85,
+      "volume": 195905,
+      "ma20_volume": 116884,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1432",
+      "stock_name": "大魯閣",
+      "vol_ratio": 1.64,
+      "change_pct": 0.57,
+      "close": 17.5,
+      "volume": 233124,
+      "ma20_volume": 142503,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4119",
+      "stock_name": "旭富",
+      "vol_ratio": 1.64,
+      "change_pct": 0.34,
+      "close": 59.1,
+      "volume": 225553,
+      "ma20_volume": 137744,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7732",
+      "stock_name": "金興精密",
+      "vol_ratio": 1.59,
+      "change_pct": -0.14,
+      "close": 36.35,
+      "volume": 21000,
+      "ma20_volume": 13229,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "3669",
+      "stock_name": "圓展",
+      "vol_ratio": 1.56,
+      "change_pct": 0.32,
+      "close": 31.2,
+      "volume": 57600,
+      "ma20_volume": 36975,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6226",
+      "stock_name": "光鼎",
+      "vol_ratio": 1.56,
+      "change_pct": 0.14,
+      "close": 6.97,
+      "volume": 256731,
+      "ma20_volume": 164483,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

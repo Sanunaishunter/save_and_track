@@ -1,0 +1,108 @@
+{
+  "date": "2026-07-16",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1063,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "8481",
+      "stock_name": "政伸",
+      "vol_ratio": 5.06,
+      "change_pct": 1.03,
+      "close": 44.35,
+      "volume": 117667,
+      "ma20_volume": 23250,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1439",
+      "stock_name": "雋揚",
+      "vol_ratio": 4.71,
+      "change_pct": 6.65,
+      "close": 26.45,
+      "volume": 125112,
+      "ma20_volume": 26588,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6914",
+      "stock_name": "阜爾運通",
+      "vol_ratio": 3.08,
+      "change_pct": 0.69,
+      "close": 146.5,
+      "volume": 162448,
+      "ma20_volume": 52740,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9927",
+      "stock_name": "泰銘",
+      "vol_ratio": 3.06,
+      "change_pct": 0.86,
+      "close": 70.4,
+      "volume": 227451,
+      "ma20_volume": 74356,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6674",
+      "stock_name": "鋐寶科技",
+      "vol_ratio": 2.33,
+      "change_pct": 5.3,
+      "close": 16.9,
+      "volume": 76000,
+      "ma20_volume": 32616,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1558",
+      "stock_name": "伸興",
+      "vol_ratio": 2.06,
+      "change_pct": 1.72,
+      "close": 94.6,
+      "volume": 136405,
+      "ma20_volume": 66201,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1541",
+      "stock_name": "錩泰",
+      "vol_ratio": 1.93,
+      "change_pct": 3.45,
+      "close": 22.5,
+      "volume": 48726,
+      "ma20_volume": 25242,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6657",
+      "stock_name": "華安",
+      "vol_ratio": 1.52,
+      "change_pct": 2.71,
+      "close": 35.95,
+      "volume": 192075,
+      "ma20_volume": 126352,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7821",
+      "stock_name": "神數",
+      "vol_ratio": 1.52,
+      "change_pct": 1.96,
+      "close": 41.6,
+      "volume": 227714,
+      "ma20_volume": 150020,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

@@ -1,0 +1,128 @@
+{
+  "date": "2025-11-17",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1057,
+  "evaluated": 1019,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "4943",
+      "stock_name": "康控-KY",
+      "vol_ratio": 6.07,
+      "change_pct": 9.94,
+      "close": 17.15,
+      "volume": 298512,
+      "ma20_volume": 49144,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1906",
+      "stock_name": "寶隆",
+      "vol_ratio": 3.88,
+      "change_pct": 2.4,
+      "close": 12.8,
+      "volume": 195158,
+      "ma20_volume": 50351,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9926",
+      "stock_name": "新海",
+      "vol_ratio": 2.9,
+      "change_pct": 0.3,
+      "close": 49.45,
+      "volume": 35197,
+      "ma20_volume": 12148,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6464",
+      "stock_name": "台數科",
+      "vol_ratio": 2.82,
+      "change_pct": 2.53,
+      "close": 77.0,
+      "volume": 75052,
+      "ma20_volume": 26630,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2239",
+      "stock_name": "英利-KY",
+      "vol_ratio": 2.14,
+      "change_pct": 1.68,
+      "close": 30.2,
+      "volume": 245447,
+      "ma20_volume": 114691,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4106",
+      "stock_name": "雃博",
+      "vol_ratio": 2.07,
+      "change_pct": 0.46,
+      "close": 21.7,
+      "volume": 122684,
+      "ma20_volume": 59386,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1456",
+      "stock_name": "怡華",
+      "vol_ratio": 2.03,
+      "change_pct": 0.81,
+      "close": 12.4,
+      "volume": 110500,
+      "ma20_volume": 54495,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9930",
+      "stock_name": "中聯資源",
+      "vol_ratio": 1.93,
+      "change_pct": 0.57,
+      "close": 70.1,
+      "volume": 247294,
+      "ma20_volume": 128089,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1475",
+      "stock_name": "業旺",
+      "vol_ratio": 1.53,
+      "change_pct": 1.64,
+      "close": 37.1,
+      "volume": 35546,
+      "ma20_volume": 23300,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1527",
+      "stock_name": "鑽全",
+      "vol_ratio": 1.53,
+      "change_pct": 0.6,
+      "close": 33.35,
+      "volume": 225259,
+      "ma20_volume": 147606,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5215",
+      "stock_name": "科嘉-KY",
+      "vol_ratio": 1.51,
+      "change_pct": 4.02,
+      "close": 38.8,
+      "volume": 139061,
+      "ma20_volume": 91873,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

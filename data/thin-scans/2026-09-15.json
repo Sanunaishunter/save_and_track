@@ -1,0 +1,108 @@
+{
+  "date": "2026-09-15",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1058,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "2712",
+      "stock_name": "遠雄來",
+      "vol_ratio": 7.28,
+      "change_pct": -1.78,
+      "close": 13.8,
+      "volume": 77000,
+      "ma20_volume": 10580,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 6.15,
+      "change_pct": 3.23,
+      "close": 17.6,
+      "volume": 281006,
+      "ma20_volume": 45727,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3296",
+      "stock_name": "勝德",
+      "vol_ratio": 4.32,
+      "change_pct": 5.88,
+      "close": 27.0,
+      "volume": 217217,
+      "ma20_volume": 50276,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9937",
+      "stock_name": "全國",
+      "vol_ratio": 3.82,
+      "change_pct": 0.0,
+      "close": 54.8,
+      "volume": 138988,
+      "ma20_volume": 36408,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9918",
+      "stock_name": "欣天然",
+      "vol_ratio": 2.34,
+      "change_pct": -1.61,
+      "close": 42.8,
+      "volume": 38153,
+      "ma20_volume": 16316,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1541",
+      "stock_name": "錩泰",
+      "vol_ratio": 2.22,
+      "change_pct": 0.48,
+      "close": 20.75,
+      "volume": 27193,
+      "ma20_volume": 12271,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "8411",
+      "stock_name": "福貞-KY",
+      "vol_ratio": 2.17,
+      "change_pct": 0.79,
+      "close": 12.75,
+      "volume": 129927,
+      "ma20_volume": 59749,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6957",
+      "stock_name": "裕慶-KY",
+      "vol_ratio": 1.99,
+      "change_pct": 2.08,
+      "close": 245.0,
+      "volume": 170601,
+      "ma20_volume": 85711,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1521",
+      "stock_name": "大億",
+      "vol_ratio": 1.56,
+      "change_pct": 1.23,
+      "close": 24.75,
+      "volume": 26502,
+      "ma20_volume": 16967,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

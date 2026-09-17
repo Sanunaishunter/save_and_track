@@ -1,0 +1,98 @@
+{
+  "date": "2026-08-07",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1081,
+  "evaluated": 1066,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "1435",
+      "stock_name": "中福",
+      "vol_ratio": 2.22,
+      "change_pct": 9.91,
+      "close": 23.3,
+      "volume": 78985,
+      "ma20_volume": 35620,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6952",
+      "stock_name": "大武山",
+      "vol_ratio": 1.95,
+      "change_pct": 3.65,
+      "close": 38.35,
+      "volume": 55904,
+      "ma20_volume": 28727,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6807",
+      "stock_name": "峰源-KY",
+      "vol_ratio": 1.91,
+      "change_pct": 2.61,
+      "close": 37.35,
+      "volume": 19550,
+      "ma20_volume": 10257,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2013",
+      "stock_name": "中鋼構",
+      "vol_ratio": 1.87,
+      "change_pct": 1.47,
+      "close": 41.3,
+      "volume": 209131,
+      "ma20_volume": 112101,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6582",
+      "stock_name": "申豐",
+      "vol_ratio": 1.87,
+      "change_pct": 0.63,
+      "close": 31.8,
+      "volume": 101630,
+      "ma20_volume": 54230,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6534",
+      "stock_name": "正瀚-創",
+      "vol_ratio": 1.84,
+      "change_pct": 0.42,
+      "close": 95.3,
+      "volume": 197906,
+      "ma20_volume": 107498,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2028",
+      "stock_name": "威致",
+      "vol_ratio": 1.74,
+      "change_pct": 0.98,
+      "close": 15.4,
+      "volume": 193509,
+      "ma20_volume": 111195,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8367",
+      "stock_name": "建新國際",
+      "vol_ratio": 1.57,
+      "change_pct": -0.12,
+      "close": 40.05,
+      "volume": 41613,
+      "ma20_volume": 26580,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

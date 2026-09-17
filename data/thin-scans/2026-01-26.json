@@ -1,0 +1,108 @@
+{
+  "date": "2026-01-26",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1067,
+  "evaluated": 1040,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "1413",
+      "stock_name": "宏洲",
+      "vol_ratio": 5.73,
+      "change_pct": 0.92,
+      "close": 9.88,
+      "volume": 182839,
+      "ma20_volume": 31903,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 2.29,
+      "change_pct": 0.26,
+      "close": 38.8,
+      "volume": 78407,
+      "ma20_volume": 34197,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9110",
+      "stock_name": "越南控-DR",
+      "vol_ratio": 2.08,
+      "change_pct": 7.28,
+      "close": 3.24,
+      "volume": 64034,
+      "ma20_volume": 30765,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3716",
+      "stock_name": "中化控股",
+      "vol_ratio": 1.96,
+      "change_pct": 0.15,
+      "close": 33.95,
+      "volume": 194038,
+      "ma20_volume": 99156,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3679",
+      "stock_name": "新至陞",
+      "vol_ratio": 1.8,
+      "change_pct": 1.32,
+      "close": 115.0,
+      "volume": 74932,
+      "ma20_volume": 41742,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1445",
+      "stock_name": "大宇",
+      "vol_ratio": 1.72,
+      "change_pct": 2.46,
+      "close": 14.6,
+      "volume": 270463,
+      "ma20_volume": 157503,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1762",
+      "stock_name": "中化生",
+      "vol_ratio": 1.63,
+      "change_pct": 3.68,
+      "close": 26.8,
+      "volume": 167978,
+      "ma20_volume": 103136,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1466",
+      "stock_name": "聚隆",
+      "vol_ratio": 1.55,
+      "change_pct": 1.77,
+      "close": 14.4,
+      "volume": 228999,
+      "ma20_volume": 147415,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 1.5,
+      "change_pct": 1.16,
+      "close": 61.0,
+      "volume": 154865,
+      "ma20_volume": 102945,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

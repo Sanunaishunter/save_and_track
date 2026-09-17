@@ -1,0 +1,128 @@
+{
+  "date": "2025-12-01",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1058,
+  "evaluated": 1017,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "6552",
+      "stock_name": "易華電",
+      "vol_ratio": 2.86,
+      "change_pct": -3.39,
+      "close": 24.25,
+      "volume": 164235,
+      "ma20_volume": 57492,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1109",
+      "stock_name": "信大",
+      "vol_ratio": 2.5,
+      "change_pct": 0.0,
+      "close": 15.65,
+      "volume": 190048,
+      "ma20_volume": 76091,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3043",
+      "stock_name": "科風",
+      "vol_ratio": 2.37,
+      "change_pct": 9.98,
+      "close": 23.15,
+      "volume": 264941,
+      "ma20_volume": 111746,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2904",
+      "stock_name": "匯僑",
+      "vol_ratio": 2.01,
+      "change_pct": 1.46,
+      "close": 17.4,
+      "volume": 70679,
+      "ma20_volume": 35244,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2107",
+      "stock_name": "厚生",
+      "vol_ratio": 1.95,
+      "change_pct": 0.21,
+      "close": 23.7,
+      "volume": 282416,
+      "ma20_volume": 144639,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8463",
+      "stock_name": "潤泰材",
+      "vol_ratio": 1.82,
+      "change_pct": 0.96,
+      "close": 26.4,
+      "volume": 150202,
+      "ma20_volume": 82615,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8442",
+      "stock_name": "威宏-KY",
+      "vol_ratio": 1.73,
+      "change_pct": 0.28,
+      "close": 71.6,
+      "volume": 120618,
+      "ma20_volume": 69769,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1467",
+      "stock_name": "南緯",
+      "vol_ratio": 1.7,
+      "change_pct": 0.57,
+      "close": 7.03,
+      "volume": 272390,
+      "ma20_volume": 160092,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2115",
+      "stock_name": "六暉-KY",
+      "vol_ratio": 1.69,
+      "change_pct": 0.4,
+      "close": 25.25,
+      "volume": 54266,
+      "ma20_volume": 32176,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6715",
+      "stock_name": "嘉基",
+      "vol_ratio": 1.6,
+      "change_pct": 6.12,
+      "close": 95.3,
+      "volume": 78300,
+      "ma20_volume": 48986,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6790",
+      "stock_name": "永豐實",
+      "vol_ratio": 1.53,
+      "change_pct": 0.92,
+      "close": 38.4,
+      "volume": 253253,
+      "ma20_volume": 165371,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

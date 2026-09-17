@@ -1,0 +1,98 @@
+{
+  "date": "2026-03-26",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1070,
+  "evaluated": 1059,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "6924",
+      "stock_name": "榮惠-KY創",
+      "vol_ratio": 3.04,
+      "change_pct": 9.21,
+      "close": 80.6,
+      "volume": 94554,
+      "ma20_volume": 31100,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4440",
+      "stock_name": "宜新實業",
+      "vol_ratio": 2.22,
+      "change_pct": 0.58,
+      "close": 17.45,
+      "volume": 255000,
+      "ma20_volume": 114928,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 2.05,
+      "change_pct": 0.41,
+      "close": 12.25,
+      "volume": 189166,
+      "ma20_volume": 92471,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1906",
+      "stock_name": "寶隆",
+      "vol_ratio": 2.02,
+      "change_pct": 2.26,
+      "close": 11.3,
+      "volume": 270602,
+      "ma20_volume": 134081,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2424",
+      "stock_name": "隴華",
+      "vol_ratio": 2.01,
+      "change_pct": 9.82,
+      "close": 26.85,
+      "volume": 160314,
+      "ma20_volume": 79830,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6918",
+      "stock_name": "愛派司",
+      "vol_ratio": 1.8,
+      "change_pct": 0.95,
+      "close": 85.0,
+      "volume": 83071,
+      "ma20_volume": 46024,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6914",
+      "stock_name": "阜爾運通",
+      "vol_ratio": 1.72,
+      "change_pct": 2.68,
+      "close": 153.0,
+      "volume": 183514,
+      "ma20_volume": 106745,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1324",
+      "stock_name": "地球",
+      "vol_ratio": 1.51,
+      "change_pct": 2.88,
+      "close": 10.7,
+      "volume": 201493,
+      "ma20_volume": 133438,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

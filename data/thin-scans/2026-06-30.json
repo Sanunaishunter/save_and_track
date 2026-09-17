@@ -1,0 +1,118 @@
+{
+  "date": "2026-06-30",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1062,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 4.65,
+      "change_pct": 8.01,
+      "close": 67.4,
+      "volume": 126195,
+      "ma20_volume": 27165,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8101",
+      "stock_name": "華冠",
+      "vol_ratio": 2.62,
+      "change_pct": -7.01,
+      "close": 12.6,
+      "volume": 45058,
+      "ma20_volume": 17185,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6969",
+      "stock_name": "成信實業*-創",
+      "vol_ratio": 2.3,
+      "change_pct": -1.86,
+      "close": 23.75,
+      "volume": 163853,
+      "ma20_volume": 71243,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2433",
+      "stock_name": "互盛電",
+      "vol_ratio": 2.27,
+      "change_pct": 0.56,
+      "close": 44.8,
+      "volume": 122261,
+      "ma20_volume": 53788,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 2.23,
+      "change_pct": -4.11,
+      "close": 38.5,
+      "volume": 130587,
+      "ma20_volume": 58573,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8367",
+      "stock_name": "建新國際",
+      "vol_ratio": 2.15,
+      "change_pct": 0.88,
+      "close": 40.35,
+      "volume": 95156,
+      "ma20_volume": 44231,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3130",
+      "stock_name": "一零四",
+      "vol_ratio": 2.01,
+      "change_pct": 0.68,
+      "close": 222.5,
+      "volume": 93471,
+      "ma20_volume": 46529,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9931",
+      "stock_name": "欣高",
+      "vol_ratio": 1.86,
+      "change_pct": -4.7,
+      "close": 33.45,
+      "volume": 127544,
+      "ma20_volume": 68710,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2008",
+      "stock_name": "高興昌",
+      "vol_ratio": 1.7,
+      "change_pct": -0.16,
+      "close": 30.5,
+      "volume": 67765,
+      "ma20_volume": 39882,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2762",
+      "stock_name": "世界健身-KY",
+      "vol_ratio": 1.57,
+      "change_pct": 0.98,
+      "close": 82.5,
+      "volume": 238146,
+      "ma20_volume": 151468,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

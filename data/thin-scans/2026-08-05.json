@@ -1,0 +1,68 @@
+{
+  "date": "2026-08-05",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1081,
+  "evaluated": 1066,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 2.51,
+      "change_pct": 0.88,
+      "close": 68.8,
+      "volume": 37325,
+      "ma20_volume": 14889,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6952",
+      "stock_name": "大武山",
+      "vol_ratio": 2.29,
+      "change_pct": 4.31,
+      "close": 36.3,
+      "volume": 60400,
+      "ma20_volume": 26327,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4441",
+      "stock_name": "振大環球",
+      "vol_ratio": 2.27,
+      "change_pct": 5.6,
+      "close": 188.5,
+      "volume": 227401,
+      "ma20_volume": 100221,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3494",
+      "stock_name": "誠研",
+      "vol_ratio": 1.9,
+      "change_pct": 1.02,
+      "close": 6.95,
+      "volume": 166983,
+      "ma20_volume": 88091,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6136",
+      "stock_name": "富爾特",
+      "vol_ratio": 1.64,
+      "change_pct": 1.84,
+      "close": 24.9,
+      "volume": 256965,
+      "ma20_volume": 156439,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

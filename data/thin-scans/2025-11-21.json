@@ -1,0 +1,58 @@
+{
+  "date": "2025-11-21",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1056,
+  "evaluated": 1021,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 2.1,
+      "change_pct": 5.5,
+      "close": 44.1,
+      "volume": 32917,
+      "ma20_volume": 15695,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1339",
+      "stock_name": "昭輝",
+      "vol_ratio": 2.07,
+      "change_pct": 0.79,
+      "close": 44.75,
+      "volume": 128663,
+      "ma20_volume": 62143,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 1.82,
+      "change_pct": 1.1,
+      "close": 64.4,
+      "volume": 55044,
+      "ma20_volume": 30231,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3164",
+      "stock_name": "景岳",
+      "vol_ratio": 1.65,
+      "change_pct": -1.35,
+      "close": 18.3,
+      "volume": 42371,
+      "ma20_volume": 25749,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

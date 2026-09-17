@@ -1,0 +1,118 @@
+{
+  "date": "2025-12-10",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1057,
+  "evaluated": 1017,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 4.6,
+      "change_pct": 1.99,
+      "close": 25.6,
+      "volume": 266002,
+      "ma20_volume": 57865,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6796",
+      "stock_name": "晉弘",
+      "vol_ratio": 4.31,
+      "change_pct": 2.91,
+      "close": 99.0,
+      "volume": 260987,
+      "ma20_volume": 60609,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8162",
+      "stock_name": "微矽電子-創",
+      "vol_ratio": 3.18,
+      "change_pct": 4.63,
+      "close": 35.05,
+      "volume": 183973,
+      "ma20_volume": 57892,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2115",
+      "stock_name": "六暉-KY",
+      "vol_ratio": 2.69,
+      "change_pct": -0.2,
+      "close": 24.8,
+      "volume": 104721,
+      "ma20_volume": 38981,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6918",
+      "stock_name": "愛派司",
+      "vol_ratio": 2.67,
+      "change_pct": 2.76,
+      "close": 89.4,
+      "volume": 106865,
+      "ma20_volume": 39959,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6666",
+      "stock_name": "羅麗芬-KY",
+      "vol_ratio": 2.4,
+      "change_pct": 4.74,
+      "close": 46.4,
+      "volume": 45806,
+      "ma20_volume": 19078,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5546",
+      "stock_name": "永固-KY",
+      "vol_ratio": 1.69,
+      "change_pct": 0.89,
+      "close": 22.65,
+      "volume": 25000,
+      "ma20_volume": 14761,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5288",
+      "stock_name": "豐祥-KY",
+      "vol_ratio": 1.67,
+      "change_pct": -1.48,
+      "close": 133.5,
+      "volume": 176331,
+      "ma20_volume": 105486,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6958",
+      "stock_name": "日盛台駿",
+      "vol_ratio": 1.61,
+      "change_pct": 2.88,
+      "close": 16.05,
+      "volume": 75691,
+      "ma20_volume": 47017,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9912",
+      "stock_name": "偉聯",
+      "vol_ratio": 1.59,
+      "change_pct": 2.52,
+      "close": 12.2,
+      "volume": 214045,
+      "ma20_volume": 134302,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

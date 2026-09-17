@@ -1,0 +1,128 @@
+{
+  "date": "2026-09-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1084,
+  "evaluated": 1062,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "2438",
+      "stock_name": "翔耀",
+      "vol_ratio": 4.08,
+      "change_pct": 9.86,
+      "close": 20.05,
+      "volume": 266618,
+      "ma20_volume": 65395,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6671",
+      "stock_name": "三能-KY",
+      "vol_ratio": 3.27,
+      "change_pct": -0.87,
+      "close": 22.8,
+      "volume": 153150,
+      "ma20_volume": 46863,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6838",
+      "stock_name": "台新藥",
+      "vol_ratio": 2.94,
+      "change_pct": 2.61,
+      "close": 23.6,
+      "volume": 215581,
+      "ma20_volume": 73430,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8488",
+      "stock_name": "吉源-KY",
+      "vol_ratio": 2.86,
+      "change_pct": 0.3,
+      "close": 9.95,
+      "volume": 293000,
+      "ma20_volume": 102362,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 2.43,
+      "change_pct": -0.4,
+      "close": 24.8,
+      "volume": 171548,
+      "ma20_volume": 70739,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9908",
+      "stock_name": "大台北",
+      "vol_ratio": 2.28,
+      "change_pct": 0.0,
+      "close": 29.0,
+      "volume": 270894,
+      "ma20_volume": 118650,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4438",
+      "stock_name": "廣越",
+      "vol_ratio": 2.04,
+      "change_pct": -4.11,
+      "close": 58.3,
+      "volume": 224011,
+      "ma20_volume": 110063,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "8045",
+      "stock_name": "達運光電",
+      "vol_ratio": 2.0,
+      "change_pct": 0.39,
+      "close": 51.5,
+      "volume": 298198,
+      "ma20_volume": 148830,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6698",
+      "stock_name": "旭暉應材",
+      "vol_ratio": 1.86,
+      "change_pct": 2.0,
+      "close": 33.15,
+      "volume": 248144,
+      "ma20_volume": 133294,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 1.84,
+      "change_pct": 0.11,
+      "close": 44.35,
+      "volume": 31471,
+      "ma20_volume": 17148,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6965",
+      "stock_name": "中傑-KY",
+      "vol_ratio": 1.8,
+      "change_pct": -0.54,
+      "close": 73.4,
+      "volume": 40365,
+      "ma20_volume": 22374,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

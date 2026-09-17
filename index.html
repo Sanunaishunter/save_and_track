@@ -67,6 +67,7 @@
     <button type="button" class="viewbtn" data-view="fade">訊號反用</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
+    <button type="button" class="viewbtn" data-view="thinscan">薄股測試</button>
     <button type="button" class="viewbtn" data-view="fomo" hidden>FOMO</button>
     <button type="button" class="viewbtn" data-view="crashfomo" hidden>暴跌FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
@@ -270,6 +271,39 @@
         </tr>
       </thead>
       <tbody id="crash-tbody"></tbody>
+    </table>
+  </div>
+</main>
+
+<!-- 薄股測試(2026-09-17):跟爆量掃描同公式,鎖定量<300張(現行爆量掃描門檻
+     濾掉的薄股票)這群。記分板已驗證過這群平均命中率比爆量掃描本身更低,這裡
+     故意不藏起來、不打📖(不是教科書公式沒驗證,是驗證過了、數字偏負)——
+     使用者要的是「跟著散戶抬轎,有紀律地下車」,自己盯著勝率決定要不要跟。 -->
+<main class="list-wrap" id="thinscan-wrap" hidden>
+  <div class="scan-meta" id="thinscan-meta">載入中…</div>
+  <p class="panel-note">跟爆量掃描同一個公式(量比>1.5 且收紅),差別只在鎖定「量 &lt; 300 張」——
+    現行爆量掃描的量下限會把這群濾掉。記分板已經測過:這群平均命中率比爆量掃描本身更低、
+    超額報酬更負,不是穩賺的訊號,是「散戶熱錢常炒的那種薄股」,想跟就要自己設好紀律的
+    出場(參考下面「訊號記分板」裡薄股爆量這欄的實際命中率)。</p>
+  <div class="gate-banner" id="thinscan-gate" hidden></div>
+  <div class="table-scroll">
+    <table class="scan-table" id="thinscan-table">
+      <thead>
+        <tr>
+          <th>代碼</th>
+          <th>名稱</th>
+          <th class="num">量比</th>
+          <th class="num">量(張)</th>
+          <th class="num">漲跌幅</th>
+          <th>均線</th>
+          <th>訊號</th>
+          <th class="num">融資餘額</th>
+          <th class="num">融資增減</th>
+          <th class="num">融券餘額</th>
+          <th>追蹤</th>
+        </tr>
+      </thead>
+      <tbody id="thinscan-tbody"></tbody>
     </table>
   </div>
 </main>

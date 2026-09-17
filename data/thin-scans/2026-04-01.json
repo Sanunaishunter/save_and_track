@@ -1,0 +1,118 @@
+{
+  "date": "2026-04-01",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1073,
+  "evaluated": 1054,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "1614",
+      "stock_name": "三洋電",
+      "vol_ratio": 3.2,
+      "change_pct": 0.0,
+      "close": 31.6,
+      "volume": 138117,
+      "ma20_volume": 43102,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1456",
+      "stock_name": "怡華",
+      "vol_ratio": 2.31,
+      "change_pct": 9.93,
+      "close": 14.95,
+      "volume": 298740,
+      "ma20_volume": 129262,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2488",
+      "stock_name": "漢平",
+      "vol_ratio": 2.15,
+      "change_pct": 1.56,
+      "close": 48.9,
+      "volume": 281548,
+      "ma20_volume": 131211,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 2.13,
+      "change_pct": 3.6,
+      "close": 41.75,
+      "volume": 115995,
+      "ma20_volume": 54486,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3716",
+      "stock_name": "中化控股",
+      "vol_ratio": 2.08,
+      "change_pct": 1.68,
+      "close": 33.25,
+      "volume": 286877,
+      "ma20_volume": 137819,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1737",
+      "stock_name": "臺鹽",
+      "vol_ratio": 1.98,
+      "change_pct": 0.79,
+      "close": 31.95,
+      "volume": 210840,
+      "ma20_volume": 106468,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6641",
+      "stock_name": "基士德-KY",
+      "vol_ratio": 1.76,
+      "change_pct": 0.27,
+      "close": 18.55,
+      "volume": 53552,
+      "ma20_volume": 30464,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "5007",
+      "stock_name": "三星",
+      "vol_ratio": 1.66,
+      "change_pct": -3.78,
+      "close": 56.0,
+      "volume": 135576,
+      "ma20_volume": 81865,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8482",
+      "stock_name": "商億-KY",
+      "vol_ratio": 1.64,
+      "change_pct": -1.35,
+      "close": 47.35,
+      "volume": 17046,
+      "ma20_volume": 10409,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 1.52,
+      "change_pct": 1.2,
+      "close": 12.6,
+      "volume": 178133,
+      "ma20_volume": 116869,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

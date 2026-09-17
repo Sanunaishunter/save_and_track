@@ -1,0 +1,78 @@
+{
+  "date": "2026-06-17",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1079,
+  "evaluated": 1065,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "9928",
+      "stock_name": "中視",
+      "vol_ratio": 4.37,
+      "change_pct": 5.54,
+      "close": 19.05,
+      "volume": 216711,
+      "ma20_volume": 49539,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1456",
+      "stock_name": "怡華",
+      "vol_ratio": 2.7,
+      "change_pct": 4.12,
+      "close": 15.15,
+      "volume": 290715,
+      "ma20_volume": 107576,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4569",
+      "stock_name": "六方科-KY",
+      "vol_ratio": 2.33,
+      "change_pct": 4.89,
+      "close": 182.5,
+      "volume": 286077,
+      "ma20_volume": 122689,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3168",
+      "stock_name": "眾福科",
+      "vol_ratio": 1.86,
+      "change_pct": -2.26,
+      "close": 47.55,
+      "volume": 246199,
+      "ma20_volume": 132575,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1626",
+      "stock_name": "艾美特-KY",
+      "vol_ratio": 1.65,
+      "change_pct": 1.5,
+      "close": 10.15,
+      "volume": 207290,
+      "ma20_volume": 125762,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2704",
+      "stock_name": "國賓",
+      "vol_ratio": 1.6,
+      "change_pct": 3.36,
+      "close": 46.1,
+      "volume": 268731,
+      "ma20_volume": 168368,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

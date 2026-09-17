@@ -1,0 +1,98 @@
+{
+  "date": "2025-11-19",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1059,
+  "evaluated": 1021,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 11.4,
+      "change_pct": 6.78,
+      "close": 104.0,
+      "volume": 269714,
+      "ma20_volume": 23656,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1445",
+      "stock_name": "大宇",
+      "vol_ratio": 7.06,
+      "change_pct": 2.86,
+      "close": 14.4,
+      "volume": 220784,
+      "ma20_volume": 31284,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9918",
+      "stock_name": "欣天然",
+      "vol_ratio": 2.71,
+      "change_pct": 0.38,
+      "close": 39.75,
+      "volume": 28809,
+      "ma20_volume": 10627,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1413",
+      "stock_name": "宏洲",
+      "vol_ratio": 2.48,
+      "change_pct": 0.6,
+      "close": 10.05,
+      "volume": 52010,
+      "ma20_volume": 21012,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2013",
+      "stock_name": "中鋼構",
+      "vol_ratio": 2.46,
+      "change_pct": 2.23,
+      "close": 41.2,
+      "volume": 153739,
+      "ma20_volume": 62566,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3229",
+      "stock_name": "晟鈦",
+      "vol_ratio": 2.27,
+      "change_pct": 2.71,
+      "close": 15.15,
+      "volume": 123100,
+      "ma20_volume": 54162,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 2.14,
+      "change_pct": -1.71,
+      "close": 43.05,
+      "volume": 29007,
+      "ma20_volume": 13584,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6581",
+      "stock_name": "鋼聯",
+      "vol_ratio": 1.98,
+      "change_pct": 0.0,
+      "close": 108.0,
+      "volume": 22030,
+      "ma20_volume": 11104,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

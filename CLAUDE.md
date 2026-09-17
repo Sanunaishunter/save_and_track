@@ -59,6 +59,7 @@
 | 訊號記分板 | `scorecard-latest.json` | 歷史訊號之後 5/10/20 日超額報酬、命中率,五種分桶,N<60 灰 |
 | 訊號反用 | `scorecard-latest.json`(同一份) | 每個訊號正用(原方向)vs. 反用(反方向重算)命中率/預期報酬並排比較,見第 5 節 |
 | 爆量掃描 / 暴跌掃描 | `scan-latest.json` / `crash-latest.json` | `量/MA20(shift 1) > 1.5` 且 `close > open`(暴跌對稱 `<`),≥300 張;每列有 `ma_state` |
+| 薄股測試 | `thin-scan-latest.json` | 跟爆量掃描同公式,鎖定量 < 300 張(爆量掃描門檻濾掉的薄股票)這群,見第 5 節 |
 | ~~FOMO / 暴跌FOMO~~ | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數)。**2026-09-16 使用者要求 no show,兩個分頁按鈕 `hidden`、拿出 `VIEWS_ORDER`**(見第 4 節),資料照樣每天產生,個股查詢的 🔔🕐🔻🔥 標記跟記分板/backtest 工具都還在吃 |
 | 產業流向 | `tick-latest.json`、`tick-members-latest.json` | 移植 SH2 8012:產業 × 市值級距的成交筆數,凍結抽樣每組 10 檔 |
 | 部位 | `quotes-latest.json` | Kelly 部位 + 零股試算 |
@@ -72,6 +73,7 @@
 ```
 fetch_prices.py        TWSE 全市場 OHLCV+成交筆數 → data/history/(只留 30 天)
 compute_scan.py / compute_crash.py    爆量 / 暴跌(含 ma_state)→ *-latest + scans/ crashes/ 存查
+compute_thin_scan.py   薄股測試(同公式,量<300張)→ thin-scan-latest + thin-scans/ 存查
 fetch_stock_meta.py    產業別(FinMind)+ 股數(TWSE)+ 套 industry_overrides.json
 fetch_stock_lookup.py ×3   三份個股查詢清單(FinMind 融資融券/法人,60 日曆天)
 compute_tick_flow.py   產業流向(凍結抽樣)
@@ -270,6 +272,62 @@ git commit + push      if: always()
   無 JS 錯誤。跑 `compute_scorecard.py` 只用來確認新 `SIGNAL_DEFS` 不會讓既有資料
   跑出例外,沒有拿本機容器的 `data/scorecard-latest.json` 覆蓋 commit(那份要等
   Actions 真的跑出新一天的 FOMO 資料後,由排程重新產生)。
+
+**薄股測試(`scripts/compute_thin_scan.py`,2026-09-17 加入)**
+- 起因:使用者拿 6957 裕慶-KY 的真實線圖追出來,問「有沒有機會抓到噴出前的
+  狀態」。第一次分析時我判斷是「量縮蓄勢」(9/1~9/9 量確實很安靜),但使用者
+  糾正:「234 前已經有量了,跟前面蹲的時候有差別了」——查真實資料才發現
+  9/10(119張)、9/11(162張)vol_ratio 已經是 1.64/2.18,早就超過爆量掃描
+  1.5 的門檻,不是「還沒到門檻的早期訊號」,是**已經達標但被 300 張絕對量
+  下限(`common.MIN_VOLUME_LOTS`)擋住看不到**——6957 一路到量衝上 390 張
+  (9/16)才第一次進爆量掃描名單,隔天(9/17)噴出 274。
+- 全市場回測(`data/archive/prices`,284 天、不打 API)先測了兩個方向:①
+  「連續兩天量放大但還沒到爆量門檻」這個原始構想(vol_ramp)——結果 6957
+  自己的 9/10、9/11 因為當天 vol_ratio 已經 >1.5,反而被這個定義的「還沒到
+  爆量門檻」排除條件濾掉,構想本身跟這次案例對不上;②改用「爆量掃描原始
+  公式,不設量下限」直接測,才發現真正的分野在量下限,不在 vol_ratio 夠不夠
+  ——量<300張這群(N=4028,遠超過記分板 60 門檻)5 日命中率 33.4%、平均超額
+  −1.40%,量≥300張這群(現行爆量掃描)是 38.1%/−0.62%,兩群都是看多會輸,
+  薄股這群輸得更多,20 日天期差距更大(−5.82% vs −2.88%)。這**不是新發現的
+  獨立優勢**,是已經驗證過的「爆量看多容易輸」的加強版;6957 自己過去一年
+  也觸發過同一公式好幾次(2025-08-19 起),這次是同一種型態裡剛好中獎的
+  一次,不是系統第一次錯過的獨一無二訊號(存活者偏誤)。
+- 使用者聽完數據後的決定(不是要否決功能,是重新定義用途):「這就是台灣人
+  熱愛的炒股票,我們要做的是跟著散戶一起抬轎,然後有紀律地下車」——不是拿
+  這個訊號當保證勝率的進場依據,是照樣做成正式訊號、進記分板算勝率
+  (`SIGNAL_DEFS['thin_scan']`,`dir=1`),讓使用者自己盯著數字決定要不要跟、
+  跟多重,系統負責誠實揭露勝率,不負責幫他下結論說穩賺。因為已經驗證過
+  (不是沒驗證過的教科書公式),前端刻意不加 📖(那個標記是給「沒驗證過的
+  教科書公式」,這裡已經驗證過、數字就是偏負,標📖反而誤導)。
+- 實作:`compute_thin_scan.py` 跟 `compute_scan.py` 公式完全一致(`vol_ratio >
+  1.5` 且 `close > open`),只多一個量的範圍限制(`THIN_SCAN_MIN_VOLUME_LOTS`
+  10 張 `<=` 量 `<` `MIN_VOLUME_LOTS` 300 張),兩個掃描互補、同一天同一檔不會
+  同時出現在兩份清單。多了 `--backfill-archive` 一次性模式,用既有
+  `data/archive/prices`(2025-07 起)直接回補 `data/thin-scans/*.json`
+  ——這是重新計算既有資料,不是補抓新資料,所以（跟 scan/crash/FOMO 這幾個
+  從上線那天才開始累積樣本的訊號不同)這個訊號一上線記分板就有 4000+ 筆
+  到期樣本,不用等好幾週。`compute_scorecard.py` 的 `load_signal_instances()`
+  加讀 `THIN_SCANS_DIR`(`foreign_consec`/`margin_consec` 留 None,因為薄股票
+  通常不在 FOMO 前 60 名候選池裡,沒有合流資訊可查,`confluence_label()` 看到
+  兩者皆 None 會正確回報「無合流資料」,不是誤判)。前端新分頁「薄股測試」
+  (排在暴跌掃描後面)`renderThinScan()`/`loadThinScan()` 跟 `renderScan()`
+  幾乎一樣,多一欄「量(張)」;`quickAddBtnHtml`/`bindQuickAdd` 記得掛在
+  `thinscan-tbody`(照抄 scan/crash 那三行時漏掉會讓「+ 追蹤」按鈕沒反應,
+  這次有記得加);`ENTRY_TAG_RULES` 加 `thin_scan` 規則(比對「薄股測試」
+  字面,擺在 `surge`/`thinrally` 之間,沒有子字串衝突不用擔心順序)、
+  `ENTRY_TAG_DIRECTION` 加對應方向;`SC_SIGNAL_ORDER` 加 `thin_scan`
+  (`FADE_SIGNAL_ORDER` 是從它 `.concat()` 出來的,自動一起帶到訊號反用分頁,
+  不用另外改)。
+- 驗證:`compute_thin_scan.py --backfill-archive` 回補後,`data/thin-scans/`
+  裡 6957 的 vol_ratio(2026-08-28 1.75、09-10 1.64、09-11 2.18、09-14 2.45、
+  09-15 1.99,09-16 起正確消失,因為量已經 >=300 張改進爆量掃描)跟手算
+  一字不差對上;`compute_scorecard.py` 跑出來的 `thin_scan` 5/10/20 日
+  n=4026/3931/3806、命中 33.4/28.9/21.4%、超額 −1.4/−2.65/−5.82%,跟
+  上線前用獨立探測腳本(`backtest_thin_scan.py`,一次性、沒進 repo)算出來的
+  數字幾乎一致(差 2 筆是這裡多了 10 張的雜訊下限)。Playwright 走真實 UI
+  確認薄股測試分頁渲染 19 檔候選、無 JS 錯誤,訊號記分板/訊號反用兩個分頁
+  都正確顯示「薄股爆量」區塊;「+ 追蹤」流程確認過 localStorage 存的
+  `notes[1]` 正確帶出「薄股測試(量比 x.xx x、漲 +x.xx%、量 xx.x張)」文字。
 
 **個股查詢標記(`createLookupPanel()`,四個分頁共用)**
 - 🔔量縮轉買、🔽量縮、🔻外資出貨、🔥連續增溫、🕐蓄勢中:量比 = 量 / 前 10 日峰量,

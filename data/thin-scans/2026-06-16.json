@@ -1,0 +1,58 @@
+{
+  "date": "2026-06-16",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1065,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "2910",
+      "stock_name": "統領",
+      "vol_ratio": 3.87,
+      "change_pct": 6.29,
+      "close": 23.65,
+      "volume": 44944,
+      "ma20_volume": 11604,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 2.05,
+      "change_pct": 1.0,
+      "close": 40.35,
+      "volume": 128889,
+      "ma20_volume": 62863,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2739",
+      "stock_name": "寒舍",
+      "vol_ratio": 1.84,
+      "change_pct": 0.97,
+      "close": 36.5,
+      "volume": 244865,
+      "ma20_volume": 132723,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4552",
+      "stock_name": "力達-KY",
+      "vol_ratio": 1.52,
+      "change_pct": 1.9,
+      "close": 21.45,
+      "volume": 201018,
+      "ma20_volume": 131816,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

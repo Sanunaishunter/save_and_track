@@ -1,0 +1,98 @@
+{
+  "date": "2026-06-22",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1081,
+  "evaluated": 1067,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "3018",
+      "stock_name": "隆銘綠能",
+      "vol_ratio": 2.29,
+      "change_pct": 0.84,
+      "close": 12.0,
+      "volume": 82498,
+      "ma20_volume": 35956,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 2.14,
+      "change_pct": -0.6,
+      "close": 24.7,
+      "volume": 141070,
+      "ma20_volume": 65917,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 2.03,
+      "change_pct": 3.12,
+      "close": 56.2,
+      "volume": 255998,
+      "ma20_volume": 126359,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7760",
+      "stock_name": "享溫馨",
+      "vol_ratio": 1.99,
+      "change_pct": 1.19,
+      "close": 34.0,
+      "volume": 265938,
+      "ma20_volume": 133318,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1535",
+      "stock_name": "中宇",
+      "vol_ratio": 1.61,
+      "change_pct": -0.2,
+      "close": 50.3,
+      "volume": 222926,
+      "ma20_volume": 138796,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6201",
+      "stock_name": "亞弘電",
+      "vol_ratio": 1.58,
+      "change_pct": -0.21,
+      "close": 48.3,
+      "volume": 90351,
+      "ma20_volume": 57125,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6666",
+      "stock_name": "羅麗芬-KY",
+      "vol_ratio": 1.53,
+      "change_pct": 0.7,
+      "close": 43.25,
+      "volume": 76336,
+      "ma20_volume": 49877,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2712",
+      "stock_name": "遠雄來",
+      "vol_ratio": 1.51,
+      "change_pct": 0.0,
+      "close": 15.2,
+      "volume": 21051,
+      "ma20_volume": 13896,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

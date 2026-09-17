@@ -1,0 +1,108 @@
+{
+  "date": "2026-07-09",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1062,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 12.92,
+      "change_pct": 6.32,
+      "close": 101.0,
+      "volume": 227141,
+      "ma20_volume": 17577,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 5.37,
+      "change_pct": 5.97,
+      "close": 88.8,
+      "volume": 136682,
+      "ma20_volume": 25456,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6936",
+      "stock_name": "永鴻生技",
+      "vol_ratio": 4.77,
+      "change_pct": -1.06,
+      "close": 32.65,
+      "volume": 133337,
+      "ma20_volume": 27927,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6934",
+      "stock_name": "心誠鎂",
+      "vol_ratio": 2.9,
+      "change_pct": 8.29,
+      "close": 79.7,
+      "volume": 188311,
+      "ma20_volume": 64903,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1418",
+      "stock_name": "東華",
+      "vol_ratio": 2.14,
+      "change_pct": 4.92,
+      "close": 19.2,
+      "volume": 72549,
+      "ma20_volume": 33961,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1256",
+      "stock_name": "鮮活果汁-KY",
+      "vol_ratio": 1.91,
+      "change_pct": -1.0,
+      "close": 197.5,
+      "volume": 240618,
+      "ma20_volume": 125910,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 1.58,
+      "change_pct": 1.12,
+      "close": 18.0,
+      "volume": 119006,
+      "ma20_volume": 75460,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2248",
+      "stock_name": "華勝-KY",
+      "vol_ratio": 1.55,
+      "change_pct": 1.37,
+      "close": 59.0,
+      "volume": 84636,
+      "ma20_volume": 54630,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 1.51,
+      "change_pct": -6.65,
+      "close": 24.55,
+      "volume": 126134,
+      "ma20_volume": 83433,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

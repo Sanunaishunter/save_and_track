@@ -1,0 +1,118 @@
+{
+  "date": "2026-07-07",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1062,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "2008",
+      "stock_name": "高興昌",
+      "vol_ratio": 6.69,
+      "change_pct": -3.43,
+      "close": 29.6,
+      "volume": 225692,
+      "ma20_volume": 33760,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6534",
+      "stock_name": "正瀚-創",
+      "vol_ratio": 3.28,
+      "change_pct": 0.89,
+      "close": 91.0,
+      "volume": 203346,
+      "ma20_volume": 61920,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6794",
+      "stock_name": "向榮生技",
+      "vol_ratio": 3.11,
+      "change_pct": 4.67,
+      "close": 85.2,
+      "volume": 161503,
+      "ma20_volume": 51972,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6807",
+      "stock_name": "峰源-KY",
+      "vol_ratio": 2.3,
+      "change_pct": -0.15,
+      "close": 33.6,
+      "volume": 36010,
+      "ma20_volume": 15656,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7736",
+      "stock_name": "虎山",
+      "vol_ratio": 2.25,
+      "change_pct": 1.42,
+      "close": 71.4,
+      "volume": 66438,
+      "ma20_volume": 29553,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9944",
+      "stock_name": "新麗",
+      "vol_ratio": 1.73,
+      "change_pct": 0.28,
+      "close": 18.05,
+      "volume": 106188,
+      "ma20_volume": 61218,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8462",
+      "stock_name": "柏文",
+      "vol_ratio": 1.65,
+      "change_pct": 2.65,
+      "close": 155.0,
+      "volume": 283569,
+      "ma20_volume": 171704,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6934",
+      "stock_name": "心誠鎂",
+      "vol_ratio": 1.6,
+      "change_pct": 1.32,
+      "close": 68.9,
+      "volume": 107300,
+      "ma20_volume": 67229,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1233",
+      "stock_name": "天仁",
+      "vol_ratio": 1.56,
+      "change_pct": 1.24,
+      "close": 28.5,
+      "volume": 40667,
+      "ma20_volume": 26058,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "4736",
+      "stock_name": "泰博",
+      "vol_ratio": 1.54,
+      "change_pct": 0.8,
+      "close": 126.5,
+      "volume": 222318,
+      "ma20_volume": 144663,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

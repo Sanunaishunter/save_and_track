@@ -1,0 +1,98 @@
+{
+  "date": "2026-07-01",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1080,
+  "evaluated": 1062,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 3.59,
+      "change_pct": 2.42,
+      "close": 25.4,
+      "volume": 277843,
+      "ma20_volume": 77309,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7760",
+      "stock_name": "享溫馨",
+      "vol_ratio": 2.59,
+      "change_pct": 4.85,
+      "close": 34.6,
+      "volume": 299255,
+      "ma20_volume": 115428,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6674",
+      "stock_name": "鋐寶科技",
+      "vol_ratio": 2.3,
+      "change_pct": -0.87,
+      "close": 17.15,
+      "volume": 70402,
+      "ma20_volume": 30675,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2247",
+      "stock_name": "汎德永業",
+      "vol_ratio": 2.27,
+      "change_pct": 4.72,
+      "close": 244.0,
+      "volume": 235306,
+      "ma20_volume": 103828,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3593",
+      "stock_name": "力銘",
+      "vol_ratio": 1.98,
+      "change_pct": -2.27,
+      "close": 15.1,
+      "volume": 66619,
+      "ma20_volume": 33611,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "8481",
+      "stock_name": "政伸",
+      "vol_ratio": 1.88,
+      "change_pct": 0.24,
+      "close": 41.7,
+      "volume": 41562,
+      "ma20_volume": 22062,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1233",
+      "stock_name": "天仁",
+      "vol_ratio": 1.52,
+      "change_pct": 1.07,
+      "close": 28.4,
+      "volume": 43025,
+      "ma20_volume": 28267,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "3679",
+      "stock_name": "新至陞",
+      "vol_ratio": 1.52,
+      "change_pct": 4.65,
+      "close": 112.5,
+      "volume": 201046,
+      "ma20_volume": 132025,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

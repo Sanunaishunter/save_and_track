@@ -1,0 +1,98 @@
+{
+  "date": "2026-04-27",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1069,
+  "evaluated": 1053,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "2114",
+      "stock_name": "鑫永銓",
+      "vol_ratio": 2.25,
+      "change_pct": 0.56,
+      "close": 89.0,
+      "volume": 74905,
+      "ma20_volume": 33339,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1232",
+      "stock_name": "大統益",
+      "vol_ratio": 2.11,
+      "change_pct": 0.34,
+      "close": 149.5,
+      "volume": 167533,
+      "ma20_volume": 79495,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6936",
+      "stock_name": "永鴻生技",
+      "vol_ratio": 1.94,
+      "change_pct": -0.43,
+      "close": 34.45,
+      "volume": 70943,
+      "ma20_volume": 36554,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7823",
+      "stock_name": "奧義賽博-KY創",
+      "vol_ratio": 1.79,
+      "change_pct": 4.17,
+      "close": 80.0,
+      "volume": 36811,
+      "ma20_volume": 20587,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1233",
+      "stock_name": "天仁",
+      "vol_ratio": 1.77,
+      "change_pct": 0.7,
+      "close": 28.8,
+      "volume": 27125,
+      "ma20_volume": 15357,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2904",
+      "stock_name": "匯僑",
+      "vol_ratio": 1.73,
+      "change_pct": 0.62,
+      "close": 16.35,
+      "volume": 93455,
+      "ma20_volume": 54118,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1109",
+      "stock_name": "信大",
+      "vol_ratio": 1.59,
+      "change_pct": 0.32,
+      "close": 15.45,
+      "volume": 248701,
+      "ma20_volume": 156598,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2753",
+      "stock_name": "八方雲集",
+      "vol_ratio": 1.54,
+      "change_pct": 0.0,
+      "close": 179.0,
+      "volume": 277236,
+      "ma20_volume": 179982,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

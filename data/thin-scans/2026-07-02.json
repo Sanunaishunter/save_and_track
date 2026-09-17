@@ -1,0 +1,98 @@
+{
+  "date": "2026-07-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1079,
+  "evaluated": 1061,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "2239",
+      "stock_name": "英利-KY",
+      "vol_ratio": 4.44,
+      "change_pct": 6.24,
+      "close": 23.0,
+      "volume": 292425,
+      "ma20_volume": 65925,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 2.98,
+      "change_pct": 3.54,
+      "close": 26.3,
+      "volume": 264925,
+      "ma20_volume": 88794,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4583",
+      "stock_name": "台灣精銳",
+      "vol_ratio": 2.85,
+      "change_pct": 1.98,
+      "close": 617.0,
+      "volume": 282721,
+      "ma20_volume": 99256,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7705",
+      "stock_name": "三商餐飲",
+      "vol_ratio": 2.4,
+      "change_pct": 2.33,
+      "close": 32.95,
+      "volume": 132219,
+      "ma20_volume": 55190,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6887",
+      "stock_name": "寶綠特-KY",
+      "vol_ratio": 2.19,
+      "change_pct": -3.34,
+      "close": 34.75,
+      "volume": 47979,
+      "ma20_volume": 21912,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1441",
+      "stock_name": "大東",
+      "vol_ratio": 1.72,
+      "change_pct": 3.88,
+      "close": 9.38,
+      "volume": 88467,
+      "ma20_volume": 51564,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2013",
+      "stock_name": "中鋼構",
+      "vol_ratio": 1.55,
+      "change_pct": 0.57,
+      "close": 44.0,
+      "volume": 266681,
+      "ma20_volume": 172557,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2706",
+      "stock_name": "第一店",
+      "vol_ratio": 1.51,
+      "change_pct": 0.4,
+      "close": 12.6,
+      "volume": 213840,
+      "ma20_volume": 141781,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

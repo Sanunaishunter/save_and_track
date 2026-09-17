@@ -1,0 +1,118 @@
+{
+  "date": "2026-07-20",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1081,
+  "evaluated": 1064,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "6958",
+      "stock_name": "日盛台駿",
+      "vol_ratio": 4.29,
+      "change_pct": 3.06,
+      "close": 18.55,
+      "volume": 218914,
+      "ma20_volume": 50974,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1468",
+      "stock_name": "昶和",
+      "vol_ratio": 2.74,
+      "change_pct": 9.93,
+      "close": 14.95,
+      "volume": 137324,
+      "ma20_volume": 50203,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6504",
+      "stock_name": "南六",
+      "vol_ratio": 2.65,
+      "change_pct": 1.4,
+      "close": 36.3,
+      "volume": 130372,
+      "ma20_volume": 49132,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8481",
+      "stock_name": "政伸",
+      "vol_ratio": 2.43,
+      "change_pct": -4.09,
+      "close": 39.9,
+      "volume": 82180,
+      "ma20_volume": 33762,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8467",
+      "stock_name": "波力-KY",
+      "vol_ratio": 2.24,
+      "change_pct": -0.49,
+      "close": 102.0,
+      "volume": 40141,
+      "ma20_volume": 17940,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2024",
+      "stock_name": "志聯",
+      "vol_ratio": 2.2,
+      "change_pct": 0.36,
+      "close": 14.05,
+      "volume": 25715,
+      "ma20_volume": 11681,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5525",
+      "stock_name": "順天",
+      "vol_ratio": 2.06,
+      "change_pct": 3.9,
+      "close": 22.65,
+      "volume": 259461,
+      "ma20_volume": 125682,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2701",
+      "stock_name": "萬企",
+      "vol_ratio": 1.99,
+      "change_pct": 0.92,
+      "close": 10.95,
+      "volume": 173442,
+      "ma20_volume": 87008,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2008",
+      "stock_name": "高興昌",
+      "vol_ratio": 1.83,
+      "change_pct": 0.81,
+      "close": 31.3,
+      "volume": 67409,
+      "ma20_volume": 36908,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6951",
+      "stock_name": "青新-創",
+      "vol_ratio": 1.5,
+      "change_pct": -0.69,
+      "close": 71.7,
+      "volume": 66284,
+      "ma20_volume": 44161,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

@@ -1,0 +1,98 @@
+{
+  "date": "2026-04-28",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1072,
+  "evaluated": 1053,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "2762",
+      "stock_name": "世界健身-KY",
+      "vol_ratio": 3.28,
+      "change_pct": 0.82,
+      "close": 73.5,
+      "volume": 114463,
+      "ma20_volume": 34879,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6464",
+      "stock_name": "台數科",
+      "vol_ratio": 3.13,
+      "change_pct": 0.4,
+      "close": 76.0,
+      "volume": 89100,
+      "ma20_volume": 28452,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "7732",
+      "stock_name": "金興精密",
+      "vol_ratio": 2.89,
+      "change_pct": 1.87,
+      "close": 35.4,
+      "volume": 50004,
+      "ma20_volume": 17305,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2712",
+      "stock_name": "遠雄來",
+      "vol_ratio": 2.61,
+      "change_pct": 9.91,
+      "close": 17.75,
+      "volume": 80619,
+      "ma20_volume": 30837,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1233",
+      "stock_name": "天仁",
+      "vol_ratio": 2.47,
+      "change_pct": 0.17,
+      "close": 28.85,
+      "volume": 37089,
+      "ma20_volume": 15030,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 2.46,
+      "change_pct": 3.7,
+      "close": 14.0,
+      "volume": 100100,
+      "ma20_volume": 40609,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "9906",
+      "stock_name": "欣巴巴",
+      "vol_ratio": 1.55,
+      "change_pct": 2.41,
+      "close": 38.3,
+      "volume": 205022,
+      "ma20_volume": 132464,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1731",
+      "stock_name": "美吾華",
+      "vol_ratio": 1.53,
+      "change_pct": 0.46,
+      "close": 21.8,
+      "volume": 163663,
+      "ma20_volume": 107222,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

@@ -1,0 +1,88 @@
+{
+  "date": "2026-04-07",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1073,
+  "evaluated": 1053,
+  "count": 7,
+  "rows": [
+    {
+      "stock_id": "1538",
+      "stock_name": "正峰",
+      "vol_ratio": 2.55,
+      "change_pct": 0.0,
+      "close": 12.65,
+      "volume": 89286,
+      "ma20_volume": 34974,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "3164",
+      "stock_name": "景岳",
+      "vol_ratio": 2.11,
+      "change_pct": 1.91,
+      "close": 18.7,
+      "volume": 133028,
+      "ma20_volume": 62923,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9928",
+      "stock_name": "中視",
+      "vol_ratio": 2.03,
+      "change_pct": 0.84,
+      "close": 18.05,
+      "volume": 78154,
+      "ma20_volume": 38497,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9110",
+      "stock_name": "越南控-DR",
+      "vol_ratio": 1.93,
+      "change_pct": 0.65,
+      "close": 3.12,
+      "volume": 65000,
+      "ma20_volume": 33750,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3530",
+      "stock_name": "晶相光",
+      "vol_ratio": 1.92,
+      "change_pct": 4.53,
+      "close": 60.0,
+      "volume": 275702,
+      "ma20_volume": 143519,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1468",
+      "stock_name": "昶和",
+      "vol_ratio": 1.7,
+      "change_pct": 1.29,
+      "close": 11.75,
+      "volume": 88000,
+      "ma20_volume": 51782,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5285",
+      "stock_name": "界霖",
+      "vol_ratio": 1.55,
+      "change_pct": 3.22,
+      "close": 49.75,
+      "volume": 211061,
+      "ma20_volume": 135990,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

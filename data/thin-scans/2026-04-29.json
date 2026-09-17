@@ -1,0 +1,78 @@
+{
+  "date": "2026-04-29",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1074,
+  "evaluated": 1056,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "1418",
+      "stock_name": "東華",
+      "vol_ratio": 3.55,
+      "change_pct": 6.7,
+      "close": 19.1,
+      "volume": 54494,
+      "ma20_volume": 15337,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2524",
+      "stock_name": "京城",
+      "vol_ratio": 2.19,
+      "change_pct": 2.17,
+      "close": 37.7,
+      "volume": 190957,
+      "ma20_volume": 87033,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1516",
+      "stock_name": "川飛",
+      "vol_ratio": 2.1,
+      "change_pct": 2.48,
+      "close": 20.65,
+      "volume": 110101,
+      "ma20_volume": 52375,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1805",
+      "stock_name": "寶徠",
+      "vol_ratio": 1.8,
+      "change_pct": 0.47,
+      "close": 10.75,
+      "volume": 194839,
+      "ma20_volume": 107965,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6614",
+      "stock_name": "資拓宏宇",
+      "vol_ratio": 1.77,
+      "change_pct": 3.6,
+      "close": 43.2,
+      "volume": 206258,
+      "ma20_volume": 116556,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1783",
+      "stock_name": "和康生",
+      "vol_ratio": 1.68,
+      "change_pct": 3.41,
+      "close": 39.4,
+      "volume": 212744,
+      "ma20_volume": 126687,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

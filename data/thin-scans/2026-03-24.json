@@ -1,0 +1,78 @@
+{
+  "date": "2026-03-24",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1067,
+  "evaluated": 1060,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "3150",
+      "stock_name": "鈺寶-創",
+      "vol_ratio": 4.1,
+      "change_pct": 10.0,
+      "close": 17.6,
+      "volume": 262321,
+      "ma20_volume": 64032,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 2.25,
+      "change_pct": 4.46,
+      "close": 11.7,
+      "volume": 191462,
+      "ma20_volume": 85262,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7730",
+      "stock_name": "暉盛-創",
+      "vol_ratio": 2.19,
+      "change_pct": 6.27,
+      "close": 161.0,
+      "volume": 241460,
+      "ma20_volume": 110214,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6924",
+      "stock_name": "榮惠-KY創",
+      "vol_ratio": 2.16,
+      "change_pct": 0.54,
+      "close": 74.7,
+      "volume": 64076,
+      "ma20_volume": 29695,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1733",
+      "stock_name": "五鼎",
+      "vol_ratio": 1.74,
+      "change_pct": 3.47,
+      "close": 29.8,
+      "volume": 257832,
+      "ma20_volume": 148195,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1465",
+      "stock_name": "偉全",
+      "vol_ratio": 1.52,
+      "change_pct": 1.26,
+      "close": 12.05,
+      "volume": 250842,
+      "ma20_volume": 165269,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

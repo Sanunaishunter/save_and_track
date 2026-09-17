@@ -1,0 +1,88 @@
+{
+  "date": "2025-10-23",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1056,
+  "evaluated": 1021,
+  "count": 7,
+  "rows": [
+    {
+      "stock_id": "1339",
+      "stock_name": "昭輝",
+      "vol_ratio": 4.66,
+      "change_pct": 2.12,
+      "close": 45.8,
+      "volume": 278738,
+      "ma20_volume": 59826,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6796",
+      "stock_name": "晉弘",
+      "vol_ratio": 3.0,
+      "change_pct": 2.49,
+      "close": 94.7,
+      "volume": 217357,
+      "ma20_volume": 72556,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7736",
+      "stock_name": "虎山",
+      "vol_ratio": 2.15,
+      "change_pct": 0.42,
+      "close": 96.0,
+      "volume": 155370,
+      "ma20_volume": 72113,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6534",
+      "stock_name": "正瀚-創",
+      "vol_ratio": 2.1,
+      "change_pct": 4.27,
+      "close": 110.0,
+      "volume": 132388,
+      "ma20_volume": 63078,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 1.96,
+      "change_pct": 0.43,
+      "close": 11.8,
+      "volume": 218920,
+      "ma20_volume": 111775,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3716",
+      "stock_name": "中化控股",
+      "vol_ratio": 1.91,
+      "change_pct": 0.15,
+      "close": 34.3,
+      "volume": 180477,
+      "ma20_volume": 94497,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2440",
+      "stock_name": "太空梭",
+      "vol_ratio": 1.79,
+      "change_pct": 0.41,
+      "close": 12.35,
+      "volume": 212494,
+      "ma20_volume": 118828,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

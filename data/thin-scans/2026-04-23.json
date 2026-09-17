@@ -1,0 +1,78 @@
+{
+  "date": "2026-04-23",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1074,
+  "evaluated": 1050,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 4.35,
+      "change_pct": 0.46,
+      "close": 65.7,
+      "volume": 125649,
+      "ma20_volume": 28880,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1472",
+      "stock_name": "三洋實業",
+      "vol_ratio": 2.31,
+      "change_pct": 0.0,
+      "close": 95.0,
+      "volume": 60303,
+      "ma20_volume": 26111,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2434",
+      "stock_name": "統懋",
+      "vol_ratio": 2.22,
+      "change_pct": 0.99,
+      "close": 30.5,
+      "volume": 38354,
+      "ma20_volume": 17277,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1730",
+      "stock_name": "花仙子",
+      "vol_ratio": 2.06,
+      "change_pct": 0.0,
+      "close": 52.6,
+      "volume": 57708,
+      "ma20_volume": 27999,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "4807",
+      "stock_name": "日成-KY",
+      "vol_ratio": 1.77,
+      "change_pct": 2.99,
+      "close": 15.5,
+      "volume": 202445,
+      "ma20_volume": 114426,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2033",
+      "stock_name": "佳大",
+      "vol_ratio": 1.59,
+      "change_pct": 0.31,
+      "close": 16.3,
+      "volume": 190496,
+      "ma20_volume": 119983,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

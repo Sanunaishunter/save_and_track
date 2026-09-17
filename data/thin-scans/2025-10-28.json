@@ -1,0 +1,128 @@
+{
+  "date": "2025-10-28",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1056,
+  "evaluated": 1021,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "8466",
+      "stock_name": "美吉吉-KY",
+      "vol_ratio": 3.31,
+      "change_pct": 0.68,
+      "close": 22.35,
+      "volume": 263208,
+      "ma20_volume": 79530,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1438",
+      "stock_name": "三地開發",
+      "vol_ratio": 3.09,
+      "change_pct": 1.78,
+      "close": 37.2,
+      "volume": 142562,
+      "ma20_volume": 46118,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1521",
+      "stock_name": "大億",
+      "vol_ratio": 2.56,
+      "change_pct": 0.8,
+      "close": 25.05,
+      "volume": 53657,
+      "ma20_volume": 20947,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4942",
+      "stock_name": "嘉彰",
+      "vol_ratio": 2.05,
+      "change_pct": 1.76,
+      "close": 37.5,
+      "volume": 273368,
+      "ma20_volume": 133530,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2373",
+      "stock_name": "震旦行",
+      "vol_ratio": 1.96,
+      "change_pct": 0.88,
+      "close": 57.5,
+      "volume": 45522,
+      "ma20_volume": 23235,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8940",
+      "stock_name": "新天地",
+      "vol_ratio": 1.87,
+      "change_pct": 1.42,
+      "close": 21.5,
+      "volume": 85351,
+      "ma20_volume": 45662,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6957",
+      "stock_name": "裕慶-KY",
+      "vol_ratio": 1.7,
+      "change_pct": 2.17,
+      "close": 188.0,
+      "volume": 266400,
+      "ma20_volume": 157154,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3557",
+      "stock_name": "嘉威",
+      "vol_ratio": 1.67,
+      "change_pct": 4.19,
+      "close": 41.0,
+      "volume": 269453,
+      "ma20_volume": 161789,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1475",
+      "stock_name": "業旺",
+      "vol_ratio": 1.62,
+      "change_pct": 5.91,
+      "close": 38.5,
+      "volume": 70716,
+      "ma20_volume": 43676,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2012",
+      "stock_name": "春雨",
+      "vol_ratio": 1.59,
+      "change_pct": 1.91,
+      "close": 16.0,
+      "volume": 91837,
+      "ma20_volume": 57652,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2013",
+      "stock_name": "中鋼構",
+      "vol_ratio": 1.56,
+      "change_pct": 0.24,
+      "close": 41.65,
+      "volume": 84128,
+      "ma20_volume": 54040,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

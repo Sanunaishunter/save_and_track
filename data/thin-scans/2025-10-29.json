@@ -1,0 +1,98 @@
+{
+  "date": "2025-10-29",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1055,
+  "evaluated": 1021,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "3679",
+      "stock_name": "新至陞",
+      "vol_ratio": 4.33,
+      "change_pct": 3.77,
+      "close": 124.0,
+      "volume": 179401,
+      "ma20_volume": 41419,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1441",
+      "stock_name": "大東",
+      "vol_ratio": 3.32,
+      "change_pct": 0.46,
+      "close": 11.0,
+      "volume": 49089,
+      "ma20_volume": 14783,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2459",
+      "stock_name": "敦吉",
+      "vol_ratio": 2.43,
+      "change_pct": -0.61,
+      "close": 65.0,
+      "volume": 201537,
+      "ma20_volume": 82883,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1725",
+      "stock_name": "元禎",
+      "vol_ratio": 2.06,
+      "change_pct": 2.1,
+      "close": 26.7,
+      "volume": 80280,
+      "ma20_volume": 38965,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4737",
+      "stock_name": "華廣",
+      "vol_ratio": 1.93,
+      "change_pct": 1.77,
+      "close": 63.3,
+      "volume": 80154,
+      "ma20_volume": 41451,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 1.87,
+      "change_pct": 1.28,
+      "close": 11.85,
+      "volume": 226624,
+      "ma20_volume": 121098,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3150",
+      "stock_name": "鈺寶-創",
+      "vol_ratio": 1.73,
+      "change_pct": 0.24,
+      "close": 21.2,
+      "volume": 96002,
+      "ma20_volume": 55523,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2012",
+      "stock_name": "春雨",
+      "vol_ratio": 1.7,
+      "change_pct": 0.0,
+      "close": 16.0,
+      "volume": 103483,
+      "ma20_volume": 60719,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

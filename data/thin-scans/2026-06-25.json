@@ -1,0 +1,68 @@
+{
+  "date": "2026-06-25",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1077,
+  "evaluated": 1064,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "6771",
+      "stock_name": "平和環保-創",
+      "vol_ratio": 3.99,
+      "change_pct": -7.39,
+      "close": 38.85,
+      "volume": 131290,
+      "ma20_volume": 32935,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2250",
+      "stock_name": "IKKA-KY",
+      "vol_ratio": 2.4,
+      "change_pct": 2.47,
+      "close": 62.2,
+      "volume": 261873,
+      "ma20_volume": 109284,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 2.02,
+      "change_pct": 0.0,
+      "close": 17.45,
+      "volume": 99172,
+      "ma20_volume": 49013,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6582",
+      "stock_name": "申豐",
+      "vol_ratio": 1.95,
+      "change_pct": 1.08,
+      "close": 32.9,
+      "volume": 171271,
+      "ma20_volume": 87906,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "7760",
+      "stock_name": "享溫馨",
+      "vol_ratio": 1.6,
+      "change_pct": 0.62,
+      "close": 32.5,
+      "volume": 190510,
+      "ma20_volume": 118869,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

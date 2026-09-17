@@ -1,0 +1,98 @@
+{
+  "date": "2026-03-31",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1071,
+  "evaluated": 1054,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "1445",
+      "stock_name": "大宇",
+      "vol_ratio": 4.38,
+      "change_pct": 5.51,
+      "close": 13.4,
+      "volume": 260502,
+      "ma20_volume": 59537,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 2.54,
+      "change_pct": 1.22,
+      "close": 12.45,
+      "volume": 273822,
+      "ma20_volume": 107866,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8411",
+      "stock_name": "福貞-KY",
+      "vol_ratio": 2.48,
+      "change_pct": 0.0,
+      "close": 12.35,
+      "volume": 223615,
+      "ma20_volume": 89992,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "8482",
+      "stock_name": "商億-KY",
+      "vol_ratio": 2.18,
+      "change_pct": -0.31,
+      "close": 48.0,
+      "volume": 22005,
+      "ma20_volume": 10112,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9110",
+      "stock_name": "越南控-DR",
+      "vol_ratio": 2.03,
+      "change_pct": -0.32,
+      "close": 3.08,
+      "volume": 58000,
+      "ma20_volume": 28600,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 1.98,
+      "change_pct": 0.81,
+      "close": 62.2,
+      "volume": 65767,
+      "ma20_volume": 33135,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4106",
+      "stock_name": "雃博",
+      "vol_ratio": 1.71,
+      "change_pct": 0.23,
+      "close": 22.1,
+      "volume": 131601,
+      "ma20_volume": 76972,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2029",
+      "stock_name": "盛餘",
+      "vol_ratio": 1.6,
+      "change_pct": 0.74,
+      "close": 20.4,
+      "volume": 284450,
+      "ma20_volume": 177980,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

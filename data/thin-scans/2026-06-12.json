@@ -1,0 +1,68 @@
+{
+  "date": "2026-06-12",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1079,
+  "evaluated": 1062,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "2901",
+      "stock_name": "欣欣",
+      "vol_ratio": 2.03,
+      "change_pct": 1.29,
+      "close": 23.6,
+      "volume": 56009,
+      "ma20_volume": 27553,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8481",
+      "stock_name": "政伸",
+      "vol_ratio": 1.84,
+      "change_pct": 1.21,
+      "close": 41.9,
+      "volume": 46181,
+      "ma20_volume": 25140,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3168",
+      "stock_name": "眾福科",
+      "vol_ratio": 1.69,
+      "change_pct": 6.39,
+      "close": 49.15,
+      "volume": 198612,
+      "ma20_volume": 117415,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6666",
+      "stock_name": "羅麗芬-KY",
+      "vol_ratio": 1.67,
+      "change_pct": 0.69,
+      "close": 43.6,
+      "volume": 76928,
+      "ma20_volume": 45953,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 1.5,
+      "change_pct": 0.0,
+      "close": 62.1,
+      "volume": 15064,
+      "ma20_volume": 10034,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

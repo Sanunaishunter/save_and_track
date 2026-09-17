@@ -1,0 +1,68 @@
+{
+  "date": "2025-09-26",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1050,
+  "evaluated": 1020,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 2.51,
+      "change_pct": 0.31,
+      "close": 64.7,
+      "volume": 35091,
+      "ma20_volume": 14000,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4994",
+      "stock_name": "傳奇",
+      "vol_ratio": 2.48,
+      "change_pct": 0.51,
+      "close": 97.9,
+      "volume": 49279,
+      "ma20_volume": 19862,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 2.13,
+      "change_pct": 3.85,
+      "close": 20.25,
+      "volume": 223468,
+      "ma20_volume": 104736,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4764",
+      "stock_name": "雙鍵",
+      "vol_ratio": 1.56,
+      "change_pct": 0.49,
+      "close": 41.0,
+      "volume": 18500,
+      "ma20_volume": 11880,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "vol_ratio": 1.53,
+      "change_pct": 0.41,
+      "close": 24.4,
+      "volume": 114478,
+      "ma20_volume": 74996,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

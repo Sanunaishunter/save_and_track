@@ -1,0 +1,108 @@
+{
+  "date": "2026-03-04",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1072,
+  "evaluated": 1049,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "7631",
+      "stock_name": "聚賢研發-創",
+      "vol_ratio": 9.37,
+      "change_pct": -4.24,
+      "close": 113.0,
+      "volume": 194001,
+      "ma20_volume": 20705,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "4994",
+      "stock_name": "傳奇",
+      "vol_ratio": 3.23,
+      "change_pct": 0.0,
+      "close": 103.5,
+      "volume": 71914,
+      "ma20_volume": 22238,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1323",
+      "stock_name": "永裕",
+      "vol_ratio": 2.36,
+      "change_pct": 0.81,
+      "close": 18.65,
+      "volume": 112987,
+      "ma20_volume": 47856,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2115",
+      "stock_name": "六暉-KY",
+      "vol_ratio": 2.18,
+      "change_pct": 0.63,
+      "close": 24.1,
+      "volume": 203875,
+      "ma20_volume": 93602,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1463",
+      "stock_name": "強盛新",
+      "vol_ratio": 2.15,
+      "change_pct": 0.28,
+      "close": 17.95,
+      "volume": 121952,
+      "ma20_volume": 56608,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2373",
+      "stock_name": "震旦行",
+      "vol_ratio": 2.1,
+      "change_pct": -0.71,
+      "close": 55.8,
+      "volume": 96441,
+      "ma20_volume": 45935,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2430",
+      "stock_name": "燦坤",
+      "vol_ratio": 2.08,
+      "change_pct": 0.0,
+      "close": 23.0,
+      "volume": 197534,
+      "ma20_volume": 94747,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4190",
+      "stock_name": "佐登-KY",
+      "vol_ratio": 2.08,
+      "change_pct": -0.34,
+      "close": 29.3,
+      "volume": 66590,
+      "ma20_volume": 31973,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2739",
+      "stock_name": "寒舍",
+      "vol_ratio": 1.84,
+      "change_pct": -1.97,
+      "close": 32.3,
+      "volume": 223287,
+      "ma20_volume": 121153,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

@@ -1,0 +1,118 @@
+{
+  "date": "2026-07-28",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1083,
+  "evaluated": 1066,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 3.16,
+      "change_pct": 0.75,
+      "close": 53.6,
+      "volume": 228031,
+      "ma20_volume": 72167,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2432",
+      "stock_name": "倚天酷碁-創",
+      "vol_ratio": 2.69,
+      "change_pct": -0.71,
+      "close": 28.15,
+      "volume": 108175,
+      "ma20_volume": 40155,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7736",
+      "stock_name": "虎山",
+      "vol_ratio": 2.56,
+      "change_pct": 1.28,
+      "close": 71.0,
+      "volume": 76145,
+      "ma20_volume": 29767,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1475",
+      "stock_name": "業旺",
+      "vol_ratio": 2.29,
+      "change_pct": -2.93,
+      "close": 26.5,
+      "volume": 40580,
+      "ma20_volume": 17728,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 2.23,
+      "change_pct": 2.01,
+      "close": 48.15,
+      "volume": 77266,
+      "ma20_volume": 34610,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2704",
+      "stock_name": "國賓",
+      "vol_ratio": 1.86,
+      "change_pct": -0.76,
+      "close": 45.65,
+      "volume": 192382,
+      "ma20_volume": 103625,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6534",
+      "stock_name": "正瀚-創",
+      "vol_ratio": 1.57,
+      "change_pct": 0.22,
+      "close": 92.7,
+      "volume": 118281,
+      "ma20_volume": 75507,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3494",
+      "stock_name": "誠研",
+      "vol_ratio": 1.54,
+      "change_pct": -2.85,
+      "close": 7.17,
+      "volume": 127513,
+      "ma20_volume": 82724,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 1.52,
+      "change_pct": 0.13,
+      "close": 38.7,
+      "volume": 94615,
+      "ma20_volume": 62184,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4581",
+      "stock_name": "光隆精密-KY",
+      "vol_ratio": 1.5,
+      "change_pct": -0.98,
+      "close": 50.7,
+      "volume": 19039,
+      "ma20_volume": 12659,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

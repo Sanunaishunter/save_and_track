@@ -1,0 +1,108 @@
+{
+  "date": "2026-08-24",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1084,
+  "evaluated": 1063,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "6674",
+      "stock_name": "鋐寶科技",
+      "vol_ratio": 4.35,
+      "change_pct": 3.07,
+      "close": 16.8,
+      "volume": 160415,
+      "ma20_volume": 36896,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8442",
+      "stock_name": "威宏-KY",
+      "vol_ratio": 3.66,
+      "change_pct": 5.55,
+      "close": 49.45,
+      "volume": 241919,
+      "ma20_volume": 66187,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1525",
+      "stock_name": "江申",
+      "vol_ratio": 2.22,
+      "change_pct": -0.45,
+      "close": 67.0,
+      "volume": 46048,
+      "ma20_volume": 20786,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2314",
+      "stock_name": "台揚",
+      "vol_ratio": 2.2,
+      "change_pct": 9.68,
+      "close": 11.9,
+      "volume": 287289,
+      "ma20_volume": 130494,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2433",
+      "stock_name": "互盛電",
+      "vol_ratio": 1.82,
+      "change_pct": -0.36,
+      "close": 41.7,
+      "volume": 44445,
+      "ma20_volume": 24433,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1470",
+      "stock_name": "大統新創",
+      "vol_ratio": 1.77,
+      "change_pct": 0.42,
+      "close": 23.8,
+      "volume": 24049,
+      "ma20_volume": 13616,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1531",
+      "stock_name": "高林股",
+      "vol_ratio": 1.67,
+      "change_pct": 0.77,
+      "close": 13.15,
+      "volume": 231805,
+      "ma20_volume": 138820,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 1.55,
+      "change_pct": 2.25,
+      "close": 59.2,
+      "volume": 163209,
+      "ma20_volume": 105210,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6794",
+      "stock_name": "向榮生技",
+      "vol_ratio": 1.52,
+      "change_pct": 4.46,
+      "close": 75.0,
+      "volume": 67000,
+      "ma20_volume": 44213,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

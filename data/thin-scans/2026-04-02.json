@@ -1,0 +1,78 @@
+{
+  "date": "2026-04-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1073,
+  "evaluated": 1054,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "9928",
+      "stock_name": "中視",
+      "vol_ratio": 3.3,
+      "change_pct": -0.56,
+      "close": 17.9,
+      "volume": 111371,
+      "ma20_volume": 33747,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1441",
+      "stock_name": "大東",
+      "vol_ratio": 3.01,
+      "change_pct": 0.1,
+      "close": 9.83,
+      "volume": 76595,
+      "ma20_volume": 25440,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6988",
+      "stock_name": "威力暘-創",
+      "vol_ratio": 2.98,
+      "change_pct": 2.68,
+      "close": 15.35,
+      "volume": 96235,
+      "ma20_volume": 32279,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2722",
+      "stock_name": "夏都",
+      "vol_ratio": 2.54,
+      "change_pct": 2.4,
+      "close": 23.5,
+      "volume": 95618,
+      "ma20_volume": 37649,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2707",
+      "stock_name": "晶華",
+      "vol_ratio": 2.03,
+      "change_pct": 0.8,
+      "close": 188.5,
+      "volume": 269210,
+      "ma20_volume": 132315,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2702",
+      "stock_name": "華園",
+      "vol_ratio": 1.8,
+      "change_pct": 1.59,
+      "close": 12.8,
+      "volume": 220280,
+      "ma20_volume": 122317,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

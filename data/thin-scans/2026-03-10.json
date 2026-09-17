@@ -1,0 +1,108 @@
+{
+  "date": "2026-03-10",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1072,
+  "evaluated": 1052,
+  "count": 9,
+  "rows": [
+    {
+      "stock_id": "2432",
+      "stock_name": "倚天酷碁-創",
+      "vol_ratio": 4.16,
+      "change_pct": 9.98,
+      "close": 27.0,
+      "volume": 224082,
+      "ma20_volume": 53918,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7730",
+      "stock_name": "暉盛-創",
+      "vol_ratio": 3.3,
+      "change_pct": 8.9,
+      "close": 128.5,
+      "volume": 213074,
+      "ma20_volume": 64544,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1443",
+      "stock_name": "立益物流",
+      "vol_ratio": 3.26,
+      "change_pct": 0.81,
+      "close": 24.95,
+      "volume": 87759,
+      "ma20_volume": 26936,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1341",
+      "stock_name": "富林-KY",
+      "vol_ratio": 3.07,
+      "change_pct": 3.09,
+      "close": 60.0,
+      "volume": 26141,
+      "ma20_volume": 8503,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6965",
+      "stock_name": "中傑-KY",
+      "vol_ratio": 2.4,
+      "change_pct": 6.39,
+      "close": 83.3,
+      "volume": 209941,
+      "ma20_volume": 87622,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1472",
+      "stock_name": "三洋實業",
+      "vol_ratio": 2.22,
+      "change_pct": 0.89,
+      "close": 91.1,
+      "volume": 97282,
+      "ma20_volume": 43780,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1707",
+      "stock_name": "葡萄王",
+      "vol_ratio": 1.78,
+      "change_pct": 2.53,
+      "close": 121.5,
+      "volume": 235452,
+      "ma20_volume": 132487,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2923",
+      "stock_name": "鼎固-KY",
+      "vol_ratio": 1.7,
+      "change_pct": -2.86,
+      "close": 18.65,
+      "volume": 253817,
+      "ma20_volume": 149237,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2524",
+      "stock_name": "京城",
+      "vol_ratio": 1.59,
+      "change_pct": 3.1,
+      "close": 39.85,
+      "volume": 200525,
+      "ma20_volume": 126038,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:20Z"
+}

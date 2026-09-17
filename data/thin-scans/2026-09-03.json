@@ -1,0 +1,58 @@
+{
+  "date": "2026-09-03",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1078,
+  "evaluated": 1058,
+  "count": 4,
+  "rows": [
+    {
+      "stock_id": "9929",
+      "stock_name": "秋雨",
+      "vol_ratio": 6.78,
+      "change_pct": 2.7,
+      "close": 11.4,
+      "volume": 61497,
+      "ma20_volume": 9072,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6838",
+      "stock_name": "台新藥",
+      "vol_ratio": 3.76,
+      "change_pct": 1.69,
+      "close": 24.0,
+      "volume": 295383,
+      "ma20_volume": 78545,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9906",
+      "stock_name": "欣巴巴",
+      "vol_ratio": 2.33,
+      "change_pct": 3.27,
+      "close": 42.6,
+      "volume": 107031,
+      "ma20_volume": 46034,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2109",
+      "stock_name": "華豐",
+      "vol_ratio": 2.04,
+      "change_pct": 0.34,
+      "close": 14.8,
+      "volume": 177726,
+      "ma20_volume": 87090,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

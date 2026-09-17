@@ -1,0 +1,98 @@
+{
+  "date": "2026-08-25",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1065,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "1730",
+      "stock_name": "花仙子",
+      "vol_ratio": 3.35,
+      "change_pct": 1.17,
+      "close": 51.9,
+      "volume": 117652,
+      "ma20_volume": 35098,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6914",
+      "stock_name": "阜爾運通",
+      "vol_ratio": 3.24,
+      "change_pct": 0.68,
+      "close": 148.5,
+      "volume": 283140,
+      "ma20_volume": 87450,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1752",
+      "stock_name": "南光",
+      "vol_ratio": 2.92,
+      "change_pct": -0.31,
+      "close": 31.7,
+      "volume": 134196,
+      "ma20_volume": 45920,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2248",
+      "stock_name": "華勝-KY",
+      "vol_ratio": 2.06,
+      "change_pct": 0.16,
+      "close": 63.6,
+      "volume": 210833,
+      "ma20_volume": 102190,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4569",
+      "stock_name": "六方科-KY",
+      "vol_ratio": 2.01,
+      "change_pct": 2.8,
+      "close": 165.0,
+      "volume": 113288,
+      "ma20_volume": 56300,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1583",
+      "stock_name": "程泰",
+      "vol_ratio": 1.71,
+      "change_pct": -0.39,
+      "close": 51.3,
+      "volume": 66410,
+      "ma20_volume": 38941,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5283",
+      "stock_name": "禾聯碩",
+      "vol_ratio": 1.7,
+      "change_pct": 1.18,
+      "close": 59.9,
+      "volume": 188796,
+      "ma20_volume": 110791,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6796",
+      "stock_name": "晉弘",
+      "vol_ratio": 1.51,
+      "change_pct": -1.12,
+      "close": 61.8,
+      "volume": 96298,
+      "ma20_volume": 63638,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

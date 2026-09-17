@@ -1,0 +1,78 @@
+{
+  "date": "2026-06-11",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1081,
+  "evaluated": 1064,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "8940",
+      "stock_name": "新天地",
+      "vol_ratio": 2.54,
+      "change_pct": 2.45,
+      "close": 16.7,
+      "volume": 167592,
+      "ma20_volume": 66018,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6431",
+      "stock_name": "光麗-KY",
+      "vol_ratio": 2.2,
+      "change_pct": 7.18,
+      "close": 18.65,
+      "volume": 278008,
+      "ma20_volume": 126220,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4572",
+      "stock_name": "駐龍",
+      "vol_ratio": 2.09,
+      "change_pct": 3.16,
+      "close": 147.0,
+      "volume": 100229,
+      "ma20_volume": 48023,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2923",
+      "stock_name": "鼎固-KY",
+      "vol_ratio": 1.93,
+      "change_pct": 5.91,
+      "close": 23.3,
+      "volume": 207020,
+      "ma20_volume": 107324,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2248",
+      "stock_name": "華勝-KY",
+      "vol_ratio": 1.76,
+      "change_pct": -1.77,
+      "close": 55.4,
+      "volume": 112892,
+      "ma20_volume": 64144,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8462",
+      "stock_name": "柏文",
+      "vol_ratio": 1.51,
+      "change_pct": 1.41,
+      "close": 144.0,
+      "volume": 208079,
+      "ma20_volume": 137363,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

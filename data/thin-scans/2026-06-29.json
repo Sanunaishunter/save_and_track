@@ -1,0 +1,68 @@
+{
+  "date": "2026-06-29",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1077,
+  "evaluated": 1063,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 4.29,
+      "change_pct": 0.88,
+      "close": 40.15,
+      "volume": 213878,
+      "ma20_volume": 49808,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1439",
+      "stock_name": "雋揚",
+      "vol_ratio": 3.4,
+      "change_pct": 1.88,
+      "close": 24.4,
+      "volume": 103004,
+      "ma20_volume": 30328,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8411",
+      "stock_name": "福貞-KY",
+      "vol_ratio": 1.85,
+      "change_pct": 0.84,
+      "close": 11.95,
+      "volume": 295685,
+      "ma20_volume": 159626,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 1.84,
+      "change_pct": 2.62,
+      "close": 25.5,
+      "volume": 130124,
+      "ma20_volume": 70597,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2712",
+      "stock_name": "遠雄來",
+      "vol_ratio": 1.52,
+      "change_pct": 1.33,
+      "close": 15.2,
+      "volume": 20662,
+      "ma20_volume": 13562,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}

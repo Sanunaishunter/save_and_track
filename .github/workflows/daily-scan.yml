@@ -1,4 +1,4 @@
-name: 每日掃描(爆量 + 暴跌 + 產業流向 + FOMO + 暴跌FOMO)
+name: 每日掃描(爆量 + 暴跌 + 薄股測試 + 產業流向 + FOMO + 暴跌FOMO)
 
 on:
   schedule:
@@ -84,6 +84,11 @@ jobs:
       # 暴跌掃描:跟爆量掃描完全對稱,讀同一份 data/history,不用額外抓資料
       - name: 計算暴跌清單
         run: python scripts/compute_crash.py
+
+      # 薄股測試(2026-09-17):跟爆量掃描同公式,鎖定量<300張(爆量掃描門檻
+      # 濾掉的薄股票)這群,同樣讀 data/history,不用額外抓資料。
+      - name: 計算薄股測試清單
+        run: python scripts/compute_thin_scan.py
 
       # --- 產業/市值 Tick 聚合 ---
       # 產業別要打 FinMind(只有一次呼叫),排在 FOMO 前面,
@@ -215,6 +220,7 @@ jobs:
           date = None
           for path, label, unit in (("data/scan-latest.json", "爆量", "檔"),
                                     ("data/crash-latest.json", "暴跌", "檔"),
+                                    ("data/thin-scan-latest.json", "薄股測試", "檔"),
                                     ("data/tick-latest.json", "產業流向", "組"),
                                     ("data/fomo-latest.json", "FOMO", "檔"),
                                     ("data/crash-fomo-latest.json", "暴跌FOMO", "檔")):

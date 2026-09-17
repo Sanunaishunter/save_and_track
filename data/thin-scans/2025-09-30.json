@@ -1,0 +1,138 @@
+{
+  "date": "2025-09-30",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1046,
+  "evaluated": 1017,
+  "count": 12,
+  "rows": [
+    {
+      "stock_id": "1203",
+      "stock_name": "味王",
+      "vol_ratio": 10.44,
+      "change_pct": 1.53,
+      "close": 39.85,
+      "volume": 214121,
+      "ma20_volume": 20499,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1626",
+      "stock_name": "艾美特-KY",
+      "vol_ratio": 3.2,
+      "change_pct": 2.93,
+      "close": 12.3,
+      "volume": 229606,
+      "ma20_volume": 71751,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 3.03,
+      "change_pct": 1.71,
+      "close": 11.9,
+      "volume": 283666,
+      "ma20_volume": 93474,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4190",
+      "stock_name": "佐登-KY",
+      "vol_ratio": 2.5,
+      "change_pct": 0.15,
+      "close": 33.6,
+      "volume": 34910,
+      "ma20_volume": 13955,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2438",
+      "stock_name": "翔耀",
+      "vol_ratio": 2.34,
+      "change_pct": 6.17,
+      "close": 24.95,
+      "volume": 230749,
+      "ma20_volume": 98669,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6226",
+      "stock_name": "光鼎",
+      "vol_ratio": 2.22,
+      "change_pct": -0.28,
+      "close": 7.08,
+      "volume": 243624,
+      "ma20_volume": 109980,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3494",
+      "stock_name": "誠研",
+      "vol_ratio": 1.99,
+      "change_pct": 9.64,
+      "close": 10.8,
+      "volume": 295902,
+      "ma20_volume": 148566,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "9944",
+      "stock_name": "新麗",
+      "vol_ratio": 1.89,
+      "change_pct": 0.29,
+      "close": 17.0,
+      "volume": 61432,
+      "ma20_volume": 32588,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2762",
+      "stock_name": "世界健身-KY",
+      "vol_ratio": 1.73,
+      "change_pct": 0.27,
+      "close": 73.8,
+      "volume": 88043,
+      "ma20_volume": 50813,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1315",
+      "stock_name": "達新",
+      "vol_ratio": 1.7,
+      "change_pct": 0.62,
+      "close": 65.1,
+      "volume": 24309,
+      "ma20_volume": 14320,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2460",
+      "stock_name": "建通",
+      "vol_ratio": 1.62,
+      "change_pct": -1.08,
+      "close": 18.3,
+      "volume": 217989,
+      "ma20_volume": 134814,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2904",
+      "stock_name": "匯僑",
+      "vol_ratio": 1.55,
+      "change_pct": 0.29,
+      "close": 17.55,
+      "volume": 39906,
+      "ma20_volume": 25717,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:18Z"
+}

@@ -1,0 +1,88 @@
+{
+  "date": "2025-11-18",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1054,
+  "evaluated": 1020,
+  "count": 7,
+  "rows": [
+    {
+      "stock_id": "6924",
+      "stock_name": "榮惠-KY創",
+      "vol_ratio": 3.01,
+      "change_pct": 8.08,
+      "close": 60.2,
+      "volume": 43111,
+      "ma20_volume": 14310,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1459",
+      "stock_name": "聯發",
+      "vol_ratio": 2.64,
+      "change_pct": -0.42,
+      "close": 11.9,
+      "volume": 291726,
+      "ma20_volume": 110401,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1817",
+      "stock_name": "凱撒衛",
+      "vol_ratio": 2.48,
+      "change_pct": 0.26,
+      "close": 38.85,
+      "volume": 119614,
+      "ma20_volume": 48277,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1558",
+      "stock_name": "伸興",
+      "vol_ratio": 2.36,
+      "change_pct": 0.52,
+      "close": 97.5,
+      "volume": 270898,
+      "ma20_volume": 114716,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4439",
+      "stock_name": "冠星-KY",
+      "vol_ratio": 2.36,
+      "change_pct": 0.31,
+      "close": 97.4,
+      "volume": 51624,
+      "ma20_volume": 21879,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "6902",
+      "stock_name": "GOGOLOOK",
+      "vol_ratio": 2.34,
+      "change_pct": 6.4,
+      "close": 76.5,
+      "volume": 198812,
+      "ma20_volume": 84959,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3593",
+      "stock_name": "力銘",
+      "vol_ratio": 1.96,
+      "change_pct": 0.14,
+      "close": 7.21,
+      "volume": 47503,
+      "ma20_volume": 24230,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:19Z"
+}

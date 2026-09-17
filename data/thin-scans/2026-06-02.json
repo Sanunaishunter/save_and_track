@@ -1,0 +1,128 @@
+{
+  "date": "2026-06-02",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1062,
+  "count": 11,
+  "rows": [
+    {
+      "stock_id": "2901",
+      "stock_name": "欣欣",
+      "vol_ratio": 4.52,
+      "change_pct": 0.0,
+      "close": 23.5,
+      "volume": 105774,
+      "ma20_volume": 23402,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1454",
+      "stock_name": "台富",
+      "vol_ratio": 3.43,
+      "change_pct": 3.08,
+      "close": 13.4,
+      "volume": 255469,
+      "ma20_volume": 74523,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "3679",
+      "stock_name": "新至陞",
+      "vol_ratio": 3.3,
+      "change_pct": 0.4,
+      "close": 125.0,
+      "volume": 229612,
+      "ma20_volume": 69534,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2008",
+      "stock_name": "高興昌",
+      "vol_ratio": 3.22,
+      "change_pct": 0.69,
+      "close": 29.2,
+      "volume": 75813,
+      "ma20_volume": 23520,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2432",
+      "stock_name": "倚天酷碁-創",
+      "vol_ratio": 2.78,
+      "change_pct": 4.88,
+      "close": 27.95,
+      "volume": 223009,
+      "ma20_volume": 80200,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1232",
+      "stock_name": "大統益",
+      "vol_ratio": 2.1,
+      "change_pct": 0.34,
+      "close": 148.0,
+      "volume": 224929,
+      "ma20_volume": 107070,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6965",
+      "stock_name": "中傑-KY",
+      "vol_ratio": 2.06,
+      "change_pct": 2.4,
+      "close": 81.0,
+      "volume": 149549,
+      "ma20_volume": 72697,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6838",
+      "stock_name": "台新藥",
+      "vol_ratio": 1.66,
+      "change_pct": 2.78,
+      "close": 25.85,
+      "volume": 286321,
+      "ma20_volume": 172515,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1323",
+      "stock_name": "永裕",
+      "vol_ratio": 1.64,
+      "change_pct": -2.39,
+      "close": 20.45,
+      "volume": 216516,
+      "ma20_volume": 131904,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1417",
+      "stock_name": "嘉裕",
+      "vol_ratio": 1.57,
+      "change_pct": 0.73,
+      "close": 8.26,
+      "volume": 237952,
+      "ma20_volume": 151926,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2239",
+      "stock_name": "英利-KY",
+      "vol_ratio": 1.51,
+      "change_pct": 2.04,
+      "close": 25.0,
+      "volume": 159171,
+      "ma20_volume": 105153,
+      "ma_state": "bull"
+    }
+  ],
+  "generated_at": "2026-09-17T14:20:21Z"
+}
