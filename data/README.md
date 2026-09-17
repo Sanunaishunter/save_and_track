@@ -974,7 +974,12 @@ rule = `hold|profit_target|fixed_stop|profit_and_stop|atr_stop|max_drawdown`(門
 `(收盤 − MA20) / MA20 × 100`,MA20 含當日、跟 `ma` 同一個 `common.ma_state()`;五桶有
 正負號 `< −10%` / `−10 ~ −5%` / `−5 ~ +5%` / `+5 ~ +10%` / `≥ +10%`,MA20 不足標
 「無均線資料」;桶名前端 `SC_BUCKET_ORDER` 照抄,改了要一起改)。每格
-`enough = n >= 60`(`common.SCORECARD_MIN_N`),不足的前端顯示灰色。
+`enough = n >= 60`(`common.SCORECARD_MIN_N`),不足的前端顯示灰色。2026-09-19 每格再加 `hit_ci`/`hit_ci_ew`(Wilson 95% 區間,`[lo,hi]`
+百分比;頂層另有 `fade_hit_ci`/`fade_hit_ci_ew`),前端只在 `hit_ci_ew` 不含 50% 時把
+「命中率(vs中位股)」標粗。訊號層 `overlap`:`{with, n_overlap, n_stale_pool, n_independent}`
+——`n_stale_pool` 是「候選池版本不一致」(FOMO 候選清單用舊版沒有量下限的 scan 挑的,
+存查檔重算後對不上,當天量 < 300 張),不算獨立樣本;六個 FOMO 系訊號目前 `n_independent`
+全部是 0。
 
 **第一次跑(2026-09-11 資料,30 天存檔)的結果,記下來當基準:** 爆量 5 日
 n=362、命中 21.5%、平均超額 −3.26%;可能會漲 5 日 n=47、命中 17.0%、超額 −3.83%;

@@ -8067,8 +8067,16 @@
     var withSig = sigs[ov.with];
     var withLabel = withSig ? withSig.label : ov.with;
     var cls = ov.n_independent < 60 ? ' class="is-thin"' : '';
-    return ' · <span' + cls + '>與' + esc(withLabel) + '同日同檔重疊 ' +
-      ov.n_overlap + ' 筆,獨立 ' + ov.n_independent + ' 筆</span>';
+    // 2026-09-19:n_stale_pool 是「候選池版本不一致」的樣本(FOMO 候選清單當初
+    // 用舊版沒有量下限的 scan 挑的,現在的 scan 存查檔重算過,這些薄股對不上),
+    // 不能算成獨立樣本,見 compute_overlaps() 的說明。舊版 JSON 沒有這個欄位,
+    // 用 == null 判斷才不會顯示 undefined。
+    var stale = ov.n_stale_pool == null ? '' :
+      ',候選池版本不一致 ' + ov.n_stale_pool + ' 筆';
+    return ' · <span' + cls + ' title="重疊 = 同一天同一檔也出現在另一個訊號裡,不是獨立驗證;' +
+      '候選池版本不一致 = FOMO 候選清單是用舊版(沒有 300 張量下限)的爆量/暴跌名單挑的,' +
+      '現在的存查檔重算過所以對不上,也不算獨立樣本">與' + esc(withLabel) + '同日同檔重疊 ' +
+      ov.n_overlap + ' 筆' + stale + ',真正獨立 ' + ov.n_independent + ' 筆</span>';
   }
 
   function scBucketTable(buckets, kind, hs) {

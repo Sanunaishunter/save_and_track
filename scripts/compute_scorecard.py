@@ -434,15 +434,24 @@ OVERLAP_WITH = {
 }
 
 
-def compute_overlaps(instances):
+def compute_overlaps(instances, prices):
     """
     2026-09-19 使用者要求標出「這個訊號的樣本有多少跟另一個訊號同一天同一檔
     重疊」,不是拿掉重疊樣本、只計數——fomo_real/fomo_fake 等候選池本來就是
     從爆量/暴跌前 60 名再篩,樣本高度重疊不是獨立驗證,見 CLAUDE.md 第 5 節
-    「拆掉 fomo_real 跟 scan 重疊樣本重測」那條(當時用 backtest_signal_fade.py
-    的 CLI 參數測出 fomo_real 81 筆裡 79 筆重疊,這裡要對上同一個數字)。
+    「拆掉 fomo_real 跟 scan 重疊樣本重測」那條。
     scan/crash/thin_scan 本身不在 OVERLAP_WITH 裡,回傳的 dict 不會有這三個
     key,呼叫端對這三個訊號要記得 overlap=None。
+
+    **2026-09-19 修過的坑:不能把「沒對上」一律當成獨立樣本。** 同一天
+    `data/scans/*.json` 被 `--backfill-archive` 用現行公式重算過(300 張量下限
+    2026-09-09 才加),但 `data/fomo/*.json` 的候選清單是當初用**舊版 scan
+    (沒有量下限)**挑出來的,所以 2026-09-10 以前那些「薄股 FOMO 候選」現在
+    一定對不到 scan——重算後 fomo_real 的重疊從 79/2 掉到 65/16,那多出來的
+    14 筆不是新發現的獨立樣本,是候選池版本不一致的假象(實測 16 筆全部都是
+    當天量 < 300 張)。所以這裡多算一個 `n_stale_pool`:沒對上、且當天成交量
+    低於現行 `MIN_VOLUME_SHARES` 的,歸到「候選池版本不一致」,不算進
+    `n_independent`。`n_independent` 只留真正能獨立驗證的樣本。
     """
     keys_by_signal = {}
     for it in instances:
@@ -451,13 +460,19 @@ def compute_overlaps(instances):
     for sig, with_sig in OVERLAP_WITH.items():
         keys = keys_by_signal.get(sig) or set()
         with_keys = keys_by_signal.get(with_sig) or set()
-        n_overlap = len(keys & with_keys)
-        overlaps[sig] = {"with": with_sig, "n_overlap": n_overlap, "n_independent": len(keys) - n_overlap}
+        matched = keys & with_keys
+        n_stale = 0
+        for ds, sid in (keys - matched):
+            vol = ((prices.get(ds) or {}).get(sid) or {}).get("volume")
+            if vol is not None and vol < common.MIN_VOLUME_SHARES:
+                n_stale += 1
+        overlaps[sig] = {"with": with_sig, "n_overlap": len(matched), "n_stale_pool": n_stale,
+                         "n_independent": len(keys) - len(matched) - n_stale}
     return overlaps
 
 
 def build_scorecard(instances, prices, dates, index_days, events):
-    overlaps = compute_overlaps(instances)
+    overlaps = compute_overlaps(instances, prices)
     pos_of = {d: i for i, d in enumerate(dates)}
     per_signal = {}
     for it in instances:

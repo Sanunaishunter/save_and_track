@@ -439,6 +439,23 @@ git commit + push      if: always()
   紀錄,以這條為準。薄股測試比爆量再差 2~4 個百分點,仍然成立。Playwright 13 項對照
   JSON 跟手算(1451 2026-03-11 5 日:個股 −0.549%、同日中位數 +0.779%、超額 −1.329%),
   無 JS 錯誤。`scorecard-latest.json` 這次有 commit(前端要有新欄位才顯示得出來)。
+- **2026-09-19 重疊計數的坑:「沒對上另一個訊號」不等於「獨立樣本」。** Sonnet 先做
+  `compute_overlaps()` 時 fomo_real 是 79 重疊/2 獨立(跟 9/16 CLI 測出來的一致),接著
+  重算 2026-08-31~09-10 那 9 天舊公式存查檔之後變成 65/16——那多出來的 14 筆不是新發現
+  的獨立樣本。原因:`data/scans/*.json` 被現行公式(含 300 張量下限)重算過,但
+  `data/fomo/*.json` 的候選清單是當初用**舊版沒有量下限的 scan** 挑的,那些薄股候選現在
+  一定對不到 scan。實測那 16 筆**全部**都是當天量 < 300 張。修法:`compute_overlaps()`
+  多收 `prices`,沒對上、且當天量 < `MIN_VOLUME_SHARES` 的歸到 `n_stale_pool`
+  (候選池版本不一致),不算進 `n_independent`;前端 `scOverlapNote()` 三個數字都顯示。
+  **修完的結果:六個 FOMO 系訊號的 `n_independent` 全部是 0**——不是「獨立樣本很少」,
+  是一筆都沒有,這六個訊號到今天為止沒有任何可以獨立驗證的證據。以後再看到「獨立 N 筆」
+  變多,先確認不是存查檔跟候選清單版本不一致造成的。
+- **2026-09-19 踩到的坑:回補/重算存查檔之後,`exit-scorecard-latest.json` 要一起重跑。**
+  出場記分板跟訊號記分板讀同一個 `load_signal_instances()`,9 天存查檔重算後
+  `compute_scorecard.py` 有重跑、`compute_exit_scorecard.py` 沒有(當時的指示叫它別動
+  那支),commit 進 repo 的兩份檔案 instances 對不起來(exit 19276 / entry 19189)。
+  排程每天兩支都會跑所以隔天會自己修好,但**手動動過 `data/scans`/`data/crashes` 的人
+  要記得兩支都重跑再 commit**。
 - **2026-09-18 加「出場記分板」分頁(`data-view="exitsc"`,排在訊號反用後面;
   `scripts/compute_exit_scorecard.py` → `data/exit-scorecard-latest.json`,daily-scan 排在
   記分板後面)**。進場訊號驗證完發現沒有方向優勢,使用者的方向是「有紀律地下車」,出場
