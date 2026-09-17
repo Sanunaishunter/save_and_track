@@ -1,16 +1,16 @@
 {
   "date": "2026-09-02",
-  "generated_at": "2026-09-02T12:45:04Z",
   "market": "twse-listed-common",
   "params": {
     "ma_window": 20,
     "ma_shift": 1,
     "vol_ratio_threshold": 1.5,
-    "condition": "vol_ratio > 1.5 且 close > open"
+    "min_volume_shares": 300000,
+    "condition": "vol_ratio > 1.5 且 close > open 且成交量 >= 300000 股(300 張)"
   },
   "universe": 1084,
   "evaluated": 1062,
-  "count": 75,
+  "count": 64,
   "rows": [
     {
       "stock_id": "3518",
@@ -19,7 +19,8 @@
       "change_pct": 1.59,
       "close": 31.9,
       "volume": 4155596,
-      "ma20_volume": 468865
+      "ma20_volume": 468865,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6438",
@@ -28,7 +29,8 @@
       "change_pct": 2.24,
       "close": 159.5,
       "volume": 2240759,
-      "ma20_volume": 288356
+      "ma20_volume": 288356,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3019",
@@ -37,7 +39,8 @@
       "change_pct": 9.76,
       "close": 157.5,
       "volume": 24643003,
-      "ma20_volume": 3282815
+      "ma20_volume": 3282815,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2419",
@@ -46,7 +49,8 @@
       "change_pct": 9.84,
       "close": 27.9,
       "volume": 2493846,
-      "ma20_volume": 361752
+      "ma20_volume": 361752,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6668",
@@ -55,7 +59,8 @@
       "change_pct": 2.68,
       "close": 44.0,
       "volume": 8037549,
-      "ma20_volume": 1469109
+      "ma20_volume": 1469109,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3380",
@@ -64,7 +69,8 @@
       "change_pct": 6.0,
       "close": 30.05,
       "volume": 8377185,
-      "ma20_volume": 1545041
+      "ma20_volume": 1545041,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2491",
@@ -73,7 +79,8 @@
       "change_pct": 9.29,
       "close": 50.0,
       "volume": 8049652,
-      "ma20_volume": 1608569
+      "ma20_volume": 1608569,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6405",
@@ -82,7 +89,8 @@
       "change_pct": 3.94,
       "close": 42.25,
       "volume": 1978718,
-      "ma20_volume": 426997
+      "ma20_volume": 426997,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3701",
@@ -91,7 +99,8 @@
       "change_pct": 5.36,
       "close": 43.25,
       "volume": 4944351,
-      "ma20_volume": 1085408
+      "ma20_volume": 1085408,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4569",
@@ -100,16 +109,8 @@
       "change_pct": 6.85,
       "close": 179.5,
       "volume": 311447,
-      "ma20_volume": 72452
-    },
-    {
-      "stock_id": "2438",
-      "stock_name": "翔耀",
-      "vol_ratio": 4.08,
-      "change_pct": 9.86,
-      "close": 20.05,
-      "volume": 266618,
-      "ma20_volume": 65395
+      "ma20_volume": 72452,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6209",
@@ -118,7 +119,8 @@
       "change_pct": 2.93,
       "close": 84.3,
       "volume": 33317698,
-      "ma20_volume": 8182785
+      "ma20_volume": 8182785,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4976",
@@ -127,7 +129,8 @@
       "change_pct": 9.92,
       "close": 41.55,
       "volume": 12907098,
-      "ma20_volume": 3508929
+      "ma20_volume": 3508929,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6854",
@@ -136,7 +139,8 @@
       "change_pct": 3.65,
       "close": 99.5,
       "volume": 632380,
-      "ma20_volume": 174047
+      "ma20_volume": 174047,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6133",
@@ -145,7 +149,8 @@
       "change_pct": 2.6,
       "close": 23.65,
       "volume": 2110436,
-      "ma20_volume": 584727
+      "ma20_volume": 584727,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3545",
@@ -154,7 +159,8 @@
       "change_pct": 5.21,
       "close": 52.5,
       "volume": 2221782,
-      "ma20_volume": 646503
+      "ma20_volume": 646503,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1440",
@@ -163,16 +169,8 @@
       "change_pct": 2.53,
       "close": 14.2,
       "volume": 7130914,
-      "ma20_volume": 2096394
-    },
-    {
-      "stock_id": "6671",
-      "stock_name": "三能-KY",
-      "vol_ratio": 3.27,
-      "change_pct": -0.87,
-      "close": 22.8,
-      "volume": 153150,
-      "ma20_volume": 46863
+      "ma20_volume": 2096394,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6885",
@@ -181,7 +179,8 @@
       "change_pct": 5.35,
       "close": 24.6,
       "volume": 1109266,
-      "ma20_volume": 342857
+      "ma20_volume": 342857,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2812",
@@ -190,7 +189,8 @@
       "change_pct": 1.57,
       "close": 19.4,
       "volume": 36663547,
-      "ma20_volume": 12188926
+      "ma20_volume": 12188926,
+      "ma_state": "bull"
     },
     {
       "stock_id": "5285",
@@ -199,16 +199,8 @@
       "change_pct": 9.94,
       "close": 89.6,
       "volume": 2605362,
-      "ma20_volume": 877421
-    },
-    {
-      "stock_id": "6838",
-      "stock_name": "台新藥",
-      "vol_ratio": 2.94,
-      "change_pct": 2.61,
-      "close": 23.6,
-      "volume": 215581,
-      "ma20_volume": 73430
+      "ma20_volume": 877421,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2201",
@@ -217,16 +209,8 @@
       "change_pct": 1.43,
       "close": 31.95,
       "volume": 9972103,
-      "ma20_volume": 3429860
-    },
-    {
-      "stock_id": "8488",
-      "stock_name": "吉源-KY",
-      "vol_ratio": 2.86,
-      "change_pct": 0.3,
-      "close": 9.95,
-      "volume": 293000,
-      "ma20_volume": 102362
+      "ma20_volume": 3429860,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4576",
@@ -235,7 +219,8 @@
       "change_pct": 4.99,
       "close": 242.0,
       "volume": 7351242,
-      "ma20_volume": 2611677
+      "ma20_volume": 2611677,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2897",
@@ -244,7 +229,8 @@
       "change_pct": 0.94,
       "close": 10.7,
       "volume": 9951222,
-      "ma20_volume": 3653549
+      "ma20_volume": 3653549,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2455",
@@ -253,7 +239,8 @@
       "change_pct": 3.44,
       "close": 542.0,
       "volume": 34014193,
-      "ma20_volume": 12651634
+      "ma20_volume": 12651634,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3504",
@@ -262,7 +249,8 @@
       "change_pct": 8.14,
       "close": 94.3,
       "volume": 9604329,
-      "ma20_volume": 3616174
+      "ma20_volume": 3616174,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6224",
@@ -271,7 +259,8 @@
       "change_pct": 9.96,
       "close": 85.0,
       "volume": 2874505,
-      "ma20_volume": 1081172
+      "ma20_volume": 1081172,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3036",
@@ -280,7 +269,8 @@
       "change_pct": -4.59,
       "close": 187.0,
       "volume": 28951535,
-      "ma20_volume": 11094865
+      "ma20_volume": 11094865,
+      "ma_state": "bear"
     },
     {
       "stock_id": "1558",
@@ -289,7 +279,8 @@
       "change_pct": 2.43,
       "close": 105.5,
       "volume": 328491,
-      "ma20_volume": 126382
+      "ma20_volume": 126382,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6515",
@@ -298,7 +289,8 @@
       "change_pct": 2.03,
       "close": 7050.0,
       "volume": 1001765,
-      "ma20_volume": 388280
+      "ma20_volume": 388280,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "1597",
@@ -307,7 +299,8 @@
       "change_pct": 2.77,
       "close": 148.5,
       "volume": 5980445,
-      "ma20_volume": 2340372
+      "ma20_volume": 2340372,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "5607",
@@ -316,16 +309,8 @@
       "change_pct": 7.54,
       "close": 55.6,
       "volume": 2804398,
-      "ma20_volume": 1124639
-    },
-    {
-      "stock_id": "1410",
-      "stock_name": "南染",
-      "vol_ratio": 2.43,
-      "change_pct": -0.4,
-      "close": 24.8,
-      "volume": 171548,
-      "ma20_volume": 70739
+      "ma20_volume": 1124639,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "3023",
@@ -334,7 +319,8 @@
       "change_pct": 3.12,
       "close": 330.0,
       "volume": 2248436,
-      "ma20_volume": 926464
+      "ma20_volume": 926464,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4912",
@@ -343,7 +329,8 @@
       "change_pct": 4.36,
       "close": 103.0,
       "volume": 1457136,
-      "ma20_volume": 616348
+      "ma20_volume": 616348,
+      "ma_state": "bull"
     },
     {
       "stock_id": "5876",
@@ -352,7 +339,8 @@
       "change_pct": 1.91,
       "close": 45.35,
       "volume": 16001250,
-      "ma20_volume": 6874653
+      "ma20_volume": 6874653,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6451",
@@ -361,16 +349,8 @@
       "change_pct": 9.89,
       "close": 500.0,
       "volume": 10313171,
-      "ma20_volume": 4504510
-    },
-    {
-      "stock_id": "9908",
-      "stock_name": "大台北",
-      "vol_ratio": 2.28,
-      "change_pct": 0.0,
-      "close": 29.0,
-      "volume": 270894,
-      "ma20_volume": 118650
+      "ma20_volume": 4504510,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3094",
@@ -379,7 +359,8 @@
       "change_pct": 0.0,
       "close": 41.2,
       "volume": 5495413,
-      "ma20_volume": 2486216
+      "ma20_volume": 2486216,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6830",
@@ -388,7 +369,8 @@
       "change_pct": 4.55,
       "close": 598.0,
       "volume": 5478263,
-      "ma20_volume": 2480518
+      "ma20_volume": 2480518,
+      "ma_state": "bull"
     },
     {
       "stock_id": "5284",
@@ -397,7 +379,8 @@
       "change_pct": 5.34,
       "close": 355.0,
       "volume": 901595,
-      "ma20_volume": 408924
+      "ma20_volume": 408924,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3013",
@@ -406,7 +389,8 @@
       "change_pct": -3.14,
       "close": 89.5,
       "volume": 2577642,
-      "ma20_volume": 1219629
+      "ma20_volume": 1219629,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2889",
@@ -415,7 +399,8 @@
       "change_pct": 2.24,
       "close": 16.0,
       "volume": 22666854,
-      "ma20_volume": 10905101
+      "ma20_volume": 10905101,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3055",
@@ -424,7 +409,8 @@
       "change_pct": 9.65,
       "close": 142.0,
       "volume": 4304618,
-      "ma20_volume": 2085750
+      "ma20_volume": 2085750,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6272",
@@ -433,16 +419,8 @@
       "change_pct": 9.94,
       "close": 27.65,
       "volume": 388649,
-      "ma20_volume": 188662
-    },
-    {
-      "stock_id": "4438",
-      "stock_name": "廣越",
-      "vol_ratio": 2.04,
-      "change_pct": -4.11,
-      "close": 58.3,
-      "volume": 224011,
-      "ma20_volume": 110063
+      "ma20_volume": 188662,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6695",
@@ -451,16 +429,8 @@
       "change_pct": 4.43,
       "close": 50.7,
       "volume": 810499,
-      "ma20_volume": 396789
-    },
-    {
-      "stock_id": "8045",
-      "stock_name": "達運光電",
-      "vol_ratio": 2.0,
-      "change_pct": 0.39,
-      "close": 51.5,
-      "volume": 298198,
-      "ma20_volume": 148830
+      "ma20_volume": 396789,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "8215",
@@ -469,25 +439,8 @@
       "change_pct": 4.16,
       "close": 26.3,
       "volume": 1005327,
-      "ma20_volume": 532472
-    },
-    {
-      "stock_id": "6698",
-      "stock_name": "旭暉應材",
-      "vol_ratio": 1.86,
-      "change_pct": 2.0,
-      "close": 33.15,
-      "volume": 248144,
-      "ma20_volume": 133294
-    },
-    {
-      "stock_id": "1203",
-      "stock_name": "味王",
-      "vol_ratio": 1.84,
-      "change_pct": 0.11,
-      "close": 44.35,
-      "volume": 31471,
-      "ma20_volume": 17148
+      "ma20_volume": 532472,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4763",
@@ -496,16 +449,8 @@
       "change_pct": 3.0,
       "close": 51.5,
       "volume": 16192430,
-      "ma20_volume": 8853003
-    },
-    {
-      "stock_id": "6965",
-      "stock_name": "中傑-KY",
-      "vol_ratio": 1.8,
-      "change_pct": -0.54,
-      "close": 73.4,
-      "volume": 40365,
-      "ma20_volume": 22374
+      "ma20_volume": 8853003,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "1409",
@@ -514,7 +459,8 @@
       "change_pct": -1.17,
       "close": 25.35,
       "volume": 25510372,
-      "ma20_volume": 14436553
+      "ma20_volume": 14436553,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2465",
@@ -523,7 +469,8 @@
       "change_pct": 9.6,
       "close": 105.0,
       "volume": 8513698,
-      "ma20_volume": 4838228
+      "ma20_volume": 4838228,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4904",
@@ -532,7 +479,8 @@
       "change_pct": 1.49,
       "close": 102.5,
       "volume": 9678275,
-      "ma20_volume": 5492780
+      "ma20_volume": 5492780,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "4927",
@@ -541,7 +489,8 @@
       "change_pct": 1.32,
       "close": 42.3,
       "volume": 6930586,
-      "ma20_volume": 3958483
+      "ma20_volume": 3958483,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6442",
@@ -550,7 +499,8 @@
       "change_pct": 9.79,
       "close": 1795.0,
       "volume": 5147981,
-      "ma20_volume": 2942477
+      "ma20_volume": 2942477,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2374",
@@ -559,7 +509,8 @@
       "change_pct": 2.04,
       "close": 70.1,
       "volume": 4638888,
-      "ma20_volume": 2694874
+      "ma20_volume": 2694874,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "5880",
@@ -568,7 +519,8 @@
       "change_pct": 2.73,
       "close": 26.3,
       "volume": 36416956,
-      "ma20_volume": 21404430
+      "ma20_volume": 21404430,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2498",
@@ -577,7 +529,8 @@
       "change_pct": 1.83,
       "close": 41.65,
       "volume": 5875912,
-      "ma20_volume": 3530576
+      "ma20_volume": 3530576,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3041",
@@ -586,7 +539,8 @@
       "change_pct": 2.59,
       "close": 23.8,
       "volume": 1124582,
-      "ma20_volume": 675549
+      "ma20_volume": 675549,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "7711",
@@ -595,7 +549,8 @@
       "change_pct": 6.09,
       "close": 610.0,
       "volume": 2332752,
-      "ma20_volume": 1434244
+      "ma20_volume": 1434244,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4526",
@@ -604,7 +559,8 @@
       "change_pct": 2.29,
       "close": 31.25,
       "volume": 1831147,
-      "ma20_volume": 1132136
+      "ma20_volume": 1132136,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2464",
@@ -613,7 +569,8 @@
       "change_pct": 9.49,
       "close": 202.0,
       "volume": 27613956,
-      "ma20_volume": 17284903
+      "ma20_volume": 17284903,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3312",
@@ -622,7 +579,8 @@
       "change_pct": 6.87,
       "close": 56.0,
       "volume": 2189224,
-      "ma20_volume": 1368757
+      "ma20_volume": 1368757,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1712",
@@ -631,7 +589,8 @@
       "change_pct": 2.24,
       "close": 41.05,
       "volume": 2029300,
-      "ma20_volume": 1289324
+      "ma20_volume": 1289324,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6415",
@@ -640,7 +599,8 @@
       "change_pct": 1.79,
       "close": 426.0,
       "volume": 5955557,
-      "ma20_volume": 3792386
+      "ma20_volume": 3792386,
+      "ma_state": "bear"
     },
     {
       "stock_id": "7780",
@@ -649,7 +609,8 @@
       "change_pct": 1.19,
       "close": 17.05,
       "volume": 1093610,
-      "ma20_volume": 705561
+      "ma20_volume": 705561,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3231",
@@ -658,7 +619,8 @@
       "change_pct": 1.92,
       "close": 185.5,
       "volume": 84035531,
-      "ma20_volume": 54642024
+      "ma20_volume": 54642024,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "8404",
@@ -667,7 +629,8 @@
       "change_pct": 0.61,
       "close": 16.45,
       "volume": 313971,
-      "ma20_volume": 205248
+      "ma20_volume": 205248,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2887",
@@ -676,7 +639,8 @@
       "change_pct": 2.23,
       "close": 41.2,
       "volume": 88399635,
-      "ma20_volume": 58590645
+      "ma20_volume": 58590645,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3563",
@@ -685,7 +649,9 @@
       "change_pct": 0.0,
       "close": 710.0,
       "volume": 713159,
-      "ma20_volume": 470776
+      "ma20_volume": 470776,
+      "ma_state": "mixed"
     }
-  ]
+  ],
+  "generated_at": "2026-09-17T22:41:45Z"
 }

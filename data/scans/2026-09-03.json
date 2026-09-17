@@ -1,16 +1,16 @@
 {
   "date": "2026-09-03",
-  "generated_at": "2026-09-03T09:01:53Z",
   "market": "twse-listed-common",
   "params": {
     "ma_window": 20,
     "ma_shift": 1,
     "vol_ratio_threshold": 1.5,
-    "condition": "vol_ratio > 1.5 且 close > open"
+    "min_volume_shares": 300000,
+    "condition": "vol_ratio > 1.5 且 close > open 且成交量 >= 300000 股(300 張)"
   },
   "universe": 1078,
   "evaluated": 1058,
-  "count": 35,
+  "count": 31,
   "rows": [
     {
       "stock_id": "2438",
@@ -19,7 +19,8 @@
       "change_pct": 9.98,
       "close": 22.05,
       "volume": 1014704,
-      "ma20_volume": 76153
+      "ma20_volume": 76153,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6906",
@@ -28,16 +29,8 @@
       "change_pct": 9.88,
       "close": 83.4,
       "volume": 397569,
-      "ma20_volume": 56181
-    },
-    {
-      "stock_id": "9929",
-      "stock_name": "秋雨",
-      "vol_ratio": 6.78,
-      "change_pct": 2.7,
-      "close": 11.4,
-      "volume": 61497,
-      "ma20_volume": 9072
+      "ma20_volume": 56181,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3021",
@@ -46,7 +39,8 @@
       "change_pct": 9.95,
       "close": 22.1,
       "volume": 525343,
-      "ma20_volume": 111749
+      "ma20_volume": 111749,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2897",
@@ -55,16 +49,8 @@
       "change_pct": 1.87,
       "close": 10.9,
       "volume": 16173535,
-      "ma20_volume": 3997190
-    },
-    {
-      "stock_id": "6838",
-      "stock_name": "台新藥",
-      "vol_ratio": 3.76,
-      "change_pct": 1.69,
-      "close": 24.0,
-      "volume": 295383,
-      "ma20_volume": 78545
+      "ma20_volume": 3997190,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2889",
@@ -73,7 +59,8 @@
       "change_pct": 2.81,
       "close": 16.45,
       "volume": 44317804,
-      "ma20_volume": 11872342
+      "ma20_volume": 11872342,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2498",
@@ -82,7 +69,8 @@
       "change_pct": -0.12,
       "close": 41.6,
       "volume": 12708286,
-      "ma20_volume": 3539849
+      "ma20_volume": 3539849,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7730",
@@ -91,7 +79,8 @@
       "change_pct": 9.94,
       "close": 188.0,
       "volume": 343073,
-      "ma20_volume": 97339
+      "ma20_volume": 97339,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "3094",
@@ -100,7 +89,8 @@
       "change_pct": 2.67,
       "close": 42.3,
       "volume": 9326594,
-      "ma20_volume": 2674180
+      "ma20_volume": 2674180,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2845",
@@ -109,7 +99,8 @@
       "change_pct": 5.0,
       "close": 13.65,
       "volume": 42579382,
-      "ma20_volume": 13147946
+      "ma20_volume": 13147946,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2820",
@@ -118,7 +109,8 @@
       "change_pct": 1.79,
       "close": 17.05,
       "volume": 6662949,
-      "ma20_volume": 2192745
+      "ma20_volume": 2192745,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3030",
@@ -127,7 +119,8 @@
       "change_pct": 1.73,
       "close": 293.5,
       "volume": 2790260,
-      "ma20_volume": 936979
+      "ma20_volume": 936979,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2836",
@@ -136,7 +129,8 @@
       "change_pct": 0.82,
       "close": 12.25,
       "volume": 3510984,
-      "ma20_volume": 1300274
+      "ma20_volume": 1300274,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2801",
@@ -145,7 +139,8 @@
       "change_pct": 3.5,
       "close": 26.6,
       "volume": 46745368,
-      "ma20_volume": 18153855
+      "ma20_volume": 18153855,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2481",
@@ -154,7 +149,8 @@
       "change_pct": 5.41,
       "close": 156.0,
       "volume": 66498096,
-      "ma20_volume": 26176918
+      "ma20_volume": 26176918,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2884",
@@ -163,16 +159,8 @@
       "change_pct": 6.67,
       "close": 43.2,
       "volume": 96702581,
-      "ma20_volume": 39286559
-    },
-    {
-      "stock_id": "9906",
-      "stock_name": "欣巴巴",
-      "vol_ratio": 2.33,
-      "change_pct": 3.27,
-      "close": 42.6,
-      "volume": 107031,
-      "ma20_volume": 46034
+      "ma20_volume": 39286559,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1604",
@@ -181,7 +169,8 @@
       "change_pct": 0.21,
       "close": 23.45,
       "volume": 378253,
-      "ma20_volume": 174190
+      "ma20_volume": 174190,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7610",
@@ -190,16 +179,8 @@
       "change_pct": 8.88,
       "close": 1655.0,
       "volume": 1152011,
-      "ma20_volume": 539198
-    },
-    {
-      "stock_id": "2109",
-      "stock_name": "華豐",
-      "vol_ratio": 2.04,
-      "change_pct": 0.34,
-      "close": 14.8,
-      "volume": 177726,
-      "ma20_volume": 87090
+      "ma20_volume": 539198,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "3231",
@@ -208,7 +189,8 @@
       "change_pct": 1.62,
       "close": 188.5,
       "volume": 97294860,
-      "ma20_volume": 48505480
+      "ma20_volume": 48505480,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2905",
@@ -217,7 +199,8 @@
       "change_pct": 2.25,
       "close": 18.2,
       "volume": 2924093,
-      "ma20_volume": 1464658
+      "ma20_volume": 1464658,
+      "ma_state": "bull"
     },
     {
       "stock_id": "5607",
@@ -226,7 +209,8 @@
       "change_pct": 2.88,
       "close": 57.2,
       "volume": 2416852,
-      "ma20_volume": 1253182
+      "ma20_volume": 1253182,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2855",
@@ -235,7 +219,8 @@
       "change_pct": 2.02,
       "close": 50.6,
       "volume": 6834505,
-      "ma20_volume": 3564778
+      "ma20_volume": 3564778,
+      "ma_state": "bull"
     },
     {
       "stock_id": "5876",
@@ -244,7 +229,8 @@
       "change_pct": 1.32,
       "close": 45.95,
       "volume": 13157273,
-      "ma20_volume": 7349781
+      "ma20_volume": 7349781,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4306",
@@ -253,7 +239,8 @@
       "change_pct": 1.33,
       "close": 15.25,
       "volume": 1718050,
-      "ma20_volume": 1002511
+      "ma20_volume": 1002511,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "1104",
@@ -262,7 +249,8 @@
       "change_pct": 2.77,
       "close": 27.8,
       "volume": 1904132,
-      "ma20_volume": 1121382
+      "ma20_volume": 1121382,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2882",
@@ -271,7 +259,8 @@
       "change_pct": 3.21,
       "close": 112.5,
       "volume": 35860344,
-      "ma20_volume": 21346832
+      "ma20_volume": 21346832,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4119",
@@ -280,7 +269,8 @@
       "change_pct": 0.36,
       "close": 56.1,
       "volume": 369838,
-      "ma20_volume": 219880
+      "ma20_volume": 219880,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2538",
@@ -289,7 +279,8 @@
       "change_pct": 0.91,
       "close": 8.89,
       "volume": 733869,
-      "ma20_volume": 444912
+      "ma20_volume": 444912,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "5531",
@@ -298,7 +289,8 @@
       "change_pct": 3.46,
       "close": 7.47,
       "volume": 912472,
-      "ma20_volume": 558493
+      "ma20_volume": 558493,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6426",
@@ -307,7 +299,8 @@
       "change_pct": 3.31,
       "close": 265.5,
       "volume": 3546338,
-      "ma20_volume": 2205932
+      "ma20_volume": 2205932,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7769",
@@ -316,7 +309,8 @@
       "change_pct": 2.8,
       "close": 5870.0,
       "volume": 940844,
-      "ma20_volume": 597431
+      "ma20_volume": 597431,
+      "ma_state": "bear"
     },
     {
       "stock_id": "2885",
@@ -325,7 +319,9 @@
       "change_pct": 2.7,
       "close": 68.5,
       "volume": 35817623,
-      "ma20_volume": 23373044
+      "ma20_volume": 23373044,
+      "ma_state": "mixed"
     }
-  ]
+  ],
+  "generated_at": "2026-09-17T22:41:45Z"
 }

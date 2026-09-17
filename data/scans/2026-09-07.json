@@ -1,16 +1,16 @@
 {
   "date": "2026-09-07",
-  "generated_at": "2026-09-07T13:10:10Z",
   "market": "twse-listed-common",
   "params": {
     "ma_window": 20,
     "ma_shift": 1,
     "vol_ratio_threshold": 1.5,
-    "condition": "vol_ratio > 1.5 且 close > open"
+    "min_volume_shares": 300000,
+    "condition": "vol_ratio > 1.5 且 close > open 且成交量 >= 300000 股(300 張)"
   },
   "universe": 1087,
   "evaluated": 1061,
-  "count": 71,
+  "count": 44,
   "rows": [
     {
       "stock_id": "3021",
@@ -19,7 +19,8 @@
       "change_pct": 4.73,
       "close": 25.45,
       "volume": 3025658,
-      "ma20_volume": 139026
+      "ma20_volume": 139026,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2413",
@@ -28,34 +29,8 @@
       "change_pct": 5.57,
       "close": 48.35,
       "volume": 9650289,
-      "ma20_volume": 906265
-    },
-    {
-      "stock_id": "2024",
-      "stock_name": "志聯",
-      "vol_ratio": 8.26,
-      "change_pct": 0.75,
-      "close": 13.35,
-      "volume": 91926,
-      "ma20_volume": 11127
-    },
-    {
-      "stock_id": "6924",
-      "stock_name": "榮惠-KY創",
-      "vol_ratio": 6.24,
-      "change_pct": 1.63,
-      "close": 125.0,
-      "volume": 219941,
-      "ma20_volume": 35272
-    },
-    {
-      "stock_id": "6674",
-      "stock_name": "鋐寶科技",
-      "vol_ratio": 5.63,
-      "change_pct": 5.43,
-      "close": 16.5,
-      "volume": 292309,
-      "ma20_volume": 51876
+      "ma20_volume": 906265,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2849",
@@ -64,7 +39,8 @@
       "change_pct": 4.32,
       "close": 15.7,
       "volume": 710172,
-      "ma20_volume": 141889
+      "ma20_volume": 141889,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2444",
@@ -73,7 +49,8 @@
       "change_pct": 9.72,
       "close": 11.85,
       "volume": 816529,
-      "ma20_volume": 172674
+      "ma20_volume": 172674,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6906",
@@ -82,34 +59,8 @@
       "change_pct": 2.61,
       "close": 86.5,
       "volume": 450562,
-      "ma20_volume": 96486
-    },
-    {
-      "stock_id": "1438",
-      "stock_name": "三地開發",
-      "vol_ratio": 4.12,
-      "change_pct": 1.34,
-      "close": 22.7,
-      "volume": 128040,
-      "ma20_volume": 31041
-    },
-    {
-      "stock_id": "6504",
-      "stock_name": "南六",
-      "vol_ratio": 3.9,
-      "change_pct": 1.62,
-      "close": 37.7,
-      "volume": 97175,
-      "ma20_volume": 24909
-    },
-    {
-      "stock_id": "6934",
-      "stock_name": "心誠鎂",
-      "vol_ratio": 3.9,
-      "change_pct": 6.89,
-      "close": 77.6,
-      "volume": 91308,
-      "ma20_volume": 23404
+      "ma20_volume": 96486,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6133",
@@ -118,7 +69,8 @@
       "change_pct": 4.42,
       "close": 24.8,
       "volume": 2441605,
-      "ma20_volume": 713691
+      "ma20_volume": 713691,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4770",
@@ -127,16 +79,8 @@
       "change_pct": 5.52,
       "close": 239.0,
       "volume": 1370362,
-      "ma20_volume": 417918
-    },
-    {
-      "stock_id": "2432",
-      "stock_name": "倚天酷碁-創",
-      "vol_ratio": 3.25,
-      "change_pct": 2.76,
-      "close": 27.9,
-      "volume": 62000,
-      "ma20_volume": 19077
+      "ma20_volume": 417918,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2409",
@@ -145,7 +89,8 @@
       "change_pct": 7.09,
       "close": 28.7,
       "volume": 523099639,
-      "ma20_volume": 162625163
+      "ma20_volume": 162625163,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6224",
@@ -154,7 +99,8 @@
       "change_pct": 4.72,
       "close": 88.8,
       "volume": 5449926,
-      "ma20_volume": 1709244
+      "ma20_volume": 1709244,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3535",
@@ -163,7 +109,8 @@
       "change_pct": 4.72,
       "close": 90.9,
       "volume": 1638541,
-      "ma20_volume": 522634
+      "ma20_volume": 522634,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6672",
@@ -172,7 +119,8 @@
       "change_pct": 3.63,
       "close": 299.5,
       "volume": 14526240,
-      "ma20_volume": 4739951
+      "ma20_volume": 4739951,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6885",
@@ -181,7 +129,8 @@
       "change_pct": 4.36,
       "close": 25.15,
       "volume": 1286251,
-      "ma20_volume": 428231
+      "ma20_volume": 428231,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2436",
@@ -190,7 +139,8 @@
       "change_pct": 9.97,
       "close": 71.7,
       "volume": 15538506,
-      "ma20_volume": 5203818
+      "ma20_volume": 5203818,
+      "ma_state": "bull"
     },
     {
       "stock_id": "8488",
@@ -199,16 +149,8 @@
       "change_pct": 3.37,
       "close": 10.75,
       "volume": 366476,
-      "ma20_volume": 127323
-    },
-    {
-      "stock_id": "6807",
-      "stock_name": "峰源-KY",
-      "vol_ratio": 2.8,
-      "change_pct": 3.05,
-      "close": 33.75,
-      "volume": 27231,
-      "ma20_volume": 9711
+      "ma20_volume": 127323,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2442",
@@ -217,25 +159,8 @@
       "change_pct": 0.78,
       "close": 19.45,
       "volume": 4540143,
-      "ma20_volume": 1632595
-    },
-    {
-      "stock_id": "1441",
-      "stock_name": "大東",
-      "vol_ratio": 2.7,
-      "change_pct": 0.0,
-      "close": 8.8,
-      "volume": 35569,
-      "ma20_volume": 13186
-    },
-    {
-      "stock_id": "4737",
-      "stock_name": "華廣",
-      "vol_ratio": 2.63,
-      "change_pct": 0.68,
-      "close": 59.0,
-      "volume": 158485,
-      "ma20_volume": 60260
+      "ma20_volume": 1632595,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "1734",
@@ -244,7 +169,8 @@
       "change_pct": 1.8,
       "close": 31.15,
       "volume": 584301,
-      "ma20_volume": 224812
+      "ma20_volume": 224812,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "4526",
@@ -253,7 +179,8 @@
       "change_pct": 1.09,
       "close": 32.35,
       "volume": 5081838,
-      "ma20_volume": 1961542
+      "ma20_volume": 1961542,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7799",
@@ -262,16 +189,8 @@
       "change_pct": 6.76,
       "close": 395.0,
       "volume": 670481,
-      "ma20_volume": 259136
-    },
-    {
-      "stock_id": "9931",
-      "stock_name": "欣高",
-      "vol_ratio": 2.54,
-      "change_pct": 0.88,
-      "close": 34.2,
-      "volume": 45000,
-      "ma20_volume": 17729
+      "ma20_volume": 259136,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2363",
@@ -280,7 +199,8 @@
       "change_pct": 2.74,
       "close": 52.5,
       "volume": 9168337,
-      "ma20_volume": 3701915
+      "ma20_volume": 3701915,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "6168",
@@ -289,16 +209,8 @@
       "change_pct": 1.2,
       "close": 29.4,
       "volume": 9407152,
-      "ma20_volume": 3975323
-    },
-    {
-      "stock_id": "2712",
-      "stock_name": "遠雄來",
-      "vol_ratio": 2.36,
-      "change_pct": 1.04,
-      "close": 14.6,
-      "volume": 20088,
-      "ma20_volume": 8513
+      "ma20_volume": 3975323,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2303",
@@ -307,25 +219,8 @@
       "change_pct": 10.0,
       "close": 143.0,
       "volume": 337408282,
-      "ma20_volume": 143544745
-    },
-    {
-      "stock_id": "9926",
-      "stock_name": "新海",
-      "vol_ratio": 2.31,
-      "change_pct": 0.41,
-      "close": 49.55,
-      "volume": 34607,
-      "ma20_volume": 15004
-    },
-    {
-      "stock_id": "5007",
-      "stock_name": "三星",
-      "vol_ratio": 2.29,
-      "change_pct": 0.35,
-      "close": 56.6,
-      "volume": 110153,
-      "ma20_volume": 48201
+      "ma20_volume": 143544745,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7769",
@@ -334,7 +229,8 @@
       "change_pct": 9.78,
       "close": 6565.0,
       "volume": 1408004,
-      "ma20_volume": 614502
+      "ma20_volume": 614502,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "1325",
@@ -343,7 +239,8 @@
       "change_pct": 2.75,
       "close": 26.2,
       "volume": 434038,
-      "ma20_volume": 194622
+      "ma20_volume": 194622,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "3705",
@@ -352,7 +249,8 @@
       "change_pct": 0.53,
       "close": 56.4,
       "volume": 367256,
-      "ma20_volume": 164872
+      "ma20_volume": 164872,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6944",
@@ -361,7 +259,8 @@
       "change_pct": 3.3,
       "close": 719.0,
       "volume": 597836,
-      "ma20_volume": 268491
+      "ma20_volume": 268491,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "8028",
@@ -370,7 +269,8 @@
       "change_pct": 4.39,
       "close": 249.5,
       "volume": 5872402,
-      "ma20_volume": 2628510
+      "ma20_volume": 2628510,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "9958",
@@ -379,7 +279,8 @@
       "change_pct": 3.97,
       "close": 91.6,
       "volume": 4682375,
-      "ma20_volume": 2104553
+      "ma20_volume": 2104553,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "8021",
@@ -388,7 +289,8 @@
       "change_pct": 10.0,
       "close": 462.0,
       "volume": 13046649,
-      "ma20_volume": 5954372
+      "ma20_volume": 5954372,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2305",
@@ -397,7 +299,8 @@
       "change_pct": 8.27,
       "close": 33.4,
       "volume": 12488405,
-      "ma20_volume": 5782246
+      "ma20_volume": 5782246,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3714",
@@ -406,16 +309,18 @@
       "change_pct": 0.6,
       "close": 67.2,
       "volume": 26485957,
-      "ma20_volume": 12327662
+      "ma20_volume": 12327662,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1721",
-      "stock_name": "三晃",
+      "stock_name": "國慶科技",
       "vol_ratio": 2.12,
       "change_pct": 9.8,
       "close": 22.4,
       "volume": 1221625,
-      "ma20_volume": 577188
+      "ma20_volume": 577188,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2454",
@@ -424,34 +329,8 @@
       "change_pct": 7.81,
       "close": 4760.0,
       "volume": 17178200,
-      "ma20_volume": 8565356
-    },
-    {
-      "stock_id": "4572",
-      "stock_name": "駐龍",
-      "vol_ratio": 2.0,
-      "change_pct": 1.06,
-      "close": 143.0,
-      "volume": 34642,
-      "ma20_volume": 17331
-    },
-    {
-      "stock_id": "9906",
-      "stock_name": "欣巴巴",
-      "vol_ratio": 1.99,
-      "change_pct": 0.83,
-      "close": 42.55,
-      "volume": 99144,
-      "ma20_volume": 49809
-    },
-    {
-      "stock_id": "9937",
-      "stock_name": "全國",
-      "vol_ratio": 1.94,
-      "change_pct": 0.91,
-      "close": 55.7,
-      "volume": 54132,
-      "ma20_volume": 27920
+      "ma20_volume": 8565356,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3006",
@@ -460,34 +339,8 @@
       "change_pct": 6.64,
       "close": 297.0,
       "volume": 26812246,
-      "ma20_volume": 14101434
-    },
-    {
-      "stock_id": "3168",
-      "stock_name": "眾福科",
-      "vol_ratio": 1.85,
-      "change_pct": 0.82,
-      "close": 43.1,
-      "volume": 27659,
-      "ma20_volume": 14911
-    },
-    {
-      "stock_id": "6666",
-      "stock_name": "羅麗芬-KY",
-      "vol_ratio": 1.85,
-      "change_pct": 1.01,
-      "close": 44.8,
-      "volume": 57002,
-      "ma20_volume": 30759
-    },
-    {
-      "stock_id": "2109",
-      "stock_name": "華豐",
-      "vol_ratio": 1.84,
-      "change_pct": 0.68,
-      "close": 14.9,
-      "volume": 170419,
-      "ma20_volume": 92748
+      "ma20_volume": 14101434,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1604",
@@ -496,7 +349,8 @@
       "change_pct": 0.64,
       "close": 23.65,
       "volume": 343257,
-      "ma20_volume": 188672
+      "ma20_volume": 188672,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6272",
@@ -505,7 +359,8 @@
       "change_pct": -0.34,
       "close": 29.7,
       "volume": 762367,
-      "ma20_volume": 428553
+      "ma20_volume": 428553,
+      "ma_state": "bull"
     },
     {
       "stock_id": "7711",
@@ -514,7 +369,8 @@
       "change_pct": 4.43,
       "close": 660.0,
       "volume": 2867311,
-      "ma20_volume": 1616571
+      "ma20_volume": 1616571,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2908",
@@ -523,25 +379,8 @@
       "change_pct": 0.0,
       "close": 22.25,
       "volume": 350309,
-      "ma20_volume": 206958
-    },
-    {
-      "stock_id": "5546",
-      "stock_name": "永固-KY",
-      "vol_ratio": 1.68,
-      "change_pct": 1.01,
-      "close": 14.95,
-      "volume": 77000,
-      "ma20_volume": 45890
-    },
-    {
-      "stock_id": "2373",
-      "stock_name": "震旦行",
-      "vol_ratio": 1.65,
-      "change_pct": 1.13,
-      "close": 53.8,
-      "volume": 51086,
-      "ma20_volume": 31035
+      "ma20_volume": 206958,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2511",
@@ -550,7 +389,8 @@
       "change_pct": 1.07,
       "close": 8.52,
       "volume": 1281701,
-      "ma20_volume": 781053
+      "ma20_volume": 781053,
+      "ma_state": "bull"
     },
     {
       "stock_id": "4927",
@@ -559,16 +399,8 @@
       "change_pct": 2.63,
       "close": 43.0,
       "volume": 6268476,
-      "ma20_volume": 3874459
-    },
-    {
-      "stock_id": "2923",
-      "stock_name": "鼎固-KY",
-      "vol_ratio": 1.61,
-      "change_pct": 5.86,
-      "close": 27.1,
-      "volume": 295431,
-      "ma20_volume": 184063
+      "ma20_volume": 3874459,
+      "ma_state": "bull"
     },
     {
       "stock_id": "6526",
@@ -577,7 +409,8 @@
       "change_pct": 1.42,
       "close": 644.0,
       "volume": 775824,
-      "ma20_volume": 482628
+      "ma20_volume": 482628,
+      "ma_state": "mixed"
     },
     {
       "stock_id": "2617",
@@ -586,16 +419,8 @@
       "change_pct": 1.39,
       "close": 32.9,
       "volume": 3612170,
-      "ma20_volume": 2250926
-    },
-    {
-      "stock_id": "7730",
-      "stock_name": "暉盛-創",
-      "vol_ratio": 1.59,
-      "change_pct": -3.22,
-      "close": 180.5,
-      "volume": 194952,
-      "ma20_volume": 122231
+      "ma20_volume": 2250926,
+      "ma_state": "bull"
     },
     {
       "stock_id": "1326",
@@ -604,34 +429,8 @@
       "change_pct": 3.01,
       "close": 71.9,
       "volume": 57918008,
-      "ma20_volume": 36619713
-    },
-    {
-      "stock_id": "3266",
-      "stock_name": "昇陽",
-      "vol_ratio": 1.55,
-      "change_pct": 1.08,
-      "close": 14.05,
-      "volume": 47063,
-      "ma20_volume": 30285
-    },
-    {
-      "stock_id": "6951",
-      "stock_name": "青新-創",
-      "vol_ratio": 1.54,
-      "change_pct": 0.42,
-      "close": 71.3,
-      "volume": 31476,
-      "ma20_volume": 20385
-    },
-    {
-      "stock_id": "1435",
-      "stock_name": "中福",
-      "vol_ratio": 1.52,
-      "change_pct": 3.41,
-      "close": 22.75,
-      "volume": 30893,
-      "ma20_volume": 20317
+      "ma20_volume": 36619713,
+      "ma_state": "bull"
     },
     {
       "stock_id": "2855",
@@ -640,7 +439,8 @@
       "change_pct": 2.56,
       "close": 52.0,
       "volume": 5706215,
-      "ma20_volume": 3748276
+      "ma20_volume": 3748276,
+      "ma_state": "bull"
     },
     {
       "stock_id": "3711",
@@ -649,7 +449,9 @@
       "change_pct": 5.61,
       "close": 621.0,
       "volume": 27604665,
-      "ma20_volume": 18324046
+      "ma20_volume": 18324046,
+      "ma_state": "mixed"
     }
-  ]
+  ],
+  "generated_at": "2026-09-17T22:41:45Z"
 }

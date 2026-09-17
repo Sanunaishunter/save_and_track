@@ -527,6 +527,12 @@ git commit + push      if: always()
   `scan/crash/thin_scan` 的 `overlap` 是 `None`。前端 `scOverlapNote()` 動態
   查 `res.signals[with].label` 組中文,不在前端另外硬寫對照表。對過
   fomo_real 81 筆裡 79 筆重疊(CLAUDE.md 舊記錄),一字不差。
+- **2026-09-19 重算 8/31~9/10 舊公式的 scan/crash 存查檔**:這 9 天(scan 全部、
+  crash 的 09-04~09-10)是 300 張下限/`ma_state` 上線前的舊格式,刪掉重跑
+  `--backfill-archive`(非 `--force`,靠先刪檔逼它重算)補齊成現行公式;
+  09-11 起檔案 `git diff` 為空,確認沒動到。**副作用**:fomo_real 跟 scan 的
+  重疊筆數從 79/2 變 65/16(因為 scan 這幾天的股票清單變乾淨,少了原本不該
+  在裡面的薄股),上一條記的「79 筆」checkpoint 是重算前驗證的,不是錯誤。
 
 ## 6. 已知限制 / 還沒決定的事
 
