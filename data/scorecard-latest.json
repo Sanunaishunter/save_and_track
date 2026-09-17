@@ -1,6 +1,6 @@
 {
   "date": "2026-09-17",
-  "generated_at": "2026-09-17T08:46:37Z",
+  "generated_at": "2026-09-17T11:34:13Z",
   "params": {
     "horizons": [
       5,
@@ -22,7 +22,7 @@
     "price_from": "2025-07-22",
     "price_to": "2026-09-17",
     "index_days": 284,
-    "instances": 1394,
+    "instances": 1400,
     "events": 3
   },
   "signals": {
@@ -45,7 +45,11 @@
           "n_excess": 19,
           "hit_rate": 57.9,
           "avg_excess": -2.06,
-          "median_excess": -2.05
+          "median_excess": -2.05,
+          "fade_hit_rate": 42.1,
+          "fade_hit_rate_raw": 42.1,
+          "pnl": 2.06,
+          "fade_pnl": -2.06
         },
         "10": {
           "n": 6,
@@ -56,11 +60,19 @@
           "n_excess": 6,
           "hit_rate": 50.0,
           "avg_excess": -1.06,
-          "median_excess": -1.88
+          "median_excess": -1.88,
+          "fade_hit_rate": 50.0,
+          "fade_hit_rate_raw": 33.3,
+          "pnl": 1.06,
+          "fade_pnl": -1.06
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {
@@ -322,7 +334,11 @@
           "n_excess": 75,
           "hit_rate": 33.3,
           "avg_excess": -2.11,
-          "median_excess": -1.86
+          "median_excess": -1.86,
+          "fade_hit_rate": 66.7,
+          "fade_hit_rate_raw": 80.0,
+          "pnl": -2.11,
+          "fade_pnl": 2.11
         },
         "10": {
           "n": 35,
@@ -333,11 +349,19 @@
           "n_excess": 35,
           "hit_rate": 31.4,
           "avg_excess": -2.76,
-          "median_excess": -1.29
+          "median_excess": -1.29,
+          "fade_hit_rate": 68.6,
+          "fade_hit_rate_raw": 71.4,
+          "pnl": -2.76,
+          "fade_pnl": 2.76
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {
@@ -552,6 +576,80 @@
         }
       }
     },
+    "fomo_fake_loose": {
+      "label": "虛漲😝",
+      "direction": "看空",
+      "dir": -1,
+      "instances": 1,
+      "skipped_no_price": 1,
+      "pending_20d": 0,
+      "first_date": "2026-09-17",
+      "last_date": "2026-09-17",
+      "horizons": {
+        "5": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        },
+        "10": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        },
+        "20": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        }
+      },
+      "buckets": {}
+    },
+    "fomo_real_loose": {
+      "label": "可能會漲😝",
+      "direction": "看多",
+      "dir": 1,
+      "instances": 5,
+      "skipped_no_price": 5,
+      "pending_20d": 0,
+      "first_date": "2026-09-17",
+      "last_date": "2026-09-17",
+      "horizons": {
+        "5": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        },
+        "10": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        },
+        "20": {
+          "n": 0,
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
+        }
+      },
+      "buckets": {}
+    },
     "crashfomo_real": {
       "label": "真跌",
       "direction": "看空",
@@ -571,15 +669,27 @@
           "n_excess": 43,
           "hit_rate": 62.8,
           "avg_excess": -0.97,
-          "median_excess": -0.3
+          "median_excess": -0.3,
+          "fade_hit_rate": 37.2,
+          "fade_hit_rate_raw": 14.0,
+          "pnl": 0.97,
+          "fade_pnl": -0.97
         },
         "10": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {
@@ -771,15 +881,27 @@
       "horizons": {
         "5": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         },
         "10": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {}
@@ -803,7 +925,11 @@
           "n_excess": 543,
           "hit_rate": 31.9,
           "avg_excess": -1.9,
-          "median_excess": -2.14
+          "median_excess": -2.14,
+          "fade_hit_rate": 68.1,
+          "fade_hit_rate_raw": 66.9,
+          "pnl": -1.9,
+          "fade_pnl": 1.9
         },
         "10": {
           "n": 308,
@@ -814,11 +940,19 @@
           "n_excess": 308,
           "hit_rate": 35.1,
           "avg_excess": -2.04,
-          "median_excess": -2.5
+          "median_excess": -2.5,
+          "fade_hit_rate": 64.9,
+          "fade_hit_rate_raw": 71.4,
+          "pnl": -2.04,
+          "fade_pnl": 2.04
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {
@@ -1329,15 +1463,27 @@
           "n_excess": 249,
           "hit_rate": 49.8,
           "avg_excess": 0.17,
-          "median_excess": 0.02
+          "median_excess": 0.02,
+          "fade_hit_rate": 50.2,
+          "fade_hit_rate_raw": 22.1,
+          "pnl": -0.17,
+          "fade_pnl": 0.17
         },
         "10": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         },
         "20": {
           "n": 0,
-          "enough": false
+          "enough": false,
+          "fade_hit_rate": null,
+          "fade_hit_rate_raw": null,
+          "pnl": null,
+          "fade_pnl": null
         }
       },
       "buckets": {
