@@ -234,6 +234,40 @@ git commit + push      if: always()
   或別的地方也看得到,要再另外接。離線用 2305 的真實數字(9/14 metrics)+ 兩個乾淨案例
   驗證過 `is_conflict` 算得對,Playwright 走真實 UI(暫時拿掉 hidden 屬性點進去)確認
   badge、統計列、展開明細的說明文字都正確顯示,無 JS 錯誤。
+- **2026-09-17 加寬鬆版「可能會漲😝/虛漲😝」(`judge_real_rally_loose()`/
+  `judge_fake_stock_rally_loose()`)**:使用者要求跟原版(嚴格版)平行、獨立存在的
+  第二組判斷,不是取代——想看看放寬門檻後樣本會不會變多、命中率會不會因此變差,
+  兩組各自累積歷史命中率,不能混著看。門檻:可能會漲😝 只留外資/融資連續買超兩個
+  必要條件、天數從 ≥3 降到 ≥2(40+20=60,拿掉券資比/PBR 加分項);虛漲😝 融資5日
+  增幅門檻從 >15% 降到 >10%(`MARGIN_CHANGE_NOTICE`)、PBR 門檻從 >2.5 降到 >2.0
+  (新增 `PBR_LOOSE_HIGH`),拿掉外資買賣超加分項,只留融資增幅+PBR+今日量縮三項
+  (30+20+10=60)。兩組門檻縮減後,60 分的湊法只有一種,結構上就同時保證了必要
+  條件,不用像原版那樣另外寫「達分但未過閘門」的檢查。`score_stock()` 新增
+  `is_real_rally_loose`/`real_rally_loose_score`/`is_fake_rally_loose`/
+  `fake_rally_loose_score`/`is_conflict_loose`(跟 `is_conflict` 同道理,兩個放寬版
+  判斷也沒有互斥,只加衝突旗標)。**只做了 FOMO(可能會漲/虛漲)這一組,使用者沒有
+  要求暴跌FOMO(真跌/虛跌)也出寬鬆版,`score_stock_crash()` 沒有動。**
+  前端 `badges()`/`fomoTriggerNote()`/`fomoDetailHtml()`/`renderFomo()` 統計列都加了
+  😝 版本的 badge/文字/理由清單/檔數,跟 `is_conflict` 一樣目前只有隱藏的 FOMO 分頁
+  在用。**這個寬鬆版有额外要求要進「準度分析」**,分兩層都接了:①後端訊號記分板
+  (`compute_scorecard.py`)新增 `SIGNAL_DEFS` 的 `fomo_real_loose`/`fomo_fake_loose`
+  兩個訊號,`load_signal_instances()` 從同一批 FOMO 存查檔案多讀 `is_real_rally_loose`/
+  `is_fake_rally_loose` 兩個欄位出實例(舊存查檔案沒有這兩個欄位,`.get()` 拿 None
+  自然跳過,從新欄位開始出現那天起才累積樣本,跟其他訊號當初上線時一樣);②前端
+  追蹤分頁「進場訊號準度統計」的 `ENTRY_TAG_RULES` 加了 `real_rally_loose`/
+  `fake_rally_loose` 兩條規則(比對「可能會漲😝」/「虛漲😝」字面),**位置排在原本
+  `real_rally`/`fake_rally` 規則前面**——寬鬆版的自動文字本身就包含「可能會漲」/
+  「虛漲」子字串,`entryGroupKey()` 取第一個命中的規則,順序放後面永遠會被前面的
+  規則先攔截、分類不到寬鬆版那組。`ENTRY_TAG_DIRECTION` 也加了對應的方向預期。
+  離線用使用者截圖的 2305 真實數字(外資連買4天、融資連買6天、融資5日+38.7%、
+  PBR 3.76)驗證過兩個 judge 函式算出 60/60 分且都成立,跟使用者手算的分解一致;
+  `load_signal_instances()` 用假 fixture 驗證過會正確吐出 `fomo_real_loose`(dir=1)/
+  `fomo_fake_loose`(dir=-1)兩筆實例;Playwright 走真實 UI(FOMO 列表 → 展開明細
+  → 加入追蹤 → 重新整理讓 `init()` 抓報價 → 追蹤分頁)確認 badge、統計列、明細
+  理由、加入追蹤帶出的文字、「進場訊號準度統計」分類都正確顯示「可能會漲😝」,
+  無 JS 錯誤。跑 `compute_scorecard.py` 只用來確認新 `SIGNAL_DEFS` 不會讓既有資料
+  跑出例外,沒有拿本機容器的 `data/scorecard-latest.json` 覆蓋 commit(那份要等
+  Actions 真的跑出新一天的 FOMO 資料後,由排程重新產生)。
 
 **個股查詢標記(`createLookupPanel()`,四個分頁共用)**
 - 🔔量縮轉買、🔽量縮、🔻外資出貨、🔥連續增溫、🕐蓄勢中:量比 = 量 / 前 10 日峰量,
