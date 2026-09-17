@@ -462,6 +462,14 @@ git commit + push      if: always()
   報告裡明講這些數字**不能直接當市場關係的結論**,要固定窗口長度重驗
   才能拆開「訊號日期」跟「大盤環境」的效應——這是下一次分析要做的事,
   這次只負責誠實揭露,不下結論。
+- **2026-09-18 個股查詢面板加 is_conflict 警示**:FOMO/暴跌FOMO 分頁是
+  hidden,`is_conflict`/`is_conflict_loose` 原本沒地方看得到。FOMO/
+  暴跌FOMO 檔案是單日快照(`rows` 裡沒有 date,整份共用頂層 `date`),
+  所以 `lookupConflictHits()` 只在 `fomoData.date`/`crashFomoData.date`
+  那一列的日期格補 ⚠️,不是逐日判斷。**踩到的坑**:`loadFomo()`/
+  `loadCrashFomo()` 原本是 fire-and-forget,沒有 `return` fetch 的
+  Promise,呼叫 `.catch()` 會整個炸掉——補上 `return` 後兩個既有呼叫點
+  (`switchView()`)行為不變(本來就沒用回傳值)。
 
 ## 6. 已知限制 / 還沒決定的事
 

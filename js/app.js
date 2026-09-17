@@ -4093,6 +4093,7 @@
         if (openDate === r.date) row += editorHtml(code, r.date, entry);
         return row;
       }).join('');
+      appendLookupConflictBadges(code, table);
     }
 
     function load(force) {
@@ -4468,16 +4469,20 @@
   var fomoData = null;
 
   function loadFomo(force) {
-    if (fomoLoaded && !force) return;
+    // 2026-09-18 補 return:個股查詢面板的 appendLookupConflictBadges() 要
+    // 靠這個 Promise 知道資料何時到位,原本 fire-and-forget 沒有回傳值,
+    // 呼叫端唯一既有用法(switchView() 的 loadFomo(false))本來就沒用回傳值,
+    // 補上不影響原本行為。
+    if (fomoLoaded && !force) return Promise.resolve(fomoData);
     el('fomo-meta').textContent = '載入中…';
 
     if (location.protocol === 'file:') {
       renderFomo({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
                           '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
-      return;
+      return Promise.reject(new Error('file://'));
     }
 
-    fetch(FOMO_URL, { cache: 'no-store' })
+    return fetch(FOMO_URL, { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -4486,10 +4491,12 @@
         fomoLoaded = true;
         fomoData = data;
         renderFomo(data);
+        return data;
       })
       .catch(function (e) {
         renderFomo({ error: '讀不到 FOMO 結果(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
+        throw e;
       });
   }
 
@@ -4520,6 +4527,53 @@
     if (r.is_conflict) tags.push('⚠️訊號衝突');
     if (r.is_divergence) tags.push('背離');
     return '暴跌FOMO(' + r.crash_score + ' 分):' + (tags.length ? tags.join('+') : '無明顯真跌/虛跌訊號');
+  }
+
+  // 2026-09-18 使用者要求:FOMO/暴跌FOMO 分頁目前是 hidden(no show,見
+  // VIEWS_ORDER 那條坑),is_conflict/is_conflict_loose 沒有其他地方看得到。
+  // 個股查詢面板(createLookupPanel())補上這個警示——FOMO/暴跌FOMO 都是
+  // 單日快照(rows 裡沒有 date,整份檔案共用同一個頂層 date),所以只在
+  // fomoData.date/crashFomoData.date 那一天的列上標記,不是逐日判斷。
+  function lookupConflictHits(code) {
+    var hits = [];
+    function scan(dataset) {
+      if (!dataset || !dataset.date || !dataset.rows) return;
+      for (var i = 0; i < dataset.rows.length; i++) {
+        if (dataset.rows[i].stock_id !== code) continue;
+        var r = dataset.rows[i];
+        if (r.is_conflict) hits.push({ date: dataset.date, loose: false });
+        if (r.is_conflict_loose) hits.push({ date: dataset.date, loose: true });
+        break;
+      }
+    }
+    scan(fomoData);
+    scan(crashFomoData);
+    return hits;
+  }
+
+  /** render() 已經同步畫完表格後才呼叫——FOMO/暴跌FOMO 資料是另外 fetch
+   * 的,晚到就用 tableEl 上的 token 擋掉過期的非同步結果,不重繪整張表
+   * (只在對應日期那一格補一個 badge),跟 appendLookupExtras() 同一種寫法。*/
+  function appendLookupConflictBadges(forCode, tableEl) {
+    var token = String(Number(tableEl.getAttribute('data-conflict-token') || 0) + 1);
+    tableEl.setAttribute('data-conflict-token', token);
+    Promise.all([
+      loadFomo(false).catch(function () { return null; }),
+      loadCrashFomo(false).catch(function () { return null; })
+    ]).then(function () {
+      if (tableEl.getAttribute('data-conflict-token') !== token) return;
+      lookupConflictHits(forCode).forEach(function (hit) {
+        var tr = tableEl.querySelector('tr[data-lookup-date="' + hit.date + '"]');
+        if (!tr) return;
+        var cell = tr.querySelector('td.mono');
+        if (!cell) return;
+        var label = hit.loose ? '⚠️訊號衝突😝' : '⚠️訊號衝突';
+        if (cell.innerHTML.indexOf(label) !== -1) return;
+        cell.innerHTML += ' <span class="badge badge-diverge" title="FOMO/暴跌FOMO 當天快照:' +
+          '可能會漲/虛漲(或真跌/虛跌)同時成立,兩個判斷各自獨立打分沒有互斥,詳見「+ 追蹤」' +
+          '帶出的說明文字">' + label + '</span>';
+      });
+    });
   }
 
   function crashFomoDetailHtml(r) {
@@ -4602,16 +4656,17 @@
   }
 
   function loadCrashFomo(force) {
-    if (crashFomoLoaded && !force) return;
+    // 2026-09-18 補 return,理由同 loadFomo() 上面的註解。
+    if (crashFomoLoaded && !force) return Promise.resolve(crashFomoData);
     el('crashfomo-meta').textContent = '載入中…';
 
     if (location.protocol === 'file:') {
       renderCrashFomo({ error: '用 file:// 直接開啟時,瀏覽器不允許讀取本機 JSON。' +
                           '請用網址開啟(GitHub Pages),或在資料夾裡跑 python3 -m http.server。' });
-      return;
+      return Promise.reject(new Error('file://'));
     }
 
-    fetch(CRASH_FOMO_URL, { cache: 'no-store' })
+    return fetch(CRASH_FOMO_URL, { cache: 'no-store' })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
@@ -4620,10 +4675,12 @@
         crashFomoLoaded = true;
         crashFomoData = data;
         renderCrashFomo(data);
+        return data;
       })
       .catch(function (e) {
         renderCrashFomo({ error: '讀不到暴跌 FOMO 結果(' + (e.message || e) + ')。' +
                             '每日排程尚未跑過,或檔案還沒產生。' });
+        throw e;
       });
   }
 
