@@ -2625,6 +2625,12 @@
     '④': '無量暴跌', '⑤': '量增溫和上漲', '⑥': '量增溫和下跌'
   };
 
+  /** 六訊號名稱本身的多空定性(跟台股慣例一致:漲紅跌綠),②方向不明顯不上色。*/
+  var HUNTER_SIGNAL_CLASS = {
+    '①': 'up', '②': '', '③': 'down',
+    '④': 'down', '⑤': 'up', '⑥': 'down'
+  };
+
   /**
    * 爆量六訊號分類。①②③⑤⑥ 在 S>HUNTER_K 母體內無縫覆蓋整個 ΔP 範圍,
    * ④ 來自 S<=HUNTER_K 母體,是唯一的無量情境;其餘無量情境回傳 null,
@@ -6750,8 +6756,8 @@
         '<div><span>ΔP</span><b class="' + plClass(hu.dp) + '">' +
           (hu.dp >= 0 ? '+' : '') + (hu.dp * 100).toFixed(2) + '%</b></div>' +
         '<div><span>ρ</span><b>' + hu.rho.toFixed(2) + '</b></div>' +
-        (hu.signal ? '<div><span>今日觸發訊號</span><b>' + hu.signal + ' ' +
-          esc(HUNTER_SIGNAL_LABELS[hu.signal]) + '</b></div>' : '') +
+        (hu.signal ? '<div><span>今日觸發訊號</span><b class="' + HUNTER_SIGNAL_CLASS[hu.signal] + '">' +
+          hu.signal + ' ' + esc(HUNTER_SIGNAL_LABELS[hu.signal]) + '</b></div>' : '') +
       '</div>' +
     '</section>';
   }
@@ -6799,7 +6805,8 @@
     var rows = items.map(function (it) {
       return '<div class="hunter-signal-item">' +
         '<span class="mono">' + esc(it.date) + '</span>' +
-        '<span>' + it.sig + ' ' + esc(HUNTER_SIGNAL_LABELS[it.sig]) + '</span>' +
+        '<span class="' + HUNTER_SIGNAL_CLASS[it.sig] + '">' + it.sig + ' ' +
+          esc(HUNTER_SIGNAL_LABELS[it.sig]) + '</span>' +
         '<span class="mono ' + plClass(it.dp) + '">' +
           (it.dp >= 0 ? '+' : '') + (it.dp * 100).toFixed(2) + '%</span>' +
       '</div>';
