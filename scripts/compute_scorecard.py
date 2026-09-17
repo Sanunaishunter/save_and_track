@@ -275,6 +275,32 @@ def _bucket_add(buckets, kind, label, h, sample):
     buckets.setdefault(kind, {}).setdefault(label, {}).setdefault(h, []).append(sample)
 
 
+def summarize_with_fade(samples, direction):
+    """
+    2026-09-17 使用者要求把 scripts/backtest_signal_fade.py 探測過的「反著用」
+    命中率也放進記分板本體,前端才能不用重跑 CLI 就顯示「訊號反用」分頁。
+    跟 backtest_signal_fade.py 的 fade_summary() 同一套算法(直接抄,不重寫):
+    同一批樣本,原本方向 summarize() 一次、方向相反再 summarize() 一次——
+    hit_rate/hit_rate_raw 是真的用相反方向重算(不是 100%−原命中率,因為
+    excess 剛好等於 0 的樣本兩邊都不算命中);avg_excess/avg_raw 本身不分方向,
+    是「預期報酬」= 方向 × 平均超額報酬 這樣換算出來的,反著做自然是正負號
+    相反。只用在頂層 horizons(5/10/20 日),不下探到 buckets——buckets organized
+    by regime 等細節分桶的反著用比較留給 backtest_signal_fade.py 探索用,
+    避免記分板本體資料量爆炸。
+    """
+    st = summarize(samples, direction)
+    fade_st = summarize(samples, -direction)
+    st["fade_hit_rate"] = fade_st.get("hit_rate")
+    st["fade_hit_rate_raw"] = fade_st.get("hit_rate_raw")
+    if st.get("avg_excess") is not None:
+        st["pnl"] = round(direction * st["avg_excess"], 2)
+        st["fade_pnl"] = round(-st["pnl"], 2)
+    else:
+        st["pnl"] = None
+        st["fade_pnl"] = None
+    return st
+
+
 def build_scorecard(instances, prices, dates, index_days, events):
     pos_of = {d: i for i, d in enumerate(dates)}
     per_signal = {}
@@ -314,7 +340,7 @@ def build_scorecard(instances, prices, dates, index_days, events):
     for sig, entry in per_signal.items():
         sdef = SIGNAL_DEFS[sig]
         direction = sdef["dir"]
-        horizons = {str(h): summarize(entry["by_h"][h], direction) for h in HORIZONS}
+        horizons = {str(h): summarize_with_fade(entry["by_h"][h], direction) for h in HORIZONS}
         buckets = {}
         for kind, groups in entry["buckets"].items():
             buckets[kind] = {}

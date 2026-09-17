@@ -56,6 +56,7 @@
 | 兵棋推演 | 追蹤紀錄 + `quotes-latest.json` | 移動停利模式部位的總覽:啟動狀態、距峰回落、ATR 停損緩衝 |
 | 法人軌跡 | 三份 `stock-lookup*-latest.json` | 量縮蓄勢候選的方向三票(融資/外資投信/收盤位置) |
 | 訊號記分板 | `scorecard-latest.json` | 歷史訊號之後 5/10/20 日超額報酬、命中率,五種分桶,N<60 灰 |
+| 訊號反用 | `scorecard-latest.json`(同一份) | 每個訊號正用(原方向)vs. 反用(反方向重算)命中率/預期報酬並排比較,見第 5 節 |
 | 爆量掃描 / 暴跌掃描 | `scan-latest.json` / `crash-latest.json` | `量/MA20(shift 1) > 1.5` 且 `close > open`(暴跌對稱 `<`),≥300 張;每列有 `ma_state` |
 | ~~FOMO / 暴跌FOMO~~ | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數)。**2026-09-16 使用者要求 no show,兩個分頁按鈕 `hidden`、拿出 `VIEWS_ORDER`**(見第 4 節),資料照樣每天產生,個股查詢的 🔔🕐🔻🔥 標記跟記分板/backtest 工具都還在吃 |
 | 產業流向 | `tick-latest.json`、`tick-members-latest.json` | 移植 SH2 8012:產業 × 市值級距的成交筆數,凍結抽樣每組 10 檔 |
@@ -339,6 +340,28 @@ git commit + push      if: always()
 - `tune_thresholds.py`:一次動一個參數、N<60 不下結論、調完要用之後的新資料再驗。
 - 事件:`data/events.json` 進記分板;瀏覽器裡新增的個人事件不進(刻意)。
 - 記分板沒納入個股查詢的 🔔🕐🔻🔥(前端算的,沒有每日存查檔)。
+- **2026-09-17 加「訊號反用」分頁(`index.html` 的 `data-view="fade"`,排在訊號記分板
+  後面)**:使用者要求把 `backtest_signal_fade.py` 探測出來的「反著用」命中率跟「正用」
+  放在同一張表比較,不用每次手動跑 CLI。做法是把反用統計直接算進 `scorecard-latest.json`
+  本體,不是另外開一支腳本或另一份存查檔:`compute_scorecard.py` 新增
+  `summarize_with_fade(samples, direction)`,直接抄 `backtest_signal_fade.py` 的
+  `fade_summary()` 演算法(同一批樣本各呼叫 `summarize()` 一次,方向相反那次的
+  `hit_rate`/`hit_rate_raw` 是真的重算,不是 100%−正用命中率;`pnl`/`fade_pnl` 是
+  `方向 × avg_excess` 換算出來的,互為正負號相反),只套在**頂層 horizons(5/10/20 日)**,
+  沒有下探到 buckets(regime/ma/confluence/event/vol_ratio 的反著用細節分桶還是要用
+  `backtest_signal_fade.py` 才看得到,記分板本體資料量控制住)。前端 `js/app.js` 新增
+  `FADE_SIGNAL_ORDER`(= `SC_SIGNAL_ORDER` 加上 `fomo_real_loose`/`fomo_fake_loose`
+  兩個寬鬆版😝訊號)、`scFadeRow()`、`renderFade()`、`loadFadeView()`,沿用
+  `loadScorecard()` 的快取(跟訊號記分板讀同一份 `scorecard-latest.json`,不多打一次
+  fetch);沒有資料(`instances=0`)的訊號直接不顯示,不會出現空表格或報錯。用本機
+  真實存檔資料重跑 `compute_scorecard.py`(在 scratchpad 隔離環境,沒有覆蓋 commit 進
+  repo 的 `data/scorecard-latest.json`)驗證過算出來的反用數字跟之前 CLI 探測、已經寫
+  進本節上面的數字**逐一對得上**:爆量 5 日反著做命中 70.4%/+2.24%、可能會漲 66.2%/
+  +2.10%、虛漲 37.5%/−3.46%、暴跌 51.0%/+0.18%、真跌 38.7%/−0.98%。Playwright 走
+  真實 UI 確認分頁切換、六個訊號區塊(爆量/可能會漲/虛漲/暴跌/真跌/虛跌)都正確顯示
+  正用/反用命中率+預期報酬並排比較,無 JS 錯誤。`fomo_real_loose`/`fomo_fake_loose`
+  目前 0 筆(等下一次 daily-scan 產生帶新欄位的 FOMO 存查檔才會開始累積,見上面
+  FOMO 寬鬆版那條)。
 
 ## 6. 已知限制 / 還沒決定的事
 

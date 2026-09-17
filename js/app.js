@@ -4087,6 +4087,7 @@
     el('trail-wrap').hidden = v !== 'trail';
     el('insttrack-wrap').hidden = v !== 'insttrack';
     el('scorecard-wrap').hidden = v !== 'scorecard';
+    el('fade-wrap').hidden = v !== 'fade';
     el('scan-wrap').hidden = v !== 'scan';
     el('crash-wrap').hidden = v !== 'crash';
     el('fomo-wrap').hidden = v !== 'fomo';
@@ -4108,6 +4109,7 @@
     if (v === 'trail') loadTrailWatch();
     if (v === 'insttrack') loadInstTrack(false);
     if (v === 'scorecard') loadScorecardView(false);
+    if (v === 'fade') loadFadeView(false);
     if (v === 'scan') loadScan(false);
     if (v === 'crash') loadCrash(false);
     if (v === 'fomo') loadFomo(false);
@@ -4134,7 +4136,7 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'scan', 'crash', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'scan', 'crash', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -7891,6 +7893,75 @@
     if (scorecardData) { renderScorecard(scorecardData); return; }
     el('scorecard-meta').textContent = '載入中…';
     loadScorecard().then(renderScorecard).catch(function (e) { renderScorecard({ error: e.message || String(e) }); });
+  }
+
+  // ---------------------------------------------------------- 訊號反用
+  // 2026-09-17 使用者要求:把 scripts/backtest_signal_fade.py 探測過的「反著用」
+  // 命中率做成分頁,跟訊號記分板的「正用」命中率放在同一張表比較,不用再手動跑
+  // CLI。資料來自同一份 scorecard-latest.json——compute_scorecard.py 的
+  // summarize_with_fade() 已經把 fade_hit_rate/fade_pnl 跟正用的 hit_rate/pnl
+  // 一起存進每個訊號每個天期,這裡純粹是換一種排版讀同一份資料,沿用
+  // loadScorecard() 的快取,不用另外打一次 fetch。加了寬鬆版(😝)兩個訊號。
+  var FADE_SIGNAL_ORDER = SC_SIGNAL_ORDER.concat(['fomo_real_loose', 'fomo_fake_loose']);
+
+  function scFadeRow(h, st) {
+    if (!st || !st.n) {
+      return '<tr><td>' + h + ' 日</td><td class="num is-thin">0</td>' +
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td>' +
+        '<td class="num is-thin">—</td><td class="num is-thin">—</td></tr>';
+    }
+    var thin = st.enough ? '' : ' is-thin';
+    var origHit = st.hit_rate == null ? '—' : st.hit_rate.toFixed(1) + '%';
+    var origPnl = st.pnl == null ? '—' : (st.pnl > 0 ? '+' : '') + st.pnl.toFixed(2) + '%';
+    var origCls = st.pnl == null ? '' : (st.pnl > 0 ? ' up' : ' down');
+    var fadeHit = st.fade_hit_rate == null ? '—' : st.fade_hit_rate.toFixed(1) + '%';
+    var fadePnl = st.fade_pnl == null ? '—' : (st.fade_pnl > 0 ? '+' : '') + st.fade_pnl.toFixed(2) + '%';
+    var fadeCls = st.fade_pnl == null ? '' : (st.fade_pnl > 0 ? ' up' : ' down');
+    return '<tr><td>' + h + ' 日</td>' +
+      '<td class="num' + thin + '" title="到期樣本數' + (st.enough ? '' : '(不足 60,只能看方向感)') + '">' + st.n + '</td>' +
+      '<td class="num' + thin + '">' + origHit + '</td>' +
+      '<td class="num' + thin + origCls + '">' + origPnl + '</td>' +
+      '<td class="num' + thin + '">' + fadeHit + '</td>' +
+      '<td class="num' + thin + fadeCls + '">' + fadePnl + '</td>' +
+    '</tr>';
+  }
+
+  function renderFade(res) {
+    var meta = el('fade-meta');
+    var body = el('fade-body');
+    if (res.error) { meta.innerHTML = '<span class="warn">' + esc(res.error) + '</span>'; body.innerHTML = ''; return; }
+    var cov = res.coverage || {};
+    var hs = (res.params && res.params.horizons ? res.params.horizons : [5, 10, 20]).map(String);
+    meta.textContent = '價格存檔 ' + (cov.price_from || '?') + ' ~ ' + (cov.price_to || '?') + '(' + (cov.price_days || 0) +
+      ' 個交易日)· 「反用」是同一批樣本方向相反重算,不是重新驗證出來的新資料 · 樣本不到 ' +
+      (res.params && res.params.min_n || 60) + ' 的格子顯示成灰色';
+    var sigs = res.signals || {};
+    var html = '';
+    FADE_SIGNAL_ORDER.forEach(function (key) {
+      var s = sigs[key];
+      if (!s) return;
+      var fadeDirLabel = s.dir > 0 ? '看空' : '看多';
+      html += '<section class="panel sc-signal">' +
+        '<h2 class="panel-title">' + esc(s.label) +
+        ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">原本' + esc(s.direction) + '</span>' +
+        ' <span class="sc-dir ' + (s.dir > 0 ? 'down' : 'up') + '">反著做' + esc(fadeDirLabel) + '</span>' +
+        '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
+        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
+        '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th>' +
+        '<th class="num">正用命中率</th><th class="num">正用預期報酬</th>' +
+        '<th class="num">反用命中率</th><th class="num">反用預期報酬</th></tr></thead><tbody>' +
+        hs.map(function (h) { return scFadeRow(h, s.horizons[h]); }).join('') +
+        '</tbody></table></div></section>';
+    });
+    if (!html) html = '<p class="panel-note">還沒有任何訊號樣本。</p>';
+    body.innerHTML = html;
+  }
+
+  function loadFadeView(force) {
+    if (force) scorecardData = null;
+    if (scorecardData) { renderFade(scorecardData); return; }
+    el('fade-meta').textContent = '載入中…';
+    loadScorecard().then(renderFade).catch(function (e) { renderFade({ error: e.message || String(e) }); });
   }
 
   // ---------------------------------------------------------- 大盤閘門橫幅
