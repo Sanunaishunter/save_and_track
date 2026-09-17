@@ -1817,6 +1817,9 @@ input[type="date"] {
    硬幣不一樣」;vs指數那組基準本身有偏(見 compute_scorecard.py 的
    universe_ew_return() 說明),不套用這個樣式,只在 title 附區間參考。 */
 .sc-table td.sc-sig { font-weight: 700; text-decoration: underline; }
+/* 2026-09-19:重疊樣本提醒(scOverlapNote()),獨立樣本 <60 筆時比 sc-count
+   本身更淡,暗示「這幾乎不是獨立驗證」。 */
+.sc-count .is-thin { opacity: 0.65; font-style: italic; }
 .sc-details { margin-top: 8px; }
 .sc-details summary { cursor: pointer; font-size: 13px; color: var(--text-dim); padding: 6px 0; }
 .sc-details[open] summary { color: var(--text); }

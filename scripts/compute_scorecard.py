@@ -424,7 +424,40 @@ def summarize_with_fade(samples, direction):
     return st
 
 
+OVERLAP_WITH = {
+    "fomo_real": "scan",
+    "fomo_real_loose": "scan",
+    "fomo_fake": "scan",
+    "fomo_fake_loose": "scan",
+    "crashfomo_real": "crash",
+    "crashfomo_fake": "crash",
+}
+
+
+def compute_overlaps(instances):
+    """
+    2026-09-19 使用者要求標出「這個訊號的樣本有多少跟另一個訊號同一天同一檔
+    重疊」,不是拿掉重疊樣本、只計數——fomo_real/fomo_fake 等候選池本來就是
+    從爆量/暴跌前 60 名再篩,樣本高度重疊不是獨立驗證,見 CLAUDE.md 第 5 節
+    「拆掉 fomo_real 跟 scan 重疊樣本重測」那條(當時用 backtest_signal_fade.py
+    的 CLI 參數測出 fomo_real 81 筆裡 79 筆重疊,這裡要對上同一個數字)。
+    scan/crash/thin_scan 本身不在 OVERLAP_WITH 裡,回傳的 dict 不會有這三個
+    key,呼叫端對這三個訊號要記得 overlap=None。
+    """
+    keys_by_signal = {}
+    for it in instances:
+        keys_by_signal.setdefault(it["signal"], set()).add((it["date"], it["stock_id"]))
+    overlaps = {}
+    for sig, with_sig in OVERLAP_WITH.items():
+        keys = keys_by_signal.get(sig) or set()
+        with_keys = keys_by_signal.get(with_sig) or set()
+        n_overlap = len(keys & with_keys)
+        overlaps[sig] = {"with": with_sig, "n_overlap": n_overlap, "n_independent": len(keys) - n_overlap}
+    return overlaps
+
+
 def build_scorecard(instances, prices, dates, index_days, events):
+    overlaps = compute_overlaps(instances)
     pos_of = {d: i for i, d in enumerate(dates)}
     per_signal = {}
     for it in instances:
@@ -477,6 +510,7 @@ def build_scorecard(instances, prices, dates, index_days, events):
             "pending_20d": entry["pending_20d"],
             "first_date": entry["first_date"], "last_date": entry["last_date"],
             "horizons": horizons, "buckets": buckets,
+            "overlap": overlaps.get(sig),
         }
     return signals_out
 

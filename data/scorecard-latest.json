@@ -1,6 +1,6 @@
 {
   "date": "2026-09-17",
-  "generated_at": "2026-09-17T17:52:59Z",
+  "generated_at": "2026-09-17T22:38:28Z",
   "params": {
     "horizons": [
       5,
@@ -789,6 +789,11 @@
             }
           }
         }
+      },
+      "overlap": {
+        "with": "scan",
+        "n_overlap": 36,
+        "n_independent": 1
       }
     },
     "fomo_real": {
@@ -1467,6 +1472,11 @@
             }
           }
         }
+      },
+      "overlap": {
+        "with": "scan",
+        "n_overlap": 79,
+        "n_independent": 2
       }
     },
     "fomo_real_loose": {
@@ -1519,7 +1529,12 @@
           "fade_pnl_ew": null
         }
       },
-      "buckets": {}
+      "buckets": {},
+      "overlap": {
+        "with": "scan",
+        "n_overlap": 3,
+        "n_independent": 0
+      }
     },
     "fomo_fake_loose": {
       "label": "虛漲😝",
@@ -1571,7 +1586,12 @@
           "fade_pnl_ew": null
         }
       },
-      "buckets": {}
+      "buckets": {},
+      "overlap": {
+        "with": "scan",
+        "n_overlap": 1,
+        "n_independent": 0
+      }
     },
     "crashfomo_real": {
       "label": "真跌",
@@ -2086,6 +2106,11 @@
             }
           }
         }
+      },
+      "overlap": {
+        "with": "crash",
+        "n_overlap": 81,
+        "n_independent": 1
       }
     },
     "crashfomo_fake": {
@@ -2138,7 +2163,12 @@
           "fade_pnl_ew": null
         }
       },
-      "buckets": {}
+      "buckets": {},
+      "overlap": {
+        "with": "crash",
+        "n_overlap": 1,
+        "n_independent": 0
+      }
     },
     "scan": {
       "label": "爆量",
@@ -3920,7 +3950,8 @@
             }
           }
         }
-      }
+      },
+      "overlap": null
     },
     "crash": {
       "label": "暴跌",
@@ -5527,7 +5558,8 @@
             }
           }
         }
-      }
+      },
+      "overlap": null
     },
     "thin_scan": {
       "label": "薄股爆量",
@@ -6995,7 +7027,8 @@
             }
           }
         }
-      }
+      },
+      "overlap": null
     }
   },
   "note": "事前登記、全樣本統計。樣本不到 60 的格子 enough=false,只能看方向感,不能下結論。存檔剛開始只有 30 天,20 日天期一開始幾乎沒有到期樣本,每天會多一天。"

@@ -521,6 +521,12 @@ git commit + push      if: always()
   但正常分支是 5 個,原本會讓那一列後面的中位超額/不扣指數命中兩欄
   整列位移——這個函式從加 vs中位股基準時就沒同步更新,這次補到 5 個。
   對過 scan 5 日 hit_rate_ew=46.2%、n=19026、區間 [45.5,46.9]。
+- **2026-09-19 記分板標出重疊樣本**:`compute_overlaps()` 用 `(date, stock_id)`
+  集合算 `fomo_real/fomo_real_loose/fomo_fake/fomo_fake_loose` vs `scan`、
+  `crashfomo_real/crashfomo_fake` vs `crash` 的重疊筆數,只計數不拿掉;
+  `scan/crash/thin_scan` 的 `overlap` 是 `None`。前端 `scOverlapNote()` 動態
+  查 `res.signals[with].label` 組中文,不在前端另外硬寫對照表。對過
+  fomo_real 81 筆裡 79 筆重疊(CLAUDE.md 舊記錄),一字不差。
 
 ## 6. 已知限制 / 還沒決定的事
 

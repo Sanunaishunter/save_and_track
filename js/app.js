@@ -8054,6 +8054,21 @@
       '<td class="num' + thin + exEwCls + '" title="平均超額報酬(扣掉同日全市場個股報酬中位數)">' + exEw + '</td>';
   }
 
+  // 2026-09-19 使用者要求標出重疊樣本(不拿掉,只提醒):fomo_real/fomo_fake
+  // 等訊號的候選池本來就是從爆量/暴跌前 60 名再篩,樣本高度重疊不是獨立驗證,
+  // 見 CLAUDE.md 第 5 節「拆掉 fomo_real 跟 scan 重疊樣本重測」那條。
+  // overlap.with 只是訊號 key(如 "scan"),中文標籤從 sigs(同一份 API 回應
+  // 的 res.signals)查,不在前端另外硬寫一份對照表。
+  function scOverlapNote(s, sigs) {
+    var ov = s.overlap;
+    if (!ov) return '';
+    var withSig = sigs[ov.with];
+    var withLabel = withSig ? withSig.label : ov.with;
+    var cls = ov.n_independent < 60 ? ' class="is-thin"' : '';
+    return ' · <span' + cls + '>與' + esc(withLabel) + '同日同檔重疊 ' +
+      ov.n_overlap + ' 筆,獨立 ' + ov.n_independent + ' 筆</span>';
+  }
+
   function scBucketTable(buckets, kind, hs) {
     var groups = buckets && buckets[kind];
     if (!groups) return '';
@@ -8092,7 +8107,7 @@
       html += '<section class="panel sc-signal">' +
         '<h2 class="panel-title">' + esc(s.label) + ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">' + esc(s.direction) + '</span>' +
         '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
-        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
+        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + scOverlapNote(s, sigs) + '</span></h2>' +
         '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th><th class="num">命中率(vs指數)</th><th class="num">平均超額(vs指數)</th><th class="num">命中率(vs中位股)</th><th class="num">平均超額(vs中位股)</th><th class="num">中位超額</th><th class="num">不扣指數命中</th></tr></thead><tbody>' +
         hs.map(function (h) {
           var st = s.horizons[h] || {};
@@ -8193,7 +8208,7 @@
         ' <span class="sc-dir ' + (s.dir > 0 ? 'up' : 'down') + '">原本' + esc(s.direction) + '</span>' +
         ' <span class="sc-dir ' + (s.dir > 0 ? 'down' : 'up') + '">反著做' + esc(fadeDirLabel) + '</span>' +
         '<span class="sc-count">訊號 ' + s.instances + ' 筆 · ' + esc(s.first_date || '') + ' ~ ' + esc(s.last_date || '') +
-        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + '</span></h2>' +
+        (s.pending_20d ? ' · ' + s.pending_20d + ' 筆 20 日還沒到期' : '') + scOverlapNote(s, sigs) + '</span></h2>' +
         '<div class="table-scroll"><table class="scan-table sc-table"><thead><tr><th>天期</th><th class="num">到期 n</th>' +
         '<th class="num">正用命中率</th><th class="num">正用預期報酬</th><th class="num">正用中位數</th>' +
         '<th class="num">反用命中率</th><th class="num">反用預期報酬</th><th class="num">扣成本後</th><th class="num">反用中位數</th>' +
