@@ -376,7 +376,8 @@ git commit + push      if: always()
   不一致,比較像雜訊不是規律;crash 10/20 日天期目前 n=0(訊號從 9/4 才開始記,還沒有
   10 天後到期的樣本),之後樣本夠了要重跑再確認。工具沒有算融券成本/券源/盯市風險,純粹
   驗證訊號方向,**不是可以直接下單的策略**,也還沒決定要不要真的把 `scan` 的 `dir` 或
-  前端顯示方式改成看空(要問過使用者)。
+  前端顯示方式改成看空(要問過使用者)。**2026-09-18 存查檔回補到一年(scan 19276 筆、
+  crash 16156 筆),新數字見 commit <PENDING_HASH>,上面這段(小樣本時期)的結論待重新確認。**
 - **剩下四種訊號(fomo_real/fomo_fake/crashfomo_real/crashfomo_fake)也用
   `backtest_signal_fade.py` 測過反著用,只有 `fomo_real` 5 日過 N≥60(n=74)**:原本
   (看多)命中 33.8%、預期報酬 −2.1%,反著做(看空)命中 66.2%、+2.1%——方向上跟爆量
@@ -412,7 +413,8 @@ git commit + push      if: always()
   除 −5~+5% 外全部 N<60,看不出規律。**含意:反著用爆量要挑乖離大的做,貼著均線的爆量
   反著做沒什麼肉**;這是站上自己驗證出來的,不用標 📖。scan 樣本還是兩週,等存查檔
   回補到一年後要重看一次。Playwright 走真實 UI 14 項對照 JSON 跟手算值(6957 9/17
-  +20.47% 落 ≥+10%、2330 +0.45% 落 −5~+5%),無 JS 錯誤。
+  +20.47% 落 ≥+10%、2330 +0.45% 落 −5~+5%),無 JS 錯誤。**2026-09-18 回補後樣本擴大
+  到一年,新數字見 commit <PENDING_HASH>,結論待重新確認。**
 - **2026-09-17 加「訊號反用」分頁(`index.html` 的 `data-view="fade"`,排在訊號記分板
   後面)**:使用者要求把 `backtest_signal_fade.py` 探測出來的「反著用」命中率跟「正用」
   放在同一張表比較,不用每次手動跑 CLI。做法是把反用統計直接算進 `scorecard-latest.json`
@@ -435,6 +437,12 @@ git commit + push      if: always()
   正用/反用命中率+預期報酬並排比較,無 JS 錯誤。`fomo_real_loose`/`fomo_fake_loose`
   目前 0 筆(等下一次 daily-scan 產生帶新欄位的 FOMO 存查檔才會開始累積,見上面
   FOMO 寬鬆版那條)。
+- **2026-09-18 `compute_scan.py`/`compute_crash.py` 加 `--backfill-archive [--force]`**
+  (照抄 `compute_thin_scan.py` 的 `compute_for_date()`/`run_backfill()` 模式):用
+  `data/archive/prices` 回補到 2025-07-22 起,已存在日期預設跳過。驗證時發現
+  2026-09-11 前的舊存查檔是用當時的舊公式算的(300 張下限 09-09 才加、`ma_state`
+  09-11 才加),用現在公式 `--force` 重算會跟舊檔不同——這是版本落差,不是 bug,
+  09-11 起(含)逐檔逐格對過完全一致。
 
 ## 6. 已知限制 / 還沒決定的事
 
