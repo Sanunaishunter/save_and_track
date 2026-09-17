@@ -65,6 +65,7 @@
     <button type="button" class="viewbtn" data-view="insttrack">法人軌跡</button>
     <button type="button" class="viewbtn" data-view="scorecard">訊號記分板</button>
     <button type="button" class="viewbtn" data-view="fade">訊號反用</button>
+    <button type="button" class="viewbtn" data-view="exitsc">出場記分板</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="thinscan">薄股測試</button>
@@ -216,14 +217,29 @@
   <p class="panel-note">
     訊號反用(2026-09-17 加入):跟訊號記分板同一批已到期樣本,只是把訊號方向反過來——
     命中率是真的用相反方向重算(不是拿 100% 減正用命中率,因為超額報酬剛好等於 0 的
-    樣本兩邊都不算命中),不是重新抓一批資料驗證。爆量反著做(訊號出現後放空)5 日
-    命中率 70% 左右,遠高於正著用的 30%,但暴跌反著用沒有同樣的優勢,不是每個訊號都
-    能套用同一個結論——詳細分析寫在 CLAUDE.md。這裡是全樣本結果,想按大盤狀態/均線
+    樣本兩邊都不算命中),不是重新抓一批資料驗證。2026-09-18 存查檔回補到一年、基準改成
+    「同日中位股」之後,爆量/暴跌/薄股反著用的命中率都只有 51~55%,扣成本後沒有優勢;
+    之前「爆量反著做 70%」是兩週弱勢盤加上有偏的指數基準疊出來的,已撤回——詳細寫在
+    CLAUDE.md。這裡是全樣本結果,想按大盤狀態/均線
     等細節分桶看反著用效果,用 <code>scripts/backtest_signal_fade.py</code>。
     樣本不到 60 的格子顯示成灰色,只能看方向感,不能下結論。這不是可以直接下單的
     策略,沒有算融券成本/券源/盯市風險。
   </p>
   <div id="fade-body"></div>
+</main>
+
+<main class="list-wrap" id="exitsc-wrap" hidden>
+  <div class="scan-meta" id="exitsc-meta">載入中…</div>
+  <p class="panel-note">
+    出場記分板(2026-09-18 加入):進場訊號有記分板驗證,出場規則以前只有一次性回測。
+    這裡拿記分板同一批訊號,假設訊號日收盤進場,套六種出場規則(獲利目標、固定停損、
+    目標+停損、ATR 停損、最大回撤),每條都跟「同一筆樣本抱到天期收盤」配對比較——
+    value_add = 規則報酬 − 抱到底報酬,同檔同日配對,加權指數/中位股哪個當基準的問題
+    在這裡不存在。觸發用當日最高/最低價、成交在規則價、不處理跳空;同日目標+停損都碰到
+    時停損贏。app 的移動停利(trail)模式沒模擬。門檻是 app 現在的預設/教科書值,這裡
+    只驗證不調參。樣本不到 60 的格子灰色。
+  </p>
+  <div id="exitsc-body"></div>
 </main>
 
 <!-- 個股詳情（全螢幕面板） -->

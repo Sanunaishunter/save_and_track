@@ -58,6 +58,7 @@
 | 法人軌跡 | 三份 `stock-lookup*-latest.json` | 量縮蓄勢候選的方向三票(融資/外資投信/收盤位置) |
 | 訊號記分板 | `scorecard-latest.json` | 歷史訊號之後 5/10/20 日超額報酬、命中率,五種分桶,N<60 灰 |
 | 訊號反用 | `scorecard-latest.json`(同一份) | 每個訊號正用(原方向)vs. 反用(反方向重算)命中率/預期報酬並排比較,見第 5 節 |
+| 出場記分板 | `exit-scorecard-latest.json` | 同一批訊號套六種出場規則(目標/停損/目標+停損/ATR/回撤)跟抱到底配對比較,見第 5 節 |
 | 爆量掃描 / 暴跌掃描 | `scan-latest.json` / `crash-latest.json` | `量/MA20(shift 1) > 1.5` 且 `close > open`(暴跌對稱 `<`),≥300 張;每列有 `ma_state` |
 | 薄股測試 | `thin-scan-latest.json` | 跟爆量掃描同公式,鎖定量 < 300 張(爆量掃描門檻濾掉的薄股票)這群,見第 5 節 |
 | ~~FOMO / 暴跌FOMO~~ | `fomo-latest.json` / `crash-fomo-latest.json` | 對爆量/暴跌前 60 名判定可能會漲/虛漲、真跌/虛跌(有 PE/PBR、外資融資連續天數)。**2026-09-16 使用者要求 no show,兩個分頁按鈕 `hidden`、拿出 `VIEWS_ORDER`**(見第 4 節),資料照樣每天產生,個股查詢的 🔔🕐🔻🔥 標記跟記分板/backtest 工具都還在吃 |
@@ -83,6 +84,7 @@ archive_prices.py      永久存檔 data/archive/(價格按月、指數逐日,�
 fetch_valuation.py     全市場 PE/PB/殖利率(BWIBBU_ALL,continue-on-error)
 compute_fomo.py / compute_crash_fomo.py   吃上面剛產的 scan/crash 清單
 compute_scorecard.py   訊號記分板(讀 scans/crashes/fomo/crash-fomo 存查檔 + 存檔)
+compute_exit_scorecard.py   出場記分板(同一批訊號 × 六種出場規則,配對比較)
 git commit + push      if: always()
 ```
 手動參數:`backfill_days`(爆量基線)、`market_backfill_days`、`archive_backfill_days`
@@ -436,6 +438,22 @@ git commit + push      if: always()
   紀錄,以這條為準。薄股測試比爆量再差 2~4 個百分點,仍然成立。Playwright 13 項對照
   JSON 跟手算(1451 2026-03-11 5 日:個股 −0.549%、同日中位數 +0.779%、超額 −1.329%),
   無 JS 錯誤。`scorecard-latest.json` 這次有 commit(前端要有新欄位才顯示得出來)。
+- **2026-09-18 加「出場記分板」分頁(`data-view="exitsc"`,排在訊號反用後面;
+  `scripts/compute_exit_scorecard.py` → `data/exit-scorecard-latest.json`,daily-scan 排在
+  記分板後面)**。進場訊號驗證完發現沒有方向優勢,使用者的方向是「有紀律地下車」,出場
+  規則需要跟進場同等級、每天累積的驗證。模擬器 import `backtest_exit_rules.py` 的
+  `atr_at_entry()`/`simulate_fixed_stop()`/`simulate_atr_stop()`(照抄不重打),另加獲利目標
+  4.5%(app「+ 追蹤」預設)、最大回撤 5%、目標+停損(同日停損贏,跟 `evalExitPlan` 順序
+  一致)。**每條規則跟同一筆樣本「抱到天期收盤」配對**,`value_add` = 規則 − 抱到底,
+  同檔同日配對所以指數/中位股基準偏誤在這裡互相抵消。app 的 trail 模式(量/MA5 出場)
+  沒模擬。**第一次跑的結論(一年樣本,10 日):爆量看多套任何出場規則平均都比抱到底差**
+  (獲利目標 −0.70%、固定停損 −0.27%、ATR −1.15%、回撤 −1.13%),因為上檔右偏、少數大漲
+  被 4.5% 目標砍掉;**暴跌看空反過來,所有規則都加值**(+0.38 ~ +0.78%);薄股接近 0。
+  「贏過抱到底」比例全部 <50%,意思是規則多數時候小輸、少數時候躲過大跌。跟 9/15
+  `backtest_exit_rules.py` 兩週樣本的「爆量停損比較好」相反,以這條為準。手算對照 6909/
+  3645 2026-03-11(目標/停損/目標+停損/回撤四種觸發天數與報酬)、1451(不觸發=抱到底)、
+  6671 看空鏡射,全部一字不差;hold 樣本數 = 訊號記分板 n。Playwright 15 項,無 JS 錯誤。
+  `index.html` 訊號反用那段「爆量反著做 70%」的舊說明文字同步改掉。
 - **2026-09-17 加「訊號反用」分頁(`index.html` 的 `data-view="fade"`,排在訊號記分板
   後面)**:使用者要求把 `backtest_signal_fade.py` 探測出來的「反著用」命中率跟「正用」
   放在同一張表比較,不用每次手動跑 CLI。做法是把反用統計直接算進 `scorecard-latest.json`
