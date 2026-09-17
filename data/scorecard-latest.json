@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-16",
-  "generated_at": "2026-09-16T13:36:25Z",
+  "date": "2026-09-17",
+  "generated_at": "2026-09-17T08:46:37Z",
   "params": {
     "horizons": [
       5,
@@ -18,11 +18,11 @@
     }
   },
   "coverage": {
-    "price_days": 283,
+    "price_days": 284,
     "price_from": "2025-07-22",
-    "price_to": "2026-09-16",
-    "index_days": 283,
-    "instances": 1280,
+    "price_to": "2026-09-17",
+    "index_days": 284,
+    "instances": 1394,
     "events": 3
   },
   "signals": {
@@ -30,22 +30,22 @@
       "label": "虛漲",
       "direction": "看空",
       "dir": -1,
-      "instances": 36,
-      "skipped_no_price": 20,
-      "pending_20d": 16,
+      "instances": 37,
+      "skipped_no_price": 18,
+      "pending_20d": 19,
       "first_date": "2026-09-01",
-      "last_date": "2026-09-16",
+      "last_date": "2026-09-17",
       "horizons": {
         "5": {
-          "n": 16,
+          "n": 19,
           "enough": false,
-          "hit_rate_raw": 62.5,
-          "avg_raw": -4.23,
-          "median_raw": -4.02,
-          "n_excess": 16,
-          "hit_rate": 62.5,
-          "avg_excess": -3.46,
-          "median_excess": -2.38
+          "hit_rate_raw": 57.9,
+          "avg_raw": -2.92,
+          "median_raw": -2.24,
+          "n_excess": 19,
+          "hit_rate": 57.9,
+          "avg_excess": -2.06,
+          "median_excess": -2.05
         },
         "10": {
           "n": 6,
@@ -141,6 +141,27 @@
               "n": 0,
               "enough": false
             }
+          },
+          "指數跌": {
+            "5": {
+              "n": 3,
+              "enough": false,
+              "hit_rate_raw": 33.3,
+              "avg_raw": 4.04,
+              "median_raw": 4.73,
+              "n_excess": 3,
+              "hit_rate": 33.3,
+              "avg_excess": 5.43,
+              "median_excess": 6.12
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         },
         "ma": {
@@ -174,15 +195,15 @@
           },
           "多頭排列": {
             "5": {
-              "n": 12,
+              "n": 15,
               "enough": false,
-              "hit_rate_raw": 75.0,
-              "avg_raw": -6.81,
-              "median_raw": -6.38,
-              "n_excess": 12,
-              "hit_rate": 66.7,
-              "avg_excess": -5.46,
-              "median_excess": -3.28
+              "hit_rate_raw": 66.7,
+              "avg_raw": -4.64,
+              "median_raw": -5.35,
+              "n_excess": 15,
+              "hit_rate": 60.0,
+              "avg_excess": -3.28,
+              "median_excess": -2.71
             },
             "10": {
               "n": 3,
@@ -257,6 +278,27 @@
               "n": 0,
               "enough": false
             }
+          },
+          "大盤事件±1日": {
+            "5": {
+              "n": 3,
+              "enough": false,
+              "hit_rate_raw": 33.3,
+              "avg_raw": 4.04,
+              "median_raw": 4.73,
+              "n_excess": 3,
+              "hit_rate": 33.3,
+              "avg_excess": 5.43,
+              "median_excess": 6.12
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         }
       }
@@ -265,33 +307,33 @@
       "label": "可能會漲",
       "direction": "看多",
       "dir": 1,
-      "instances": 81,
+      "instances": 82,
       "skipped_no_price": 7,
-      "pending_20d": 74,
+      "pending_20d": 75,
       "first_date": "2026-09-01",
-      "last_date": "2026-09-16",
+      "last_date": "2026-09-17",
       "horizons": {
         "5": {
-          "n": 74,
+          "n": 75,
           "enough": true,
-          "hit_rate_raw": 20.3,
-          "avg_raw": -2.62,
+          "hit_rate_raw": 20.0,
+          "avg_raw": -2.63,
           "median_raw": -2.41,
-          "n_excess": 74,
-          "hit_rate": 33.8,
-          "avg_excess": -2.1,
-          "median_excess": -1.81
+          "n_excess": 75,
+          "hit_rate": 33.3,
+          "avg_excess": -2.11,
+          "median_excess": -1.86
         },
         "10": {
-          "n": 25,
+          "n": 35,
           "enough": false,
-          "hit_rate_raw": 8.0,
-          "avg_raw": -6.38,
-          "median_raw": -5.41,
-          "n_excess": 25,
-          "hit_rate": 24.0,
-          "avg_excess": -4.46,
-          "median_excess": -2.87
+          "hit_rate_raw": 25.7,
+          "avg_raw": -3.87,
+          "median_raw": -3.6,
+          "n_excess": 35,
+          "hit_rate": 31.4,
+          "avg_excess": -2.76,
+          "median_excess": -1.29
         },
         "20": {
           "n": 0,
@@ -341,15 +383,15 @@
               "median_excess": -3.66
             },
             "10": {
-              "n": 12,
+              "n": 22,
               "enough": false,
-              "hit_rate_raw": 16.7,
-              "avg_raw": -6.41,
-              "median_raw": -5.64,
-              "n_excess": 12,
-              "hit_rate": 25.0,
-              "avg_excess": -5.73,
-              "median_excess": -4.96
+              "hit_rate_raw": 40.9,
+              "avg_raw": -2.4,
+              "median_raw": -1.24,
+              "n_excess": 22,
+              "hit_rate": 36.4,
+              "avg_excess": -2.45,
+              "median_excess": -1.11
             },
             "20": {
               "n": 0,
@@ -376,6 +418,27 @@
               "n": 0,
               "enough": false
             }
+          },
+          "指數跌": {
+            "5": {
+              "n": 1,
+              "enough": false,
+              "hit_rate_raw": 0.0,
+              "avg_raw": -3.79,
+              "median_raw": -3.79,
+              "n_excess": 1,
+              "hit_rate": 0.0,
+              "avg_excess": -2.4,
+              "median_excess": -2.4
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         },
         "ma": {
@@ -392,15 +455,15 @@
               "median_excess": -0.88
             },
             "10": {
-              "n": 8,
+              "n": 12,
               "enough": false,
-              "hit_rate_raw": 12.5,
-              "avg_raw": -5.6,
-              "median_raw": -3.46,
-              "n_excess": 8,
-              "hit_rate": 37.5,
-              "avg_excess": -3.72,
-              "median_excess": -1.48
+              "hit_rate_raw": 33.3,
+              "avg_raw": -2.03,
+              "median_raw": -1.32,
+              "n_excess": 12,
+              "hit_rate": 33.3,
+              "avg_excess": -1.09,
+              "median_excess": -0.21
             },
             "20": {
               "n": 0,
@@ -409,26 +472,26 @@
           },
           "多頭排列": {
             "5": {
-              "n": 45,
+              "n": 46,
               "enough": false,
-              "hit_rate_raw": 17.8,
-              "avg_raw": -2.41,
-              "median_raw": -2.51,
-              "n_excess": 45,
-              "hit_rate": 35.6,
-              "avg_excess": -1.94,
-              "median_excess": -2.77
+              "hit_rate_raw": 17.4,
+              "avg_raw": -2.44,
+              "median_raw": -2.64,
+              "n_excess": 46,
+              "hit_rate": 34.8,
+              "avg_excess": -1.95,
+              "median_excess": -2.76
             },
             "10": {
-              "n": 17,
+              "n": 23,
               "enough": false,
-              "hit_rate_raw": 5.9,
-              "avg_raw": -6.75,
-              "median_raw": -6.34,
-              "n_excess": 17,
-              "hit_rate": 17.6,
-              "avg_excess": -4.81,
-              "median_excess": -3.28
+              "hit_rate_raw": 21.7,
+              "avg_raw": -4.83,
+              "median_raw": -4.33,
+              "n_excess": 23,
+              "hit_rate": 30.4,
+              "avg_excess": -3.63,
+              "median_excess": -2.35
             },
             "20": {
               "n": 0,
@@ -450,15 +513,36 @@
               "median_excess": -1.81
             },
             "10": {
-              "n": 25,
+              "n": 35,
               "enough": false,
-              "hit_rate_raw": 8.0,
-              "avg_raw": -6.38,
-              "median_raw": -5.41,
-              "n_excess": 25,
-              "hit_rate": 24.0,
-              "avg_excess": -4.46,
-              "median_excess": -2.87
+              "hit_rate_raw": 25.7,
+              "avg_raw": -3.87,
+              "median_raw": -3.6,
+              "n_excess": 35,
+              "hit_rate": 31.4,
+              "avg_excess": -2.76,
+              "median_excess": -1.29
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "大盤事件±1日": {
+            "5": {
+              "n": 1,
+              "enough": false,
+              "hit_rate_raw": 0.0,
+              "avg_raw": -3.79,
+              "median_raw": -3.79,
+              "n_excess": 1,
+              "hit_rate": 0.0,
+              "avg_excess": -2.4,
+              "median_excess": -2.4
+            },
+            "10": {
+              "n": 0,
+              "enough": false
             },
             "20": {
               "n": 0,
@@ -472,21 +556,21 @@
       "label": "真跌",
       "direction": "看空",
       "dir": -1,
-      "instances": 78,
-      "skipped_no_price": 47,
-      "pending_20d": 31,
+      "instances": 82,
+      "skipped_no_price": 39,
+      "pending_20d": 43,
       "first_date": "2026-09-04",
-      "last_date": "2026-09-16",
+      "last_date": "2026-09-17",
       "horizons": {
         "5": {
-          "n": 31,
+          "n": 43,
           "enough": false,
-          "hit_rate_raw": 83.9,
-          "avg_raw": -3.74,
-          "median_raw": -3.48,
-          "n_excess": 31,
-          "hit_rate": 61.3,
-          "avg_excess": -0.98,
+          "hit_rate_raw": 83.7,
+          "avg_raw": -3.35,
+          "median_raw": -2.55,
+          "n_excess": 43,
+          "hit_rate": 62.8,
+          "avg_excess": -0.97,
           "median_excess": -0.3
         },
         "10": {
@@ -541,20 +625,41 @@
               "n": 0,
               "enough": false
             }
+          },
+          "指數跌": {
+            "5": {
+              "n": 12,
+              "enough": false,
+              "hit_rate_raw": 83.3,
+              "avg_raw": -2.35,
+              "median_raw": -1.95,
+              "n_excess": 12,
+              "hit_rate": 66.7,
+              "avg_excess": -0.96,
+              "median_excess": -0.56
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         },
         "ma": {
           "均線糾結": {
             "5": {
-              "n": 10,
+              "n": 13,
               "enough": false,
               "hit_rate_raw": 100.0,
-              "avg_raw": -6.85,
-              "median_raw": -6.51,
-              "n_excess": 10,
-              "hit_rate": 80.0,
-              "avg_excess": -4.42,
-              "median_excess": -4.7
+              "avg_raw": -6.14,
+              "median_raw": -6.01,
+              "n_excess": 13,
+              "hit_rate": 84.6,
+              "avg_excess": -3.95,
+              "median_excess": -4.18
             },
             "10": {
               "n": 0,
@@ -567,15 +672,15 @@
           },
           "多頭排列": {
             "5": {
-              "n": 6,
+              "n": 7,
               "enough": false,
-              "hit_rate_raw": 83.3,
-              "avg_raw": -2.14,
-              "median_raw": -2.88,
-              "n_excess": 6,
-              "hit_rate": 50.0,
-              "avg_excess": 0.62,
-              "median_excess": -0.79
+              "hit_rate_raw": 85.7,
+              "avg_raw": -3.24,
+              "median_raw": -3.97,
+              "n_excess": 7,
+              "hit_rate": 57.1,
+              "avg_excess": -0.67,
+              "median_excess": -3.18
             },
             "10": {
               "n": 0,
@@ -588,14 +693,14 @@
           },
           "空頭排列": {
             "5": {
-              "n": 15,
+              "n": 23,
               "enough": false,
-              "hit_rate_raw": 73.3,
-              "avg_raw": -2.31,
-              "median_raw": -2.51,
-              "n_excess": 15,
-              "hit_rate": 53.3,
-              "avg_excess": 0.67,
+              "hit_rate_raw": 73.9,
+              "avg_raw": -1.81,
+              "median_raw": -1.58,
+              "n_excess": 23,
+              "hit_rate": 52.2,
+              "avg_excess": 0.62,
               "median_excess": -0.1
             },
             "10": {
@@ -620,6 +725,27 @@
               "hit_rate": 61.3,
               "avg_excess": -0.98,
               "median_excess": -0.3
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "大盤事件±1日": {
+            "5": {
+              "n": 12,
+              "enough": false,
+              "hit_rate_raw": 83.3,
+              "avg_raw": -2.35,
+              "median_raw": -1.95,
+              "n_excess": 12,
+              "hit_rate": 66.7,
+              "avg_excess": -0.96,
+              "median_excess": -0.56
             },
             "10": {
               "n": 0,
@@ -662,33 +788,33 @@
       "label": "爆量",
       "direction": "看多",
       "dir": 1,
-      "instances": 702,
-      "skipped_no_price": 192,
-      "pending_20d": 510,
+      "instances": 779,
+      "skipped_no_price": 236,
+      "pending_20d": 543,
       "first_date": "2026-08-31",
-      "last_date": "2026-09-16",
+      "last_date": "2026-09-17",
       "horizons": {
         "5": {
-          "n": 510,
+          "n": 543,
           "enough": true,
-          "hit_rate_raw": 29.8,
-          "avg_raw": -2.15,
-          "median_raw": -2.06,
-          "n_excess": 510,
-          "hit_rate": 29.6,
-          "avg_excess": -2.24,
-          "median_excess": -2.24
+          "hit_rate_raw": 31.5,
+          "avg_raw": -1.89,
+          "median_raw": -1.81,
+          "n_excess": 543,
+          "hit_rate": 31.9,
+          "avg_excess": -1.9,
+          "median_excess": -2.14
         },
         "10": {
-          "n": 273,
+          "n": 308,
           "enough": true,
-          "hit_rate_raw": 23.4,
-          "avg_raw": -3.93,
-          "median_raw": -4.33,
-          "n_excess": 273,
-          "hit_rate": 33.7,
-          "avg_excess": -2.43,
-          "median_excess": -2.8
+          "hit_rate_raw": 27.3,
+          "avg_raw": -3.26,
+          "median_raw": -3.79,
+          "n_excess": 308,
+          "hit_rate": 35.1,
+          "avg_excess": -2.04,
+          "median_excess": -2.5
         },
         "20": {
           "n": 0,
@@ -766,15 +892,36 @@
               "median_excess": -3.35
             },
             "10": {
-              "n": 75,
+              "n": 110,
               "enough": true,
-              "hit_rate_raw": 25.3,
-              "avg_raw": -4.49,
-              "median_raw": -4.85,
-              "n_excess": 75,
-              "hit_rate": 30.7,
-              "avg_excess": -3.81,
-              "median_excess": -4.17
+              "hit_rate_raw": 35.5,
+              "avg_raw": -2.44,
+              "median_raw": -2.53,
+              "n_excess": 110,
+              "hit_rate": 35.5,
+              "avg_excess": -2.28,
+              "median_excess": -2.82
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "指數跌": {
+            "5": {
+              "n": 33,
+              "enough": false,
+              "hit_rate_raw": 57.6,
+              "avg_raw": 2.09,
+              "median_raw": 0.62,
+              "n_excess": 33,
+              "hit_rate": 66.7,
+              "avg_excess": 3.48,
+              "median_excess": 2.02
+            },
+            "10": {
+              "n": 0,
+              "enough": false
             },
             "20": {
               "n": 0,
@@ -785,26 +932,26 @@
         "ma": {
           "均線糾結": {
             "5": {
-              "n": 206,
+              "n": 217,
               "enough": true,
-              "hit_rate_raw": 31.1,
-              "avg_raw": -1.86,
-              "median_raw": -1.63,
-              "n_excess": 206,
-              "hit_rate": 33.0,
-              "avg_excess": -1.66,
-              "median_excess": -1.57
+              "hit_rate_raw": 32.3,
+              "avg_raw": -1.8,
+              "median_raw": -1.49,
+              "n_excess": 217,
+              "hit_rate": 35.5,
+              "avg_excess": -1.54,
+              "median_excess": -1.33
             },
             "10": {
-              "n": 99,
+              "n": 112,
               "enough": true,
-              "hit_rate_raw": 25.3,
-              "avg_raw": -2.56,
-              "median_raw": -2.88,
-              "n_excess": 99,
-              "hit_rate": 38.4,
-              "avg_excess": -0.91,
-              "median_excess": -1.36
+              "hit_rate_raw": 25.9,
+              "avg_raw": -2.34,
+              "median_raw": -2.55,
+              "n_excess": 112,
+              "hit_rate": 35.7,
+              "avg_excess": -0.99,
+              "median_excess": -1.51
             },
             "20": {
               "n": 0,
@@ -813,26 +960,26 @@
           },
           "多頭排列": {
             "5": {
-              "n": 271,
+              "n": 292,
               "enough": true,
-              "hit_rate_raw": 27.3,
-              "avg_raw": -2.6,
-              "median_raw": -2.88,
-              "n_excess": 271,
-              "hit_rate": 27.3,
-              "avg_excess": -2.89,
-              "median_excess": -3.18
+              "hit_rate_raw": 29.5,
+              "avg_raw": -2.16,
+              "median_raw": -2.79,
+              "n_excess": 292,
+              "hit_rate": 29.5,
+              "avg_excess": -2.33,
+              "median_excess": -2.82
             },
             "10": {
-              "n": 155,
+              "n": 176,
               "enough": true,
-              "hit_rate_raw": 21.3,
-              "avg_raw": -5.15,
-              "median_raw": -5.18,
-              "n_excess": 155,
-              "hit_rate": 28.4,
-              "avg_excess": -3.74,
-              "median_excess": -4.08
+              "hit_rate_raw": 27.3,
+              "avg_raw": -4.12,
+              "median_raw": -4.68,
+              "n_excess": 176,
+              "hit_rate": 32.4,
+              "avg_excess": -2.99,
+              "median_excess": -3.59
             },
             "20": {
               "n": 0,
@@ -841,26 +988,26 @@
           },
           "空頭排列": {
             "5": {
-              "n": 33,
+              "n": 34,
               "enough": false,
-              "hit_rate_raw": 42.4,
-              "avg_raw": -0.28,
-              "median_raw": -0.5,
-              "n_excess": 33,
-              "hit_rate": 27.3,
-              "avg_excess": -0.54,
-              "median_excess": -1.64
+              "hit_rate_raw": 44.1,
+              "avg_raw": -0.24,
+              "median_raw": -0.48,
+              "n_excess": 34,
+              "hit_rate": 29.4,
+              "avg_excess": -0.45,
+              "median_excess": -1.61
             },
             "10": {
-              "n": 19,
+              "n": 20,
               "enough": false,
-              "hit_rate_raw": 31.6,
-              "avg_raw": -1.04,
-              "median_raw": -1.76,
-              "n_excess": 19,
-              "hit_rate": 52.6,
-              "avg_excess": 0.35,
-              "median_excess": 0.07
+              "hit_rate_raw": 35.0,
+              "avg_raw": -0.76,
+              "median_raw": -1.29,
+              "n_excess": 20,
+              "hit_rate": 55.0,
+              "avg_excess": 0.52,
+              "median_excess": 0.33
             },
             "20": {
               "n": 0,
@@ -899,26 +1046,26 @@
           },
           "外資連續≥3": {
             "5": {
-              "n": 82,
+              "n": 88,
               "enough": true,
-              "hit_rate_raw": 23.2,
-              "avg_raw": -2.64,
+              "hit_rate_raw": 22.7,
+              "avg_raw": -2.59,
               "median_raw": -2.42,
-              "n_excess": 82,
-              "hit_rate": 31.7,
-              "avg_excess": -2.19,
+              "n_excess": 88,
+              "hit_rate": 31.8,
+              "avg_excess": -2.08,
               "median_excess": -1.97
             },
             "10": {
-              "n": 28,
+              "n": 40,
               "enough": false,
-              "hit_rate_raw": 7.1,
-              "avg_raw": -6.61,
-              "median_raw": -5.67,
-              "n_excess": 28,
-              "hit_rate": 21.4,
-              "avg_excess": -4.74,
-              "median_excess": -3.06
+              "hit_rate_raw": 25.0,
+              "avg_raw": -3.93,
+              "median_raw": -3.66,
+              "n_excess": 40,
+              "hit_rate": 30.0,
+              "avg_excess": -2.9,
+              "median_excess": -2.1
             },
             "20": {
               "n": 0,
@@ -927,26 +1074,68 @@
           },
           "無合流": {
             "5": {
-              "n": 263,
+              "n": 283,
               "enough": true,
-              "hit_rate_raw": 28.1,
-              "avg_raw": -2.31,
-              "median_raw": -2.79,
-              "n_excess": 263,
-              "hit_rate": 33.1,
-              "avg_excess": -1.6,
-              "median_excess": -2.14
+              "hit_rate_raw": 31.1,
+              "avg_raw": -2.08,
+              "median_raw": -2.43,
+              "n_excess": 283,
+              "hit_rate": 36.0,
+              "avg_excess": -1.32,
+              "median_excess": -1.93
             },
             "10": {
-              "n": 91,
+              "n": 114,
               "enough": true,
-              "hit_rate_raw": 27.5,
-              "avg_raw": -4.14,
-              "median_raw": -5.4,
-              "n_excess": 91,
-              "hit_rate": 37.4,
-              "avg_excess": -2.28,
-              "median_excess": -3.67
+              "hit_rate_raw": 32.5,
+              "avg_raw": -2.95,
+              "median_raw": -4.45,
+              "n_excess": 114,
+              "hit_rate": 38.6,
+              "avg_excess": -1.65,
+              "median_excess": -3.08
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "融資連續≥3": {
+            "5": {
+              "n": 6,
+              "enough": false,
+              "hit_rate_raw": 66.7,
+              "avg_raw": 10.45,
+              "median_raw": 5.82,
+              "n_excess": 6,
+              "hit_rate": 83.3,
+              "avg_excess": 11.84,
+              "median_excess": 7.21
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "外資+融資連續≥3": {
+            "5": {
+              "n": 1,
+              "enough": false,
+              "hit_rate_raw": 0.0,
+              "avg_raw": -3.79,
+              "median_raw": -3.79,
+              "n_excess": 1,
+              "hit_rate": 0.0,
+              "avg_excess": -2.4,
+              "median_excess": -2.4
+            },
+            "10": {
+              "n": 0,
+              "enough": false
             },
             "20": {
               "n": 0,
@@ -968,15 +1157,36 @@
               "median_excess": -2.24
             },
             "10": {
-              "n": 273,
+              "n": 308,
               "enough": true,
-              "hit_rate_raw": 23.4,
-              "avg_raw": -3.93,
-              "median_raw": -4.33,
-              "n_excess": 273,
-              "hit_rate": 33.7,
-              "avg_excess": -2.43,
-              "median_excess": -2.8
+              "hit_rate_raw": 27.3,
+              "avg_raw": -3.26,
+              "median_raw": -3.79,
+              "n_excess": 308,
+              "hit_rate": 35.1,
+              "avg_excess": -2.04,
+              "median_excess": -2.5
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
+          },
+          "大盤事件±1日": {
+            "5": {
+              "n": 33,
+              "enough": false,
+              "hit_rate_raw": 57.6,
+              "avg_raw": 2.09,
+              "median_raw": 0.62,
+              "n_excess": 33,
+              "hit_rate": 66.7,
+              "avg_excess": 3.48,
+              "median_excess": 2.02
+            },
+            "10": {
+              "n": 0,
+              "enough": false
             },
             "20": {
               "n": 0,
@@ -987,26 +1197,26 @@
         "vol_ratio": {
           "5+": {
             "5": {
-              "n": 46,
+              "n": 51,
               "enough": false,
-              "hit_rate_raw": 34.8,
-              "avg_raw": -1.93,
-              "median_raw": -2.57,
-              "n_excess": 46,
-              "hit_rate": 26.1,
-              "avg_excess": -2.24,
-              "median_excess": -3.48
+              "hit_rate_raw": 37.3,
+              "avg_raw": -1.53,
+              "median_raw": -1.5,
+              "n_excess": 51,
+              "hit_rate": 33.3,
+              "avg_excess": -1.67,
+              "median_excess": -2.84
             },
             "10": {
-              "n": 25,
+              "n": 28,
               "enough": false,
-              "hit_rate_raw": 20.0,
-              "avg_raw": -4.7,
-              "median_raw": -5.02,
-              "n_excess": 25,
-              "hit_rate": 28.0,
-              "avg_excess": -3.7,
-              "median_excess": -2.64
+              "hit_rate_raw": 17.9,
+              "avg_raw": -4.79,
+              "median_raw": -4.12,
+              "n_excess": 28,
+              "hit_rate": 25.0,
+              "avg_excess": -4.0,
+              "median_excess": -2.75
             },
             "20": {
               "n": 0,
@@ -1015,26 +1225,26 @@
           },
           "3~5": {
             "5": {
-              "n": 95,
+              "n": 101,
               "enough": true,
-              "hit_rate_raw": 22.1,
-              "avg_raw": -3.5,
-              "median_raw": -3.24,
-              "n_excess": 95,
-              "hit_rate": 28.4,
-              "avg_excess": -3.4,
-              "median_excess": -3.28
+              "hit_rate_raw": 24.8,
+              "avg_raw": -3.1,
+              "median_raw": -2.96,
+              "n_excess": 101,
+              "hit_rate": 30.7,
+              "avg_excess": -2.92,
+              "median_excess": -2.97
             },
             "10": {
-              "n": 47,
+              "n": 56,
               "enough": false,
-              "hit_rate_raw": 17.0,
-              "avg_raw": -5.91,
-              "median_raw": -6.87,
-              "n_excess": 47,
-              "hit_rate": 29.8,
-              "avg_excess": -4.35,
-              "median_excess": -4.42
+              "hit_rate_raw": 26.8,
+              "avg_raw": -4.39,
+              "median_raw": -4.65,
+              "n_excess": 56,
+              "hit_rate": 33.9,
+              "avg_excess": -3.24,
+              "median_excess": -4.01
             },
             "20": {
               "n": 0,
@@ -1043,26 +1253,26 @@
           },
           "2~3": {
             "5": {
-              "n": 174,
+              "n": 185,
               "enough": true,
-              "hit_rate_raw": 33.3,
-              "avg_raw": -1.56,
-              "median_raw": -1.63,
-              "n_excess": 174,
-              "hit_rate": 33.3,
-              "avg_excess": -1.75,
-              "median_excess": -2.12
+              "hit_rate_raw": 35.7,
+              "avg_raw": -1.09,
+              "median_raw": -1.41,
+              "n_excess": 185,
+              "hit_rate": 36.2,
+              "avg_excess": -1.19,
+              "median_excess": -1.99
             },
             "10": {
-              "n": 99,
+              "n": 110,
               "enough": true,
-              "hit_rate_raw": 28.3,
-              "avg_raw": -2.82,
-              "median_raw": -4.57,
-              "n_excess": 99,
-              "hit_rate": 36.4,
-              "avg_excess": -1.41,
-              "median_excess": -2.87
+              "hit_rate_raw": 31.8,
+              "avg_raw": -2.41,
+              "median_raw": -3.87,
+              "n_excess": 110,
+              "hit_rate": 38.2,
+              "avg_excess": -1.23,
+              "median_excess": -2.65
             },
             "20": {
               "n": 0,
@@ -1071,26 +1281,26 @@
           },
           "1.5~2": {
             "5": {
-              "n": 195,
+              "n": 206,
               "enough": true,
-              "hit_rate_raw": 29.2,
-              "avg_raw": -2.07,
-              "median_raw": -1.78,
-              "n_excess": 195,
-              "hit_rate": 27.7,
-              "avg_excess": -2.12,
-              "median_excess": -1.96
+              "hit_rate_raw": 29.6,
+              "avg_raw": -2.11,
+              "median_raw": -1.97,
+              "n_excess": 206,
+              "hit_rate": 28.2,
+              "avg_excess": -2.08,
+              "median_excess": -2.0
             },
             "10": {
-              "n": 102,
+              "n": 114,
               "enough": true,
-              "hit_rate_raw": 22.5,
-              "avg_raw": -3.9,
-              "median_raw": -3.79,
-              "n_excess": 102,
-              "hit_rate": 34.3,
-              "avg_excess": -2.22,
-              "median_excess": -1.6
+              "hit_rate_raw": 25.4,
+              "avg_raw": -3.14,
+              "median_raw": -3.52,
+              "n_excess": 114,
+              "hit_rate": 35.1,
+              "avg_excess": -1.74,
+              "median_excess": -1.48
             },
             "20": {
               "n": 0,
@@ -1104,22 +1314,22 @@
       "label": "暴跌",
       "direction": "看空",
       "dir": -1,
-      "instances": 382,
-      "skipped_no_price": 176,
-      "pending_20d": 206,
+      "instances": 413,
+      "skipped_no_price": 164,
+      "pending_20d": 249,
       "first_date": "2026-09-04",
-      "last_date": "2026-09-16",
+      "last_date": "2026-09-17",
       "horizons": {
         "5": {
-          "n": 206,
+          "n": 249,
           "enough": true,
-          "hit_rate_raw": 77.7,
-          "avg_raw": -2.53,
-          "median_raw": -2.56,
-          "n_excess": 206,
-          "hit_rate": 49.0,
-          "avg_excess": 0.18,
-          "median_excess": 0.17
+          "hit_rate_raw": 74.7,
+          "avg_raw": -2.31,
+          "median_raw": -2.46,
+          "n_excess": 249,
+          "hit_rate": 49.8,
+          "avg_excess": 0.17,
+          "median_excess": 0.02
         },
         "10": {
           "n": 0,
@@ -1173,20 +1383,41 @@
               "n": 0,
               "enough": false
             }
+          },
+          "指數跌": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "hit_rate_raw": 60.5,
+              "avg_raw": -1.26,
+              "median_raw": -1.4,
+              "n_excess": 43,
+              "hit_rate": 53.5,
+              "avg_excess": 0.13,
+              "median_excess": -0.01
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         },
         "ma": {
           "多頭排列": {
             "5": {
-              "n": 46,
+              "n": 56,
               "enough": false,
-              "hit_rate_raw": 78.3,
-              "avg_raw": -2.77,
-              "median_raw": -4.54,
-              "n_excess": 46,
-              "hit_rate": 63.0,
-              "avg_excess": -0.13,
-              "median_excess": -1.82
+              "hit_rate_raw": 73.2,
+              "avg_raw": -2.63,
+              "median_raw": -3.91,
+              "n_excess": 56,
+              "hit_rate": 60.7,
+              "avg_excess": -0.21,
+              "median_excess": -1.71
             },
             "10": {
               "n": 0,
@@ -1199,15 +1430,15 @@
           },
           "空頭排列": {
             "5": {
-              "n": 78,
+              "n": 94,
               "enough": true,
-              "hit_rate_raw": 78.2,
-              "avg_raw": -2.13,
-              "median_raw": -2.47,
-              "n_excess": 78,
-              "hit_rate": 42.3,
-              "avg_excess": 0.67,
-              "median_excess": 0.57
+              "hit_rate_raw": 77.7,
+              "avg_raw": -2.15,
+              "median_raw": -2.34,
+              "n_excess": 94,
+              "hit_rate": 45.7,
+              "avg_excess": 0.41,
+              "median_excess": 0.41
             },
             "10": {
               "n": 0,
@@ -1220,15 +1451,15 @@
           },
           "均線糾結": {
             "5": {
-              "n": 82,
+              "n": 99,
               "enough": true,
-              "hit_rate_raw": 76.8,
-              "avg_raw": -2.77,
-              "median_raw": -2.37,
-              "n_excess": 82,
-              "hit_rate": 47.6,
-              "avg_excess": -0.11,
-              "median_excess": 0.44
+              "hit_rate_raw": 72.7,
+              "avg_raw": -2.29,
+              "median_raw": -2.19,
+              "n_excess": 99,
+              "hit_rate": 47.5,
+              "avg_excess": 0.16,
+              "median_excess": 0.4
             },
             "10": {
               "n": 0,
@@ -1243,13 +1474,13 @@
         "confluence": {
           "無合流": {
             "5": {
-              "n": 126,
+              "n": 157,
               "enough": true,
-              "hit_rate_raw": 76.2,
-              "avg_raw": -2.29,
-              "median_raw": -2.53,
-              "n_excess": 126,
-              "hit_rate": 45.2,
+              "hit_rate_raw": 71.3,
+              "avg_raw": -2.01,
+              "median_raw": -2.28,
+              "n_excess": 157,
+              "hit_rate": 45.9,
               "avg_excess": 0.54,
               "median_excess": 0.53
             },
@@ -1264,14 +1495,14 @@
           },
           "外資連續≥3": {
             "5": {
-              "n": 31,
+              "n": 43,
               "enough": false,
-              "hit_rate_raw": 83.9,
-              "avg_raw": -3.99,
-              "median_raw": -3.48,
-              "n_excess": 31,
-              "hit_rate": 61.3,
-              "avg_excess": -1.22,
+              "hit_rate_raw": 83.7,
+              "avg_raw": -3.53,
+              "median_raw": -2.55,
+              "n_excess": 43,
+              "hit_rate": 62.8,
+              "avg_excess": -1.15,
               "median_excess": -0.3
             },
             "10": {
@@ -1326,20 +1557,41 @@
               "n": 0,
               "enough": false
             }
+          },
+          "大盤事件±1日": {
+            "5": {
+              "n": 43,
+              "enough": false,
+              "hit_rate_raw": 60.5,
+              "avg_raw": -1.26,
+              "median_raw": -1.4,
+              "n_excess": 43,
+              "hit_rate": 53.5,
+              "avg_excess": 0.13,
+              "median_excess": -0.01
+            },
+            "10": {
+              "n": 0,
+              "enough": false
+            },
+            "20": {
+              "n": 0,
+              "enough": false
+            }
           }
         },
         "vol_ratio": {
           "5+": {
             "5": {
-              "n": 8,
+              "n": 12,
               "enough": false,
-              "hit_rate_raw": 50.0,
-              "avg_raw": -0.74,
-              "median_raw": -2.57,
-              "n_excess": 8,
-              "hit_rate": 50.0,
-              "avg_excess": 1.82,
-              "median_excess": 0.67
+              "hit_rate_raw": 58.3,
+              "avg_raw": -1.55,
+              "median_raw": -2.51,
+              "n_excess": 12,
+              "hit_rate": 58.3,
+              "avg_excess": 0.62,
+              "median_excess": -1.12
             },
             "10": {
               "n": 0,
@@ -1352,15 +1604,15 @@
           },
           "3~5": {
             "5": {
-              "n": 28,
+              "n": 36,
               "enough": false,
-              "hit_rate_raw": 78.6,
-              "avg_raw": -1.6,
-              "median_raw": -2.53,
-              "n_excess": 28,
-              "hit_rate": 46.4,
-              "avg_excess": 1.24,
-              "median_excess": 0.55
+              "hit_rate_raw": 80.6,
+              "avg_raw": -1.94,
+              "median_raw": -2.54,
+              "n_excess": 36,
+              "hit_rate": 52.8,
+              "avg_excess": 0.58,
+              "median_excess": -0.39
             },
             "10": {
               "n": 0,
@@ -1373,15 +1625,15 @@
           },
           "2~3": {
             "5": {
-              "n": 67,
+              "n": 77,
               "enough": true,
-              "hit_rate_raw": 82.1,
-              "avg_raw": -2.8,
+              "hit_rate_raw": 80.5,
+              "avg_raw": -2.79,
               "median_raw": -2.51,
-              "n_excess": 67,
-              "hit_rate": 49.3,
-              "avg_excess": -0.05,
-              "median_excess": 0.17
+              "n_excess": 77,
+              "hit_rate": 50.6,
+              "avg_excess": -0.22,
+              "median_excess": -0.05
             },
             "10": {
               "n": 0,
@@ -1394,15 +1646,15 @@
           },
           "1.5~2": {
             "5": {
-              "n": 103,
+              "n": 124,
               "enough": true,
-              "hit_rate_raw": 76.7,
-              "avg_raw": -2.75,
-              "median_raw": -2.61,
-              "n_excess": 103,
-              "hit_rate": 49.5,
-              "avg_excess": -0.08,
-              "median_excess": 0.06
+              "hit_rate_raw": 71.0,
+              "avg_raw": -2.2,
+              "median_raw": -2.01,
+              "n_excess": 124,
+              "hit_rate": 47.6,
+              "avg_excess": 0.25,
+              "median_excess": 0.32
             },
             "10": {
               "n": 0,
