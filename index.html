@@ -64,6 +64,7 @@
     <button type="button" class="viewbtn" data-view="trail">兵棋推演</button>
     <button type="button" class="viewbtn" data-view="insttrack">法人軌跡</button>
     <button type="button" class="viewbtn" data-view="scorecard">訊號記分板</button>
+    <button type="button" class="viewbtn" data-view="fade">訊號反用</button>
     <button type="button" class="viewbtn" data-view="scan">爆量掃描</button>
     <button type="button" class="viewbtn" data-view="crash">暴跌掃描</button>
     <button type="button" class="viewbtn" data-view="fomo" hidden>FOMO</button>
@@ -207,6 +208,21 @@
     20 日天期一開始幾乎沒有到期樣本,每天會多一天。
   </p>
   <div id="scorecard-body"></div>
+</main>
+
+<main class="list-wrap" id="fade-wrap" hidden>
+  <div class="scan-meta" id="fade-meta">載入中…</div>
+  <p class="panel-note">
+    訊號反用(2026-09-17 加入):跟訊號記分板同一批已到期樣本,只是把訊號方向反過來——
+    命中率是真的用相反方向重算(不是拿 100% 減正用命中率,因為超額報酬剛好等於 0 的
+    樣本兩邊都不算命中),不是重新抓一批資料驗證。爆量反著做(訊號出現後放空)5 日
+    命中率 70% 左右,遠高於正著用的 30%,但暴跌反著用沒有同樣的優勢,不是每個訊號都
+    能套用同一個結論——詳細分析寫在 CLAUDE.md。這裡是全樣本結果,想按大盤狀態/均線
+    等細節分桶看反著用效果,用 <code>scripts/backtest_signal_fade.py</code>。
+    樣本不到 60 的格子顯示成灰色,只能看方向感,不能下結論。這不是可以直接下單的
+    策略,沒有算融券成本/券源/盯市風險。
+  </p>
+  <div id="fade-body"></div>
 </main>
 
 <!-- 個股詳情（全螢幕面板） -->
