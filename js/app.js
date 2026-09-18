@@ -4222,6 +4222,7 @@
     el('crashfomo-wrap').hidden = v !== 'crashfomo';
     el('tick-wrap').hidden = v !== 'tick';
     el('kelly-wrap').hidden = v !== 'kelly';
+    el('riskctl-wrap').hidden = v !== 'riskctl';
     el('yieldcalc-wrap').hidden = v !== 'yieldcalc';
     el('themes-wrap').hidden = v !== 'themes';
     el('risk-wrap').hidden = v !== 'risk';
@@ -4247,6 +4248,7 @@
     if (v === 'crashfomo') loadCrashFomo(false);
     if (v === 'tick') loadTick(false);
     if (v === 'kelly') loadKelly();
+    if (v === 'riskctl') loadRiskCtl();
     if (v === 'yieldcalc') loadYieldCalc();
     if (v === 'themes') loadThemes(false);
     if (v === 'risk') loadRisk(false);
@@ -4267,7 +4269,7 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['today', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['today', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'riskctl', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -5119,6 +5121,36 @@
   }
 
   /**
+   * 2026-09-18 使用者要求:限價估算不再只能用「現價」,能選報價資料庫
+   * (data/quotes-latest.json)裡最近 30 天(quotes.days)任一天的收盤價。
+   * dateStr 留空或等於最新一天就等同 quoteOf() 的 close,不是另一套邏輯。
+   * 回傳 {code, name, close, date} 或 null(代號查不到/那天沒有資料)。
+   */
+  function quoteOnDate(code, dateStr) {
+    if (!quotes || !quotesIdx) return null;
+    var i = quotesIdx[String(code || '').trim()];
+    if (i == null) return null;
+    var days = quotes.days || [];
+    var j = dateStr ? days.indexOf(dateStr) : 0;
+    if (j < 0) return null;
+    var arr = quotes.daily_close && quotes.daily_close[i];
+    var close = arr ? arr[j] : null;
+    if (close == null) return null;
+    return { code: quotes.codes[i], name: quotes.names[i] || '', close: close, date: days[j] };
+  }
+
+  /** 給「選哪一天收盤價」的 <select> 用,第一個選項永遠是「現價(最新)」。 */
+  function priceDateOptionsHtml(selected) {
+    var html = '<option value="">現價(最新)</option>';
+    var days = (quotes && quotes.days) || [];
+    for (var i = 0; i < days.length; i++) {
+      html += '<option value="' + esc(days[i]) + '"' +
+        (selected === days[i] ? ' selected' : '') + '>' + esc(days[i]) + '</option>';
+    }
+    return html;
+  }
+
+  /**
    * 兩檔的日報酬相關係數。回傳 {rho, n} 或 null(資料不足)。
    * ret_bp 是基點整數,缺值為 null —— 兩邊都要有值那天才算。
    */
@@ -5189,7 +5221,7 @@
   var kLegs = 2;
   var kRho = 0.35;
 
-  var K_DEFAULTS = { code: '', p: '55', s: '8', w: '16' };
+  var K_DEFAULTS = { code: '', date: '', p: '55', s: '8', w: '16' };
 
   function kLegRowHtml(i, vals) {
     return '' +
@@ -5199,6 +5231,8 @@
           '<label class="field"><span class="field-label">股票代號(選填)</span>' +
             '<input type="text" data-kf="code" data-i="' + i + '" inputmode="numeric" ' +
             'autocomplete="off" value="' + esc(vals.code) + '" placeholder="例如 2330"></label>' +
+          '<label class="field"><span class="field-label">參考價日期</span>' +
+            '<select data-kf="date" data-i="' + i + '">' + priceDateOptionsHtml(vals.date) + '</select></label>' +
           '<label class="field"><span class="field-label">勝率 %</span>' +
             '<input type="text" data-kf="p" data-i="' + i + '" inputmode="decimal" ' +
             'value="' + esc(vals.p) + '"></label>' +
@@ -5221,10 +5255,29 @@
       var prev = old[i] || old[old.length - 1] || K_DEFAULTS;
       html += kLegRowHtml(i, {
         code: i < old.length ? prev.code : '',    // 新增的那筆不要複製代號
+        date: i < old.length ? prev.date : '',
         p: prev.p, s: prev.s, w: prev.w
       });
     }
     el('k-legs').innerHTML = html;
+  }
+
+  /**
+   * renderKellyLegs() 建好 DOM 時,quotes 常常還沒載入完成,「參考價日期」
+   * 的下拉選單當下只有「現價(最新)」一個選項。quotes 載入後不能整批重繪
+   * (會吃掉正在打字的欄位),所以改成只幫「還只有一個選項」的下拉補選項、
+   * 保留使用者已經選的值——recalcKelly() 每次都會呼叫,quotes 到位那次
+   * 自然就補上了。
+   */
+  function fillDateSelectOptions(containerId, selector) {
+    var container = el(containerId);
+    if (!container || !quotes || !quotes.days || !quotes.days.length) return;
+    var selects = container.querySelectorAll(selector);
+    Array.prototype.forEach.call(selects, function (sel) {
+      if (sel.options.length > 1) return;   // 已經補過
+      var cur = sel.value;
+      sel.innerHTML = priceDateOptionsHtml(cur);
+    });
   }
 
   function readKellyLegs() {
@@ -5235,7 +5288,7 @@
         var input = node.querySelector('[data-kf="' + f + '"]');
         return input ? input.value.trim() : '';
       }
-      out.push({ code: v('code'), p: v('p'), s: v('s'), w: v('w') });
+      out.push({ code: v('code'), date: v('date'), p: v('p'), s: v('s'), w: v('w') });
     });
     return out;
   }
@@ -5284,6 +5337,7 @@
   }
 
   function recalcKelly() {
+    fillDateSelectOptions('k-legs', '[data-kf="date"]');
     var capital = num(el('k-capital').value);
     var legs = readKellyLegs();
     var out = el('k-out');
@@ -5325,15 +5379,15 @@
       var p = num(L.p), s = num(L.s), w = num(L.w);
       var solo = (p == null || s == null || w == null)
         ? null : kellySolo(p / 100, s / 100, w / 100);
-      var q = L.code ? quoteOf(L.code) : null;
+      var q = L.code ? quoteOnDate(L.code, L.date) : null;
       var info = el('k-legs').querySelector('[data-leg-info="' + i + '"]');
       if (info) {
         if (L.code && q) {
-          info.innerHTML = '<span class="dim">' + esc(q.name) + ' 現價 ' +
-            q.close + '(' + esc(quotes.date) + ')</span>';
+          info.innerHTML = '<span class="dim">' + esc(q.name) + (L.date ? ' 收盤 ' : ' 現價 ') +
+            q.close + '(' + esc(q.date) + ')</span>';
         } else if (L.code) {
           info.innerHTML = '<span class="warn-sm">查不到 ' + esc(L.code) +
-            '(只收錄上市普通股)</span>';
+            (L.date ? '(那天沒有資料或不是交易日)' : '(只收錄上市普通股)') + '</span>';
         } else {
           info.innerHTML = '';
         }
@@ -5496,6 +5550,218 @@
       el('kelly-meta').innerHTML = '<span class="warn">讀不到報價(' + esc(quotesErr || '') +
         ')。Kelly 還是能算,但沒有實測相關係數,請用下面的手動 ρ。</span>';
       recalcKelly();
+    });
+  }
+
+  // ------------------------------------------------------------ 風險管控(固定風險部位試算)
+  //
+  // 2026-09-18 使用者要求(9/18 大量放空爆量反著做訊號被軋空之後的檢討):
+  // Kelly 算的是「長期複利成長最快」的部位,不是「每筆虧多少錢都一樣」——
+  // 使用者當天的部位是固定 1000 股下單,股價 4695 元的台光電因此獨佔帳戶
+  // 65% 的曝險,不是刻意選的權重。這裡是獨立的第二個計算機,公式:
+  //   股數 = (帳戶金額 × 每筆風險預算%) ÷ (進場價 × 停損%)
+  // 用固定風險反推股數,高價股跟低價股在停損時虧的錢一樣多。跟 Kelly 分頁
+  // 一樣不寫回任何持倉資料,純試算,不會自動下單。
+  var rcLegs = 3;
+  var RC_DEFAULTS = { code: '', dir: 'long', date: '' };
+
+  function rcLegRowHtml(i, vals) {
+    return '' +
+      '<div class="k-leg" data-rleg="' + i + '">' +
+        '<div class="k-leg-head">第 ' + (i + 1) + ' 筆</div>' +
+        '<div class="grid2">' +
+          '<label class="field"><span class="field-label">股票代號(選填)</span>' +
+            '<input type="text" data-rf="code" data-i="' + i + '" inputmode="numeric" ' +
+            'autocomplete="off" value="' + esc(vals.code) + '" placeholder="例如 2330"></label>' +
+          '<label class="field"><span class="field-label">方向</span>' +
+            '<select data-rf="dir" data-i="' + i + '">' +
+              '<option value="long"' + (vals.dir !== 'short' ? ' selected' : '') + '>做多</option>' +
+              '<option value="short"' + (vals.dir === 'short' ? ' selected' : '') + '>做空</option>' +
+            '</select></label>' +
+          '<label class="field"><span class="field-label">參考價日期</span>' +
+            '<select data-rf="date" data-i="' + i + '">' + priceDateOptionsHtml(vals.date) + '</select></label>' +
+          '<label class="field"><span class="field-label">進場價(留空自動帶入參考價)</span>' +
+            '<input type="text" data-rf="price" data-i="' + i + '" inputmode="decimal" ' +
+            'value="' + esc(vals.price || '') + '" placeholder="自動帶入"></label>' +
+        '</div>' +
+        '<div class="k-leg-info" data-rleg-info="' + i + '"></div>' +
+      '</div>';
+  }
+
+  /** 只在筆數改變時重建 —— 跟 Kelly legs 同一個理由,不吃掉打字中的輸入。 */
+  function renderRiskCtlLegs() {
+    var old = readRiskCtlLegs();
+    var html = '';
+    for (var i = 0; i < rcLegs; i++) {
+      var prev = old[i] || old[old.length - 1] || RC_DEFAULTS;
+      html += rcLegRowHtml(i, {
+        code: i < old.length ? prev.code : '',    // 新增的那筆不要複製代號/價格
+        dir: prev.dir || 'long',
+        date: i < old.length ? prev.date : (prev.date || ''),
+        price: i < old.length ? prev.price : ''
+      });
+    }
+    el('rc-legs').innerHTML = html;
+  }
+
+  function readRiskCtlLegs() {
+    var out = [];
+    var nodes = el('rc-legs').querySelectorAll('[data-rleg]');
+    Array.prototype.forEach.call(nodes, function (node) {
+      function v(f) {
+        var input = node.querySelector('[data-rf="' + f + '"]');
+        return input ? input.value.trim() : '';
+      }
+      out.push({ code: v('code'), dir: v('dir') || 'long', date: v('date'), price: v('price') });
+    });
+    return out;
+  }
+
+  /**
+   * 進場價欄位是空的、或者裡面的值是上一次自動帶入的(不是使用者自己
+   * 打的),就用「代號 + 參考價日期」重新查一次報價填進去——跟
+   * thinkingPrefillValuation() 同一種「不覆蓋使用者自己填的值」慣例,
+   * 差別是這裡多了「換日期要能更新自動帶入的價格」這個需求:如果只看
+   * 「欄位是不是空的」,使用者先填代號(自動帶入現價)、再切換參考價
+   * 日期,價格會卡在現價不動,跟這個功能要解決的問題（換日期看歷史價）
+   * 直接衝突。用 data-autofilled 旗標分辨「這個值是自動帶入的」還是
+   * 「使用者自己打的」,只有前者才允許被覆蓋;使用者直接在進場價欄位
+   * 打字時,input 事件會清掉這個旗標(見 bindEvents 那段)。
+   */
+  function rcAutofillPrices() {
+    var nodes = el('rc-legs').querySelectorAll('[data-rleg]');
+    Array.prototype.forEach.call(nodes, function (node) {
+      var codeEl = node.querySelector('[data-rf="code"]');
+      var dateEl = node.querySelector('[data-rf="date"]');
+      var priceEl = node.querySelector('[data-rf="price"]');
+      if (!codeEl || !priceEl) return;
+      var isEmpty = priceEl.value.trim() === '';
+      var wasAutofilled = priceEl.getAttribute('data-autofilled') === '1';
+      if (!isEmpty && !wasAutofilled) return;      // 使用者自己填過的價格,不覆蓋
+      var code = codeEl.value.trim();
+      if (!code) return;
+      var q = quoteOnDate(code, dateEl ? dateEl.value : '');
+      if (q) { priceEl.value = q.close; priceEl.setAttribute('data-autofilled', '1'); }
+    });
+  }
+
+  function recalcRiskCtl() {
+    fillDateSelectOptions('rc-legs', '[data-rf="date"]');
+    rcAutofillPrices();
+
+    var capital = num(el('rc-capital').value);
+    var riskPct = num(el('rc-risk-pct').value);
+    var stopPct = num(el('rc-stop-pct').value);
+    var out = el('rc-out');
+    var legs = readRiskCtlLegs();
+
+    // leg-info:顯示查到的名稱/報價日期,跟 Kelly legs 同一套提示邏輯
+    var i;
+    for (i = 0; i < legs.length; i++) {
+      var L = legs[i];
+      var info = el('rc-legs').querySelector('[data-rleg-info="' + i + '"]');
+      if (!info) continue;
+      if (L.code) {
+        var q = quoteOnDate(L.code, L.date);
+        info.innerHTML = q
+          ? '<span class="dim">' + esc(q.name) + (L.date ? ' 收盤 ' : ' 現價 ') + q.close + '(' + esc(q.date) + ')</span>'
+          : '<span class="warn-sm">查不到 ' + esc(L.code) + (L.date ? '(那天沒有資料或不是交易日)' : '(只收錄上市普通股)') + '</span>';
+      } else {
+        info.innerHTML = '';
+      }
+    }
+
+    if (capital == null || capital <= 0) { out.innerHTML = '<p class="warn">請填帳戶金額。</p>'; return; }
+    if (riskPct == null || riskPct <= 0) { out.innerHTML = '<p class="warn">請填每筆風險預算 %(大於 0)。</p>'; return; }
+    if (stopPct == null || stopPct <= 0) { out.innerHTML = '<p class="warn">請填停損 %(大於 0)。</p>'; return; }
+
+    var riskBudget = capital * riskPct / 100;
+    var rows = [], anyPriced = false;
+    for (i = 0; i < legs.length; i++) {
+      var leg = legs[i];
+      var price = num(leg.price);
+      var shares = (price != null && price > 0)
+        ? Math.floor(riskBudget / (price * stopPct / 100)) : null;
+      if (shares != null) anyPriced = true;
+      rows.push({ leg: leg, price: price, shares: shares });
+    }
+
+    var html = '<table class="k-table"><thead><tr>' +
+      '<th>筆</th><th>方向</th><th class="num">進場價</th><th class="num">建議股數</th>' +
+      '<th class="num">曝險</th><th class="num">停損時虧</th><th class="num">佔帳戶</th>' +
+      '</tr></thead><tbody>';
+    var sumExposure = 0, sumRisk = 0, sumExposureLong = 0, sumExposureShort = 0;
+    for (i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var label = '第 ' + (i + 1) + ' 筆' + (r.leg.code ? '<br><span class="dim">' + esc(r.leg.code) + '</span>' : '');
+      var dirLabel = r.leg.dir === 'short' ? '做空' : '做多';
+      if (r.price == null || r.shares == null) {
+        html += '<tr><td>' + label + '</td><td>' + dirLabel + '</td><td colspan="4" class="dim">請填進場價(或填代號自動帶入)</td></tr>';
+        continue;
+      }
+      if (r.shares <= 0) {
+        html += '<tr><td>' + label + '</td><td>' + dirLabel + '</td><td class="num">' + r.price +
+          '</td><td colspan="3" class="dim">風險預算不夠買 1 股(股價相對停損%太高)</td></tr>';
+        continue;
+      }
+      var exposure = r.shares * r.price;
+      var riskAmt = exposure * stopPct / 100;
+      sumExposure += exposure;
+      sumRisk += riskAmt;
+      if (r.leg.dir === 'short') sumExposureShort += exposure; else sumExposureLong += exposure;
+      var lots = Math.floor(r.shares / 1000), odd = r.shares % 1000;
+      html += '<tr>' +
+        '<td>' + label + '</td>' +
+        '<td>' + dirLabel + '</td>' +
+        '<td class="num">' + r.price + '</td>' +
+        '<td class="num">' + fmtInt(r.shares) + ' 股' +
+          (lots ? '<br><span class="dim">' + lots + ' 張 ' + odd + ' 股</span>' : '') + '</td>' +
+        '<td class="num">' + fmtMoney(exposure) + '</td>' +
+        '<td class="num down">-' + fmtMoney(riskAmt) + '</td>' +
+        '<td class="num">' + fmtPct(exposure / capital, 1) + '</td>' +
+      '</tr>';
+    }
+    html += '</tbody></table>';
+
+    html += '<div class="k-sum">' +
+      '<div><span>總曝險</span><b>' + fmtMoney(sumExposure) + '</b>' +
+        '<span class="dim">(' + fmtPct(capital > 0 ? sumExposure / capital : null, 1) + ' 帳戶)</span></div>' +
+      '<div><span>全數停損時</span><b class="down">-' + fmtMoney(sumRisk) + '</b>' +
+        '<span class="dim">(' + fmtPct(capital > 0 ? sumRisk / capital : null, 1) + ' 帳戶)</span></div>' +
+      '<div><span>做多曝險</span><b>' + fmtMoney(sumExposureLong) + '</b></div>' +
+      '<div><span>做空曝險</span><b>' + fmtMoney(sumExposureShort) + '</b></div>' +
+    '</div>';
+
+    if (sumRisk > capital) {
+      html += '<p class="warn-sm">全部同時停損的虧損(' + fmtMoney(sumRisk) +
+        ')已經超過帳戶金額 —— 筆數 × 每筆風險預算% 太高,不是股價的問題,考慮減少筆數或調低風險預算%。</p>';
+    }
+    html += '<p class="panel-note">停損假設一定在你設的價位成交,真實市場會跳空穿過停損 —— ' +
+      '實際虧損可能大於上表,尤其是做空、遇到漲停鎖死的情況。這裡只算單一筆停損,' +
+      '沒有像 Kelly 分頁那樣做多筆相關係數折減 —— 同一天同方向的多筆部位,' +
+      '實際風險會比「每筆風險預算加總」更集中,自己心裡有數。</p>';
+    if (!anyPriced) {
+      html += '<p class="dim">還沒有任何一筆有進場價,填股票代號(自動帶入報價)或直接填進場價開始算。</p>';
+    }
+    out.innerHTML = html;
+  }
+
+  var riskCtlReady = false;
+
+  function loadRiskCtl() {
+    if (riskCtlReady) { recalcRiskCtl(); return; }
+    riskCtlReady = true;
+    renderRiskCtlLegs();
+
+    el('riskctl-meta').textContent = '載入報價中…';
+    loadQuotes().then(function (d) {
+      el('riskctl-meta').textContent = d.date + ' 收盤 · 收錄 ' + fmtInt(d.codes.length) +
+        ' 檔上市股票,參考價日期可選最近 ' + fmtInt(d.days.length) + ' 個交易日';
+      recalcRiskCtl();
+    }).catch(function () {
+      el('riskctl-meta').innerHTML = '<span class="warn">讀不到報價(' + esc(quotesErr || '') +
+        '),股票代號自動帶入用不了,請直接手動填進場價。</span>';
+      recalcRiskCtl();
     });
   }
 
@@ -7405,6 +7671,7 @@
 
     el('k-capital').addEventListener('input', recalcKelly);
     el('k-legs').addEventListener('input', recalcKelly);
+    el('k-legs').addEventListener('change', recalcKelly);
 
     el('kelly-wrap').addEventListener('click', function (e) {
       var m = e.target.closest('[data-kmult]');
@@ -7433,6 +7700,30 @@
       kRho = parseInt(e.target.value, 10) / 100;
       el('k-rho-val').textContent = kRho.toFixed(2);
       recalcKelly();
+    });
+
+    ['rc-capital', 'rc-risk-pct', 'rc-stop-pct'].forEach(function (id) {
+      el(id).addEventListener('input', recalcRiskCtl);
+    });
+    el('rc-legs').addEventListener('input', function (e) {
+      // 使用者直接在進場價欄位打字,視為手動值,取消自動帶入旗標,
+      // 之後換代號/日期不會再覆蓋這一格。
+      if (e.target && e.target.getAttribute && e.target.getAttribute('data-rf') === 'price') {
+        e.target.removeAttribute('data-autofilled');
+      }
+      recalcRiskCtl();
+    });
+    el('rc-legs').addEventListener('change', recalcRiskCtl);
+    el('riskctl-wrap').addEventListener('click', function (e) {
+      var n = e.target.closest('[data-rlegs]');
+      if (!n) return;
+      rcLegs = parseInt(n.getAttribute('data-rlegs'), 10);
+      Array.prototype.forEach.call(
+        el('riskctl-wrap').querySelectorAll('[data-rlegs]'), function (b) {
+          b.classList.toggle('is-active', b === n);
+        });
+      renderRiskCtlLegs();
+      recalcRiskCtl();
     });
 
     ['odd-budget', 'odd-price', 'odd-rate', 'odd-disc', 'odd-min'].forEach(function (id) {

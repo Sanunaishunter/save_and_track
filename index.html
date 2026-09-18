@@ -74,6 +74,7 @@
     <button type="button" class="viewbtn" data-view="crashfomo" hidden>暴跌FOMO</button>
     <button type="button" class="viewbtn" data-view="tick">產業流向</button>
     <button type="button" class="viewbtn" data-view="kelly">部位</button>
+    <button type="button" class="viewbtn" data-view="riskctl">風險管控</button>
     <button type="button" class="viewbtn" data-view="yieldcalc">📖 利率試算</button>
     <button type="button" class="viewbtn" data-view="themes">題材分類</button>
     <button type="button" class="viewbtn" data-view="signals">量價訊號</button>
@@ -456,6 +457,12 @@
       <button type="button" class="tchip is-active" data-klegs="2">2</button>
       <button type="button" class="tchip" data-klegs="3">3</button>
       <button type="button" class="tchip" data-klegs="4">4</button>
+      <button type="button" class="tchip" data-klegs="5">5</button>
+      <button type="button" class="tchip" data-klegs="6">6</button>
+      <button type="button" class="tchip" data-klegs="7">7</button>
+      <button type="button" class="tchip" data-klegs="8">8</button>
+      <button type="button" class="tchip" data-klegs="9">9</button>
+      <button type="button" class="tchip" data-klegs="10">10</button>
     </div>
 
     <div id="k-legs"></div>
@@ -488,6 +495,50 @@
         <input type="text" id="odd-min" inputmode="decimal" value="1"></label>
     </div>
     <div id="odd-out"></div>
+  </section>
+</main>
+
+<!-- 風險管控(2026-09-18 使用者要求):固定風險部位試算,跟部位分頁的 Kelly
+     計算機是獨立工具,不互相牽動。Kelly 算的是「長期複利成長最快」的部位,
+     這裡算的是「每筆最多虧多少錢」——先定風險預算,再反推股數,不是先決定
+     股數。股價來源可選「現價」或報價資料庫裡最近 30 天任一天的收盤價。 -->
+<main class="list-wrap" id="riskctl-wrap" hidden>
+  <div class="scan-meta" id="riskctl-meta">載入中…</div>
+
+  <section class="panel">
+    <h2 class="panel-title">風險管控:固定風險部位試算</h2>
+    <p class="panel-note">
+      股數 = (帳戶金額 × 每筆風險預算%) ÷ (進場價 × 停損%)。每一筆不管股價高低,
+      觸及停損時的虧損金額都一樣,帳戶不會被單一高價股的曝險綁架。這是示範用的
+      估算工具,不會自動下單,也不會覆蓋追蹤分頁的出場設定。
+    </p>
+
+    <div class="grid2">
+      <label class="field"><span class="field-label">帳戶金額</span>
+        <input type="text" id="rc-capital" inputmode="decimal" value="1000000"></label>
+      <label class="field"><span class="field-label">每筆風險預算 %(帳戶的)</span>
+        <input type="text" id="rc-risk-pct" inputmode="decimal" value="1"></label>
+      <label class="field"><span class="field-label">停損 %</span>
+        <input type="text" id="rc-stop-pct" inputmode="decimal" value="8"></label>
+    </div>
+
+    <div class="ctrl-row">
+      <span class="ctrl-label">幾筆(最多 10)</span>
+      <button type="button" class="tchip" data-rlegs="1">1</button>
+      <button type="button" class="tchip" data-rlegs="2">2</button>
+      <button type="button" class="tchip is-active" data-rlegs="3">3</button>
+      <button type="button" class="tchip" data-rlegs="4">4</button>
+      <button type="button" class="tchip" data-rlegs="5">5</button>
+      <button type="button" class="tchip" data-rlegs="6">6</button>
+      <button type="button" class="tchip" data-rlegs="7">7</button>
+      <button type="button" class="tchip" data-rlegs="8">8</button>
+      <button type="button" class="tchip" data-rlegs="9">9</button>
+      <button type="button" class="tchip" data-rlegs="10">10</button>
+    </div>
+
+    <div id="rc-legs"></div>
+
+    <div id="rc-out"></div>
   </section>
 </main>
 
