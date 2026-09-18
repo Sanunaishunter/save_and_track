@@ -8108,10 +8108,18 @@
   //   r_new = r_implied + Δ殖利率 × 傳導係數
   //   新合理PE = payout×(1+g) / (r_new − g);新合理股價 = EPS × 新合理PE
 
-  function yieldCalcCompute(code, deltaPct, coeff) {
-    var q = quoteOf(code);
+  function yieldCalcCompute(code, deltaPct, coeff, dateStr) {
+    // 2026-09-18 使用者要求(單純版本):可選歷史某天的收盤價代替現價,
+    // 但 PE/PB/殖利率沒有逐日歷史資料,只有最新一天快照(valuation-latest.json
+    // 沒有 daily_* 序列),所以選了歷史日期時,估值倍數仍然是今天的——
+    // 這是刻意的簡化,不是漏改,UI 上用 #yc-date-note 提醒這個不一致。
+    var q = dateStr ? quoteOnDate(code, dateStr) : quoteOf(code);
     var v = valuationOf(code);
-    if (!q || !(q.close > 0)) return { fatal: '查無現價資料(代號打錯,或不是上市普通股)。' };
+    if (!q || !(q.close > 0)) {
+      return { fatal: dateStr
+        ? '那天查無收盤價(代號打錯、不是上市普通股,或那天不是交易日/超出 30 天範圍)。'
+        : '查無現價資料(代號打錯,或不是上市普通股)。' };
+    }
     if (!v) return { fatal: '查無估值資料(代號打錯,或不是上市普通股)。' };
     var price = q.close, pe = v.pe, pb = v.pb, yld = v['yield'];
     if (!(pe > 0)) return { fatal: '這檔股票 PE 無效(近期虧損或無穩定獲利),本模型算不出來。' };
@@ -8130,7 +8138,8 @@
     var deltaR = (Number(deltaPct) || 0) / 100 * (Number(coeff) || 0);
     var rNew = rImplied + deltaR;
     var base = {
-      name: v.name, code: code, price: price, pe: pe, pb: pb, yieldPct: yld,
+      name: v.name, code: code, price: price, priceDate: dateStr ? q.date : null,
+      pe: pe, pb: pb, yieldPct: yld,
       eps: price / pe, bookValue: price / pb,
       payout: payout, payoutRaw: payoutRaw, retention: retention, roe: roe, g: g,
       rImplied: rImplied, deltaR: deltaR, rNew: rNew
@@ -8159,9 +8168,9 @@
     }
     var head = '<div class="k-sum">' +
         '<div><span>股票</span><b>' + esc(r.code) + ' ' + esc(r.name || '') + '</b></div>' +
-        '<div><span>現價</span><b>' + r.price + '</b></div>' +
-        '<div><span>PE / PB / 殖利率</span><b>' + r.pe + ' / ' + r.pb + ' / ' +
-          (r.yieldPct == null ? '—' : r.yieldPct + '%') + '</b></div>' +
+        '<div><span>' + (r.priceDate ? '參考價(' + esc(r.priceDate) + ' 收盤)' : '現價') + '</span><b>' + r.price + '</b></div>' +
+        '<div><span>PE / PB / 殖利率' + (r.priceDate ? '(最新快照,非同一天)' : '') + '</span><b>' +
+          r.pe + ' / ' + r.pb + ' / ' + (r.yieldPct == null ? '—' : r.yieldPct + '%') + '</b></div>' +
         '<div><span>反推 EPS / 每股淨值</span><b>' + r.eps.toFixed(2) + ' / ' + r.bookValue.toFixed(2) + '</b></div>' +
         '<div><span>ROE / 配息率 / 保留率</span><b>' + fmtPct(r.roe, 1) + ' / ' + fmtPct(r.payout, 1) + ' / ' + fmtPct(r.retention, 1) + '</b></div>' +
         '<div><span>永續成長率 g</span><b>' + fmtPct(r.g, 2) + '</b></div>' +
@@ -8191,9 +8200,13 @@
   var yieldCalcBound = false;
 
   function recalcYieldCalc() {
-    var codeEl = el('yc-code'), deltaEl = el('yc-delta'), coeffEl = el('yc-coeff'), out = el('yc-out');
+    var codeEl = el('yc-code'), dateEl = el('yc-date'), deltaEl = el('yc-delta'), coeffEl = el('yc-coeff'), out = el('yc-out');
     if (!codeEl || !out) return;
+    fillDateSelectOptions('yieldcalc-wrap', '#yc-date');
     var code = codeEl.value.trim();
+    var dateStr = dateEl ? dateEl.value : '';
+    var noteEl = el('yc-date-note');
+    if (noteEl) noteEl.hidden = !dateStr;
     if (!code) { out.innerHTML = ''; return; }
     if (!/^[1-9]\d{3}$/.test(code)) {
       out.innerHTML = '<p class="dim">股票代號要是 4 碼數字、開頭不是 0(只支援上市普通股)。</p>';
@@ -8208,7 +8221,7 @@
     }
     out.innerHTML = '<p class="dim">計算中…</p>';
     Promise.all([loadQuotes(), loadValuation()]).then(function () {
-      var r = yieldCalcCompute(code, deltaPct, coeff);
+      var r = yieldCalcCompute(code, deltaPct, coeff, dateStr);
       out.innerHTML = yieldCalcResultHtml(r, deltaInput, coeffInput);
     }).catch(function (e) {
       out.innerHTML = '<p class="warn-sm">讀不到報價或估值資料(' + esc(e.message || String(e)) + ')。</p>';
@@ -8218,9 +8231,9 @@
   function loadYieldCalc() {
     if (yieldCalcBound) return;
     yieldCalcBound = true;
-    ['yc-code', 'yc-delta', 'yc-coeff'].forEach(function (id) {
+    ['yc-code', 'yc-date', 'yc-delta', 'yc-coeff'].forEach(function (id) {
       var node = el(id);
-      if (node) node.addEventListener('input', recalcYieldCalc);
+      if (node) { node.addEventListener('input', recalcYieldCalc); node.addEventListener('change', recalcYieldCalc); }
     });
     var meta = el('yieldcalc-meta');
     if (meta) {
@@ -8230,6 +8243,9 @@
         meta.textContent = '讀不到估值資料,輸入股票代號後會再重試。';
       });
     }
+    // 參考價日期下拉的選項要等 quotes 載入才有——跟 Kelly/風險管控同一套
+    // fillDateSelectOptions() backfill 邏輯,不用等這裡特別處理失敗情況。
+    loadQuotes().then(function () { fillDateSelectOptions('yieldcalc-wrap', '#yc-date'); }).catch(function () {});
   }
 
   /** 個股查詢 meta 那行的非同步附加:估值 + 事件。兩份資料抓不到就什麼都不加。 */

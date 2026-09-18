@@ -559,11 +559,18 @@
     <div class="grid2">
       <label class="field"><span class="field-label">股票代號</span>
         <input type="text" id="yc-code" inputmode="numeric" autocomplete="off" placeholder="例如 2634"></label>
+      <label class="field"><span class="field-label">參考價日期</span>
+        <select id="yc-date"><option value="">現價(最新)</option></select></label>
       <label class="field"><span class="field-label">Δ殖利率(百分點,升息為正)</span>
         <input type="text" id="yc-delta" inputmode="decimal" placeholder="例如 0.5 或 -0.3"></label>
       <label class="field"><span class="field-label">傳導係數(預設 1)</span>
         <input type="text" id="yc-coeff" inputmode="decimal" value="1"></label>
     </div>
+    <p class="panel-note" id="yc-date-note" hidden>
+      選了歷史日期,只換「股價」這一項;本益比/股價淨值比/殖利率還是最新一天的快照
+      (repo 沒有逐日歷史估值資料)——這代表反推出來的數字會混用「那天的股價」跟
+      「今天的估值倍數」,不是那天真正的 PE/PB/殖利率,只做粗略參考。
+    </p>
 
     <div id="yc-out"></div>
   </section>
