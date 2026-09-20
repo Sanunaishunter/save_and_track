@@ -4207,6 +4207,7 @@
 
   function switchView(v) {
     el('today-wrap').hidden = v !== 'today';
+    el('healthcheck-wrap').hidden = v !== 'healthcheck';
     el('track-wrap').hidden = v !== 'track';
     el('tabs').hidden = v !== 'track';
     el('thinking-wrap').hidden = v !== 'thinking';
@@ -4235,6 +4236,7 @@
       b.classList.toggle('is-active', b.getAttribute('data-view') === v);
     });
     if (v === 'today') loadToday(false);
+    if (v === 'healthcheck') loadHealthCheck();
     if (v === 'thinking') loadThinkingView();
     if (v === 'trail') loadTrailWatch();
     if (v === 'insttrack') loadInstTrack(false);
@@ -4269,7 +4271,7 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['today', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'riskctl', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  var VIEWS_ORDER = ['today', 'healthcheck', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'riskctl', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');
@@ -8784,6 +8786,102 @@
     ]).then(function (res) {
       renderToday({ mg: res[0], scan: res[1], crash: res[2], thinscan: res[3], sc: res[4] });
     });
+  }
+
+  // ---------------------------------------------------------- 健康度檢查
+  // 2026-09-20 新增:開盤前的個人心理/紀律問答,跟其他分頁的資料/訊號完全
+  // 無關,純粹是使用者自訂的檢查清單。一次只顯示一題、單選是/否。第 1、2
+  // 題是「閘門」——原始需求只有這兩題寫「才能顯示下一題」,答否就整個停下來、
+  // 不能繼續往下一題;第 3~6 題不管是/否都會進下一題,差別只在某個答案要不要
+  // 先顯示一句提醒;第 7 題沒有問題,只是結尾一句話,不算閘門。state 只存在
+  // 記憶體(不寫 localStorage),離開分頁或重新整理就重來,這是「每次開盤前
+  // 的儀式」,不是要長期累積資料。
+
+  var HC_QUESTIONS = [
+    { text: '人清醒且精神很好?',
+      no: { stop: true, message: '精神不好,無法開啟超腦力模式,休息吧。' } },
+    { text: '近幾日的台股市況狀況清楚嗎?',
+      no: { stop: true, message: '先看這七天的台股新聞。' } },
+    { text: '金融族群有漲嗎?',
+      yes: { message: '注意,可能有資金在避險,小心被咬。' } },
+    { text: '有記得分散風險,不重壓某一類股嗎?',
+      no: { message: '安全第一。' } },
+    { text: '利率看了嗎?(台幣變大就是有熱錢進來,反之逃跑,外資極限 32.8 塊)',
+      no: { message: '看一下吧。' } },
+    { text: '知道量的規則嗎?(量 > 0.7 都沒事,< 0.5 就危險,爆量等於出貨)',
+      no: { message: '花個五分鐘想想規則,看看 K 線跟新聞。' } }
+  ];
+  var HC_FINAL_QUOTE = '股市就是擲骰子。';
+
+  var hcState = null;
+
+  function hcReset() {
+    hcState = { step: 0, phase: 'question', message: '' };
+  }
+
+  function hcAdvance() {
+    hcState.step += 1;
+    hcState.phase = hcState.step >= HC_QUESTIONS.length ? 'done' : 'question';
+    renderHealthCheck();
+  }
+
+  function hcAnswer(isYes) {
+    var q = HC_QUESTIONS[hcState.step];
+    var branch = (isYes ? q.yes : q.no) || {};
+    if (branch.stop) {
+      hcState.phase = 'stopped';
+      hcState.message = branch.message;
+      renderHealthCheck();
+      return;
+    }
+    if (branch.message) {
+      hcState.phase = 'message';
+      hcState.message = branch.message;
+      renderHealthCheck();
+      return;
+    }
+    hcAdvance();
+  }
+
+  function renderHealthCheck() {
+    var out = el('hc-out');
+    if (!out) return;
+
+    if (hcState.phase === 'stopped') {
+      out.innerHTML = '<div class="gate-banner">' + esc(hcState.message) + '</div>' +
+        '<button type="button" class="btn btn-outline btn-block" id="hc-btn-restart">重新測驗</button>';
+      el('hc-btn-restart').addEventListener('click', function () { hcReset(); renderHealthCheck(); });
+      return;
+    }
+
+    if (hcState.phase === 'done') {
+      out.innerHTML = '<div class="hc-quote">' + esc(HC_FINAL_QUOTE) + '</div>' +
+        '<button type="button" class="btn btn-primary btn-block" id="hc-btn-restart">重新測驗</button>';
+      el('hc-btn-restart').addEventListener('click', function () { hcReset(); renderHealthCheck(); });
+      return;
+    }
+
+    if (hcState.phase === 'message') {
+      out.innerHTML = '<div class="gate-banner">' + esc(hcState.message) + '</div>' +
+        '<button type="button" class="btn btn-primary btn-block" id="hc-btn-next">下一題</button>';
+      el('hc-btn-next').addEventListener('click', hcAdvance);
+      return;
+    }
+
+    var q = HC_QUESTIONS[hcState.step];
+    out.innerHTML = '<div class="hc-progress">第 ' + (hcState.step + 1) + ' / ' + HC_QUESTIONS.length + ' 題</div>' +
+      '<div class="hc-question">' + esc(q.text) + '</div>' +
+      '<div class="hc-btnrow">' +
+        '<button type="button" class="btn btn-primary btn-block" id="hc-btn-yes">是</button>' +
+        '<button type="button" class="btn btn-outline btn-block" id="hc-btn-no">否</button>' +
+      '</div>';
+    el('hc-btn-yes').addEventListener('click', function () { hcAnswer(true); });
+    el('hc-btn-no').addEventListener('click', function () { hcAnswer(false); });
+  }
+
+  function loadHealthCheck() {
+    if (!hcState) hcReset();
+    renderHealthCheck();
   }
 
   function init() {

@@ -59,6 +59,7 @@
   </div>
   <nav class="views" id="views">
     <button type="button" class="viewbtn" data-view="today">今天</button>
+    <button type="button" class="viewbtn" data-view="healthcheck">健康度檢查</button>
     <button type="button" class="viewbtn" data-view="risk">大盤狀況</button>
     <button type="button" class="viewbtn is-active" data-view="track">追蹤</button>
     <button type="button" class="viewbtn" data-view="thinking">思考路徑</button>
@@ -115,6 +116,15 @@
   <section class="panel today-panel">
     <h2 class="panel-title">事件</h2>
     <div class="today-list" id="today-events"></div>
+  </section>
+</main>
+
+<!-- 健康度檢查(2026-09-20):開盤前的個人心理/紀律問答,一次只顯示一題、
+     單選是/否,不吃任何 data/*.json,跟追蹤/訊號完全無關。 -->
+<main class="list-wrap" id="healthcheck-wrap" hidden>
+  <div class="scan-meta" id="hc-meta">開盤前的自我檢查,不是分析工具,答案不會被儲存。</div>
+  <section class="panel">
+    <div id="hc-out"></div>
   </section>
 </main>
 
