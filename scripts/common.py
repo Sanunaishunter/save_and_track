@@ -102,7 +102,9 @@ def read_json(path, default=None):
 
 
 def write_json(path, obj, compact=False):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    dirname = os.path.dirname(path)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         if compact:
             json.dump(obj, f, ensure_ascii=False, separators=(",", ":"))

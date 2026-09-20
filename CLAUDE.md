@@ -135,6 +135,24 @@ git commit + push      if: always()
   **把查詢字串裡的日期回填進結果**(2026-09-14 實測:查「9/14 無人機預算」就說 9/14
   通過,實際是 8/14),摘要不算證據,看來源網址/內文日期並對 repo 價量。
 
+**後端腳本**
+- **`common.write_json(path, obj)` 原本無條件 `os.makedirs(os.path.dirname(path),
+  exist_ok=True)`,path 是不含目錄的裸檔名(例如 `stock_lookup.json`,repo 根目錄那份
+  手動清單)時 `os.path.dirname()` 回傳空字串,`os.makedirs('')` 直接丟
+  `FileNotFoundError`。** 2026-09-20 使用者手動觸發 `update-stock-lookup.yml`(`list=fomo`、
+  `only` 填了幾個清單裡沒有的代號)時炸掉,job log 顯示 `fetch_stock_lookup.py` 第 191 行
+  `common.write_json(args.list_file, codes)`——`--only` 遇到清單裡沒有的代號會自動加進
+  `--list-file` 再抓(2026-09-11 加的行為,見該腳本 docstring),但這個 workflow 傳的
+  `--list-file` 就是裸檔名(`stock_lookup.json`/`stock_lookup_scan.json`/
+  `stock_lookup_crashfomo.json`,相對 repo root,不是 `data/...` 那種有目錄的路徑),
+  一路沒被真正踩過(其他所有 `write_json` 呼叫點都用 `common.XXX_FILE` 或
+  `os.path.join(...)`,一定有目錄)。修法:`dirname` 是空字串就跳過 `makedirs`,不要求
+  一定有目錄。離線在 scratch 目錄用 job log 裡完全相同的 `--only` 清單重放過
+  `fetch_stock_lookup.main()`,確認會正確把新代號加進裸檔名的 `stock_lookup.json`
+  (寫入內容跟預期一致)且不再拋例外,之後在沒有 `data/history` 的 scratch 環境正常
+  在下一步回報「data/history 沒有任何資料」並返回 1(這是預期行為,不是這次的 bug)。
+  這個 fix 之後要請使用者重新觸發一次失敗的那次 `update-stock-lookup.yml` run 確認過關。
+
 **前端**
 - `[hidden] { display: none !important; }` 那行不能拿掉(`.btn-block` 會蓋掉 hidden)。
 - 自動存檔/連動欄位**絕不重繪 DOM**(會吃掉使用者正在打的字):`autoSave()` 不重繪、
