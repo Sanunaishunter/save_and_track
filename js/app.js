@@ -3721,26 +3721,40 @@
     return priceMaState(closesDesc);
   }
 
-  /** 2026-09-20 使用者要求:量(張)欄位標出近30個交易日的最高/最低量,
-   * 並用（最低/最高）% 算出量的落差有多大(量縮蓄勢/爆量出貨的落差感)。
-   * rowsAsc 是舊到新,取最後 30 筆(最新的 30 個交易日);缺量的日子
+  /** 2026-09-20 使用者要求:量(張)欄位標出近30個交易日的最高量(=「爆量
+   * 那天」),再看爆量之後量縮到多低,用（最低/最高）% 算出落差。**同一天
+   * 使用者追加澄清方向:只看爆量日「之後」的量,爆量日之前的低量不算、
+   * 不標**——蓄勢期的量不是重點,爆量後量縮才是該觀察的訊號(爆量出貨/
+   * 有沒有人追價)。所以最低量的搜尋範圍限定在 `windowRows` 裡爆量日
+   * (`maxIdx`)之後的交易日,爆量日之前的資料只用來找最高量,不參與找
+   * 最低量。若爆量日剛好是視窗內最後一天(還沒有爆量後的資料),
+   * `minDate`/`minVolume`/`pct` 都是 null,呼叫端要處理(不顯示最低量
+   * 相關文字/標記)。rowsAsc 是舊到新,取最後 30 筆;缺量的日子
    * (r.volume == null)跳過,不當 0 處理。maxVolume 是 0(整段都沒有
    * 成交量資料的極端情況)時不算 pct,避免除以 0。 */
   var LOOKUP_VOL_EXTREME_WINDOW = 30;
   function computeLookupVolumeExtreme(rowsAsc) {
     if (!rowsAsc || !rowsAsc.length) return null;
     var windowRows = rowsAsc.slice(-LOOKUP_VOL_EXTREME_WINDOW);
-    var maxRow = null, minRow = null;
-    windowRows.forEach(function (r) {
+    var maxRow = null, maxIdx = -1;
+    windowRows.forEach(function (r, i) {
       if (r.volume == null) return;
-      if (!maxRow || r.volume > maxRow.volume) maxRow = r;
-      if (!minRow || r.volume < minRow.volume) minRow = r;
+      if (!maxRow || r.volume > maxRow.volume) { maxRow = r; maxIdx = i; }
     });
-    if (!maxRow || !minRow) return null;
-    var pct = maxRow.volume > 0 ? (minRow.volume / maxRow.volume * 100) : null;
+    if (!maxRow) return null;
+
+    var minRow = null;
+    for (var i = maxIdx + 1; i < windowRows.length; i++) {
+      var r = windowRows[i];
+      if (r.volume == null) continue;
+      if (!minRow || r.volume < minRow.volume) minRow = r;
+    }
+
+    var pct = (minRow && maxRow.volume > 0) ? (minRow.volume / maxRow.volume * 100) : null;
     return {
       maxDate: maxRow.date, maxVolume: maxRow.volume,
-      minDate: minRow.date, minVolume: minRow.volume,
+      minDate: minRow ? minRow.date : null,
+      minVolume: minRow ? minRow.volume : null,
       pct: pct
     };
   }
@@ -4040,13 +4054,17 @@
         maNote = '  ·  <span class="' + priceMaClass(priceMa) + '">' + esc(priceMaText(priceMa)) + '</span>';
       }
       var volExtremeNote = '';
-      if (volExtreme && volExtreme.pct != null) {
-        volExtremeNote = '  ·  近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日量:' +
+      if (volExtreme) {
+        volExtremeNote = '  ·  近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日爆量:' +
           '<span class="lookup-vol-max">最高 ' + lookupLots(volExtreme.maxVolume) + ' 張(' +
-            esc(volExtreme.maxDate) + ')</span> / ' +
-          '<span class="lookup-vol-min">最低 ' + lookupLots(volExtreme.minVolume) + ' 張(' +
-            esc(volExtreme.minDate) + ')</span>' +
-          '(最低/最高)= <span class="mono">' + volExtreme.pct.toFixed(1) + '%</span>';
+            esc(volExtreme.maxDate) + ')</span>';
+        if (volExtreme.minDate != null) {
+          volExtremeNote += ' → <span class="lookup-vol-min">爆量後最低 ' +
+            lookupLots(volExtreme.minVolume) + ' 張(' + esc(volExtreme.minDate) + ')</span>' +
+            '(最低/最高)= <span class="mono">' + volExtreme.pct.toFixed(1) + '%</span>';
+        } else {
+          volExtremeNote += '(爆量後還沒有交易日可比)';
+        }
       }
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
@@ -4115,10 +4133,10 @@
         var volText = lookupLots(r.volume);
         if (volExtreme && r.date === volExtreme.maxDate) {
           volCls += ' lookup-vol-max';
-          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最高量"';
+          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最高量(爆量日)"';
         } else if (volExtreme && r.date === volExtreme.minDate) {
           volCls += ' lookup-vol-min';
-          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最低量,(最低/最高)= ' +
+          volTitle = ' title="爆量後最低量,(最低/最高)= ' +
             (volExtreme.pct == null ? '—' : volExtreme.pct.toFixed(1) + '%') + '"';
           if (volExtreme.pct != null) volText += '(' + volExtreme.pct.toFixed(1) + '%)';
         }
