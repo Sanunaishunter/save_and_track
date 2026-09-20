@@ -4112,12 +4112,15 @@
           : '';
         var volCls = 'num mono';
         var volTitle = '';
+        var volText = lookupLots(r.volume);
         if (volExtreme && r.date === volExtreme.maxDate) {
           volCls += ' lookup-vol-max';
           volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最高量"';
         } else if (volExtreme && r.date === volExtreme.minDate) {
           volCls += ' lookup-vol-min';
-          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最低量"';
+          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最低量,(最低/最高)= ' +
+            (volExtreme.pct == null ? '—' : volExtreme.pct.toFixed(1) + '%') + '"';
+          if (volExtreme.pct != null) volText += '(' + volExtreme.pct.toFixed(1) + '%)';
         }
         var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
           '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + warmingBadge + '</td>' +
@@ -4125,7 +4128,7 @@
           '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
           '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
           '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
-          '<td' + colHiddenAttr(5) + ' class="' + volCls + '"' + volTitle + '>' + lookupLots(r.volume) + '</td>' +
+          '<td' + colHiddenAttr(5) + ' class="' + volCls + '"' + volTitle + '>' + volText + '</td>' +
           '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
           '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
             (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
