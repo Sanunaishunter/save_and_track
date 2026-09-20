@@ -1345,6 +1345,11 @@ input[type="date"] {
 .lookup-row.hl-purple { background: rgba(171, 71, 188, 0.20); }
 .lookup-row.is-hidden-row { opacity: .45; }
 
+/* 2026-09-20 量(張)欄位標出近30個交易日最高/最低,跟上面 hl-purple(整列
+   人工標色)是不同東西,這裡只上色文字本身,不動整列背景,避免混淆。 */
+.lookup-vol-max { color: #ab47bc; font-weight: 700; }
+.lookup-vol-min { color: #2dd4bf; font-weight: 700; }
+
 .lookup-th { cursor: pointer; }
 .lookup-th:hover { text-decoration: underline; }
 

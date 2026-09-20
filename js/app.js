@@ -3721,6 +3721,30 @@
     return priceMaState(closesDesc);
   }
 
+  /** 2026-09-20 使用者要求:量(張)欄位標出近30個交易日的最高/最低量,
+   * 並用（最低/最高）% 算出量的落差有多大(量縮蓄勢/爆量出貨的落差感)。
+   * rowsAsc 是舊到新,取最後 30 筆(最新的 30 個交易日);缺量的日子
+   * (r.volume == null)跳過,不當 0 處理。maxVolume 是 0(整段都沒有
+   * 成交量資料的極端情況)時不算 pct,避免除以 0。 */
+  var LOOKUP_VOL_EXTREME_WINDOW = 30;
+  function computeLookupVolumeExtreme(rowsAsc) {
+    if (!rowsAsc || !rowsAsc.length) return null;
+    var windowRows = rowsAsc.slice(-LOOKUP_VOL_EXTREME_WINDOW);
+    var maxRow = null, minRow = null;
+    windowRows.forEach(function (r) {
+      if (r.volume == null) return;
+      if (!maxRow || r.volume > maxRow.volume) maxRow = r;
+      if (!minRow || r.volume < minRow.volume) minRow = r;
+    });
+    if (!maxRow || !minRow) return null;
+    var pct = maxRow.volume > 0 ? (minRow.volume / maxRow.volume * 100) : null;
+    return {
+      maxDate: maxRow.date, maxVolume: maxRow.volume,
+      minDate: minRow.date, minVolume: minRow.volume,
+      pct: pct
+    };
+  }
+
   function computeLookupMarginMaintenance(rowsAsc) {
     if (!rowsAsc || rowsAsc.length < 2) return null;
     var bestIdx = null;
@@ -3978,6 +4002,7 @@
       var marginMaint = computeLookupMarginMaintenance(rec.rows || []);
       var nearHigh = computeLookupNearHigh(rec.rows || []);
       var priceMa = computeLookupPriceMa(rec.rows || []);
+      var volExtreme = computeLookupVolumeExtreme(rec.rows || []);
 
       var zoneNote = '';
       if (shrinkZone && !shrinkZone.alreadyTriggered) {
@@ -4014,9 +4039,18 @@
       if (priceMa) {
         maNote = '  ·  <span class="' + priceMaClass(priceMa) + '">' + esc(priceMaText(priceMa)) + '</span>';
       }
+      var volExtremeNote = '';
+      if (volExtreme && volExtreme.pct != null) {
+        volExtremeNote = '  ·  近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日量:' +
+          '<span class="lookup-vol-max">最高 ' + lookupLots(volExtreme.maxVolume) + ' 張(' +
+            esc(volExtreme.maxDate) + ')</span> / ' +
+          '<span class="lookup-vol-min">最低 ' + lookupLots(volExtreme.minVolume) + ' 張(' +
+            esc(volExtreme.minDate) + ')</span>' +
+          '(最低/最高)= <span class="mono">' + volExtreme.pct.toFixed(1) + '%</span>';
+      }
       meta.innerHTML = esc('資料範圍 ' + (range.from || '?') + ' ~ ' + (range.to || '?') +
         '(' + okCodes.length + ' 檔可查' + failNote + deadCodeNote + noSignalNote + ')' +
-        zoneNote + lowActivityNote) + maintNote + nearHighNote + maNote;
+        zoneNote + lowActivityNote) + maintNote + nearHighNote + maNote + volExtremeNote;
       appendLookupExtras(meta, code);
 
       table.hidden = false;
@@ -4076,13 +4110,22 @@
             '%)且外資同步買超,不要求先蹲量,跟🔔量縮轉買是獨立的兩套邏輯' +
             '(參考用,只驗證過一次樣本,沒有回測)">🔥連續增溫</span>'
           : '';
+        var volCls = 'num mono';
+        var volTitle = '';
+        if (volExtreme && r.date === volExtreme.maxDate) {
+          volCls += ' lookup-vol-max';
+          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最高量"';
+        } else if (volExtreme && r.date === volExtreme.minDate) {
+          volCls += ' lookup-vol-min';
+          volTitle = ' title="近' + LOOKUP_VOL_EXTREME_WINDOW + '個交易日最低量"';
+        }
         var row = '<tr class="lookup-row' + hlCls + hiddenCls + '" data-lookup-date="' + esc(r.date) + '">' +
           '<td class="mono">' + esc(r.date) + breakoutBadge + shrinkBadge + selloffBadge + warmingBadge + '</td>' +
           '<td' + colHiddenAttr(1) + ' class="num mono">' + lookupNum(r.open, 2) + '</td>' +
           '<td' + colHiddenAttr(2) + ' class="num mono">' + lookupNum(r.high, 2) + '</td>' +
           '<td' + colHiddenAttr(3) + ' class="num mono">' + lookupNum(r.low, 2) + '</td>' +
           '<td' + colHiddenAttr(4) + ' class="num mono">' + lookupNum(r.close, 2) + '</td>' +
-          '<td' + colHiddenAttr(5) + ' class="num mono">' + lookupLots(r.volume) + '</td>' +
+          '<td' + colHiddenAttr(5) + ' class="' + volCls + '"' + volTitle + '>' + lookupLots(r.volume) + '</td>' +
           '<td' + colHiddenAttr(6) + ' class="num mono">' + lookupNum(r.margin_balance) + '</td>' +
           '<td' + colHiddenAttr(7) + ' class="num mono ' + plClass(r.margin_change) + '">' +
             (r.margin_change == null ? '—' : signed(r.margin_change)) + '</td>' +
