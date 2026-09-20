@@ -4314,7 +4314,14 @@
   // 只是藏起來,不是刪掉——data/fomo*.json、data/crash-fomo*.json 還是照常每天產生,
   // 記分板/backtest 工具、個股查詢的 🔔🕐🔻🔥 標記都還在吃這份資料,VIEWS_ORDER 拿掉
   // 這兩個是為了讓左右滑動手勢也跳過(不然按鈕看不到、手勢還是滑得進去)。
-  var VIEWS_ORDER = ['today', 'healthcheck', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'riskctl', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo', 'lookup-fullscan'];
+  // 2026-09-20 使用者要求把「9/8全掃」(lookup-fullscan)整個 no show,而且不用再
+  // 執行——這個分頁的資料來源 scan-full-candidates.yml 本來就是標成「一次性,用完
+  // 可刪」的手動 workflow(不在 daily-scan.yml 裡,平常也不會自動更新),照使用者
+  // 指示直接刪掉那個 workflow 檔案,以後也不會再有人手動觸發它。跟 FOMO 那次一樣,
+  // 只讓按鈕 hidden、把 'lookup-fullscan' 從這個陣列拿掉,不刪 index.html 的
+  // #lookup-fullscan-wrap 區塊或 switchView()/lookupFullscanPanel 的邏輯——
+  // data/stock-lookup-fullscan-latest.json 留著當歷史快照,不會再更新,不刪除。
+  var VIEWS_ORDER = ['today', 'healthcheck', 'risk', 'track', 'thinking', 'trail', 'insttrack', 'scorecard', 'fade', 'exitsc', 'scan', 'crash', 'thinscan', 'tick', 'kelly', 'riskctl', 'yieldcalc', 'themes', 'signals', 'lookup', 'lookup-scan', 'lookup-crashfomo'];
 
   function currentViewName() {
     var active = el('views').querySelector('.viewbtn.is-active');

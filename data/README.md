@@ -200,7 +200,7 @@ Actions 之後才有資料」。
 | FOMO個股查詢 | `stock_lookup.json`(手動維護) | `data/stock-lookup-latest.json` | 每日排程 |
 | 爆量個股查詢 | `stock_lookup_scan.json`(手動維護) | `data/stock-lookup-scan-latest.json` | 每日排程 |
 | 暴跌FOMO個股查詢 | `stock_lookup_crashfomo.json`(手動維護) | `data/stock-lookup-crashfomo-latest.json` | 每日排程 |
-| 9/8全掃 | 當天 `scan-latest.json`+`crash-latest.json` 候選全部(84 檔,不是抽樣) | `data/stock-lookup-fullscan-latest.json` | 一次性,手動觸發 `scan-full-candidates.yml` |
+| ~~9/8全掃~~ | 當天 `scan-latest.json`+`crash-latest.json` 候選全部(84 檔,不是抽樣) | `data/stock-lookup-fullscan-latest.json` | **2026-09-20 已退役,見下方章節開頭** |
 
 `stock_lookup.json` 最早是手動加 2313 開始的,後來加了一批從 FOMO/暴跌FOMO
 候選池批次測試過的股票(見下面「量縮/量縮轉買」章節)。`stock_lookup_scan.json`
@@ -222,7 +222,20 @@ Actions 之後才有資料」。
 下來抓 500 次上下,600 次/小時的上限還有餘裕但不算寬。之後想再加清單
 或加檔數,先看 daily-scan job 的 log 有沒有頂到上限。
 
-### 9/8全掃(2026-09-09 加入,一次性分頁)
+### 9/8全掃(2026-09-09 加入,一次性分頁;**2026-09-20 使用者要求整個 no show,
+不用再執行,已退役**)
+
+⚠️ **2026-09-20 退役:** 使用者要求「9/8全掃」整個分頁 no show、不用再更新、
+不用再執行。前端跟 FOMO/暴跌FOMO 那次一樣,只讓 `index.html` 的分頁按鈕
+`hidden`、把 `'lookup-fullscan'` 從 `js/app.js` 的 `VIEWS_ORDER` 拿掉,沒有
+刪 `#lookup-fullscan-wrap` 區塊或 `switchView()`/`lookupFullscanPanel` 的
+邏輯。跟 FOMO 不同的地方:這個分頁的資料來源 `scan-full-candidates.yml`
+本來就標「一次性,用完可刪」、只有 `workflow_dispatch` 手動觸發、不在
+`daily-scan.yml` 排程裡,使用者說「不用再執行」等於直接刪掉這個 workflow
+檔案,以後也不會有人手動再觸發它,`data/stock-lookup-fullscan-latest.json`
+留著當歷史快照(最後更新日期就是退役前最後一次手動觸發的那天),不會再變。
+下面這一整節記的是 2026-09-09 加入時的討論脈絡跟實作細節,留著當歷史紀錄,
+不代表現在還照著跑。
 
 討論脈絡:三份手動清單各自只抽樣 20 檔,使用者發現這樣「只驗證了抽到
 的那幾檔,沒驗證整個候選池」,想直接掃當天全部候選、套同一套過濾條件

@@ -52,6 +52,7 @@
 | 分頁 | 資料 | 一句話 |
 | --- | --- | --- |
 | 今天 | 大盤九宮格+爆量/暴跌/薄股+localStorage 持倉+事件(全部既有資料源) | 首頁總覽,四塊各列前三條(大盤狀態、今日訊號、持倉出場提醒、近期事件),點了跳對應分頁,見第 5 節 |
+| 健康度檢查 | 無(純前端狀態機,不吃任何 `data/*.json`、不寫 localStorage) | 開盤前七題是非問答,一次一題、單選是/否,見第 5 節 |
 | 大盤狀況 | `market-grid-latest.json`、`risk-latest.json`、`fx-futures-latest.json`、`events.json` | 九宮格(ΔP_idx × 成交值 5/20 日比)、30 日追蹤表、法人融資交叉、拉積盤、注意股/除權息、**事件日曆** |
 | 追蹤 | localStorage | 七步驟紀錄 + 持倉損益 + 出場設定 + 自動出場/全出統計 + 進場訊號準度統計 |
 | 思考路徑 | localStorage `stock_pipeline_v1__thinking_paths` | 分岔/合併的鐵軌圖,一檔股票一條;估值試算/進出場計算兩個計算機 |
@@ -67,8 +68,9 @@
 | 部位 | `quotes-latest.json` | Kelly 部位 + 零股試算 |
 | 📖 利率試算 | `quotes-latest.json`、`valuation-latest.json` | 輸入代號+Δ殖利率+傳導係數,反推股利折現模型隱含 r/g,算利率變動下的合理股價參考(見第 5 節) |
 | 題材分類 | `themes.json` | 手動維護的靜態清單 |
-| 量價訊號 | `stock-lookup-fullscan-latest.json` | 獵人六訊號 |
-| 四個個股查詢 | `stock-lookup{,-scan,-crashfomo,-fullscan}-latest.json` | 手動清單的逐日大表格(OHLCV + 融資融券 + 外資投信),標記 🔔🔽🔻🔥🕐‼️、融資維持率、均線狀態、PE/PB、📅 |
+| 量價訊號 | `quotes-latest.json` | 獵人六訊號,全市場即時掃描,跟個股查詢的 `stock-lookup*` 系列無關 |
+| 三個個股查詢 | `stock-lookup{,-scan,-crashfomo}-latest.json` | 手動清單的逐日大表格(OHLCV + 融資融券 + 外資投信),標記 🔔🔽🔻🔥🕐‼️、融資維持率、均線狀態、PE/PB、📅、近30日量最高/最低(見第 5 節) |
+| ~~9/8全掃~~ | `stock-lookup-fullscan-latest.json` | 同上但清單是當天爆量+暴跌候選全部(84 檔),不是抽樣。**2026-09-20 使用者要求 no show,按鈕 `hidden`、拿出 `VIEWS_ORDER`,產生資料的 `scan-full-candidates.yml` 已刪除,不會再更新**,資料檔留著當歷史快照,見第 4 節 |
 
 ### 每日流程(`daily-scan.yml`,台北 16:13,單一 job、順序由執行序保證)
 
@@ -91,7 +93,9 @@ git commit + push      if: always()
 手動參數:`backfill_days`(爆量基線)、`market_backfill_days`、`archive_backfill_days`
 (第一次填 250)、`refreeze_tick`(平常別動)、FOMO 的 `source/top/limit`、
 `crash_source/crash_top/crash_limit`。另有 `update-stock-lookup.yml`(打代號就抓,
-不在清單會自動加)、`scan-full-candidates.yml`(9/8 全掃快照,常駐可重跑)。
+不在清單會自動加)。**2026-09-20 使用者要求「9/8全掃」整個 no show、不用再執行,
+`scan-full-candidates.yml` 已經刪掉**(它本來就標「一次性,用完可刪」、只有
+`workflow_dispatch` 手動觸發,不在 daily-scan.yml 裡),見第 4 節前端那條。
 
 ### 資料檔速查(全部在 `data/`)
 
@@ -333,7 +337,8 @@ git commit + push      if: always()
   都正確顯示「薄股爆量」區塊;「+ 追蹤」流程確認過 localStorage 存的
   `notes[1]` 正確帶出「薄股測試(量比 x.xx x、漲 +x.xx%、量 xx.x張)」文字。
 
-**個股查詢標記(`createLookupPanel()`,四個分頁共用)**
+**個股查詢標記(`createLookupPanel()`,四個分頁共用同一段程式碼,但「9/8全掃」
+2026-09-20 起分頁本身已經 hidden,見第 3 節,以下標記實際看得到的只剩三個分頁)**
 - 🔔量縮轉買、🔽量縮、🔻外資出貨、🔥連續增溫、🕐蓄勢中:量比 = 量 / 前 10 日峰量,
   `< 0.6` 算量縮;蓄勢 = 近 10 日 ≥ 8 天量縮且平均振幅 `(高−低)/收盤 ≥ 3.5%`,且還沒
   觸發轉買(投信整段為 0 的股票只看外資)。整檔 30 天沒任何標記會被濾出清單。
@@ -342,6 +347,26 @@ git commit + push      if: always()
 - 均線狀態:MA5/10/20 含當日簡單平均;多頭排列 `close>MA5>MA10>MA20`、空頭相反、其餘糾結。
   Python 版 `common.ma_state()` 與前端 `priceMaState()` 同定義,用 2634 真實資料對過。
 - PE/PB/殖利率來自 `valuation-latest.json`;📅 = 5 天內有事件。
+- **2026-09-20 量(張)欄標近30個交易日最高/最低**(`computeLookupVolumeExtreme()`):
+  取 `rows` 尾端 30 筆(缺量的日子跳過)找最高/最低量,表格對應儲存格上色(最高
+  紫色 `lookup-vol-max`、最低薄荷綠 `lookup-vol-min`),meta 列另外補一行摘要
+  (最高/最低張數+日期、「(最低/最高)=x%」公式)——因為最低量那天很常剛好被
+  低活躍度過濾(量<300張且外資<100張)整列濾掉不會顯示在表格裡,摘要行保證
+  資訊不會憑空消失。Playwright 對 3 個分頁(FOMO/爆量/暴跌FOMO個股查詢)各挑
+  一檔跟 Python 手算(直接讀 JSON)核對過,無 JS 錯誤。
+
+**健康度檢查(2026-09-20 新增)**
+- 開盤前的個人心理/紀律問答,使用者自訂的七題檢查表,跟其他分頁的資料/訊號完全
+  無關,`js/app.js` 搜 `HC_QUESTIONS`/`hcState` 可以看到全部邏輯。一次只顯示一題、
+  單選是/否。第 1、2 題是「閘門」(原始需求只有這兩題寫「才能顯示下一題」):答否
+  就整個停下來,顯示提醒訊息 + 重新測驗按鈕,不能繼續。第 3~6 題不管是/否都會進
+  下一題,差別只在某個答案要不要先顯示一句提醒(按「下一題」才繼續,不是自動跳)。
+  第 7 題沒有問題,只有結尾一句話「股市就是擲骰子。」。
+- state(`hcState`)只存在記憶體,不寫 localStorage——這是「每天開盤前的儀式」,
+  不是要長期累積資料;離開分頁或重新整理就重來。`loadHealthCheck()` 只在
+  `hcState` 是 null 時才 reset,所以左右滑動離開再滑回來不會中斷進度。
+- Playwright 走真實 UI 16 項驗證過:每題文字、每則訊息文字、兩個閘門停止/重來、
+  訊息插頁後正確跳下一題、最後收尾畫面,無 JS 錯誤。
 
 **法人軌跡**:蓄勢候選的三票——融資 10 日變動 ≤−5% 偏多 / ≥+5% 偏空;外資+投信合計正負;
 平均收盤位置 ≥60% 偏多 / ≤40% 偏空。≥2 票且明顯多於另一邊才定標籤。純觀察,不接追蹤。
