@@ -13,7 +13,7 @@ save_and_track/
 ├── css/style.css       深色主題(紅漲 #e8453c / 綠跌 #26a65b)
 ├── js/app.js           全部邏輯:七步驟、分頁、存檔、匯出匯入
 ├── manifest.json       加到主畫面用的設定
-├── icons/              App 圖示(icon.svg 是原稿,PNG 由它產生)
+├── icons/              App 圖示(PNG,檔名帶版本號;icon.svg 是舊版原稿,現行圖示不是由它產生)
 └── README.md
 ```
 
@@ -114,10 +114,11 @@ https://sanunaishunter.github.io/save_and_track/
 
 加完之後,主畫面會多一個紅色階梯圖示,點下去是全螢幕、沒有網址列的模式。
 
-> 圖示是紅色的上升階梯,呼應「一步一步走完七個步驟」。
-> 原稿是 `icons/icon.svg`,兩個 PNG 由它產生;圖形都收在中心安全區內,
-> Android 的圓形遮罩不會裁到內容。想換成別的圖,直接替換
-> `icons/icon-192.png` 和 `icons/icon-512.png` 即可,不用改程式碼。
+> 圖示目前是 Nomad Stocks 的星徽+麥穗+金幣 logo。檔名帶版本號
+> (例如 `icons/icon-192-v4.png`),因為 iOS/瀏覽器會用檔名快取圖示,
+> 換圖時要連檔名一起換(例如 v4 → v5),同時把 `index.html` 跟
+> `manifest.json` 裡的檔名、以及網址後面的 `?v=` 版本參數一併更新,
+> 光換檔案內容、不改檔名跟版本參數,手機可能還是顯示舊圖示。
 
 ---
 
@@ -241,5 +242,6 @@ git add . && git commit -m "說明改了什麼" && git push
 
 想在推上去之前先看效果,就在本地開 `index.html`(見第一節)。
 
-要換圖示的話,把 `icons/icon-192.png` 和 `icons/icon-512.png` 換成同尺寸的
-圖檔即可,不需要改任何程式碼。
+要換圖示的話,見上面「圖示目前是…」那段——記得連檔名版本號跟
+`index.html`/`manifest.json` 裡的 `?v=` 參數一起改,不然手機可能還是
+顯示舊圖示。
