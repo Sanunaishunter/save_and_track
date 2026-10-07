@@ -326,7 +326,7 @@
     markSplashSeen();
     s.hidden = false;
     s.addEventListener('click', hideSplash);
-    setTimeout(hideSplash, 11800);
+    setTimeout(hideSplash, 13900);
   }
 
   // ---------------------------------------------------------- 版本資訊
