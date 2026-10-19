@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-19",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1082,
+  "evaluated": 1052,
+  "count": 10,
+  "rows": [
+    {
+      "stock_id": "1457",
+      "stock_name": "宜進",
+      "vol_ratio": 2.43,
+      "change_pct": 1.73,
+      "close": 14.7,
+      "volume": 251118,
+      "ma20_volume": 103317,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8341",
+      "stock_name": "日友",
+      "vol_ratio": 2.11,
+      "change_pct": -0.27,
+      "close": 74.4,
+      "volume": 281426,
+      "ma20_volume": 133484,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4571",
+      "stock_name": "鈞興-KY",
+      "vol_ratio": 2.06,
+      "change_pct": 1.27,
+      "close": 160.0,
+      "volume": 228107,
+      "ma20_volume": 110831,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "9944",
+      "stock_name": "新麗",
+      "vol_ratio": 1.92,
+      "change_pct": 1.45,
+      "close": 17.55,
+      "volume": 60765,
+      "ma20_volume": 31685,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2642",
+      "stock_name": "宅配通",
+      "vol_ratio": 1.91,
+      "change_pct": 0.0,
+      "close": 20.2,
+      "volume": 70026,
+      "ma20_volume": 36702,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "2496",
+      "stock_name": "卓越",
+      "vol_ratio": 1.83,
+      "change_pct": -0.18,
+      "close": 54.9,
+      "volume": 21854,
+      "ma20_volume": 11969,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "8462",
+      "stock_name": "柏文",
+      "vol_ratio": 1.83,
+      "change_pct": 0.0,
+      "close": 158.0,
+      "volume": 127562,
+      "ma20_volume": 69617,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1410",
+      "stock_name": "南染",
+      "vol_ratio": 1.7,
+      "change_pct": 0.0,
+      "close": 23.4,
+      "volume": 155068,
+      "ma20_volume": 91262,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "8478",
+      "stock_name": "東哥遊艇",
+      "vol_ratio": 1.7,
+      "change_pct": 0.0,
+      "close": 138.5,
+      "volume": 110442,
+      "ma20_volume": 65139,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1587",
+      "stock_name": "吉茂",
+      "vol_ratio": 1.57,
+      "change_pct": 0.0,
+      "close": 23.45,
+      "volume": 147126,
+      "ma20_volume": 93491,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-10-19T15:33:14Z"
+}

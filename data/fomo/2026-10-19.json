@@ -1,0 +1,2418 @@
+{
+  "date": "2026-10-19",
+  "generated_at": "2026-10-19T15:38:09Z",
+  "source": "finmind",
+  "thresholds": {
+    "MARGIN_CHANGE_HIGH": 20,
+    "MARGIN_CHANGE_WARN": 15,
+    "MARGIN_CHANGE_NOTICE": 10,
+    "PBR_HIGH": 2.5,
+    "PBR_REAL_RALLY_MAX": 2.0,
+    "PBR_MID": 1.5,
+    "SHORT_MARGIN_BULL": 5,
+    "FOREIGN_CONSECUTIVE": 3,
+    "MARGIN_CONSECUTIVE": 3,
+    "REAL_RALLY_PASS": 60,
+    "FAKE_RALLY_PASS": 60,
+    "REAL_RALLY_REQUIRES_FOREIGN": true,
+    "REAL_RALLY_REQUIRES_MARGIN": true,
+    "FOREIGN_CONSECUTIVE_LOOSE": 2,
+    "MARGIN_CONSECUTIVE_LOOSE": 2,
+    "PBR_LOOSE_HIGH": 2.0,
+    "REAL_RALLY_LOOSE_PASS": 60,
+    "FAKE_RALLY_LOOSE_PASS": 60,
+    "PBR_CRASH_CHEAP": 1.2,
+    "MARGIN_DROP_PANIC": -15,
+    "REAL_CRASH_PASS": 60,
+    "FAKE_CRASH_PASS": 60,
+    "REAL_CRASH_REQUIRES_FOREIGN": true
+  },
+  "source_list": "scan",
+  "scan_date": "2026-10-19",
+  "market_totals": {
+    "foreign_buy": 156604436,
+    "foreign_sell": 426011039,
+    "trust_buy": 102069957,
+    "trust_sell": 57743231
+  },
+  "watchlist_count": 39,
+  "scored_count": 39,
+  "failures": [],
+  "rows": [
+    {
+      "stock_id": "6756",
+      "stock_name": "威鋒電子",
+      "fomo_score": 80,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": true,
+      "fake_rally_score": 70,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 236 張,約 $2856 萬,佔該股成交量 10.4%、佔全市場外資賣超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.79,
+        "per": 67.98,
+        "margin_change_5d_pct": 20.87,
+        "short_margin_ratio": 1.42,
+        "foreign_net": -236000.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -236000.0,
+        "foreign_streak_amount": -28556000.0,
+        "foreign_pct_of_volume": 10.42,
+        "foreign_pct_of_market": 0.06,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 14.76,
+        "close": 121.0,
+        "volume": 2265551.0,
+        "prev_volume": 938233.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 20.9%(>20%)",
+          "PBR 2.79(>2.5)",
+          "券資比 1.4%(<5%)",
+          "外資賣超(236,000 股)"
+        ],
+        "real_rally": [
+          "券資比 1.4%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "融資5日增幅 20.9%(>15%,散戶追價明顯)",
+          "外資賣超或中性(236,000 股)",
+          "PBR 2.79(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 20.9%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 2.79(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6108",
+      "stock_name": "競國",
+      "fomo_score": 70,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 50,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 30,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 1,338 張,約 $4229 萬,佔該股成交量 12.4%、佔全市場外資賣超 0.3%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.51,
+        "per": 158.0,
+        "margin_change_5d_pct": 24.43,
+        "short_margin_ratio": 1.9,
+        "foreign_net": -1338167.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -1338167.0,
+        "foreign_streak_amount": -42286077.2,
+        "foreign_pct_of_volume": 12.43,
+        "foreign_pct_of_market": 0.31,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.25,
+        "close": 31.6,
+        "volume": 10767173.0,
+        "prev_volume": 9961151.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 24.4%(>20%)",
+          "PBR 1.51(1.5~2.5)",
+          "券資比 1.9%(<5%)",
+          "外資賣超(1,338,167 股)"
+        ],
+        "real_rally": [
+          "券資比 1.9%(<5%,空方壓力低)",
+          "PBR 1.51(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "融資5日增幅 24.4%(>15%,散戶追價明顯)",
+          "外資賣超或中性(1,338,167 股)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "融資5日增幅 24.4%(>10%,散戶追價明顯,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3305",
+      "stock_name": "昇貿",
+      "fomo_score": 60,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 40,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 2,063 張,約 $2.4 億,佔該股成交量 19.6%、佔全市場外資賣超 0.5%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.64,
+        "per": 20.65,
+        "margin_change_5d_pct": 11.6,
+        "short_margin_ratio": 0.21,
+        "foreign_net": -2063458.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -2063458.0,
+        "foreign_streak_amount": -235234212.0,
+        "foreign_pct_of_volume": 19.6,
+        "foreign_pct_of_market": 0.48,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 13.24,
+        "close": 114.0,
+        "volume": 10526766.0,
+        "prev_volume": 2476481.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 11.6%(10~15%)",
+          "PBR 2.64(>2.5)",
+          "券資比 0.2%(<5%)",
+          "外資賣超(2,063,458 股)"
+        ],
+        "real_rally": [
+          "券資比 0.2%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(2,063,458 股)",
+          "PBR 2.64(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 11.6%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 2.64(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "7786",
+      "stock_name": "東方風能",
+      "fomo_score": 60,
+      "is_real_rally": false,
+      "real_rally_score": 50,
+      "is_fake_rally": false,
+      "fake_rally_score": 30,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 5 天,總共 460 張,約 $5597 萬,佔該股成交量 25.4%、佔全市場外資買超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.26,
+        "per": 11.73,
+        "margin_change_5d_pct": 123.05,
+        "short_margin_ratio": 0.32,
+        "foreign_net": 275149.0,
+        "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 5,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 459856.0,
+        "foreign_streak_amount": 55970917.5,
+        "foreign_pct_of_volume": 25.42,
+        "foreign_pct_of_market": 0.18,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 9.39,
+        "close": 125.0,
+        "volume": 1082534.0,
+        "prev_volume": 109898.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 123.0%(>20%)",
+          "PBR 2.26(1.5~2.5)",
+          "券資比 0.3%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 5 天(≥3)",
+          "券資比 0.3%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "融資5日增幅 123.0%(>15%,散戶追價明顯)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 5 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 123.0%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 2.26(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6277",
+      "stock_name": "宏正",
+      "fomo_score": 60,
+      "is_real_rally": false,
+      "real_rally_score": 50,
+      "is_fake_rally": false,
+      "fake_rally_score": 30,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 10 天,總共 2,299 張,約 $2.0 億,佔該股成交量 32.8%、佔全市場外資買超 0.4%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.21,
+        "per": 21.45,
+        "margin_change_5d_pct": 38.53,
+        "short_margin_ratio": 1.99,
+        "foreign_net": 678600.0,
+        "foreign_consecutive_buy_days": 10,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 10,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 2298997.0,
+        "foreign_streak_amount": 195659771.29999998,
+        "foreign_pct_of_volume": 32.8,
+        "foreign_pct_of_market": 0.43,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 8.48,
+        "close": 88.8,
+        "volume": 2068935.0,
+        "prev_volume": 1297696.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 38.5%(>20%)",
+          "PBR 2.21(1.5~2.5)",
+          "券資比 2.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 10 天(≥3)",
+          "券資比 2.0%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "融資5日增幅 38.5%(>15%,散戶追價明顯)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 10 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 38.5%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 2.21(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1802",
+      "stock_name": "台玻",
+      "fomo_score": 60,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 40,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": true,
+      "divergence_reason": "外資賣超 29,813,872 股、投信買進 41,000 股,方向背離,可能是投信短打",
+      "foreign_note": "外資連賣 1 天,總共 29,814 張,約 $19.7 億,佔該股成交量 13.9%、佔全市場外資賣超 7.0%,注意長線變化",
+      "trust_note": "此股投信買進 41 張,約 $271 萬,佔該股成交量 0.0%、佔全市場投信買超 0.0%,注意可能是短打",
+      "metrics": {
+        "pbr": 3.71,
+        "per": 76.74,
+        "margin_change_5d_pct": 13.36,
+        "short_margin_ratio": 2.76,
+        "foreign_net": -29813872.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 41000.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -29813872.0,
+        "foreign_streak_amount": -1967715552.0,
+        "foreign_pct_of_volume": 13.92,
+        "foreign_pct_of_market": 7.0,
+        "trust_amount": 2706000.0,
+        "trust_pct_of_volume": 0.02,
+        "trust_pct_of_market": 0.04,
+        "vol_ratio": 4.01,
+        "close": 66.0,
+        "volume": 214214830.0,
+        "prev_volume": 142656562.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 13.4%(10~15%)",
+          "PBR 3.71(>2.5)",
+          "券資比 2.8%(<5%)",
+          "外資賣超(29,813,872 股)"
+        ],
+        "real_rally": [
+          "券資比 2.8%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(29,813,872 股)",
+          "PBR 3.71(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "融資5日增幅 13.4%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 3.71(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "2412",
+      "stock_name": "中華電",
+      "fomo_score": 60,
+      "is_real_rally": false,
+      "real_rally_score": 20,
+      "is_fake_rally": false,
+      "fake_rally_score": 50,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 50,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 3,344 張,約 $5.2 億,佔該股成交量 18.7%、佔全市場外資買超 2.1%,注意長線變化",
+      "trust_note": "此股投信買進 2,417 張,約 $3.7 億,佔該股成交量 13.5%、佔全市場投信買超 2.4%,注意可能是短打",
+      "metrics": {
+        "pbr": 3.27,
+        "per": 30.35,
+        "margin_change_5d_pct": 77.43,
+        "short_margin_ratio": 7.23,
+        "foreign_net": 3344426.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 5,
+        "trust_net": 2417482.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 3344426.0,
+        "foreign_streak_amount": 516713817.0,
+        "foreign_pct_of_volume": 18.66,
+        "foreign_pct_of_market": 2.14,
+        "trust_amount": 373500969.0,
+        "trust_pct_of_volume": 13.49,
+        "trust_pct_of_market": 2.37,
+        "vol_ratio": 1.57,
+        "close": 154.5,
+        "volume": 17922573.0,
+        "prev_volume": 13986087.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 77.4%(>20%)",
+          "PBR 3.27(>2.5)"
+        ],
+        "real_rally": [
+          "融資連續買超 5 天(≥3,散戶跟著進場)"
+        ],
+        "fake_rally": [
+          "融資5日增幅 77.4%(>15%,散戶追價明顯)",
+          "PBR 3.27(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "融資連續買超 5 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 77.4%(>10%,散戶追價明顯,寬鬆版)",
+          "PBR 3.27(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3703",
+      "stock_name": "欣陸",
+      "fomo_score": 50,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 30,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 30,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 5 天,總共 2,756 張,約 $5615 萬,佔該股成交量 29.5%、佔全市場外資買超 0.4%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.62,
+        "per": 10.46,
+        "margin_change_5d_pct": 26.64,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 597100.0,
+        "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 5,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 2755998.0,
+        "foreign_streak_amount": 56149714.39999999,
+        "foreign_pct_of_volume": 29.51,
+        "foreign_pct_of_market": 0.38,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.44,
+        "close": 20.6,
+        "volume": 2023330.0,
+        "prev_volume": 938350.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 26.6%(>20%)",
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 5 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.62(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [
+          "融資5日增幅 26.6%(>15%,散戶追價明顯)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 5 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 26.6%(>10%,散戶追價明顯,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6695",
+      "stock_name": "芯鼎",
+      "fomo_score": 40,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 40,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 9 天,總共 1,166 張,約 $5884 萬,佔該股成交量 15.9%、佔全市場外資賣超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.94,
+        "per": null,
+        "margin_change_5d_pct": 7.28,
+        "short_margin_ratio": 0.8,
+        "foreign_net": -395000.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 9,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -1165685.0,
+        "foreign_streak_amount": -58840523.400000006,
+        "foreign_pct_of_volume": 15.86,
+        "foreign_pct_of_market": 0.09,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 5.05,
+        "close": 51.0,
+        "volume": 2490017.0,
+        "prev_volume": 289925.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 2.94(>2.5)",
+          "券資比 0.8%(<5%)",
+          "外資賣超(395,000 股)"
+        ],
+        "real_rally": [
+          "券資比 0.8%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(395,000 股)",
+          "PBR 2.94(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "PBR 2.94(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "8021",
+      "stock_name": "尖點",
+      "fomo_score": 40,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 40,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": true,
+      "divergence_reason": "外資賣超 1,154,810 股、投信買進 1,887,000 股,方向背離,可能是投信短打",
+      "foreign_note": "外資連賣 4 天,總共 1,577 張,約 $8.2 億,佔該股成交量 6.6%、佔全市場外資賣超 0.3%,注意長線變化",
+      "trust_note": "此股投信買進 1,887 張,約 $9.8 億,佔該股成交量 10.8%、佔全市場投信買超 1.8%,注意可能是短打",
+      "metrics": {
+        "pbr": 12.13,
+        "per": 104.84,
+        "margin_change_5d_pct": -11.52,
+        "short_margin_ratio": 0.79,
+        "foreign_net": -1154810.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 1887000.0,
+        "foreign_streak_days": 4,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -1577399.0,
+        "foreign_streak_amount": -820401086.0,
+        "foreign_pct_of_volume": 6.61,
+        "foreign_pct_of_market": 0.27,
+        "trust_amount": 981240000.0,
+        "trust_pct_of_volume": 10.8,
+        "trust_pct_of_market": 1.85,
+        "vol_ratio": 3.23,
+        "close": 520.0,
+        "volume": 17475883.0,
+        "prev_volume": 1541386.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 12.13(>2.5)",
+          "券資比 0.8%(<5%)",
+          "外資賣超(1,154,810 股)"
+        ],
+        "real_rally": [
+          "券資比 0.8%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(1,154,810 股)",
+          "PBR 12.13(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "PBR 12.13(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6209",
+      "stock_name": "今國光",
+      "fomo_score": 40,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 50,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 30,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 2,812 張,約 $2.9 億,佔該股成交量 5.9%、佔全市場外資賣超 0.7%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 4.99,
+        "per": 44.16,
+        "margin_change_5d_pct": 7.5,
+        "short_margin_ratio": 4.19,
+        "foreign_net": -2811973.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -2811973.0,
+        "foreign_streak_amount": -286821246.0,
+        "foreign_pct_of_volume": 5.86,
+        "foreign_pct_of_market": 0.66,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.0,
+        "close": 102.0,
+        "volume": 48023425.0,
+        "prev_volume": 55194753.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 4.99(>2.5)",
+          "券資比 4.2%(<5%)",
+          "外資賣超(2,811,973 股)"
+        ],
+        "real_rally": [
+          "券資比 4.2%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(2,811,973 股)",
+          "PBR 4.99(>2.5,評價偏高)",
+          "今日量縮(55,194,753 → 48,023,425)"
+        ],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 4.99(>2.0,評價偏高,寬鬆版)",
+          "今日量縮(55,194,753 → 48,023,425)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6153",
+      "stock_name": "嘉聯益",
+      "fomo_score": 40,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 30,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 40,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 3 天,總共 5,781 張,約 $1.1 億,佔該股成交量 7.6%、佔全市場外資賣超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.39,
+        "per": null,
+        "margin_change_5d_pct": 13.25,
+        "short_margin_ratio": 1.92,
+        "foreign_net": -861607.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 3,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -5781094.0,
+        "foreign_streak_amount": -108241943.3,
+        "foreign_pct_of_volume": 7.63,
+        "foreign_pct_of_market": 0.2,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.18,
+        "close": 18.65,
+        "volume": 11291332.0,
+        "prev_volume": 29443703.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 13.3%(10~15%)",
+          "券資比 1.9%(<5%)",
+          "外資賣超(861,607 股)"
+        ],
+        "real_rally": [
+          "券資比 1.9%(<5%,空方壓力低)",
+          "PBR 1.39(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(861,607 股)",
+          "今日量縮(29,443,703 → 11,291,332)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "融資5日增幅 13.3%(>10%,散戶追價明顯,寬鬆版)",
+          "今日量縮(29,443,703 → 11,291,332)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3653",
+      "stock_name": "健策",
+      "fomo_score": 40,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 40,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": true,
+      "divergence_reason": "外資賣超 78,392 股、投信買進 89,032 股,方向背離,可能是投信短打",
+      "foreign_note": "外資連賣 4 天,總共 928 張,約 $63.6 億,佔該股成交量 4.1%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": "此股投信買進 89 張,約 $5.8 億,佔該股成交量 4.6%、佔全市場投信買超 0.1%,注意可能是短打",
+      "metrics": {
+        "pbr": 40.82,
+        "per": 148.05,
+        "margin_change_5d_pct": -12.28,
+        "short_margin_ratio": 3.59,
+        "foreign_net": -78392.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 89032.0,
+        "foreign_streak_days": 4,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -928026.0,
+        "foreign_streak_amount": -6361754165.0,
+        "foreign_pct_of_volume": 4.07,
+        "foreign_pct_of_market": 0.02,
+        "trust_amount": 584049920.0,
+        "trust_pct_of_volume": 4.63,
+        "trust_pct_of_market": 0.09,
+        "vol_ratio": 1.57,
+        "close": 6560.0,
+        "volume": 1924364.0,
+        "prev_volume": 1132992.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 40.82(>2.5)",
+          "券資比 3.6%(<5%)",
+          "外資賣超(78,392 股)"
+        ],
+        "real_rally": [
+          "券資比 3.6%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(78,392 股)",
+          "PBR 40.82(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "PBR 40.82(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1526",
+      "stock_name": "日馳",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 30,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 12 張,約 $19 萬,佔該股成交量 1.1%、佔全市場外資買超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.75,
+        "per": null,
+        "margin_change_5d_pct": 14.54,
+        "short_margin_ratio": 1.13,
+        "foreign_net": 11803.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 11803.0,
+        "foreign_streak_amount": 194749.5,
+        "foreign_pct_of_volume": 1.12,
+        "foreign_pct_of_market": 0.01,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 13.82,
+        "close": 16.5,
+        "volume": 1056949.0,
+        "prev_volume": 55464.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 14.5%(10~15%)",
+          "券資比 1.1%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 1.1%(<5%,空方壓力低)",
+          "PBR 0.75(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 14.5%(>10%,散戶追價明顯,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4960",
+      "stock_name": "誠美材",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 3 天,總共 3,049 張,約 $8019 萬,佔該股成交量 9.4%、佔全市場外資賣超 0.4%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 2.22,
+        "per": null,
+        "margin_change_5d_pct": 7.12,
+        "short_margin_ratio": 1.44,
+        "foreign_net": -1805158.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 3,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -3048631.0,
+        "foreign_streak_amount": -80186120.1,
+        "foreign_pct_of_volume": 9.41,
+        "foreign_pct_of_market": 0.42,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.22,
+        "close": 27.8,
+        "volume": 19184659.0,
+        "prev_volume": 11982042.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 2.22(1.5~2.5)",
+          "券資比 1.4%(<5%)",
+          "外資賣超(1,805,158 股)"
+        ],
+        "real_rally": [
+          "券資比 1.4%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(1,805,158 股)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "PBR 2.22(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "6141",
+      "stock_name": "柏承",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 2 天,總共 1,144 張,約 $6531 萬,佔該股成交量 15.7%、佔全市場外資買超 0.6%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 11.04,
+        "per": null,
+        "margin_change_5d_pct": 0.0,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 865839.0,
+        "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 2,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 1143605.0,
+        "foreign_streak_amount": 65314372.2,
+        "foreign_pct_of_volume": 15.68,
+        "foreign_pct_of_market": 0.55,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.71,
+        "close": 58.4,
+        "volume": 5523003.0,
+        "prev_volume": 1680920.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 11.04(>2.5)",
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "PBR 11.04(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 2 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 11.04(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "8422",
+      "stock_name": "可寧衛*",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 50,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 4 天,總共 5,743 張,約 $1.5 億,佔該股成交量 9.8%、佔全市場外資買超 0.7%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 3.43,
+        "per": 27.08,
+        "margin_change_5d_pct": 6.74,
+        "short_margin_ratio": 1.6,
+        "foreign_net": 1047833.0,
+        "foreign_consecutive_buy_days": 4,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": -171000.0,
+        "foreign_streak_days": 4,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 5742552.0,
+        "foreign_streak_amount": 146696040.3,
+        "foreign_pct_of_volume": 9.79,
+        "foreign_pct_of_market": 0.67,
+        "trust_amount": -4446000.0,
+        "trust_pct_of_volume": 1.6,
+        "trust_pct_of_market": 0.3,
+        "vol_ratio": 2.54,
+        "close": 26.0,
+        "volume": 10702746.0,
+        "prev_volume": 4571794.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 3.43(>2.5)",
+          "券資比 1.6%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 4 天(≥3)",
+          "券資比 1.6%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "PBR 3.43(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 4 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 3.43(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "2912",
+      "stock_name": "統一超",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 50,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 10 天,總共 20,522 張,約 $45.6 億,佔該股成交量 76.7%、佔全市場外資買超 2.7%,注意長線變化",
+      "trust_note": "此股投信買進 290 張,約 $6626 萬,佔該股成交量 5.3%、佔全市場投信買超 0.3%,注意可能是短打",
+      "metrics": {
+        "pbr": 5.8,
+        "per": 20.59,
+        "margin_change_5d_pct": -12.94,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 4194882.0,
+        "foreign_consecutive_buy_days": 10,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 290000.0,
+        "foreign_streak_days": 10,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 20522356.0,
+        "foreign_streak_amount": 4563944613.0,
+        "foreign_pct_of_volume": 76.73,
+        "foreign_pct_of_market": 2.68,
+        "trust_amount": 66265000.0,
+        "trust_pct_of_volume": 5.3,
+        "trust_pct_of_market": 0.28,
+        "vol_ratio": 2.38,
+        "close": 228.5,
+        "volume": 5467182.0,
+        "prev_volume": 5379912.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 5.80(>2.5)",
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 10 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "PBR 5.80(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 10 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 5.80(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4306",
+      "stock_name": "炎洲",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 30,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 3 天,總共 755 張,約 $1109 萬,佔該股成交量 20.2%、佔全市場外資買超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.7,
+        "per": 16.32,
+        "margin_change_5d_pct": 11.51,
+        "short_margin_ratio": 0.02,
+        "foreign_net": 295542.0,
+        "foreign_consecutive_buy_days": 3,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 3,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 754784.0,
+        "foreign_streak_amount": 11085581.9,
+        "foreign_pct_of_volume": 20.16,
+        "foreign_pct_of_market": 0.19,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.09,
+        "close": 14.85,
+        "volume": 1465849.0,
+        "prev_volume": 645323.0
+      },
+      "reasons": {
+        "fomo": [
+          "融資5日增幅 11.5%(10~15%)",
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 3 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.70(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 3 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "融資5日增幅 11.5%(>10%,散戶追價明顯,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4927",
+      "stock_name": "泰鼎-KY",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 3,197 張,約 $1.9 億,佔該股成交量 16.5%、佔全市場外資買超 2.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 3.71,
+        "per": null,
+        "margin_change_5d_pct": 1.57,
+        "short_margin_ratio": 0.92,
+        "foreign_net": 3197184.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 3197184.0,
+        "foreign_streak_amount": 188314137.6,
+        "foreign_pct_of_volume": 16.51,
+        "foreign_pct_of_market": 2.04,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.86,
+        "close": 58.9,
+        "volume": 19370988.0,
+        "prev_volume": 10105184.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 3.71(>2.5)",
+          "券資比 0.9%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.9%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "PBR 3.71(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 3.71(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4989",
+      "stock_name": "榮科",
+      "fomo_score": 30,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 2 天,總共 424 張,約 $2844 萬,佔該股成交量 1.6%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 6.34,
+        "per": null,
+        "margin_change_5d_pct": -0.93,
+        "short_margin_ratio": 1.63,
+        "foreign_net": 193898.0,
+        "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 2,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 423656.0,
+        "foreign_streak_amount": 28435283.0,
+        "foreign_pct_of_volume": 1.56,
+        "foreign_pct_of_market": 0.12,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.56,
+        "close": 68.8,
+        "volume": 12408299.0,
+        "prev_volume": 4851340.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 6.34(>2.5)",
+          "券資比 1.6%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 1.6%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "PBR 6.34(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 2 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 6.34(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1452",
+      "stock_name": "宏益",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 82 張,約 $92 萬,佔該股成交量 19.5%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.54,
+        "per": null,
+        "margin_change_5d_pct": -12.3,
+        "short_margin_ratio": 0.0,
+        "foreign_net": -82415.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -82415.0,
+        "foreign_streak_amount": -918927.25,
+        "foreign_pct_of_volume": 19.51,
+        "foreign_pct_of_market": 0.02,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 6.72,
+        "close": 11.15,
+        "volume": 422438.0,
+        "prev_volume": 164431.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)",
+          "外資賣超(82,415 股)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.54(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(82,415 股)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4526",
+      "stock_name": "東台",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 20,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 346 張,約 $1233 萬,佔該股成交量 2.9%、佔全市場外資買超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.79,
+        "per": null,
+        "margin_change_5d_pct": 2.74,
+        "short_margin_ratio": 1.28,
+        "foreign_net": 345911.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 345911.0,
+        "foreign_streak_amount": 12331727.15,
+        "foreign_pct_of_volume": 2.87,
+        "foreign_pct_of_market": 0.22,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 5.04,
+        "close": 35.65,
+        "volume": 12049730.0,
+        "prev_volume": 4144606.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 1.79(1.5~2.5)",
+          "券資比 1.3%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 1.3%(<5%,空方壓力低)",
+          "PBR 1.79(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "4566",
+      "stock_name": "時碩工業",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 4 天,總共 1,457 張,約 $1.2 億,佔該股成交量 4.7%、佔全市場外資買超 0.3%,注意長線變化",
+      "trust_note": "此股投信買進 36 張,約 $289 萬,佔該股成交量 0.4%、佔全市場投信買超 0.0%,注意可能是短打",
+      "metrics": {
+        "pbr": 1.75,
+        "per": 31.83,
+        "margin_change_5d_pct": 8.29,
+        "short_margin_ratio": 2.66,
+        "foreign_net": 455100.0,
+        "foreign_consecutive_buy_days": 4,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 36000.0,
+        "foreign_streak_days": 4,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 1456737.0,
+        "foreign_streak_amount": 115858842.60000001,
+        "foreign_pct_of_volume": 4.74,
+        "foreign_pct_of_market": 0.29,
+        "trust_amount": 2887200.0,
+        "trust_pct_of_volume": 0.37,
+        "trust_pct_of_market": 0.04,
+        "vol_ratio": 3.6,
+        "close": 80.2,
+        "volume": 9605176.0,
+        "prev_volume": 4854574.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 1.75(1.5~2.5)",
+          "券資比 2.7%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 4 天(≥3)",
+          "券資比 2.7%(<5%,空方壓力低)",
+          "PBR 1.75(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 4 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "2380",
+      "stock_name": "虹光",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 20,
+      "is_fake_rally": false,
+      "fake_rally_score": 30,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 10,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 38 張,約 $68 萬,佔該股成交量 7.4%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.81,
+        "per": null,
+        "margin_change_5d_pct": null,
+        "short_margin_ratio": null,
+        "foreign_net": -38106.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -38106.0,
+        "foreign_streak_amount": -678286.8,
+        "foreign_pct_of_volume": 7.35,
+        "foreign_pct_of_market": 0.01,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.32,
+        "close": 17.8,
+        "volume": 518319.0,
+        "prev_volume": 856846.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 1.81(1.5~2.5)",
+          "外資賣超(38,106 股)"
+        ],
+        "real_rally": [
+          "PBR 1.81(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(38,106 股)",
+          "今日量縮(856,846 → 518,319)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "今日量縮(856,846 → 518,319)"
+        ]
+      },
+      "missing": [
+        "券資比",
+        "融資5日增幅"
+      ]
+    },
+    {
+      "stock_id": "2033",
+      "stock_name": "佳大",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 40,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 5 天,總共 860 張,約 $4819 萬,佔該股成交量 2.6%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 4.96,
+        "per": 193.24,
+        "margin_change_5d_pct": -8.9,
+        "short_margin_ratio": 14.58,
+        "foreign_net": 211670.0,
+        "foreign_consecutive_buy_days": 5,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 5,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 860296.0,
+        "foreign_streak_amount": 48190273.4,
+        "foreign_pct_of_volume": 2.63,
+        "foreign_pct_of_market": 0.14,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 3.04,
+        "close": 65.7,
+        "volume": 8061565.0,
+        "prev_volume": 887186.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 4.96(>2.5)"
+        ],
+        "real_rally": [
+          "外資連續買超 5 天(≥3)"
+        ],
+        "fake_rally": [
+          "PBR 4.96(>2.5,評價偏高)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 5 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 4.96(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "2539",
+      "stock_name": "櫻花建",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 50,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 20,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 6 天,總共 1,821 張,約 $6155 萬,佔該股成交量 3.9%、佔全市場外資買超 0.0%,注意長線變化",
+      "trust_note": "此股投信買進 433 張,約 $1464 萬,佔該股成交量 33.0%、佔全市場投信買超 0.4%,注意可能是短打",
+      "metrics": {
+        "pbr": 2.02,
+        "per": 8.03,
+        "margin_change_5d_pct": -3.42,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 51460.0,
+        "foreign_consecutive_buy_days": 6,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 433000.0,
+        "foreign_streak_days": 6,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 1821026.0,
+        "foreign_streak_amount": 61550928.14999999,
+        "foreign_pct_of_volume": 3.92,
+        "foreign_pct_of_market": 0.03,
+        "trust_amount": 14635399.999999998,
+        "trust_pct_of_volume": 33.02,
+        "trust_pct_of_market": 0.42,
+        "vol_ratio": 1.59,
+        "close": 33.8,
+        "volume": 1311182.0,
+        "prev_volume": 558371.0
+      },
+      "reasons": {
+        "fomo": [
+          "PBR 2.02(1.5~2.5)",
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 6 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 6 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "PBR 2.02(>2.0,評價偏高,寬鬆版)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3622",
+      "stock_name": "洋華",
+      "fomo_score": 20,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": true,
+      "divergence_reason": "外資賣超 17,000 股、投信買進 3,927 股,方向背離,可能是投信短打",
+      "foreign_note": "外資連賣 3 天,總共 58 張,約 $261 萬,佔該股成交量 5.5%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": "此股投信買進 4 張,約 $17 萬,佔該股成交量 1.3%、佔全市場投信買超 0.0%,注意可能是短打",
+      "metrics": {
+        "pbr": 0.85,
+        "per": 8.71,
+        "margin_change_5d_pct": -1.81,
+        "short_margin_ratio": 0.0,
+        "foreign_net": -17000.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 3927.0,
+        "foreign_streak_days": 3,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -57920.0,
+        "foreign_streak_amount": -2607746.0,
+        "foreign_pct_of_volume": 5.46,
+        "foreign_pct_of_market": 0.0,
+        "trust_amount": 174358.8,
+        "trust_pct_of_volume": 1.26,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.51,
+        "close": 44.4,
+        "volume": 311355.0,
+        "prev_volume": 133979.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)",
+          "外資賣超(17,000 股)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.85(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(17,000 股)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1236",
+      "stock_name": "宏亞",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 76 張,約 $201 萬,佔該股成交量 23.5%、佔全市場外資買超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.88,
+        "per": null,
+        "margin_change_5d_pct": -7.26,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 76000.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 76000.0,
+        "foreign_streak_amount": 2006400.0,
+        "foreign_pct_of_volume": 23.53,
+        "foreign_pct_of_market": 0.05,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 9.0,
+        "close": 26.4,
+        "volume": 322997.0,
+        "prev_volume": 22946.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.88(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "8429",
+      "stock_name": "金麗-KY",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 93 張,約 $58 萬,佔該股成交量 9.8%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.17,
+        "per": 69.11,
+        "margin_change_5d_pct": -0.47,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 93000.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 93000.0,
+        "foreign_streak_amount": 578460.0,
+        "foreign_pct_of_volume": 9.77,
+        "foreign_pct_of_market": 0.06,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 7.59,
+        "close": 6.22,
+        "volume": 951806.0,
+        "prev_volume": 54222.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.17(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1512",
+      "stock_name": "瑞利",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 20,
+      "is_fake_rally": false,
+      "fake_rally_score": 20,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連賣 1 天,總共 7 張,約 $5 萬,佔該股成交量 2.3%、佔全市場外資賣超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.94,
+        "per": 34.0,
+        "margin_change_5d_pct": null,
+        "short_margin_ratio": null,
+        "foreign_net": -7000.0,
+        "foreign_consecutive_buy_days": 0,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "sell",
+        "foreign_streak_shares": -7000.0,
+        "foreign_streak_amount": -45220.0,
+        "foreign_pct_of_volume": 2.28,
+        "foreign_pct_of_market": 0.0,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 6.08,
+        "close": 6.46,
+        "volume": 307549.0,
+        "prev_volume": 91670.0
+      },
+      "reasons": {
+        "fomo": [
+          "外資賣超(7,000 股)"
+        ],
+        "real_rally": [
+          "PBR 0.94(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "外資賣超或中性(7,000 股)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": [
+        "券資比",
+        "融資5日增幅"
+      ]
+    },
+    {
+      "stock_id": "5469",
+      "stock_name": "瀚宇博",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 4 天,總共 3,795 張,約 $3.2 億,佔該股成交量 23.7%、佔全市場外資買超 1.5%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.68,
+        "per": 15.94,
+        "margin_change_5d_pct": 5.35,
+        "short_margin_ratio": 0.4,
+        "foreign_net": 2310798.0,
+        "foreign_consecutive_buy_days": 4,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 0.0,
+        "foreign_streak_days": 4,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 3794575.0,
+        "foreign_streak_amount": 321959521.9,
+        "foreign_pct_of_volume": 23.71,
+        "foreign_pct_of_market": 1.48,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 4.64,
+        "close": 86.1,
+        "volume": 9746073.0,
+        "prev_volume": 4887701.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.4%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 4 天(≥3)",
+          "券資比 0.4%(<5%,空方壓力低)",
+          "PBR 0.68(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 4 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1103",
+      "stock_name": "嘉泥",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 6 天,總共 854 張,約 $1137 萬,佔該股成交量 33.2%、佔全市場外資買超 0.2%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.5,
+        "per": 10.0,
+        "margin_change_5d_pct": 1.89,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 277321.0,
+        "foreign_consecutive_buy_days": 6,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 6,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 854468.0,
+        "foreign_streak_amount": 11370149.100000001,
+        "foreign_pct_of_volume": 33.18,
+        "foreign_pct_of_market": 0.18,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 2.12,
+        "close": 13.4,
+        "volume": 835714.0,
+        "prev_volume": 380230.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 6 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.50(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 6 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3052",
+      "stock_name": "夆典",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 8 天,總共 385 張,約 $412 萬,佔該股成交量 14.5%、佔全市場外資買超 0.0%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 0.62,
+        "per": 9.6,
+        "margin_change_5d_pct": -4.35,
+        "short_margin_ratio": 0.0,
+        "foreign_net": 60000.0,
+        "foreign_consecutive_buy_days": 8,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 8,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 384982.0,
+        "foreign_streak_amount": 4120307.4,
+        "foreign_pct_of_volume": 14.45,
+        "foreign_pct_of_market": 0.04,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.96,
+        "close": 10.75,
+        "volume": 415160.0,
+        "prev_volume": 411671.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 8 天(≥3)",
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 0.62(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 8 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "3027",
+      "stock_name": "盛達",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 40,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 2 天,總共 114 張,約 $219 萬,佔該股成交量 17.1%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.17,
+        "per": null,
+        "margin_change_5d_pct": -0.81,
+        "short_margin_ratio": 0.02,
+        "foreign_net": 93260.0,
+        "foreign_consecutive_buy_days": 2,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 2,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 114260.0,
+        "foreign_streak_amount": 2194131.0,
+        "foreign_pct_of_volume": 17.06,
+        "foreign_pct_of_market": 0.06,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.67,
+        "close": 19.35,
+        "volume": 546504.0,
+        "prev_volume": 114477.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.0%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.0%(<5%,空方壓力低)",
+          "PBR 1.17(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [
+          "外資連續買超 2 天(≥2,寬鬆版)"
+        ],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "1466",
+      "stock_name": "聚隆",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 0,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 0,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 109 張,約 $160 萬,佔該股成交量 33.5%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": 1.04,
+        "per": null,
+        "margin_change_5d_pct": 7.13,
+        "short_margin_ratio": 0.5,
+        "foreign_net": 109181.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 1,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 109181.0,
+        "foreign_streak_amount": 1604960.7,
+        "foreign_pct_of_volume": 33.45,
+        "foreign_pct_of_market": 0.07,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.63,
+        "close": 14.7,
+        "volume": 326381.0,
+        "prev_volume": 146084.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.5%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.5%(<5%,空方壓力低)",
+          "PBR 1.04(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [],
+        "real_rally_loose": [],
+        "fake_rally_loose": []
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "2031",
+      "stock_name": "新光鋼",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 70,
+      "is_fake_rally": false,
+      "fake_rally_score": 10,
+      "is_conflict": false,
+      "is_real_rally_loose": true,
+      "real_rally_loose_score": 60,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 10,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 9 天,總共 1,833 張,約 $8601 萬,佔該股成交量 8.7%、佔全市場外資買超 0.1%,注意長線變化",
+      "trust_note": "此股投信買進 86 張,約 $415 萬,佔該股成交量 7.6%、佔全市場投信買超 0.1%,注意可能是短打",
+      "metrics": {
+        "pbr": 1.29,
+        "per": 7.47,
+        "margin_change_5d_pct": -0.66,
+        "short_margin_ratio": 0.26,
+        "foreign_net": 98361.0,
+        "foreign_consecutive_buy_days": 9,
+        "margin_consecutive_buy_days": 2,
+        "trust_net": 86000.0,
+        "foreign_streak_days": 9,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 1833394.0,
+        "foreign_streak_amount": 86009555.45,
+        "foreign_pct_of_volume": 8.66,
+        "foreign_pct_of_market": 0.06,
+        "trust_amount": 4149500.0,
+        "trust_pct_of_volume": 7.57,
+        "trust_pct_of_market": 0.08,
+        "vol_ratio": 1.54,
+        "close": 48.25,
+        "volume": 1136083.0,
+        "prev_volume": 1441840.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.3%(<5%)"
+        ],
+        "real_rally": [
+          "外資連續買超 9 天(≥3)",
+          "券資比 0.3%(<5%,空方壓力低)",
+          "PBR 1.29(<2.0,評價未偏高)",
+          "分數達標但未同時滿足融資連續買超 3 天,不列為可能會漲"
+        ],
+        "fake_rally": [
+          "今日量縮(1,441,840 → 1,136,083)"
+        ],
+        "real_rally_loose": [
+          "外資連續買超 9 天(≥2,寬鬆版)",
+          "融資連續買超 2 天(≥2,散戶跟著進場,寬鬆版)"
+        ],
+        "fake_rally_loose": [
+          "今日量縮(1,441,840 → 1,136,083)"
+        ]
+      },
+      "missing": []
+    },
+    {
+      "stock_id": "9105",
+      "stock_name": "泰金寶-DR",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 10,
+      "is_fake_rally": false,
+      "fake_rally_score": 10,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 10,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 6,719 張,約 $6134 萬,佔該股成交量 19.3%、佔全市場外資買超 4.3%,注意長線變化",
+      "trust_note": null,
+      "metrics": {
+        "pbr": null,
+        "per": null,
+        "margin_change_5d_pct": 3.62,
+        "short_margin_ratio": 0.5,
+        "foreign_net": 6718754.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 0.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 6718754.0,
+        "foreign_streak_amount": 61342224.02,
+        "foreign_pct_of_volume": 19.31,
+        "foreign_pct_of_market": 4.29,
+        "trust_amount": 0.0,
+        "trust_pct_of_volume": 0.0,
+        "trust_pct_of_market": 0.0,
+        "vol_ratio": 1.54,
+        "close": 9.13,
+        "volume": 34796787.0,
+        "prev_volume": 39797245.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.5%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.5%(<5%,空方壓力低)"
+        ],
+        "fake_rally": [
+          "今日量縮(39,797,245 → 34,796,787)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "今日量縮(39,797,245 → 34,796,787)"
+        ]
+      },
+      "missing": [
+        "PBR"
+      ]
+    },
+    {
+      "stock_id": "2723",
+      "stock_name": "美食-KY",
+      "fomo_score": 10,
+      "is_real_rally": false,
+      "real_rally_score": 30,
+      "is_fake_rally": false,
+      "fake_rally_score": 10,
+      "is_conflict": false,
+      "is_real_rally_loose": false,
+      "real_rally_loose_score": 0,
+      "is_fake_rally_loose": false,
+      "fake_rally_loose_score": 10,
+      "is_conflict_loose": false,
+      "is_divergence": false,
+      "divergence_reason": "",
+      "foreign_note": "外資連買 1 天,總共 4 張,約 $34 萬,佔該股成交量 0.9%、佔全市場外資買超 0.0%,注意長線變化",
+      "trust_note": "此股投信買進 53 張,約 $453 萬,佔該股成交量 12.7%、佔全市場投信買超 0.1%,注意可能是短打",
+      "metrics": {
+        "pbr": 1.43,
+        "per": null,
+        "margin_change_5d_pct": 0.69,
+        "short_margin_ratio": 0.31,
+        "foreign_net": 3969.0,
+        "foreign_consecutive_buy_days": 1,
+        "margin_consecutive_buy_days": 0,
+        "trust_net": 53000.0,
+        "foreign_streak_days": 1,
+        "foreign_streak_direction": "buy",
+        "foreign_streak_shares": 3969.0,
+        "foreign_streak_amount": 338952.60000000003,
+        "foreign_pct_of_volume": 0.95,
+        "foreign_pct_of_market": 0.0,
+        "trust_amount": 4526200.0,
+        "trust_pct_of_volume": 12.66,
+        "trust_pct_of_market": 0.05,
+        "vol_ratio": 1.51,
+        "close": 85.4,
+        "volume": 418663.0,
+        "prev_volume": 519765.0
+      },
+      "reasons": {
+        "fomo": [
+          "券資比 0.3%(<5%)"
+        ],
+        "real_rally": [
+          "券資比 0.3%(<5%,空方壓力低)",
+          "PBR 1.43(<2.0,評價未偏高)"
+        ],
+        "fake_rally": [
+          "今日量縮(519,765 → 418,663)"
+        ],
+        "real_rally_loose": [],
+        "fake_rally_loose": [
+          "今日量縮(519,765 → 418,663)"
+        ]
+      },
+      "missing": []
+    }
+  ]
+}
