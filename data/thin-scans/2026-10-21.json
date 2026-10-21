@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-21",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1087,
+  "evaluated": 1054,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "4994",
+      "stock_name": "傳奇",
+      "vol_ratio": 3.18,
+      "change_pct": 0.12,
+      "close": 80.6,
+      "volume": 65111,
+      "ma20_volume": 20460,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2239",
+      "stock_name": "英利-KY",
+      "vol_ratio": 2.64,
+      "change_pct": 2.86,
+      "close": 18.0,
+      "volume": 273349,
+      "ma20_volume": 103489,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1445",
+      "stock_name": "大宇",
+      "vol_ratio": 2.27,
+      "change_pct": 0.49,
+      "close": 10.3,
+      "volume": 141715,
+      "ma20_volume": 62490,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4108",
+      "stock_name": "懷特",
+      "vol_ratio": 1.74,
+      "change_pct": 0.9,
+      "close": 11.2,
+      "volume": 292131,
+      "ma20_volume": 168320,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1437",
+      "stock_name": "勤益控",
+      "vol_ratio": 1.62,
+      "change_pct": 1.11,
+      "close": 31.8,
+      "volume": 164237,
+      "ma20_volume": 101362,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1443",
+      "stock_name": "立益物流",
+      "vol_ratio": 1.57,
+      "change_pct": -0.67,
+      "close": 22.2,
+      "volume": 18109,
+      "ma20_volume": 11566,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "5292",
+      "stock_name": "華懋",
+      "vol_ratio": 1.54,
+      "change_pct": 1.02,
+      "close": 248.0,
+      "volume": 291281,
+      "ma20_volume": 189620,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2597",
+      "stock_name": "潤弘",
+      "vol_ratio": 1.52,
+      "change_pct": 1.81,
+      "close": 169.0,
+      "volume": 294886,
+      "ma20_volume": 193555,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-10-21T13:43:39Z"
+}
