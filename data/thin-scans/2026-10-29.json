@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-29",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1084,
+  "evaluated": 1053,
+  "count": 6,
+  "rows": [
+    {
+      "stock_id": "7689",
+      "stock_name": "大鵬科CLMX",
+      "vol_ratio": 3.16,
+      "change_pct": -0.38,
+      "close": 129.5,
+      "volume": 241871,
+      "ma20_volume": 76456,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "6641",
+      "stock_name": "基士德-KY",
+      "vol_ratio": 2.85,
+      "change_pct": -1.17,
+      "close": 16.9,
+      "volume": 31100,
+      "ma20_volume": 10905,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "4771",
+      "stock_name": "望隼",
+      "vol_ratio": 2.07,
+      "change_pct": 2.17,
+      "close": 212.0,
+      "volume": 298941,
+      "ma20_volume": 144221,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1906",
+      "stock_name": "寶隆",
+      "vol_ratio": 2.0,
+      "change_pct": 0.0,
+      "close": 10.9,
+      "volume": 107007,
+      "ma20_volume": 53394,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6914",
+      "stock_name": "阜爾運通",
+      "vol_ratio": 1.63,
+      "change_pct": 0.43,
+      "close": 115.5,
+      "volume": 103184,
+      "ma20_volume": 63390,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4942",
+      "stock_name": "嘉彰",
+      "vol_ratio": 1.62,
+      "change_pct": 1.32,
+      "close": 30.8,
+      "volume": 146029,
+      "ma20_volume": 90317,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-10-29T15:11:16Z"
+}
