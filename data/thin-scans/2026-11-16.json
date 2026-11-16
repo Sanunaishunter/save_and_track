@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-16",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1088,
+  "evaluated": 1056,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "4148",
+      "stock_name": "全宇生技-KY",
+      "vol_ratio": 7.38,
+      "change_pct": 5.11,
+      "close": 33.95,
+      "volume": 264429,
+      "ma20_volume": 35836,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6965",
+      "stock_name": "中傑-KY",
+      "vol_ratio": 5.96,
+      "change_pct": 4.9,
+      "close": 60.0,
+      "volume": 247779,
+      "ma20_volume": 41559,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6807",
+      "stock_name": "峰源-KY",
+      "vol_ratio": 4.22,
+      "change_pct": 5.35,
+      "close": 36.4,
+      "volume": 110300,
+      "ma20_volume": 26110,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "7760",
+      "stock_name": "享溫馨",
+      "vol_ratio": 3.11,
+      "change_pct": -1.06,
+      "close": 32.65,
+      "volume": 146144,
+      "ma20_volume": 46917,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "5007",
+      "stock_name": "三星",
+      "vol_ratio": 2.77,
+      "change_pct": 0.18,
+      "close": 55.7,
+      "volume": 104216,
+      "ma20_volume": 37632,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1626",
+      "stock_name": "艾美特-KY",
+      "vol_ratio": 1.84,
+      "change_pct": 0.31,
+      "close": 9.65,
+      "volume": 92806,
+      "ma20_volume": 50420,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4195",
+      "stock_name": "基米-創",
+      "vol_ratio": 1.59,
+      "change_pct": 0.0,
+      "close": 14.6,
+      "volume": 141413,
+      "ma20_volume": 88728,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2923",
+      "stock_name": "鼎固-KY",
+      "vol_ratio": 1.52,
+      "change_pct": 9.94,
+      "close": 28.75,
+      "volume": 290462,
+      "ma20_volume": 191448,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-11-16T18:26:32Z"
+}
