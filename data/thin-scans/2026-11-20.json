@@ -1,0 +1,68 @@
+{
+  "date": "2026-11-20",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1090,
+  "evaluated": 1063,
+  "count": 5,
+  "rows": [
+    {
+      "stock_id": "6835",
+      "stock_name": "圓裕",
+      "vol_ratio": 3.86,
+      "change_pct": -7.63,
+      "close": 27.85,
+      "volume": 135555,
+      "ma20_volume": 35105,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "1472",
+      "stock_name": "三洋實業",
+      "vol_ratio": 2.56,
+      "change_pct": -0.34,
+      "close": 88.6,
+      "volume": 122685,
+      "ma20_volume": 47910,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "6230",
+      "stock_name": "尼得科超眾",
+      "vol_ratio": 1.9,
+      "change_pct": -1.8,
+      "close": 82.0,
+      "volume": 92831,
+      "ma20_volume": 48810,
+      "ma_state": "bear"
+    },
+    {
+      "stock_id": "4148",
+      "stock_name": "全宇生技-KY",
+      "vol_ratio": 1.76,
+      "change_pct": 0.0,
+      "close": 33.7,
+      "volume": 109948,
+      "ma20_volume": 62529,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2477",
+      "stock_name": "美隆電",
+      "vol_ratio": 1.67,
+      "change_pct": 5.45,
+      "close": 21.3,
+      "volume": 227410,
+      "ma20_volume": 136056,
+      "ma_state": "mixed"
+    }
+  ],
+  "generated_at": "2026-11-20T16:55:25Z"
+}
