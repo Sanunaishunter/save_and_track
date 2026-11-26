@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-26",
+  "market": "twse-listed-common",
+  "params": {
+    "ma_window": 20,
+    "ma_shift": 1,
+    "vol_ratio_threshold": 1.5,
+    "min_volume_lots": 10,
+    "max_volume_lots_exclusive": 300,
+    "condition": "vol_ratio > 1.5 且 close > open 且 10 張 <= 成交量 < 300 張(跟爆量掃描同公式,鎖定爆量掃描量下限濾掉的薄股票)"
+  },
+  "universe": 1091,
+  "evaluated": 1070,
+  "count": 8,
+  "rows": [
+    {
+      "stock_id": "3057",
+      "stock_name": "喬鼎",
+      "vol_ratio": 2.69,
+      "change_pct": 1.38,
+      "close": 11.0,
+      "volume": 263124,
+      "ma20_volume": 97842,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "4999",
+      "stock_name": "鑫禾",
+      "vol_ratio": 2.27,
+      "change_pct": 3.15,
+      "close": 14.75,
+      "volume": 176989,
+      "ma20_volume": 78123,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "2722",
+      "stock_name": "夏都",
+      "vol_ratio": 2.25,
+      "change_pct": 8.93,
+      "close": 18.3,
+      "volume": 124460,
+      "ma20_volume": 55387,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1454",
+      "stock_name": "台富",
+      "vol_ratio": 2.18,
+      "change_pct": 4.2,
+      "close": 12.4,
+      "volume": 174381,
+      "ma20_volume": 79938,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "2910",
+      "stock_name": "統領",
+      "vol_ratio": 2.18,
+      "change_pct": 1.27,
+      "close": 23.95,
+      "volume": 38480,
+      "ma20_volume": 17648,
+      "ma_state": "bull"
+    },
+    {
+      "stock_id": "1435",
+      "stock_name": "中福",
+      "vol_ratio": 1.98,
+      "change_pct": 4.17,
+      "close": 17.5,
+      "volume": 15003,
+      "ma20_volume": 7580,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1465",
+      "stock_name": "偉全",
+      "vol_ratio": 1.9,
+      "change_pct": 1.39,
+      "close": 10.95,
+      "volume": 292936,
+      "ma20_volume": 154005,
+      "ma_state": "mixed"
+    },
+    {
+      "stock_id": "1516",
+      "stock_name": "川飛",
+      "vol_ratio": 1.52,
+      "change_pct": 2.3,
+      "close": 15.55,
+      "volume": 50940,
+      "ma20_volume": 33523,
+      "ma_state": "bear"
+    }
+  ],
+  "generated_at": "2026-11-26T18:22:43Z"
+}
